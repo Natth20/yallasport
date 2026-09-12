@@ -454,7 +454,7 @@ export function LeaguesAtlas({
                           className="relative flex items-center gap-3 rounded-xl border border-white/10 bg-card/[0.04] px-3 py-3 hover:border-orange-400/35"
                         >
                           <span className={medalClass(row.rank)}>{String(row.rank).padStart(2, '0')}</span>
-                          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#0b0d11]/40 p-1.5">
+                          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-card/40 p-1.5">
                             <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-full w-full text-sm" />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -528,7 +528,7 @@ export function LeaguesAtlas({
                 type="search"
                 defaultValue={paramsQ}
                 placeholder={pick(locale, 'ابحث عن بطولة أو دولة', 'Search league or country')}
-                className="h-11 w-full rounded-full border border-border/80 bg-white/90 ps-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-orange-400 dark:border-border dark:bg-card/[0.04] dark:text-foreground"
+                className="h-11 w-full rounded-full border border-border/80 bg-card/90 ps-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-orange-400 dark:border-border dark:bg-card/[0.04] dark:text-foreground"
               />
               {selectedCountry !== 'all' && <input type="hidden" name="country" value={selectedCountry} />}
               {activeFilter !== 'all' && <input type="hidden" name="filter" value={activeFilter} />}
@@ -615,7 +615,7 @@ export function LeaguesAtlas({
                         </span>
                       </span>
                       {hasScore(match.homeScore, match.awayScore) ? (
-                        <strong className="rounded-lg bg-[#0b0d11] px-2.5 py-1 text-[13px] font-bold tabular-nums text-orange-50">
+                        <strong className="rounded-lg bg-card px-2.5 py-1 text-[13px] font-bold tabular-nums text-orange-50">
                           {match.homeScore}–{match.awayScore}
                         </strong>
                       ) : (
@@ -818,7 +818,7 @@ export function LeaguesAtlas({
                   <Link
                     key={race.league.id}
                     href={`/league/${race.league.slug}/standings`}
-                    className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-white/5"
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted"
                   >
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-card p-1.5">
                       <LeagueCrest name={race.leader.team.name} logoUrl={race.leader.team.logoUrl} className="h-full w-full" />
@@ -916,7 +916,7 @@ export function LeaguesAtlas({
                     </>
                   );
                   return href ? (
-                    <Link key={scorer.player.id} href={href} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-white/5">
+                    <Link key={scorer.player.id} href={href} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted">
                       {row}
                     </Link>
                   ) : (
@@ -947,7 +947,7 @@ export function LeaguesAtlas({
                 <Link
                   key={article.id}
                   href={`/news/${article.slug}`}
-                  className="border-b border-border px-5 py-4 last:border-b-0 hover:bg-orange-500/[0.04] dark:border-border dark:hover:bg-white/5 md:border-e md:odd:border-e md:[&:nth-last-child(2)]:border-b-0"
+                  className="border-b border-border px-5 py-4 last:border-b-0 hover:bg-orange-500/[0.04] dark:border-border dark:hover:bg-muted md:border-e md:odd:border-e md:[&:nth-last-child(2)]:border-b-0"
                 >
                   {article.leagueName && (
                     <span className="text-[9px] font-bold uppercase tracking-wider text-orange-500">{article.leagueName}</span>

@@ -17,7 +17,7 @@ export async function TopPlayersWidget({ players }: { players: PlayerRow[] }) {
   if (players.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-black/5 bg-card p-6 dark:border-border dark:bg-card/[0.03]">
+    <div className="rounded-2xl border border-border bg-card p-6 dark:border-border dark:bg-card/[0.03]">
       <h4 className="mb-6 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.28em] text-orange-500">
         <Star className="h-4 w-4 fill-current" />
         {t('top_players')}

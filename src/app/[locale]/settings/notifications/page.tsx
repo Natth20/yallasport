@@ -39,7 +39,7 @@ export default async function NotificationSettingsPage() {
       <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500">{pick(locale, 'مركز التنبيهات', 'Notification Center')}</span>
       <h1 className="mt-3 text-3xl font-bold">{pick(locale, 'إعدادات التنبيهات', 'Notification settings')}</h1>
       <p className="mt-3 text-sm font-medium text-muted-foreground">{pick(locale, 'اختر التنبيهات التي تريد استقبالها. تذكير بداية المباراة يُرسل قبل 15 دقيقة.', 'Choose which alerts to receive. Match-start reminders are sent 15 minutes before kickoff.')}</p>
-      <div className="mt-8 rounded-2xl border border-border bg-card p-4 dark:border-border dark:bg-white/[0.035]">
+      <div className="mt-8 rounded-2xl border border-border bg-card p-4 dark:border-border dark:bg-card/[0.04]">
         <NotificationSettings initialPrefs={preferences} />
       </div>
     </div>

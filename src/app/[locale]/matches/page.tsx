@@ -1649,7 +1649,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             <Link
               href={pageHref({ date: format(addDays(selectedDate, -1), 'yyyy-MM-dd') })}
               aria-label={pick(locale, 'اليوم السابق', 'Previous day')}
-              className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(15,23,42,0.08)] bg-card text-muted-foreground transition-colors hover:border-orange-400/40 hover:text-orange-500 dark:border-border dark:bg-black/20 dark:text-foreground/70"
+              className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-orange-400/40 hover:text-orange-500 dark:border-border dark:bg-muted dark:text-foreground/70"
             >
               <ChevronRight className="h-4 w-4" />
             </Link>
@@ -1681,14 +1681,14 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             <Link
               href={pageHref({ date: format(addDays(selectedDate, 1), 'yyyy-MM-dd') })}
               aria-label={pick(locale, 'اليوم التالي', 'Next day')}
-              className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(15,23,42,0.08)] bg-card text-muted-foreground transition-colors hover:border-orange-400/40 hover:text-orange-500 dark:border-border dark:bg-black/20 dark:text-foreground/70"
+              className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-orange-400/40 hover:text-orange-500 dark:border-border dark:bg-muted dark:text-foreground/70"
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>
           </div>
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex w-fit flex-wrap items-center gap-1 rounded-xl border border-[rgba(15,23,42,0.08)] bg-white/90 p-1 dark:border-border dark:bg-black/20">
+            <div className="flex w-fit flex-wrap items-center gap-1 rounded-xl border border-border bg-card/90 p-1 dark:border-border dark:bg-muted">
               {statusFilters.map((filter) => {
                 const active = filter.value === statusFilter;
                 return (
@@ -1702,7 +1702,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                           : 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
                         : filter.value === 'live' && filter.count > 0
                           ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5 dark:hover:text-white'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground'
                     }`}
                   >
                     {filter.value === 'live' && filter.count > 0 ? (
@@ -1739,7 +1739,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${
                       programmeScope === 'major'
                         ? 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
-                        : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-white/5'
+                        : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-muted'
                     }`}
                   >
                     {pick(locale, 'كبرى', 'Majors')}
@@ -1750,7 +1750,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${
                       programmeScope === 'all'
                         ? 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
-                        : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-white/5'
+                        : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-muted'
                     }`}
                   >
                     {pick(locale, 'البرنامج كامل', 'Full programme')}
@@ -1767,7 +1767,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                 type="search"
                 defaultValue={params.q}
                 placeholder={pick(locale, 'ابحث عن فريق أو بطولة', 'Search for a team or league')}
-                className="h-11 w-full rounded-xl border border-[rgba(15,23,42,0.08)] bg-card pr-11 pl-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-4 focus:ring-orange-500/5 dark:border-border dark:bg-black/20 dark:text-foreground"
+                className="h-11 w-full rounded-xl border border-border bg-card pr-11 pl-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-4 focus:ring-orange-500/5 dark:border-border dark:bg-muted dark:text-foreground"
               />
               <input type="hidden" name="date" value={selectedDateStr} />
               {statusFilter !== 'all' && <input type="hidden" name="status" value={statusFilter} />}
@@ -1829,7 +1829,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                           {programmeScope === 'major' ? (
                             <Link
                               href={`${pageHref({ scope: 'all' })}#rest`}
-                              className="rounded-full border border-emerald-900/10 bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground transition-colors hover:border-orange-500/40 hover:text-orange-600 dark:border-border dark:bg-black/20"
+                              className="rounded-full border border-emerald-900/10 bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground transition-colors hover:border-orange-500/40 hover:text-orange-600 dark:border-border dark:bg-muted"
                             >
                               {pick(locale, 'بطاقات كاملة', 'Full cards')}
                             </Link>
@@ -1844,7 +1844,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                 leagueGroups.map((group) => leagueBoard(group))
               )
             ) : (
-              <div className="rounded-[1.55rem] border border-dashed border-[rgba(15,23,42,0.12)] bg-white/80 px-6 py-20 text-center dark:border-border dark:bg-black/20">
+              <div className="rounded-[1.55rem] border border-dashed border-border bg-card/80 px-6 py-20 text-center dark:border-border dark:bg-muted">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted dark:bg-card/[0.04]">
                   <Clock3 className="h-6 w-6 text-muted-foreground dark:text-foreground" />
                 </div>
@@ -1896,7 +1896,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   {dayCensus.map((stat) => (
                     <span
                       key={stat.label}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(15,23,42,0.08)] bg-orange-50/70 px-2.5 py-1 text-[10px] font-bold text-foreground dark:border-border dark:bg-card/[0.04] dark:text-orange-100"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-orange-50/70 px-2.5 py-1 text-[10px] font-bold text-foreground dark:border-border dark:bg-card/[0.04] dark:text-orange-100"
                     >
                       <strong className="tabular-nums text-orange-500">{stat.value}</strong>
                       {stat.label}
@@ -1924,7 +1924,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     <Link
                       key={match.id}
                       href={`/match/${match.id}`}
-                      className="block rounded-xl border border-[rgba(15,23,42,0.08)] px-3 py-3 transition-colors hover:border-orange-500/30 dark:border-border"
+                      className="block rounded-xl border border-border px-3 py-3 transition-colors hover:border-orange-500/30 dark:border-border"
                     >
                       <div className="flex items-center justify-between gap-2 text-[9px] font-semibold text-muted-foreground">
                         <span className="truncate">{match.league.name}</span>

@@ -154,7 +154,7 @@ export default async function CoachPage({ params }: { params: Promise<{ slug: st
                </h3>
                <div className="space-y-6 relative z-10">
                   {coach.trophies.length > 0 ? coach.trophies.map((trophy) => (
-                    <div key={trophy.id} className="bg-muted dark:bg-card/[0.04] p-6 rounded-3xl border border-border dark:border-border hover:border-orange-200 dark:hover:bg-white/10 transition-all">
+                    <div key={trophy.id} className="bg-muted dark:bg-card/[0.04] p-6 rounded-3xl border border-border dark:border-border hover:border-orange-200 dark:hover:bg-muted transition-all">
                        <div className="flex items-center gap-4 mb-2">
                           <Trophy className="w-5 h-5 text-orange-500" />
                           <span className="text-md font-black text-foreground dark:text-foreground">{trophy.title}</span>

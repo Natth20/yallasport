@@ -24,7 +24,7 @@ export async function DayWire({ events }: { events: WireEvent[] }) {
   if (events.length === 0) return null;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-white/90 dark:border-emerald-400/10 dark:bg-black/20">
+    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-card/90 dark:border-emerald-400/10 dark:bg-muted">
       <div className="flex items-end justify-between gap-3 border-b border-emerald-900/10 px-5 py-4 dark:border-border">
         <div>
           <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-orange-500">{t('wire')}</span>
@@ -37,7 +37,7 @@ export async function DayWire({ events }: { events: WireEvent[] }) {
           <li key={event.id}>
             <Link
               href={`/match/${event.matchId}`}
-              className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-card dark:hover:bg-white/5"
+              className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-card dark:hover:bg-muted"
             >
               <span
                 className={`w-14 shrink-0 text-[9px] font-bold ${

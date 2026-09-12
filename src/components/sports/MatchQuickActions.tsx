@@ -159,7 +159,7 @@ export function MatchQuickActions({
       <button
         type="button"
         onClick={addToCalendar}
-        className="inline-flex h-9 items-center gap-2 rounded-lg bg-muted px-3 text-[10px] font-bold text-foreground transition-all hover:bg-slate-200 dark:bg-card/[0.04] dark:text-muted-foreground dark:hover:bg-white/10"
+        className="inline-flex h-9 items-center gap-2 rounded-lg bg-muted px-3 text-[10px] font-bold text-foreground transition-all hover:bg-slate-200 dark:bg-card/[0.04] dark:text-muted-foreground dark:hover:bg-muted"
       >
         {calendarAdded ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <CalendarPlus className="h-3.5 w-3.5" />}
         {calendarAdded ? t('calendar_added') : t('add_calendar')}

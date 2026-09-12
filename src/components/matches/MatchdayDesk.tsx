@@ -107,7 +107,7 @@ export async function MatchdayDesk({
             {clashes.slice(0, 3).map(({ a, b }) => (
               <li
                 key={`${a.id}-${b.id}`}
-                className="rounded-xl border border-amber-400/20 bg-white/80 px-3 py-2.5 text-[11px] dark:bg-black/20"
+                className="rounded-xl border border-amber-400/20 bg-card/80 px-3 py-2.5 text-[11px] dark:bg-muted"
               >
                 <p className="font-semibold text-foreground dark:text-foreground">
                   {pick(
@@ -152,7 +152,7 @@ function DeskCard({
       className={`min-w-[220px] flex-1 rounded-xl border px-3 py-3 transition-transform hover:-translate-y-0.5 ${
         live
           ? 'border-orange-400/35 bg-orange-50/80 dark:border-orange-300/25 dark:bg-card/[0.04]'
-          : 'border-[rgba(15,23,42,0.08)] bg-card dark:border-border dark:bg-black/20'
+          : 'border-border bg-card dark:border-border dark:bg-muted'
       }`}
     >
       <div className={`mb-2 flex items-center justify-between gap-2 text-[9px] font-semibold ${

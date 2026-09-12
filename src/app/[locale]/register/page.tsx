@@ -31,7 +31,7 @@ export default async function RegisterPage() {
       <p className="mt-5 text-[13px] leading-7 text-muted-foreground dark:text-foreground/45">{t('google_note')}</p>
       <p className="mt-8 text-[12px] font-bold text-muted-foreground">
         {t('register_to_login')}{' '}
-        <Link href="/login" className="text-[#c26a3a] hover:underline">
+        <Link href="/login" className="text-primary hover:underline">
           {t('register_to_login_link')}
         </Link>
       </p>

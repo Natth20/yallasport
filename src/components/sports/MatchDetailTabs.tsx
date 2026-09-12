@@ -82,8 +82,8 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
   ].filter((row) => row[1] !== undefined || row[2] !== undefined);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_25px_70px_-45px_rgba(15,23,42,0.3)] dark:border-border dark:bg-white/[0.035]">
-      <nav className="flex gap-1 overflow-x-auto border-b border-border bg-muted/70 p-2 no-scrollbar dark:border-border dark:bg-white/[0.025]">
+    <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_25px_70px_-45px_rgba(15,23,42,0.3)] dark:border-border dark:bg-card/[0.04]">
+      <nav className="flex gap-1 overflow-x-auto border-b border-border bg-muted/70 p-2 no-scrollbar dark:border-border dark:bg-card/[0.03]">
         {tabs.map((item) => (
           <button
             key={item.id}
@@ -92,7 +92,7 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
             className={`flex min-w-28 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-[11px] font-bold transition-all ${
               tab === item.id
                 ? 'bg-card text-foreground shadow-sm dark:bg-muted/10 dark:text-foreground'
-                : 'text-muted-foreground hover:text-foreground dark:hover:text-white'
+                : 'text-muted-foreground hover:text-foreground dark:hover:text-foreground'
             }`}
           >
             <item.icon className={`h-3.5 w-3.5 ${tab === item.id ? 'text-orange-500' : ''}`} />
@@ -112,7 +112,7 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
               {updating && <RefreshCw className="h-4 w-4 animate-spin text-orange-500" />}
             </div>
             {events.length > 0 ? (
-              <div className="relative space-y-3 before:absolute before:bottom-3 before:right-[15px] before:top-3 before:w-px before:bg-muted dark:before:bg-white/10">
+              <div className="relative space-y-3 before:absolute before:bottom-3 before:right-[15px] before:top-3 before:w-px before:bg-muted dark:before:bg-border">
                 {events.slice().reverse().map((event, index) => (
                   <div key={event.id ?? `${event.minute}-${event.type}-${index}`} className="relative flex gap-4">
                     <span className={`relative z-10 mt-3 h-8 w-8 shrink-0 rounded-full border-4 border-white dark:border-slate-950 ${

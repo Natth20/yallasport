@@ -37,7 +37,7 @@ export async function MatchdayLenses({
         <div className="flex justify-end">
           <Link
             href={clearHref}
-            className="rounded-full border border-[rgba(15,23,42,0.08)] bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground transition-colors hover:border-orange-500/40 hover:text-orange-600 dark:border-border dark:bg-black/20"
+            className="rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground transition-colors hover:border-orange-500/40 hover:text-orange-600 dark:border-border dark:bg-muted"
           >
             {pick(locale, 'عرض كل المباريات', 'Show all matches')}
           </Link>
@@ -66,7 +66,7 @@ function LensRail({
           className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold transition-colors ${
             chip.active
               ? 'border-orange-500/50 bg-orange-500 text-primary-foreground'
-              : 'border-[rgba(15,23,42,0.08)] bg-card text-foreground hover:border-orange-500/30 hover:text-orange-600 dark:border-border dark:bg-black/20 dark:text-muted-foreground'
+              : 'border-border bg-card text-foreground hover:border-orange-500/30 hover:text-orange-600 dark:border-border dark:bg-muted dark:text-muted-foreground'
           }`}
         >
           {chip.logoUrl ? (

@@ -80,7 +80,7 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
             {t('receipt_ref')} {result.deskId}
           </p>
         ) : null}
-        <TicketBarcode className="mt-4 text-[#c26a3a]" />
+        <TicketBarcode className="mt-4 text-primary" />
       </div>
     );
   }

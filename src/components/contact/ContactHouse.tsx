@@ -54,7 +54,7 @@ export async function ContactHouse() {
                 <BrandMark size={48} />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#e8b48a]">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">
                       {t('kicker')}
                     </p>
                     <EditionPlate year={year} label={t('folio')} className="watch-edition" />
@@ -68,13 +68,13 @@ export async function ContactHouse() {
               <div className="contact-address">
                 <WaxSeal label={t('seal')} className="contact-seal" />
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e8b48a]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
                     {t('addr_to')}
                   </p>
                   <a className="contact-mail" href={`mailto:${CONTACT_EMAIL}`}>
                     {CONTACT_EMAIL}
                   </a>
-                  <TicketBarcode className="mt-3 text-[#e8b48a]/55" />
+                  <TicketBarcode className="mt-3 text-primary/55" />
                 </div>
               </div>
             </div>
@@ -111,7 +111,7 @@ export async function ContactHouse() {
                 </div>
                 <div className="contact-blotter-meta">
                   <WaxSeal label={t('stamp_paid')} className="contact-blotter-seal" />
-                  <TicketBarcode className="text-[#e8b48a]/50" />
+                  <TicketBarcode className="text-primary/50" />
                 </div>
               </div>
               {session?.user?.email ? <p className="contact-blotter-note">{t('signed_note')}</p> : null}
@@ -149,7 +149,7 @@ export async function ContactHouse() {
 
           <Reveal delay={0.12}>
             <section className="contact-side-plate">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e8b48a]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
                 {t('addr_kicker')}
               </p>
               <p className="mt-3 text-sm leading-7 text-foreground dark:text-foreground/55">{t('addr_note')}</p>

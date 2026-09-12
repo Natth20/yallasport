@@ -204,13 +204,13 @@ export function VodTitle({ locale, show }: { locale: string; show: ShowBit }) {
                   </div>
                 ))}
               </dl>
-              <TicketBarcode className="mt-5 text-[#e8b48a]/55" />
+              <TicketBarcode className="mt-5 text-primary/55" />
             </section>
           ) : null}
 
           {show.categories.length > 0 ? (
             <section className="vod-plate">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e8b48a]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
                 {pick(locale, 'التصنيفات', 'Categories')}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -224,10 +224,10 @@ export function VodTitle({ locale, show }: { locale: string; show: ShowBit }) {
           ) : null}
 
           <div className="vod-ticket">
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#c26a3a]">
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">
               {typeLabel(show.type, locale)}
             </p>
-            <p className="mt-1 text-sm font-black leading-6 text-[#1c140e]">{show.title}</p>
+            <p className="mt-1 text-sm font-black leading-6 text-foreground">{show.title}</p>
             {show.releaseYear ? (
               <p className="mt-1 text-[11px] font-bold text-foreground/45">{show.releaseYear}</p>
             ) : null}

@@ -65,7 +65,7 @@ export function MatchAIAnalyst({
   return (
     <div className="space-y-3">
       {notes.map((note) => (
-        <div key={note.label} className="flex gap-3 rounded-2xl bg-[#f7f5f0] px-4 py-3 dark:bg-card/[0.04]">
+        <div key={note.label} className="flex gap-3 rounded-2xl bg-muted px-4 py-3 dark:bg-card/[0.04]">
           {note.kind === 'discipline' ? (
             <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
           ) : (

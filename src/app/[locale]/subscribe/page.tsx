@@ -86,7 +86,7 @@ export default async function SubscribePage() {
               className={`rounded-3xl border p-6 ${
                 active
                   ? 'border-orange-500 bg-card shadow-lg dark:bg-background'
-                  : 'border-border bg-white/70 dark:border-border dark:bg-card/[0.03]'
+                  : 'border-border bg-card/70 dark:border-border dark:bg-card/[0.03]'
               }`}
             >
               <Icon className="h-6 w-6 text-orange-500" />

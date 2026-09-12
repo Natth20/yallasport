@@ -101,7 +101,7 @@ export default async function VODPlayerPage({ params }: { params: Promise<{ id: 
 
         <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_19rem]">
           <section className="vod-plate">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e8b48a]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
               {episode.show.title}
             </p>
             <h1 className="mt-2 text-2xl font-black text-white sm:text-3xl">{title}</h1>
@@ -115,7 +115,7 @@ export default async function VODPlayerPage({ params }: { params: Promise<{ id: 
 
           {siblings.length > 0 ? (
             <aside className="vod-plate">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e8b48a]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
                 {pick(locale, 'المزيد', 'More')}
               </p>
               <ul className="mt-4 space-y-2">
@@ -123,7 +123,7 @@ export default async function VODPlayerPage({ params }: { params: Promise<{ id: 
                   <li key={item.id}>
                     <Link
                       href={`/vod/player/${item.id}`}
-                      className="block rounded-xl border border-white/8 bg-card/[0.03] px-3 py-2.5 text-sm font-bold text-white/80 hover:border-[#e8b48a]/35 hover:text-white"
+                      className="block rounded-xl border border-white/8 bg-card/[0.03] px-3 py-2.5 text-sm font-bold text-white/80 hover:border-primary/35 hover:text-white"
                     >
                       {item.title ||
                         pick(locale, `الحلقة ${item.episodeNumber}`, `Episode ${item.episodeNumber}`)}

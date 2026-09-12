@@ -247,7 +247,7 @@ export async function SearchHouse({
               <BrandMark size={44} priority />
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#e8b48a]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">
                     {t('kicker')}
                   </p>
                   <EditionPlate year={new Date().getFullYear()} label={t('folio')} className="watch-edition" />
@@ -495,7 +495,7 @@ export async function SearchHouse({
             <Link href="/leagues" className="watch-chip-link is-ghost">
               {t('door_leagues')}
             </Link>
-            <TicketBarcode className="ms-auto text-[#e8b48a]/40" />
+            <TicketBarcode className="ms-auto text-primary/40" />
           </section>
         </Reveal>
 

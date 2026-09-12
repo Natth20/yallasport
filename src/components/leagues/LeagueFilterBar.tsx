@@ -63,7 +63,7 @@ export function LeagueFilterBar({
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-black/5 bg-card p-1 no-scrollbar dark:border-border dark:bg-card/[0.04]">
+      <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-border bg-card p-1 no-scrollbar dark:border-border dark:bg-card/[0.04]">
         {visibleFilters.map((filter) => {
           const active = activeFilter === filter.value;
           const live = filter.value === 'live' && counts.live > 0;
@@ -78,7 +78,7 @@ export function LeagueFilterBar({
                     : 'bg-background text-white dark:bg-card dark:text-foreground'
                   : live
                     ? 'text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5 dark:hover:text-white'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground'
               }`}
             >
               {live ? <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> : null}
@@ -96,7 +96,7 @@ export function LeagueFilterBar({
             key={sort.value}
             href={buildHref(baseParams, activeFilter, sort.value)}
             className={`text-[11px] font-semibold ${
-              activeSort === sort.value ? 'text-[#c26a3a]' : 'text-muted-foreground hover:text-[#c26a3a]'
+              activeSort === sort.value ? 'text-primary' : 'text-muted-foreground hover:text-primary'
             }`}
           >
             {t(sort.label)}

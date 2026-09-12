@@ -445,7 +445,7 @@ export async function HomeHouse() {
                   <Flame className="me-1 inline h-3.5 w-3.5" />
                   {t('news_top')}
                 </p>
-                <Link href="/news" className="text-[11px] font-semibold text-[#c26a3a] hover:underline">
+                <Link href="/news" className="text-[11px] font-semibold text-primary hover:underline">
                   {t('news_cta')}
                 </Link>
               </div>
@@ -459,7 +459,7 @@ export async function HomeHouse() {
             </div>
             <aside className="space-y-3 xl:col-span-4">
               <div className="mb-1 flex items-center justify-between">
-                <h2 className={`text-[12px] font-bold tracking-[0.14em] text-[#c26a3a] ${en ? 'uppercase' : ''}`}>
+                <h2 className={`text-[12px] font-bold tracking-[0.14em] text-primary ${en ? 'uppercase' : ''}`}>
                   {t('news_top')}
                 </h2>
               </div>
@@ -505,7 +505,7 @@ export async function HomeHouse() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-black/10 py-12 text-center dark:border-border">
+              <div className="rounded-2xl border border-dashed border-border py-12 text-center dark:border-border">
                 <Radio className="mx-auto mb-3 h-6 w-6 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">{t('programme_empty')}</p>
               </div>
@@ -534,7 +534,7 @@ export async function HomeHouse() {
             <section className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <p className={`home-section-kicker ${en ? 'is-en' : ''}`}>{t('leagues_title')}</p>
-                <Link href="/leagues" className="text-[11px] font-semibold text-muted-foreground hover:text-[#c26a3a]">
+                <Link href="/leagues" className="text-[11px] font-semibold text-muted-foreground hover:text-primary">
                   {t('leagues_cta')}
                 </Link>
               </div>
@@ -546,7 +546,7 @@ export async function HomeHouse() {
                       href={`/league/${league.slug}`}
                       className="group flex shrink-0 flex-col items-center gap-2.5"
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-black/5 bg-card p-2 transition-transform group-hover:-translate-y-1 dark:border-border dark:bg-card/[0.04]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card p-2 transition-transform group-hover:-translate-y-1 dark:border-border dark:bg-card/[0.04]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={league.logoUrl || '/placeholder.svg'}
@@ -572,7 +572,7 @@ export async function HomeHouse() {
               <section className="space-y-5">
                 <div className="flex items-center justify-between">
                   <SectionMark folio="02" kicker={t('news_kicker')} title={t('news_title')} en={en} />
-                  <Link href="/news" className="text-[11px] font-semibold text-[#c26a3a] hover:underline">
+                  <Link href="/news" className="text-[11px] font-semibold text-primary hover:underline">
                     {t('news_cta')}
                   </Link>
                 </div>
@@ -625,7 +625,7 @@ export async function HomeHouse() {
                           lead={t('licensed_lead')}
                           en={en}
                         />
-                        <Link href="/live" className="text-[11px] font-semibold text-[#c26a3a] hover:underline">
+                        <Link href="/live" className="text-[11px] font-semibold text-primary hover:underline">
                           {t('licensed_cta')}
                         </Link>
                       </div>
@@ -658,7 +658,7 @@ export async function HomeHouse() {
                     <>
                       <div className="flex flex-wrap items-end justify-between gap-3">
                         <SectionMark folio="04" kicker={t('tv_kicker')} title={t('tv_title')} en={en} />
-                        <Link href="/tv-guide" className="text-[11px] font-semibold text-[#c26a3a] hover:underline">
+                        <Link href="/tv-guide" className="text-[11px] font-semibold text-primary hover:underline">
                           {t('tv_cta')}
                         </Link>
                       </div>
@@ -685,7 +685,7 @@ export async function HomeHouse() {
                     <>
                       <div className="flex flex-wrap items-end justify-between gap-3">
                         <SectionMark folio="05" kicker={t('vod_kicker')} title={t('videos_title')} en={en} />
-                        <Link href="/watch" className="text-[11px] font-semibold text-[#c26a3a] hover:underline">
+                        <Link href="/watch" className="text-[11px] font-semibold text-primary hover:underline">
                           {t('vod_cta')}
                         </Link>
                       </div>
@@ -732,7 +732,7 @@ export async function HomeHouse() {
           {/* Sidebar */}
           <aside className="space-y-6 xl:col-span-4">
             <Reveal>
-              <div className="overflow-hidden rounded-2xl border border-black/5 dark:border-border">
+              <div className="overflow-hidden rounded-2xl border border-border dark:border-border">
                 <AdSlot placement="sidebar" width={300} height={250} />
               </div>
             </Reveal>
@@ -741,10 +741,10 @@ export async function HomeHouse() {
               <Reveal>
                 <div className="salon-sheet rounded-[1.4rem] p-6">
                   <div className="mb-5 flex items-center justify-between">
-                    <h3 className={`text-[11px] font-semibold tracking-[0.16em] text-[#c26a3a] ${en ? 'uppercase' : ''}`}>
+                    <h3 className={`text-[11px] font-semibold tracking-[0.16em] text-primary ${en ? 'uppercase' : ''}`}>
                       {t('players_title')}
                     </h3>
-                    <Link href="/leagues" className="text-[11px] font-semibold text-muted-foreground hover:text-[#c26a3a]">
+                    <Link href="/leagues" className="text-[11px] font-semibold text-muted-foreground hover:text-primary">
                       {t('scorers_cta')}
                     </Link>
                   </div>
@@ -775,7 +775,7 @@ export async function HomeHouse() {
             {liveNow.length > 0 ? (
               <Reveal>
                 <div className="salon-sheet rounded-[1.4rem] p-6">
-                  <h3 className={`mb-4 text-[11px] font-semibold tracking-[0.16em] text-[#c26a3a] ${en ? 'uppercase' : ''}`}>
+                  <h3 className={`mb-4 text-[11px] font-semibold tracking-[0.16em] text-primary ${en ? 'uppercase' : ''}`}>
                     {t('live_widget_title')}
                   </h3>
                   <div className="space-y-3">
@@ -791,7 +791,7 @@ export async function HomeHouse() {
                       </Link>
                     ))}
                   </div>
-                  <Link href="/live" className="mt-4 inline-block text-[11px] font-semibold text-[#c26a3a]">
+                  <Link href="/live" className="mt-4 inline-block text-[11px] font-semibold text-primary">
                     {t('cta_live')}
                   </Link>
                 </div>
@@ -800,7 +800,7 @@ export async function HomeHouse() {
 
             <Reveal>
               <div className="salon-sheet rounded-[1.4rem] p-6">
-                <h3 className={`mb-4 text-[11px] font-semibold tracking-[0.16em] text-[#c26a3a] ${en ? 'uppercase' : ''}`}>
+                <h3 className={`mb-4 text-[11px] font-semibold tracking-[0.16em] text-primary ${en ? 'uppercase' : ''}`}>
                   {t('stats_title')}
                 </h3>
                 <div className="home-stats-grid">

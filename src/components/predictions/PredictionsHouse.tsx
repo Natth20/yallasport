@@ -201,7 +201,7 @@ export async function PredictionsHouse() {
                     <Link href={`/match/${match.id}`} className="board-prog-card">
                       <div className="board-prog-meta">
                         <span>{match.league.name}</span>
-                        <ClientTime value={match.kickoffAt} className="font-mono text-[11px] text-[#c26a3a]" />
+                        <ClientTime value={match.kickoffAt} className="font-mono text-[11px] text-primary" />
                       </div>
                       <div className="board-prog-sides">
                         <strong>

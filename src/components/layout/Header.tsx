@@ -223,7 +223,7 @@ export const Header: React.FC = () => {
             </nav>
 
             <div className="mt-auto space-y-3 pt-8">
-              <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-white/70 px-4 py-3 dark:border-border dark:bg-card/[0.04]">
+              <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-card/70 px-4 py-3 dark:border-border dark:bg-card/[0.04]">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground dark:text-foreground/35">
                   {t('navigation.controls')}
                 </p>

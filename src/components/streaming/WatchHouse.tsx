@@ -96,7 +96,7 @@ export async function WatchHouse() {
               <BrandMark size={44} />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#e8b48a]">{t('kicker')}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">{t('kicker')}</p>
                   <EditionPlate year={editionYear} label={t('title')} className="watch-edition" />
                 </div>
                 <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-foreground dark:text-foreground sm:text-5xl">{t('title')}</h1>
@@ -277,7 +277,7 @@ export async function WatchHouse() {
                           )}
                         </Link>
                         <div className="vod-shelf-copy">
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#e8b48a]">
+                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-primary">
                             {typeLabel(show.type, t)}
                             {show.releaseYear ? ` · ${show.releaseYear}` : ''}
                           </p>
@@ -312,7 +312,7 @@ export async function WatchHouse() {
                   <li key={item.id}>
                     <Link href={`/watch/${item.id}`} className="watch-ticket watch-ticket-lux block px-4 py-3">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#c26a3a]">
+                        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">
                           {item.channel?.name || item.episode?.show.title || t('booth')}
                         </p>
                         <span className="text-[9px] font-black tabular-nums text-foreground/35">

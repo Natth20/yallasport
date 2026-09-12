@@ -53,7 +53,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ news, variant = 'vertical' }
 
   if (variant === 'slim') {
     return (
-      <Link href={`/news/${news.slug}`} className="flex items-center gap-4 group p-2 rounded-lg hover:bg-muted dark:hover:bg-white/5 transition-all">
+      <Link href={`/news/${news.slug}`} className="flex items-center gap-4 group p-2 rounded-lg hover:bg-muted dark:hover:bg-muted transition-all">
         <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-border dark:border-border">
            <img src={news.featuredImage || '/placeholder-news.svg'} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
         </div>
@@ -75,7 +75,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ news, variant = 'vertical' }
           className="w-full h-full object-cover transition-all duration-[1000ms] group-hover:scale-105" 
         />
         <div className="absolute top-3 right-3">
-           <span className="bg-white/90 dark:bg-background/90 backdrop-blur-md text-foreground dark:text-foreground text-[8px] font-bold px-3 py-1 rounded-md uppercase tracking-wider border border-border dark:border-border">
+           <span className="bg-card/90 dark:bg-background/90 backdrop-blur-md text-foreground dark:text-foreground text-[8px] font-bold px-3 py-1 rounded-md uppercase tracking-wider border border-border dark:border-border">
               {news.category}
            </span>
         </div>

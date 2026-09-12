@@ -60,9 +60,9 @@ export function MatchStreamPlayer({ assetId }: { assetId: string }) {
 
   if (loading) {
     return (
-      <div className="relative flex aspect-video w-full items-center justify-center bg-[#050608]">
+      <div className="relative flex aspect-video w-full items-center justify-center bg-background">
         <span className="broadcast-snow" />
-        <div className="relative h-10 w-10 animate-spin rounded-full border-2 border-[#e8b48a]/30 border-t-[#e8b48a]" />
+        <div className="relative h-10 w-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
         <span className="sr-only">{t('loading')}</span>
       </div>
     );
@@ -71,15 +71,15 @@ export function MatchStreamPlayer({ assetId }: { assetId: string }) {
   if (!playback || errorKey) {
     const key = errorKey || 'unavailable';
     return (
-      <div className="relative flex aspect-video w-full flex-col items-center justify-center bg-[#050608] p-10 text-center">
+      <div className="relative flex aspect-video w-full flex-col items-center justify-center bg-background p-10 text-center">
         <span className="broadcast-snow" />
         <div className="relative mb-5 rounded-full border border-white/10 bg-white/5 p-5">
-          {key === 'sign_in' ? <AlertCircle className="h-10 w-10 text-[#e8b48a]" /> : <Lock className="h-10 w-10 text-white/35" />}
+          {key === 'sign_in' ? <AlertCircle className="h-10 w-10 text-primary" /> : <Lock className="h-10 w-10 text-white/35" />}
         </div>
         <h3 className="relative text-xl font-black text-white">{t(key)}</h3>
         <div className="relative mt-6 flex gap-3">
           {key === 'sign_in' ? (
-            <Link href="/login" className="rounded-xl bg-[#c26a3a] px-5 py-2 text-xs font-black text-white">
+            <Link href="/login" className="rounded-xl bg-primary px-5 py-2 text-xs font-black text-white">
               {t('sign_in')}
             </Link>
           ) : (

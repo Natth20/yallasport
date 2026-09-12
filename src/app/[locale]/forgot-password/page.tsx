@@ -34,7 +34,7 @@ export default async function ForgotPasswordPage() {
         {t('recover_google')}
       </a>
       <p className="mt-5 text-[13px] leading-7 text-muted-foreground dark:text-foreground/45">{t('google_note')}</p>
-      <Link href="/login" className="mt-8 inline-flex text-[12px] font-bold text-[#c26a3a] hover:underline">
+      <Link href="/login" className="mt-8 inline-flex text-[12px] font-bold text-primary hover:underline">
         {t('recover_to_login')}
       </Link>
     </AuthGate>

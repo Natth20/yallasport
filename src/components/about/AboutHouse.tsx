@@ -137,7 +137,7 @@ export async function AboutHouse() {
 
               <div className="about-maison-seal-stack">
                 <WaxSeal label={t('seal')} className="about-seal" />
-                <TicketBarcode className="text-[#e8b48a]/45" />
+                <TicketBarcode className="text-primary/45" />
               </div>
             </div>
 

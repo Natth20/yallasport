@@ -37,7 +37,7 @@ export function BroadcastsLink({
         {onAir ? (
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-60" />
         ) : null}
-        <span className={`relative inline-flex h-2 w-2 rounded-full ${onAir ? 'bg-red-500' : 'bg-[#c26a3a]'}`} />
+        <span className={`relative inline-flex h-2 w-2 rounded-full ${onAir ? 'bg-red-500' : 'bg-primary'}`} />
       </span>
       <Radio className="h-3.5 w-3.5" />
       <span className={showLabel ? undefined : 'hidden sm:inline'}>{label}</span>

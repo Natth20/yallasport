@@ -30,12 +30,12 @@ export default async function LoginPage() {
       <AuthGoogleButton intent="login" />
       <p className="mt-5 text-[13px] leading-7 text-muted-foreground dark:text-foreground/45">{t('google_note')}</p>
       <div className="mt-8 flex flex-col gap-3 text-[12px] font-bold sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/forgot-password" className="text-[#c26a3a] hover:underline">
+        <Link href="/forgot-password" className="text-primary hover:underline">
           {t('forgot_link')}
         </Link>
         <p className="text-muted-foreground">
           {t('login_to_register')}{' '}
-          <Link href="/register" className="text-[#c26a3a] hover:underline">
+          <Link href="/register" className="text-primary hover:underline">
             {t('login_to_register_link')}
           </Link>
         </p>

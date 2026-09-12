@@ -156,12 +156,12 @@ export function LicensedPlayer({
     <div className="relative flex h-full w-full flex-col bg-black">
       <video ref={videoRef} className="h-full w-full flex-1" controls playsInline autoPlay />
       <div className="flex flex-wrap items-center gap-1.5 border-t border-white/10 bg-black/92 px-3 py-2">
-        <span className="me-1 text-[10px] font-semibold tracking-[0.16em] text-[#e8b48a]">{t('quality')}</span>
+        <span className="me-1 text-[10px] font-semibold tracking-[0.16em] text-primary">{t('quality')}</span>
         <button
           type="button"
           onClick={pickAuto}
           className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-            mode === 'auto' ? 'bg-[#c26a3a] text-white' : 'bg-white/10 text-white/70 hover:bg-white/15'
+            mode === 'auto' ? 'bg-primary text-white' : 'bg-white/10 text-white/70 hover:bg-white/15'
           }`}
         >
           {t('quality_auto')}

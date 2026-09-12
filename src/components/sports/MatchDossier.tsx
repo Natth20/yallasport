@@ -751,7 +751,7 @@ function LineupColumn({
       )}
 
       {lineup.bench && lineup.bench.length > 0 ? (
-        <div className="mt-4 border-t border-[rgba(15,23,42,0.08)] pt-3 dark:border-border">
+        <div className="mt-4 border-t border-border pt-3 dark:border-border">
           <span className="mb-2 block text-[9px] font-bold text-muted-foreground">{t('bench')}</span>
           <div className="flex flex-wrap gap-1.5">
             {lineup.bench.slice(0, 9).map((player, index) => (

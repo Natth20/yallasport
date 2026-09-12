@@ -42,7 +42,7 @@ export async function AuthGate({
           <header className="auth-paper-brand">
             <Link href="/" className="inline-flex items-center gap-2.5">
               <BrandMark size={36} />
-              <span className={`text-[10px] font-bold text-[#c26a3a] ${arabic ? '' : 'uppercase tracking-[0.22em]'}`}>
+              <span className={`text-[10px] font-bold text-primary ${arabic ? '' : 'uppercase tracking-[0.22em]'}`}>
                 {t('gate')}
               </span>
             </Link>
@@ -58,7 +58,7 @@ export async function AuthGate({
           <div className="auth-paper-body">{children}</div>
 
           <footer className="auth-paper-foot">
-            <TicketBarcode className="text-[#c26a3a]/35" />
+            <TicketBarcode className="text-primary/35" />
             <Link href="/" className="auth-back">
               {t('back')}
             </Link>
@@ -70,7 +70,7 @@ export async function AuthGate({
           <div>
             <Link href="/" className="inline-flex items-center gap-3">
               <BrandMark size={44} />
-              <span className={`text-[10px] font-bold text-[#e8b48a] ${arabic ? '' : 'uppercase tracking-[0.28em]'}`}>
+              <span className={`text-[10px] font-bold text-primary ${arabic ? '' : 'uppercase tracking-[0.28em]'}`}>
                 {t('gate')}
               </span>
             </Link>

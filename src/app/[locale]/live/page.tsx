@@ -204,7 +204,7 @@ export default async function LivePage({
             <BrandMark size={44} />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#e8b48a]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">
                   {t('studio_kicker')}
                 </p>
                 <EditionPlate year={editionYear} label={t('title')} className="watch-edition" />
@@ -357,7 +357,7 @@ export default async function LivePage({
         {(leagues.length > 1 || channelWall.length > 1 || leagueId || channelId) && (
           <section className="mt-8 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#e8b48a]">{t('filters')}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{t('filters')}</p>
               {leagueId || channelId ? (
                 <Link href="/live" className="watch-chip-link is-ghost">
                   {pick(locale, 'عرض كل القنوات', 'Show every channel')}
@@ -425,7 +425,7 @@ export default async function LivePage({
                               <img src={channel.logoUrl || '/placeholder.png'} alt="" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#e8b48a]">
+                              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-primary">
                                 {String(index + 1).padStart(2, '0')}
                               </p>
                               <h3 className="truncate text-[16px] font-black text-white">{channel.name}</h3>
@@ -457,7 +457,7 @@ export default async function LivePage({
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={headline.awayTeam.logoUrl || '/placeholder-team.png'} alt="" />
                             </div>
-                            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#e8b48a]">
+                            <span className="shrink-0 text-[11px] font-black tabular-nums text-primary">
                               {isLiveStatus(headline.status) ? (
                                 scoreLabel(headline.homeScore, headline.awayScore)
                               ) : (
@@ -524,7 +524,7 @@ export default async function LivePage({
                             ? ` · ${pick(locale, 'كبرى', 'Major')}`
                             : ''}
                         </p>
-                        <span className="text-[9px] font-black tabular-nums text-[#e8b48a]">
+                        <span className="text-[9px] font-black tabular-nums text-primary">
                           {String(index + 1).padStart(2, '0')}
                         </span>
                       </div>
@@ -591,7 +591,7 @@ export default async function LivePage({
                           )}
                         </Link>
                         <div className="vod-shelf-copy">
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-[#e8b48a]">
+                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-primary">
                             {show.type}
                             {show.releaseYear ? ` · ${show.releaseYear}` : ''}
                           </p>
@@ -629,7 +629,7 @@ export default async function LivePage({
                     <li key={asset.id}>
                       <Link href={`/watch/${asset.id}`} className="watch-ticket watch-ticket-lux block px-4 py-3">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#c26a3a]">
+                          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">
                             {asset.channel?.name || t('title')}
                           </p>
                           <span className="text-[9px] font-black tabular-nums text-foreground/35">

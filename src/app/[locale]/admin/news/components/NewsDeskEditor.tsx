@@ -188,7 +188,7 @@ export function NewsDeskEditor({
             </div>
 
             {open ? (
-              <div className="space-y-3 border-t border-border bg-muted/70 p-4 dark:border-border dark:bg-white/[0.02]">
+              <div className="space-y-3 border-t border-border bg-muted/70 p-4 dark:border-border dark:bg-card/[0.02]">
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground">
                     {pick(locale, 'العنوان', 'Title')}
@@ -395,8 +395,8 @@ export function NewsDeskEditor({
             const cover = item.featuredImage || item.ogImage;
             return (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm">
-                <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-2xl border border-white/10 bg-[#0b0d11] text-[#f4efe8] shadow-2xl">
-                  <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#0b0d11]/90 px-5 py-3 backdrop-blur">
+                <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-2xl border border-white/10 bg-card text-foreground shadow-2xl">
+                  <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-card/90 px-5 py-3 backdrop-blur">
                     <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-400">
                       {pick(locale, 'معاينة الزائر', 'Visitor preview')}
                     </p>

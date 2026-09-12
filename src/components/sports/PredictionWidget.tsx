@@ -79,7 +79,7 @@ export const PredictionWidget: React.FC<PredictionWidgetProps> = ({
             className={`rounded-xl border px-2 py-3 text-[10px] font-bold transition-all ${
               prediction === opt.value
                 ? 'border-orange-500 bg-orange-500 text-primary-foreground'
-                : 'border-[#efe9dc] bg-[#f7f5f0] text-foreground hover:border-orange-500/30 dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
+                : 'border-border bg-muted text-foreground hover:border-orange-500/30 dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
             }`}
           >
             {opt.label}
@@ -95,7 +95,7 @@ export const PredictionWidget: React.FC<PredictionWidgetProps> = ({
       )}
 
       {submitting && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-foreground/50">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/60 dark:bg-foreground/50">
           <div className="h-7 w-7 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
         </div>
       )}

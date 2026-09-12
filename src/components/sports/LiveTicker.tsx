@@ -36,7 +36,7 @@ export const LiveTicker: React.FC<LiveTickerProps> = ({ matches }) => {
             
             <div className="flex items-center gap-4">
                <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-orange-500 transition-colors uppercase">{match.homeTeam.name}</span>
-               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-card dark:bg-black/20 rounded border border-border dark:border-border">
+               <div className="flex items-center gap-1.5 px-2 py-0.5 bg-card dark:bg-muted rounded border border-border dark:border-border">
                   <span className="text-[11px] font-bold tabular-nums text-foreground dark:text-foreground">{match.homeScore}</span>
                   <span className="text-[11px] font-bold text-muted-foreground dark:text-foreground">:</span>
                   <span className="text-[11px] font-bold tabular-nums text-foreground dark:text-foreground">{match.awayScore}</span>

@@ -25,7 +25,7 @@ export function LegalNav({ locale, path }: { locale: string; path: string }) {
             className={`rounded-full px-4 py-2 text-[12px] font-bold transition-colors ${
               active
                 ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
-                : 'bg-white/70 text-foreground ring-1 ring-[#e4d4b4] hover:text-foreground dark:bg-card/[0.04] dark:text-foreground/60 dark:ring-white/10 dark:hover:text-white'
+                : 'bg-card/70 text-foreground ring-1 ring-border hover:text-foreground dark:bg-card/[0.04] dark:text-foreground/60 dark:ring-white/10 dark:hover:text-foreground'
             }`}
           >
             <span className="me-2 text-[9px] uppercase tracking-[0.18em] opacity-50">{item.code}</span>
@@ -107,7 +107,7 @@ export function LegalDesk({
 
       <div className="legal-paper">
         <div className="legal-ticket mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <div className="mb-8 flex flex-col gap-4 border-b border-[#e6d7bb] pb-6 dark:border-border sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-8 flex flex-col gap-4 border-b border-border pb-6 dark:border-border sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <BrandMark size={40} />
               <div>
@@ -135,7 +135,7 @@ export function LegalDesk({
                     <li key={item.id}>
                       <a
                         href={`#${item.id}`}
-                        className="block text-[13px] leading-6 text-muted-foreground transition-colors hover:text-foreground dark:text-foreground/50 dark:hover:text-white"
+                        className="block text-[13px] leading-6 text-muted-foreground transition-colors hover:text-foreground dark:text-foreground/50 dark:hover:text-foreground"
                       >
                         <span className="me-2 font-mono text-[10px] text-orange-500">
                           {String(index + 1).padStart(2, '0')}
@@ -153,7 +153,7 @@ export function LegalDesk({
             </article>
           </div>
 
-          <footer className="mt-14 flex flex-col gap-3 border-t border-dashed border-[#d9c7a4] pt-6 text-[12px] text-muted-foreground dark:border-border dark:text-foreground/40 sm:flex-row sm:items-center sm:justify-between">
+          <footer className="mt-14 flex flex-col gap-3 border-t border-dashed border-border pt-6 text-[12px] text-muted-foreground dark:border-border dark:text-foreground/40 sm:flex-row sm:items-center sm:justify-between">
             <p>
               {pick(locale, 'لرسائل المكتب:', 'Desk mail:')}{' '}
               <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-orange-600">

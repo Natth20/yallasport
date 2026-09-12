@@ -585,7 +585,7 @@ function EditionChapters({
         <Link
           key={chapter.href}
           href={chapter.href}
-          className="group rounded-2xl border border-border/80 bg-white/80 px-4 py-5 transition-all hover:-translate-y-0.5 hover:border-orange-300 dark:border-border dark:bg-card/[0.03]"
+          className="group rounded-2xl border border-border/80 bg-card/80 px-4 py-5 transition-all hover:-translate-y-0.5 hover:border-orange-300 dark:border-border dark:bg-card/[0.03]"
         >
           <chapter.icon className="h-4 w-4 text-orange-500" />
           <span className="mt-4 block text-[8px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
@@ -787,7 +787,7 @@ function NewsTile({
         <span className="news-tile-folio" aria-hidden>
           {String(index).padStart(2, '0')}
         </span>
-        <span className="absolute start-3 top-3 rounded-md bg-white/92 px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-orange-600 dark:bg-foreground/90 dark:text-orange-300">
+        <span className="absolute start-3 top-3 rounded-md bg-card px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-orange-600 dark:bg-foreground/90 dark:text-orange-300">
           {deskLabel(story.category, locale)}
         </span>
       </div>

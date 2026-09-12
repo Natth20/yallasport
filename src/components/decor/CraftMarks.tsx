@@ -64,7 +64,7 @@ export function WaxSeal({
 }) {
   return (
     <div
-      className={`edition-seal flex h-[4.5rem] w-[4.5rem] rotate-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-orange-600 to-orange-800 text-center text-[9px] font-bold uppercase leading-3 tracking-[0.16em] text-white ring-4 ring-[#f3e6c8] ${className}`}
+      className={`edition-seal flex h-[4.5rem] w-[4.5rem] rotate-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 via-orange-600 to-orange-800 text-center text-[9px] font-bold uppercase leading-3 tracking-[0.16em] text-white ring-4 ring-border ${className}`}
       aria-hidden
     >
       <span className="whitespace-pre-line">{label}</span>

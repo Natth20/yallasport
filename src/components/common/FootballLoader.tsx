@@ -17,12 +17,12 @@ export function FootballLoader({
               <stop offset="100%" stopColor="#d9cfc3" />
             </radialGradient>
             <filter id="ysBallSoft" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="#c26a3a" floodOpacity="0.22" />
+              <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="#f97316" floodOpacity="0.22" />
             </filter>
           </defs>
           <circle cx="48" cy="48" r="34" fill="url(#ysBallSkin)" filter="url(#ysBallSoft)" />
-          <circle cx="48" cy="48" r="34" stroke="#1f2933" strokeWidth="2.4" />
-          <polygon points="48,30 58.2,37.4 54.4,49.2 41.6,49.2 37.8,37.4" fill="#1f2933" className="ys-loader-panel" />
+          <circle cx="48" cy="48" r="34" stroke="#0f172a" strokeWidth="2.4" />
+          <polygon points="48,30 58.2,37.4 54.4,49.2 41.6,49.2 37.8,37.4" fill="#0f172a" className="ys-loader-panel" />
           <path className="ys-loader-stitch" d="M48 30L58.2 37.4L70 28" />
           <path className="ys-loader-stitch" d="M58.2 37.4L54.4 49.2L70 58" />
           <path className="ys-loader-stitch" d="M54.4 49.2L41.6 49.2L48 68" />

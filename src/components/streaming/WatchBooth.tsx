@@ -71,7 +71,7 @@ export async function WatchBooth({
           <div className="flex min-w-0 items-center gap-3">
             <BrandMark size={36} />
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[#e8b48a]">{t('kicker')}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">{t('kicker')}</p>
               <h1 className="mt-1 text-2xl font-black tracking-[-0.03em] text-foreground dark:text-foreground sm:text-3xl">{headline}</h1>
               <p className="mt-1 text-[12px] font-semibold text-muted-foreground dark:text-foreground/55">{t('booth')}</p>
             </div>
@@ -106,7 +106,7 @@ export async function WatchBooth({
                     <span className="broadcast-snow" />
                     <PitchWatermark className="pointer-events-none absolute h-44 w-auto text-white/10" />
                     <div className="relative max-w-md px-6 text-center">
-                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#e8b48a]">{t('booth')}</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.28em] text-primary">{t('booth')}</p>
                       <p className="mt-3 text-2xl font-black text-white sm:text-3xl">{t('house_empty')}</p>
                     </div>
                   </div>
@@ -122,7 +122,7 @@ export async function WatchBooth({
             </div>
 
             <div className="watch-plaque watch-plaque-lux">
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#e8b48a]">{t('current_feed')}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">{t('current_feed')}</p>
               <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">{headline}</h1>
               <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] text-white/50">
                 {asset?.match?.league?.name ? <span>{asset.match.league.name}</span> : null}
@@ -148,7 +148,7 @@ export async function WatchBooth({
                 {asset?.match ? (
                   <Link
                     href={`/match/${asset.match.id}`}
-                    className="rounded-xl bg-[#c26a3a] px-4 py-2 text-[11px] font-black text-white hover:bg-orange-500"
+                    className="rounded-xl bg-primary px-4 py-2 text-[11px] font-black text-white hover:bg-orange-500"
                   >
                     {t('match_center')}
                   </Link>
@@ -157,7 +157,7 @@ export async function WatchBooth({
                   <Link
                     key={item.id}
                     href={`/watch/${item.id}`}
-                    className="rounded-xl border border-white/15 px-4 py-2 text-[11px] font-bold text-white/70 hover:border-[#e8b48a] hover:text-white"
+                    className="rounded-xl border border-white/15 px-4 py-2 text-[11px] font-bold text-white/70 hover:border-primary hover:text-white"
                   >
                     {item.channel?.name || t('title')}
                   </Link>
@@ -183,7 +183,7 @@ export async function WatchBooth({
                         {poss != null ? (
                           <>
                             <p className="mt-3 text-[10px] uppercase tracking-[0.16em] text-white/35">{t('possession')}</p>
-                            <p className="mt-1 text-2xl font-black tabular-nums text-[#e8b48a]">{poss}%</p>
+                            <p className="mt-1 text-2xl font-black tabular-nums text-primary">{poss}%</p>
                             <div className="watch-meter mt-2">
                               <span style={{ width: `${poss}%` }} />
                             </div>
@@ -224,7 +224,7 @@ export async function WatchBooth({
                   {upcoming.map((item) => (
                     <li key={item.id}>
                       <Link href={`/watch/${item.id}`} className="watch-ticket block px-4 py-3">
-                        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-[#c26a3a]">
+                        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">
                           {item.channel?.name || t('title')}
                         </p>
                         <p className="mt-1 text-sm font-black leading-6">
@@ -248,7 +248,7 @@ export async function WatchBooth({
                 <ul className="space-y-2">
                   {related.map((item) => (
                     <li key={item.id}>
-                      <Link href={`/news/${item.slug}`} className="watch-clipping block px-4 py-3 text-sm font-bold leading-6 text-white/80 hover:text-[#e8b48a]">
+                      <Link href={`/news/${item.slug}`} className="watch-clipping block px-4 py-3 text-sm font-bold leading-6 text-white/80 hover:text-primary">
                         {item.title}
                       </Link>
                     </li>

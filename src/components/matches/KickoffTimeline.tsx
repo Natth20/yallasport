@@ -24,7 +24,7 @@ export async function KickoffTimeline({
   const peak = Math.max(...slots.map((slot) => slot.matches.length), 1);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-white/90 dark:border-emerald-400/10 dark:bg-black/20">
+    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-card/90 dark:border-emerald-400/10 dark:bg-muted">
       <div className="flex items-end justify-between gap-3 border-b border-emerald-900/10 px-5 py-4 dark:border-border">
         <div>
           <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-orange-500">{t('kickoff_clock')}</span>
@@ -91,8 +91,8 @@ export async function KickoffTimeline({
                           active
                             ? 'hover:bg-white/10'
                             : live
-                              ? 'bg-red-50 hover:bg-card dark:bg-red-500/10 dark:hover:bg-white/5'
-                              : 'hover:bg-card dark:hover:bg-white/5'
+                              ? 'bg-red-50 hover:bg-card dark:bg-red-500/10 dark:hover:bg-muted'
+                              : 'hover:bg-card dark:hover:bg-muted'
                         }`}
                       >
                         <span

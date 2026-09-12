@@ -25,14 +25,14 @@ export async function HomeScorersWidget({ scorers }: { scorers: HomeScorerRow[] 
     <div className="salon-sheet rounded-[1.6rem] p-7">
       <div className="mb-6 flex items-center justify-between gap-3">
         <h4
-          className={`flex items-center gap-3 text-[11px] font-semibold tracking-[0.18em] text-[#c26a3a] ${en ? 'uppercase' : ''}`}
+          className={`flex items-center gap-3 text-[11px] font-semibold tracking-[0.18em] text-primary ${en ? 'uppercase' : ''}`}
         >
           <Target className="h-4 w-4" />
           {t('scorers_title')}
         </h4>
         <Link
           href="/leagues"
-          className="text-[11px] font-semibold text-muted-foreground hover:text-[#c26a3a]"
+          className="text-[11px] font-semibold text-muted-foreground hover:text-primary"
         >
           {t('scorers_cta')}
         </Link>
@@ -47,7 +47,7 @@ export async function HomeScorersWidget({ scorers }: { scorers: HomeScorerRow[] 
             <div className="flex min-w-0 items-center gap-4">
               <span
                 className={`w-5 text-[11px] font-black tabular-nums ${
-                  index < 3 ? 'text-[#c26a3a]' : 'text-muted-foreground dark:text-foreground'
+                  index < 3 ? 'text-primary' : 'text-muted-foreground dark:text-foreground'
                 }`}
               >
                 {String(index + 1).padStart(2, '0')}
@@ -61,7 +61,7 @@ export async function HomeScorersWidget({ scorers }: { scorers: HomeScorerRow[] 
                 />
               </div>
               <div className="min-w-0">
-                <span className="block truncate text-xs font-bold text-foreground group-hover:text-[#c26a3a] dark:text-foreground">
+                <span className="block truncate text-xs font-bold text-foreground group-hover:text-primary dark:text-foreground">
                   {row.player.name}
                 </span>
                 {row.teamName ? (
@@ -69,7 +69,7 @@ export async function HomeScorersWidget({ scorers }: { scorers: HomeScorerRow[] 
                 ) : null}
               </div>
             </div>
-            <span className="shrink-0 rounded-lg bg-[#f7f3ee] px-3 py-1 text-xs font-black tabular-nums dark:bg-card/[0.04]">
+            <span className="shrink-0 rounded-lg bg-muted px-3 py-1 text-xs font-black tabular-nums dark:bg-card/[0.04]">
               {row.goals}
             </span>
           </Link>

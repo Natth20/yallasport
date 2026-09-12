@@ -18,7 +18,7 @@ export async function HomeStandingsWidget({ standings }: { standings: StandingRo
 
   return (
     <div className="salon-sheet rounded-[1.6rem] p-7">
-      <h4 className="mb-6 flex items-center gap-3 text-[11px] font-semibold tracking-[0.18em] text-[#c26a3a]">
+      <h4 className="mb-6 flex items-center gap-3 text-[11px] font-semibold tracking-[0.18em] text-primary">
         <Trophy className="h-4 w-4" />
         {league ? league.name : t('standings')}
       </h4>
@@ -26,7 +26,7 @@ export async function HomeStandingsWidget({ standings }: { standings: StandingRo
         {standings.map((row) => (
           <div key={row.id} className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-4">
-               <span className={`w-5 text-[11px] font-black tabular-nums ${row.rank <= 3 ? 'text-[#c26a3a]' : 'text-muted-foreground dark:text-foreground'}`}>
+               <span className={`w-5 text-[11px] font-black tabular-nums ${row.rank <= 3 ? 'text-primary' : 'text-muted-foreground dark:text-foreground'}`}>
                  {String(row.rank).padStart(2, '0')}
                </span>
                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-card p-1.5 dark:bg-card/[0.04]">
@@ -34,12 +34,12 @@ export async function HomeStandingsWidget({ standings }: { standings: StandingRo
                </div>
                <span className="truncate text-xs font-bold text-foreground dark:text-foreground">{row.team.name}</span>
             </div>
-            <span className="rounded-lg bg-[#f7f3ee] px-3 py-1 text-xs font-black tabular-nums dark:bg-card/[0.04]">{row.points}</span>
+            <span className="rounded-lg bg-muted px-3 py-1 text-xs font-black tabular-nums dark:bg-card/[0.04]">{row.points}</span>
           </div>
         ))}
       </div>
       {league && (
-        <Link href={`/league/${league.slug}/standings`} className="mt-6 inline-block text-[11px] font-semibold text-[#c26a3a]">
+        <Link href={`/league/${league.slug}/standings`} className="mt-6 inline-block text-[11px] font-semibold text-primary">
           {t('standings')}
         </Link>
       )}

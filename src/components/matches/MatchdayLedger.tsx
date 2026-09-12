@@ -22,7 +22,7 @@ export async function MatchdayLedger({
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       {visibleCensus.length > 0 && (
-        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-black/20">
+        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
             <Trophy className="h-3.5 w-3.5 text-orange-500" />
             {t('daily_tally')}
@@ -58,7 +58,7 @@ export async function MatchdayLedger({
       )}
 
       {grounds.length > 0 && (
-        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-black/20">
+        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
             <MapPin className="h-3.5 w-3.5 text-orange-500" />
             {t('grounds')}
@@ -78,7 +78,7 @@ export async function MatchdayLedger({
       )}
 
       {broadcasts.length > 0 && (
-        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-black/20">
+        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
             <Radio className="h-3.5 w-3.5 text-orange-500" />
             {t('broadcasts')}
