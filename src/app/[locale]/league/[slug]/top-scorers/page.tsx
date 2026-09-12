@@ -1,0 +1,258 @@
+﻿import React from 'react';
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
+import { Target } from 'lucide-react';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
+import { ChapterSectionHead, LeagueChapterShell } from '@/components/leagues/LeagueChapterShell';
+import { pick } from '@/i18n/pick';
+import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
+import { prisma } from '@/lib/prisma';
+import { pageMetadata } from '@/lib/seo/site';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const locale = await getLocale();
+  const { slug } = await params;
+  const league = await prisma.league.findUnique({
+    where: { slug },
+    select: { name: true },
+  });
+  if (!league) {
+    return pageMetadata({
+      locale,
+      title: pick(locale, 'الهدافون', 'Top scorers'),
+      description: pick(locale, 'قائمة الهدافين غير متاحة.', 'Top scorers are unavailable.'),
+      path: `/league/${slug}/top-scorers`,
+      noIndex: true,
+    });
+  }
+  return pageMetadata({
+    locale,
+    title: `${pick(locale, 'هدافو', 'Top scorers in')} ${league.name}`,
+    description: `${pick(locale, 'سباق الحذاء الذهبي في', 'The golden boot race in')} ${league.name} — ${pick(locale, 'من بيانات المباريات والمصدر الحقيقي فقط.', 'from real match data and the live source only.')}`,
+    path: `/league/${slug}/top-scorers`,
+  });
+}
+
+export default async function TopScorersPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ season?: string }>;
+}) {
+  const locale = await getLocale();
+  const { slug } = await params;
+  const { season } = await searchParams;
+  const dossier = await loadLeagueDossier(slug, { season });
+  if (!dossier) notFound();
+
+  const { league, topScorers, topAssists, topCards, seasonId, seasons } = dossier;
+  const leader = topScorers[0];
+  const maxGoals = leader?.goals || 1;
+  const podium = topScorers.slice(0, 3);
+
+  const signature = [
+    topScorers.length > 0
+      ? { value: topScorers.length, label: pick(locale, 'هداف', 'Scorers') }
+      : null,
+    leader
+      ? { value: leader.goals, label: pick(locale, 'أهداف الصدارة', 'Lead goals') }
+      : null,
+    topAssists[0]
+      ? { value: topAssists[0].assists, label: pick(locale, 'أفضل صناعة', 'Top assists') }
+      : null,
+    topCards[0]
+      ? { value: topCards[0].total, label: pick(locale, 'أكثر بطاقات', 'Most cards') }
+      : null,
+  ].filter(Boolean) as Array<{ value: string | number; label: string }>;
+
+  return (
+    <LeagueChapterShell
+      locale={locale}
+      slug={slug}
+      current="scorers"
+      kicker={pick(locale, 'الحذاء الذهبي', 'Golden Boot')}
+      title={pick(locale, 'سباق الهدافين', 'Top-scorer race')}
+      subtitle={`${league.name}${seasonId ? ` · ${pick(locale, 'الموسم', 'Season')} ${seasonId}` : ''} — ${pick(locale, 'أهداف وصناعات وبطاقات من المصدر فقط.', 'goals, assists and cards from source only.')}`}
+      leagueName={league.name}
+      logoUrl={league.logoUrl}
+      seasonId={seasonId}
+      seasons={seasons}
+      seasonHref={(value) => `/league/${slug}/top-scorers?season=${value}`}
+      signature={signature}
+      ghost={leader ? String(leader.goals) : seasonId || undefined}
+    >
+      {topScorers.length === 0 && topAssists.length === 0 && topCards.length === 0 ? (
+        <div className="league-plate px-6 py-16 text-center">
+          <Target className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-4 text-sm text-muted-foreground">
+            {pick(
+              locale,
+              'لا توجد أهداف مسجّلة بأسماء لاعبين من المصدر بعد.',
+              'No named goal events are recorded from the source yet.'
+            )}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {podium.length > 0 ? (
+            <section className="lch-scorer-podium club-rise">
+              {[podium[1], podium[0], podium[2]].filter(Boolean).map((row) => (
+                <Link
+                  key={`${row.player.id}-podium`}
+                  href={`/player/${row.player.slug}`}
+                  className={`lch-scorer-podium-card${row === podium[0] ? ' is-lead' : ''}`}
+                >
+                  <span className="lch-podium-rank">{String(topScorers.indexOf(row) + 1).padStart(2, '0')}</span>
+                  {row.player.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={row.player.photoUrl} alt="" className="lch-scorer-face" />
+                  ) : (
+                    <span className="lch-scorer-face is-empty">{row.player.name.charAt(0)}</span>
+                  )}
+                  <strong>{row.player.name}</strong>
+                  <em>{row.team.name}</em>
+                  <b>{row.goals}</b>
+                  {row.assists != null ? (
+                    <span>
+                      {row.assists} {pick(locale, 'صناعة', 'ast')}
+                    </span>
+                  ) : null}
+                </Link>
+              ))}
+            </section>
+          ) : null}
+
+          <div className="lch-scorers-grid">
+            {topScorers.length > 0 ? (
+              <section className="league-plate club-rise">
+                <ChapterSectionHead
+                  folio="01"
+                  kicker={pick(locale, 'التهديف', 'Scoring')}
+                  title={pick(locale, 'قائمة الهدافين', 'Scorers list')}
+                />
+                <div className="league-scorer-stack">
+                  {topScorers.map((row, index) => (
+                    <Link
+                      key={`${row.player.id}-${row.team.id}`}
+                      href={`/player/${row.player.slug}`}
+                      className={`league-scorer-card${index === 0 ? ' is-lead' : ''}`}
+                    >
+                      <span className="league-scorer-rank">{String(index + 1).padStart(2, '0')}</span>
+                      {row.player.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={row.player.photoUrl} alt="" className="league-scorer-photo" />
+                      ) : (
+                        <span className="league-scorer-photo is-empty">{row.player.name.charAt(0)}</span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <strong>{row.player.name}</strong>
+                        <em>
+                          {row.team.name}
+                          {row.player.position ? ` · ${row.player.position}` : ''}
+                          {row.assists != null
+                            ? ` · ${row.assists} ${pick(locale, 'صناعة', 'ast')}`
+                            : ''}
+                          {index > 0
+                            ? ` · ${pick(locale, 'خلف بـ', 'behind by')} ${maxGoals - row.goals}`
+                            : ''}
+                        </em>
+                        <span className="lch-race-track" aria-hidden>
+                          <span style={{ width: `${Math.max(8, (row.goals / maxGoals) * 100)}%` }} />
+                        </span>
+                      </div>
+                      <span className="league-scorer-goals">{row.goals}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <div className="space-y-8">
+              {topAssists.length > 0 ? (
+                <section className="league-plate club-rise">
+                  <ChapterSectionHead
+                    folio="02"
+                    kicker={pick(locale, 'الصناعة', 'Creativity')}
+                    title={pick(locale, 'صناع اللعب', 'Top assists')}
+                  />
+                  <div className="league-scorer-stack">
+                    {topAssists.map((row, index) => {
+                      const body = (
+                        <>
+                          <span className="league-scorer-rank">{String(index + 1).padStart(2, '0')}</span>
+                          {row.player?.photoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={row.player.photoUrl} alt="" className="league-scorer-photo" />
+                          ) : (
+                            <span className="league-scorer-photo is-empty">{row.name.charAt(0)}</span>
+                          )}
+                          <div className="min-w-0">
+                            <strong>{row.name}</strong>
+                            {row.team ? <em>{row.team.name}</em> : null}
+                          </div>
+                          <span className="league-scorer-goals">{row.assists}</span>
+                        </>
+                      );
+                      return row.player?.slug ? (
+                        <Link
+                          key={`${row.name}-${index}`}
+                          href={`/player/${row.player.slug}`}
+                          className="league-scorer-card"
+                        >
+                          {body}
+                        </Link>
+                      ) : (
+                        <div key={`${row.name}-${index}`} className="league-scorer-card">
+                          {body}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+
+              {topCards.length > 0 ? (
+                <section className="league-plate club-rise">
+                  <ChapterSectionHead
+                    folio="03"
+                    kicker={pick(locale, 'الانضباط', 'Discipline')}
+                    title={pick(locale, 'سجل البطاقات', 'Cards ledger')}
+                  />
+                  <div className="league-scorer-stack">
+                    {topCards.map((row, index) => (
+                      <Link
+                        key={`${row.player.id}-card`}
+                        href={`/player/${row.player.slug}`}
+                        className="league-scorer-card"
+                      >
+                        <span className="league-scorer-rank">{String(index + 1).padStart(2, '0')}</span>
+                        <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-9 w-9" />
+                        <div className="min-w-0">
+                          <strong>{row.player.name}</strong>
+                          <em>
+                            <span className="lch-card-y">{row.yellow}</span>
+                            {pick(locale, ' صفراء', ' Y')} ·{' '}
+                            <span className="lch-card-r">{row.red}</span>
+                            {pick(locale, ' حمراء', ' R')}
+                          </em>
+                        </div>
+                        <span className="league-scorer-goals">{row.total}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+    </LeagueChapterShell>
+  );
+}

@@ -1,0 +1,13 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14532d"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#g)"/>
+  <!-- Corner mark only — keep center clear for hero titles -->
+  <circle cx="720" cy="70" r="28" fill="none" stroke="#f97316" stroke-width="3" opacity="0.55"/>
+  <text x="40" y="410" fill="#94a3b8" font-family="Cairo, Arial, sans-serif" font-size="18" font-weight="600">Yalla Sport</text>
+</svg>

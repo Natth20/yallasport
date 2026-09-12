@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/sports/sync",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/notifications/reminders",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/news/cron",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/system/backup",
+      "schedule": "0 0 * * 0"
+    }
+  ]
+}

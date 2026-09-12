@@ -1,0 +1,945 @@
+import { prisma } from '@/lib/prisma';
+import { isLiveSportsApi } from '@/lib/sports-data/config';
+
+async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, 280 * (attempt + 1)));
+      }
+    }
+  }
+  if (process.env.NODE_ENV !== 'production' && lastError) {
+    const message = lastError instanceof Error ? lastError.message : String(lastError);
+    if (!message.includes('max clients') && !message.includes('EMAXCONNSESSION')) {
+      console.warn('[player-dossier] query failed, using fallback', message.slice(0, 180));
+    }
+  }
+  return fallback;
+}
+
+async function wave<T extends readonly unknown[]>(
+  tasks: [...{ [K in keyof T]: () => Promise<T[K]> }]
+): Promise<{ [K in keyof T]: T[K] }> {
+  const out: unknown[] = [];
+  for (const task of tasks) {
+    out.push(await task());
+  }
+  return out as { [K in keyof T]: T[K] };
+}
+
+function apiTransport() {
+  const apiKey = process.env.SPORTS_API_KEY?.trim();
+  if (!apiKey || !isLiveSportsApi()) return null;
+  const provider = (process.env.SPORTS_API_PROVIDER || 'apisports').toLowerCase();
+  const baseUrl =
+    provider === 'rapidapi'
+      ? 'https://api-football-v1.p.rapidapi.com/v3'
+      : 'https://v3.football.api-sports.io';
+  const headers: Record<string, string> =
+    provider === 'rapidapi'
+      ? {
+          'x-rapidapi-key': apiKey,
+          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+        }
+      : { 'x-apisports-key': apiKey };
+  return { baseUrl, headers };
+}
+
+async function apiGet<T>(endpoint: string): Promise<T | null> {
+  const transport = apiTransport();
+  if (!transport) return null;
+  try {
+    const response = await fetch(`${transport.baseUrl}${endpoint}`, {
+      headers: transport.headers,
+      cache: 'no-store',
+      signal: AbortSignal.timeout(4500),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function footballSeason(now = new Date()) {
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  return month >= 6 ? year : year - 1;
+}
+
+export type PlayerSeasonBlock = {
+  team: { id: string; name: string; logoUrl: string | null };
+  league: { id: string; name: string; country: string | null; logoUrl: string | null; season: number | null };
+  games: {
+    appearances: number | null;
+    lineups: number | null;
+    minutes: number | null;
+    number: number | null;
+    position: string | null;
+    rating: string | null;
+    captain: boolean;
+  };
+  substitutes: { in: number | null; out: number | null; bench: number | null };
+  goals: { total: number | null; assists: number | null; conceded: number | null; saves: number | null };
+  shots: { total: number | null; on: number | null };
+  passes: { total: number | null; key: number | null; accuracy: number | null };
+  tackles: { total: number | null; blocks: number | null; interceptions: number | null };
+  duels: { total: number | null; won: number | null };
+  dribbles: { attempts: number | null; success: number | null };
+  fouls: { drawn: number | null; committed: number | null };
+  cards: { yellow: number | null; yellowRed: number | null; red: number | null };
+  penalty: { scored: number | null; missed: number | null; saved: number | null };
+};
+
+export type PlayerSeasonTotals = {
+  season: number | null;
+  appearances: number;
+  lineups: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  shotsOn: number;
+  passes: number;
+  keyPasses: number;
+  passAccuracy: number | null;
+  tackles: number;
+  blocks: number;
+  interceptions: number;
+  duels: number;
+  duelsWon: number;
+  dribbles: number;
+  dribbleAttempts: number;
+  foulsDrawn: number;
+  foulsCommitted: number;
+  yellow: number;
+  yellowRed: number;
+  red: number;
+  penaltiesScored: number;
+  penaltiesMissed: number;
+  saves: number;
+  conceded: number;
+  subsIn: number;
+  subsOut: number;
+  bench: number;
+  rating: string | null;
+};
+
+export type PlayerRates = {
+  goalsPer90: number | null;
+  assistsPer90: number | null;
+  shotAccuracy: number | null;
+  duelWinPct: number | null;
+  dribbleSuccessPct: number | null;
+};
+
+export type PlayerProfileBar = {
+  key: string;
+  labelAr: string;
+  labelEn: string;
+  value: number;
+  max: number;
+  suffix?: string;
+};
+
+export type PlayerDossierData = {
+  player: {
+    id: string;
+    externalId: string;
+    name: string;
+    slug: string;
+    firstName: string | null;
+    lastName: string | null;
+    photoUrl: string | null;
+    position: string | null;
+    nationality: string | null;
+    birthDate: Date | null;
+    birthPlace: string | null;
+    birthCountry: string | null;
+    age: number | null;
+    height: string | null;
+    weight: string | null;
+    injured: boolean | null;
+  };
+  currentClub: {
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+    shirtNumber: number | null;
+  } | null;
+  clubHistory: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+    shirtNumber: number | null;
+    from: Date | null;
+    to: Date | null;
+  }>;
+  apiClubs: Array<{
+    team: { id: string; name: string; logoUrl: string | null };
+    seasons: number[];
+  }>;
+  totals: {
+    goals: number;
+    penalties: number;
+    assists: number;
+    yellow: number;
+    red: number;
+    appearancesHint: number;
+  };
+  seasonBlocks: PlayerSeasonBlock[];
+  seasonLabel: number | null;
+  seasonTotals: PlayerSeasonTotals | null;
+  prevSeasonTotals: PlayerSeasonTotals | null;
+  rates: PlayerRates | null;
+  profileBars: PlayerProfileBar[];
+  trophies: Array<{ league: string; country: string | null; season: string; place: string | null }>;
+  sidelined: Array<{ type: string; start: string | null; end: string | null }>;
+  timeline: Array<{
+    id: string;
+    type: string;
+    minute: number;
+    extraMinute: number | null;
+    detail: string | null;
+    assistName: string | null;
+    match: {
+      id: string;
+      kickoffAt: Date;
+      homeScore: number | null;
+      awayScore: number | null;
+      homeTeam: { name: string; logoUrl: string | null };
+      awayTeam: { name: string; logoUrl: string | null };
+      league: { name: string; slug: string };
+    };
+  }>;
+  transfers: Array<{
+    id: string;
+    date: Date;
+    fee: string | null;
+    type: string | null;
+    fromTeam: string | null;
+    toTeam: string | null;
+  }>;
+  news: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    shortTitle?: string;
+    excerpt?: string;
+    featuredImage?: string;
+    category: string;
+    publishedAt: Date;
+    readingTime?: number;
+    sourceName?: string;
+  }>;
+};
+
+type ApiPlayerPayload = {
+  response?: Array<{
+    player?: {
+      id?: number;
+      name?: string;
+      firstname?: string;
+      lastname?: string;
+      age?: number;
+      birth?: { date?: string; place?: string; country?: string };
+      nationality?: string;
+      height?: string;
+      weight?: string;
+      injured?: boolean;
+      photo?: string;
+    };
+    statistics?: Array<{
+      team?: { id?: number; name?: string; logo?: string };
+      league?: { id?: number; name?: string; country?: string; logo?: string; season?: number };
+      games?: {
+        appearences?: number | null;
+        appearances?: number | null;
+        lineups?: number | null;
+        minutes?: number | null;
+        number?: number | null;
+        position?: string | null;
+        rating?: string | null;
+        captain?: boolean;
+      };
+      substitutes?: { in?: number | null; out?: number | null; bench?: number | null };
+      goals?: { total?: number | null; assists?: number | null; conceded?: number | null; saves?: number | null };
+      shots?: { total?: number | null; on?: number | null };
+      passes?: { total?: number | null; key?: number | null; accuracy?: number | null };
+      tackles?: { total?: number | null; blocks?: number | null; interceptions?: number | null };
+      duels?: { total?: number | null; won?: number | null };
+      dribbles?: { attempts?: number | null; success?: number | null };
+      fouls?: { drawn?: number | null; committed?: number | null };
+      cards?: { yellow?: number | null; yellowred?: number | null; red?: number | null };
+      penalty?: { scored?: number | null; missed?: number | null; saved?: number | null };
+    }>;
+  }>;
+};
+
+type ApiTransferPayload = {
+  response?: Array<{
+    transfers?: Array<{
+      date?: string;
+      type?: string;
+      teams?: { in?: { name?: string }; out?: { name?: string } };
+    }>;
+  }>;
+};
+
+type ApiTrophyPayload = {
+  response?: Array<{
+    league?: string;
+    country?: string;
+    season?: string;
+    place?: string;
+  }>;
+};
+
+type ApiTeamsPayload = {
+  response?: Array<{
+    team?: { id?: number; name?: string; logo?: string };
+    seasons?: number[];
+  }>;
+};
+
+type ApiSidelinedPayload = {
+  response?: Array<{ type?: string; start?: string; end?: string }>;
+};
+
+type ApiStatRow = NonNullable<
+  NonNullable<NonNullable<ApiPlayerPayload['response']>[number]['statistics']>[number]
+>;
+
+function mapSeasonBlock(row: ApiStatRow): PlayerSeasonBlock | null {
+  if (!row?.team?.name || !row.league?.name) return null;
+  const appearances = row.games?.appearences ?? row.games?.appearances ?? null;
+  return {
+    team: {
+      id: String(row.team.id || ''),
+      name: row.team.name,
+      logoUrl: row.team.logo || null,
+    },
+    league: {
+      id: String(row.league.id || ''),
+      name: row.league.name,
+      country: row.league.country || null,
+      logoUrl: row.league.logo || null,
+      season: row.league.season ?? null,
+    },
+    games: {
+      appearances,
+      lineups: row.games?.lineups ?? null,
+      minutes: row.games?.minutes ?? null,
+      number: row.games?.number ?? null,
+      position: row.games?.position ?? null,
+      rating: row.games?.rating ?? null,
+      captain: Boolean(row.games?.captain),
+    },
+    substitutes: {
+      in: row.substitutes?.in ?? null,
+      out: row.substitutes?.out ?? null,
+      bench: row.substitutes?.bench ?? null,
+    },
+    goals: {
+      total: row.goals?.total ?? null,
+      assists: row.goals?.assists ?? null,
+      conceded: row.goals?.conceded ?? null,
+      saves: row.goals?.saves ?? null,
+    },
+    shots: { total: row.shots?.total ?? null, on: row.shots?.on ?? null },
+    passes: {
+      total: row.passes?.total ?? null,
+      key: row.passes?.key ?? null,
+      accuracy: row.passes?.accuracy ?? null,
+    },
+    tackles: {
+      total: row.tackles?.total ?? null,
+      blocks: row.tackles?.blocks ?? null,
+      interceptions: row.tackles?.interceptions ?? null,
+    },
+    duels: { total: row.duels?.total ?? null, won: row.duels?.won ?? null },
+    dribbles: {
+      attempts: row.dribbles?.attempts ?? null,
+      success: row.dribbles?.success ?? null,
+    },
+    fouls: {
+      drawn: row.fouls?.drawn ?? null,
+      committed: row.fouls?.committed ?? null,
+    },
+    cards: {
+      yellow: row.cards?.yellow ?? null,
+      yellowRed: row.cards?.yellowred ?? null,
+      red: row.cards?.red ?? null,
+    },
+    penalty: {
+      scored: row.penalty?.scored ?? null,
+      missed: row.penalty?.missed ?? null,
+      saved: row.penalty?.saved ?? null,
+    },
+  };
+}
+
+function sumSeason(blocks: PlayerSeasonBlock[], seasonHint: number | null = null): PlayerSeasonTotals | null {
+  if (blocks.length === 0) return null;
+  let appearances = 0;
+  let lineups = 0;
+  let minutes = 0;
+  let goals = 0;
+  let assists = 0;
+  let shots = 0;
+  let shotsOn = 0;
+  let passes = 0;
+  let keyPasses = 0;
+  let passAccSum = 0;
+  let passAccCount = 0;
+  let tackles = 0;
+  let tackleBlocks = 0;
+  let interceptions = 0;
+  let duels = 0;
+  let duelsWon = 0;
+  let dribbles = 0;
+  let dribbleAttempts = 0;
+  let foulsDrawn = 0;
+  let foulsCommitted = 0;
+  let yellow = 0;
+  let yellowRed = 0;
+  let red = 0;
+  let penaltiesScored = 0;
+  let penaltiesMissed = 0;
+  let saves = 0;
+  let conceded = 0;
+  let subsIn = 0;
+  let subsOut = 0;
+  let bench = 0;
+  const ratings: number[] = [];
+  const seasons = new Set<number>();
+
+  for (const block of blocks) {
+    if (block.league.season != null) seasons.add(block.league.season);
+    appearances += block.games.appearances || 0;
+    lineups += block.games.lineups || 0;
+    minutes += block.games.minutes || 0;
+    goals += block.goals.total || 0;
+    assists += block.goals.assists || 0;
+    shots += block.shots.total || 0;
+    shotsOn += block.shots.on || 0;
+    passes += block.passes.total || 0;
+    keyPasses += block.passes.key || 0;
+    if (block.passes.accuracy != null) {
+      passAccSum += block.passes.accuracy;
+      passAccCount += 1;
+    }
+    tackles += block.tackles.total || 0;
+    tackleBlocks += block.tackles.blocks || 0;
+    interceptions += block.tackles.interceptions || 0;
+    duels += block.duels.total || 0;
+    duelsWon += block.duels.won || 0;
+    dribbles += block.dribbles.success || 0;
+    dribbleAttempts += block.dribbles.attempts || 0;
+    foulsDrawn += block.fouls.drawn || 0;
+    foulsCommitted += block.fouls.committed || 0;
+    yellow += block.cards.yellow || 0;
+    yellowRed += block.cards.yellowRed || 0;
+    red += block.cards.red || 0;
+    penaltiesScored += block.penalty.scored || 0;
+    penaltiesMissed += block.penalty.missed || 0;
+    saves += block.goals.saves || 0;
+    conceded += block.goals.conceded || 0;
+    subsIn += block.substitutes.in || 0;
+    subsOut += block.substitutes.out || 0;
+    bench += block.substitutes.bench || 0;
+    const rating = block.games.rating ? Number(block.games.rating) : NaN;
+    if (!Number.isNaN(rating) && rating > 0) ratings.push(rating);
+  }
+
+  return {
+    season: seasonHint ?? (seasons.size === 1 ? [...seasons][0] : null),
+    appearances,
+    lineups,
+    minutes,
+    goals,
+    assists,
+    shots,
+    shotsOn,
+    passes,
+    keyPasses,
+    passAccuracy: passAccCount > 0 ? Math.round(passAccSum / passAccCount) : null,
+    tackles,
+    blocks: tackleBlocks,
+    interceptions,
+    duels,
+    duelsWon,
+    dribbles,
+    dribbleAttempts,
+    foulsDrawn,
+    foulsCommitted,
+    yellow,
+    yellowRed,
+    red,
+    penaltiesScored,
+    penaltiesMissed,
+    saves,
+    conceded,
+    subsIn,
+    subsOut,
+    bench,
+    rating: ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2) : null,
+  };
+}
+
+function buildRates(totals: PlayerSeasonTotals): PlayerRates {
+  const per90 = (value: number) =>
+    totals.minutes > 0 ? Number(((value * 90) / totals.minutes).toFixed(2)) : null;
+  return {
+    goalsPer90: totals.goals > 0 || totals.minutes > 0 ? per90(totals.goals) : null,
+    assistsPer90: totals.assists > 0 || totals.minutes > 0 ? per90(totals.assists) : null,
+    shotAccuracy:
+      totals.shots > 0 ? Math.round((totals.shotsOn / totals.shots) * 100) : null,
+    duelWinPct: totals.duels > 0 ? Math.round((totals.duelsWon / totals.duels) * 100) : null,
+    dribbleSuccessPct:
+      totals.dribbleAttempts > 0
+        ? Math.round((totals.dribbles / totals.dribbleAttempts) * 100)
+        : null,
+  };
+}
+
+function buildProfileBars(totals: PlayerSeasonTotals): PlayerProfileBar[] {
+  const candidates: PlayerProfileBar[] = [
+    {
+      key: 'goals',
+      labelAr: 'الأهداف',
+      labelEn: 'Goals',
+      value: totals.goals,
+      max: Math.max(totals.goals, 10),
+    },
+    {
+      key: 'assists',
+      labelAr: 'الصناعات',
+      labelEn: 'Assists',
+      value: totals.assists,
+      max: Math.max(totals.assists, 8),
+    },
+    {
+      key: 'shots',
+      labelAr: 'التسديدات',
+      labelEn: 'Shots',
+      value: totals.shots,
+      max: Math.max(totals.shots, 30),
+    },
+    {
+      key: 'shotsOn',
+      labelAr: 'على المرمى',
+      labelEn: 'Shots on',
+      value: totals.shotsOn,
+      max: Math.max(totals.shotsOn, 20),
+    },
+    {
+      key: 'key',
+      labelAr: 'تمريرات حاسمة',
+      labelEn: 'Key passes',
+      value: totals.keyPasses,
+      max: Math.max(totals.keyPasses, 20),
+    },
+    {
+      key: 'tackles',
+      labelAr: 'قطع الكرات',
+      labelEn: 'Tackles',
+      value: totals.tackles,
+      max: Math.max(totals.tackles, 20),
+    },
+    {
+      key: 'duels',
+      labelAr: 'ثنائيات فائزة',
+      labelEn: 'Duels won',
+      value: totals.duelsWon,
+      max: Math.max(totals.duelsWon, 40),
+    },
+    {
+      key: 'dribbles',
+      labelAr: 'مراوغات ناجحة',
+      labelEn: 'Dribbles',
+      value: totals.dribbles,
+      max: Math.max(totals.dribbles, 20),
+    },
+    {
+      key: 'minutes',
+      labelAr: 'الدقائق',
+      labelEn: 'Minutes',
+      value: totals.minutes,
+      max: Math.max(totals.minutes, 900),
+    },
+  ];
+  return candidates.filter((row) => row.value > 0);
+}
+
+export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData | null> {
+  const playerRow = await soft(
+    () =>
+      prisma.player.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          externalId: true,
+          name: true,
+          slug: true,
+          photoUrl: true,
+          position: true,
+          nationality: true,
+          birthDate: true,
+        },
+      }),
+    null
+  );
+
+  if (!playerRow) return null;
+
+  const season = footballSeason();
+  const ext = encodeURIComponent(playerRow.externalId);
+
+  const [
+    teams,
+    events,
+    transfersDb,
+    newsRows,
+    apiPlayer,
+    apiPlayerPrev,
+    apiTransfers,
+    apiTrophies,
+    apiTeams,
+    apiSidelined,
+  ] = await wave([
+    () =>
+      soft(
+        () =>
+          prisma.playerTeam.findMany({
+            where: { playerId: playerRow.id },
+            orderBy: [{ to: 'desc' }, { from: 'desc' }],
+            select: {
+              shirtNumber: true,
+              from: true,
+              to: true,
+              team: { select: { id: true, name: true, slug: true, logoUrl: true } },
+            },
+          }),
+        []
+      ),
+    () =>
+      soft(
+        () =>
+          prisma.matchEvent.findMany({
+            where: {
+              OR: [{ playerId: playerRow.id }, { playerName: playerRow.name }],
+              type: { in: ['GOAL', 'PENALTY', 'OWN_GOAL', 'YELLOW_CARD', 'RED_CARD', 'SUBSTITUTION'] },
+            },
+            orderBy: [{ match: { kickoffAt: 'desc' } }, { minute: 'desc' }],
+            take: 30,
+            select: {
+              id: true,
+              type: true,
+              minute: true,
+              extraMinute: true,
+              detail: true,
+              assistName: true,
+              match: {
+                select: {
+                  id: true,
+                  kickoffAt: true,
+                  homeScore: true,
+                  awayScore: true,
+                  homeTeam: { select: { name: true, logoUrl: true } },
+                  awayTeam: { select: { name: true, logoUrl: true } },
+                  league: { select: { name: true, slug: true } },
+                },
+              },
+            },
+          }),
+        []
+      ),
+    () =>
+      soft(
+        () =>
+          prisma.transfer.findMany({
+            where: { playerId: playerRow.id },
+            orderBy: { date: 'desc' },
+            take: 12,
+            select: { id: true, date: true, fee: true, fromTeam: true, toTeam: true },
+          }),
+        []
+      ),
+    () =>
+      soft(
+        () =>
+          prisma.news.findMany({
+            where: {
+              status: 'PUBLISHED',
+              OR: [
+                { title: { contains: playerRow.name } },
+                { content: { contains: playerRow.name } },
+                { tags: { has: playerRow.name } },
+                {
+                  entityLinks: {
+                    some: { entityType: 'PLAYER', entityId: playerRow.id },
+                  },
+                },
+              ],
+            },
+            orderBy: { publishedAt: 'desc' },
+            take: 8,
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              shortTitle: true,
+              excerpt: true,
+              featuredImage: true,
+              category: true,
+              publishedAt: true,
+              readingTime: true,
+              sourceName: true,
+            },
+          }),
+        []
+      ),
+    () => soft(() => apiGet<ApiPlayerPayload>(`/players?id=${ext}&season=${season}`), null),
+    () => soft(() => apiGet<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 1}`), null),
+    () => soft(() => apiGet<ApiTransferPayload>(`/transfers?player=${ext}`), null),
+    () => soft(() => apiGet<ApiTrophyPayload>(`/trophies?player=${ext}`), null),
+    () => soft(() => apiGet<ApiTeamsPayload>(`/players/teams?player=${ext}`), null),
+    () => soft(() => apiGet<ApiSidelinedPayload>(`/sidelined?player=${ext}`), null),
+  ]);
+
+  const currentBlocks = (apiPlayer?.response?.[0]?.statistics || [])
+    .map((row) => mapSeasonBlock(row))
+    .filter(Boolean) as PlayerSeasonBlock[];
+  const prevBlocks = (apiPlayerPrev?.response?.[0]?.statistics || [])
+    .map((row) => mapSeasonBlock(row))
+    .filter(Boolean) as PlayerSeasonBlock[];
+
+  // Prefer current season for profile, but keep previous competition cards when current is thin.
+  const seasonBlocks = (
+    currentBlocks.length > 0
+      ? [...currentBlocks, ...prevBlocks.filter((b) => b.league.season !== season)]
+      : prevBlocks
+  ).sort((a, b) => {
+    const seasonDiff = (b.league.season || 0) - (a.league.season || 0);
+    if (seasonDiff !== 0) return seasonDiff;
+    return (b.games.appearances || 0) - (a.games.appearances || 0);
+  });
+
+  const apiProfile = apiPlayer?.response?.[0]?.player || apiPlayerPrev?.response?.[0]?.player;
+
+  const birthDate =
+    playerRow.birthDate ||
+    (apiProfile?.birth?.date ? new Date(apiProfile.birth.date) : null);
+  const age =
+    typeof apiProfile?.age === 'number'
+      ? apiProfile.age
+      : birthDate
+        ? Math.max(15, new Date().getFullYear() - birthDate.getFullYear())
+        : null;
+
+  if (apiProfile) {
+    const patch: {
+      photoUrl?: string;
+      nationality?: string;
+      position?: string;
+      birthDate?: Date;
+    } = {};
+    if (!playerRow.photoUrl && apiProfile.photo) patch.photoUrl = apiProfile.photo;
+    if (!playerRow.nationality && apiProfile.nationality) patch.nationality = apiProfile.nationality;
+    if (!playerRow.position && seasonBlocks[0]?.games.position) {
+      patch.position = seasonBlocks[0].games.position;
+    }
+    if (!playerRow.birthDate && birthDate && !Number.isNaN(birthDate.getTime())) {
+      patch.birthDate = birthDate;
+    }
+    if (Object.keys(patch).length > 0) {
+      await soft(() => prisma.player.update({ where: { id: playerRow.id }, data: patch }), null);
+    }
+  }
+
+  const current = teams.find((row) => row.to == null) || teams[0] || null;
+  const clubHistory = teams.map((row) => ({
+    id: row.team.id,
+    name: row.team.name,
+    slug: row.team.slug,
+    logoUrl: row.team.logoUrl,
+    shirtNumber: row.shirtNumber,
+    from: row.from,
+    to: row.to,
+  }));
+
+  const apiClubs =
+    apiTeams?.response
+      ?.map((row) => {
+        if (!row.team?.name) return null;
+        return {
+          team: {
+            id: String(row.team.id || ''),
+            name: row.team.name,
+            logoUrl: row.team.logo || null,
+          },
+          seasons: Array.isArray(row.seasons) ? row.seasons : [],
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 16) || [];
+
+  let goals = 0;
+  let penalties = 0;
+  let yellow = 0;
+  let red = 0;
+  for (const event of events) {
+    if (event.type === 'GOAL') goals += 1;
+    if (event.type === 'PENALTY') {
+      goals += 1;
+      penalties += 1;
+    }
+    if (event.type === 'YELLOW_CARD') yellow += 1;
+    if (event.type === 'RED_CARD') red += 1;
+  }
+
+  const focusBlocks = currentBlocks.length > 0 ? currentBlocks : prevBlocks;
+  const focusSeason =
+    focusBlocks[0]?.league.season ?? (currentBlocks.length > 0 ? season : season - 1);
+  const seasonTotals = sumSeason(focusBlocks, focusSeason);
+  const prevSeasonTotals =
+    currentBlocks.length > 0 && prevBlocks.length > 0
+      ? sumSeason(prevBlocks, season - 1)
+      : null;
+  const rates = seasonTotals ? buildRates(seasonTotals) : null;
+
+  const assists = seasonTotals?.assists || 0;
+  if (seasonTotals) {
+    if (goals === 0 && seasonTotals.goals > 0) goals = seasonTotals.goals;
+    if (penalties === 0 && seasonTotals.penaltiesScored > 0) penalties = seasonTotals.penaltiesScored;
+    if (yellow === 0 && seasonTotals.yellow > 0) yellow = seasonTotals.yellow;
+    if (red === 0 && seasonTotals.red > 0) red = seasonTotals.red;
+  }
+
+  const profileBars = seasonTotals ? buildProfileBars(seasonTotals) : [];
+  const shirtFromApi = focusBlocks.find((b) => b.games.number != null)?.games.number ?? null;
+
+  const trophies =
+    apiTrophies?.response
+      ?.map((row) => {
+        if (!row.league || !row.season) return null;
+        return {
+          league: row.league,
+          country: row.country || null,
+          season: row.season,
+          place: row.place || null,
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 24) || [];
+
+  const sidelined =
+    apiSidelined?.response
+      ?.map((row) => {
+        if (!row.type) return null;
+        return {
+          type: row.type,
+          start: row.start || null,
+          end: row.end || null,
+        };
+      })
+      .filter(Boolean)
+      .slice(0, 14) || [];
+
+  const apiTransferRows =
+    apiTransfers?.response?.[0]?.transfers?.map((row, index) => ({
+      id: `api-${index}-${row.date || index}`,
+      date: row.date ? new Date(row.date) : new Date(0),
+      fee: null as string | null,
+      type: row.type || null,
+      fromTeam: row.teams?.out?.name || null,
+      toTeam: row.teams?.in?.name || null,
+    })) || [];
+
+  const transfers =
+    transfersDb.length > 0
+      ? transfersDb.map((row) => ({ ...row, type: row.fee || null }))
+      : apiTransferRows.filter((row) => !Number.isNaN(row.date.getTime()) && row.date.getTime() > 0);
+
+  const news = newsRows
+    .filter((row): row is typeof row & { publishedAt: Date } => Boolean(row.publishedAt))
+    .map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      shortTitle: row.shortTitle ?? undefined,
+      excerpt: row.excerpt ?? undefined,
+      featuredImage: row.featuredImage ?? undefined,
+      category: row.category,
+      publishedAt: row.publishedAt,
+      readingTime: row.readingTime || undefined,
+      sourceName: row.sourceName ?? undefined,
+    }));
+
+  return {
+    player: {
+      id: playerRow.id,
+      externalId: playerRow.externalId,
+      name: playerRow.name,
+      slug: playerRow.slug,
+      firstName: apiProfile?.firstname || null,
+      lastName: apiProfile?.lastname || null,
+      photoUrl: playerRow.photoUrl || apiProfile?.photo || null,
+      position: playerRow.position || seasonBlocks[0]?.games.position || null,
+      nationality: playerRow.nationality || apiProfile?.nationality || null,
+      birthDate,
+      birthPlace: apiProfile?.birth?.place || null,
+      birthCountry: apiProfile?.birth?.country || null,
+      age,
+      height: apiProfile?.height || null,
+      weight: apiProfile?.weight || null,
+      injured: typeof apiProfile?.injured === 'boolean' ? apiProfile.injured : null,
+    },
+    currentClub: current
+      ? {
+          id: current.team.id,
+          name: current.team.name,
+          slug: current.team.slug,
+          logoUrl: current.team.logoUrl,
+          shirtNumber: current.shirtNumber ?? shirtFromApi,
+        }
+      : null,
+    clubHistory,
+    apiClubs: apiClubs as PlayerDossierData['apiClubs'],
+    totals: {
+      goals,
+      penalties,
+      assists,
+      yellow,
+      red,
+      appearancesHint: seasonTotals?.appearances || events.length,
+    },
+    seasonBlocks,
+    seasonLabel: focusSeason,
+    seasonTotals,
+    prevSeasonTotals,
+    rates,
+    profileBars,
+    trophies: trophies as PlayerDossierData['trophies'],
+    sidelined: sidelined as PlayerDossierData['sidelined'],
+    timeline: events.map((event) => ({
+      id: event.id,
+      type: event.type,
+      minute: event.minute,
+      extraMinute: event.extraMinute,
+      detail: event.detail,
+      assistName: event.assistName,
+      match: event.match,
+    })),
+    transfers,
+    news,
+  };
+}

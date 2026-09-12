@@ -1,0 +1,771 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Match {
+  id             String             @id @default(cuid())
+  externalId     String             @unique
+  homeTeamId     String
+  awayTeamId     String
+  homeTeam       Team               @relation("HomeMatches", fields: [homeTeamId], references: [id])
+  awayTeam       Team               @relation("AwayMatches", fields: [awayTeamId], references: [id])
+  leagueId       String
+  league         League             @relation(fields: [leagueId], references: [id])
+  seasonId       String
+  round          String?
+  status         MatchStatus
+  homeScore      Int?
+  awayScore      Int?
+  minute         Int?
+  kickoffAt      DateTime
+  venueId        String?
+  venue          Venue?             @relation(fields: [venueId], references: [id])
+  refereeId      String?
+  referee        Referee?           @relation(fields: [refereeId], references: [id])
+  liveCommentary Json? // Array of { minute, text, type }
+  lastSyncedAt   DateTime
+  events         MatchEvent[]
+  lineups        MatchLineup[]
+  statistics     MatchStatistic[]
+  channels       MatchChannel[]
+  polls          MatchPoll[]
+  predictions    Prediction[]
+  comments       Comment[]
+  notifications  Notification[] // Track notifications sent for this match
+  commentators   MatchCommentator[]
+  reminders      MatchReminder[]
+  streamAssets   StreamAsset[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([status, kickoffAt, leagueId])
+}
+
+model MatchPoll {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id])
+  question  String
+  options   Json // { "Home Wins": 0, "Draw": 0, "Away Wins": 0 }
+  createdAt DateTime @default(now())
+}
+
+enum MatchStatus {
+  NOT_STARTED
+  LIVE
+  HALFTIME
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
+model MatchEvent {
+  id          String  @id @default(cuid())
+  sourceKey   String? @unique
+  matchId     String
+  match       Match   @relation(fields: [matchId], references: [id])
+  type        String // GOAL | YELLOW_CARD | RED_CARD | SUBSTITUTION
+  minute      Int
+  extraMinute Int?
+  playerId    String?
+  player      Player? @relation(fields: [playerId], references: [id])
+  playerName  String?
+  assistName  String?
+  teamId      String
+  detail      String?
+
+  @@index([matchId, minute])
+}
+
+model MatchLineup {
+  id          String   @id @default(cuid())
+  matchId     String
+  match       Match    @relation(fields: [matchId], references: [id])
+  teamId      String
+  formation   String?
+  playersJson Json
+  isPredicted Boolean  @default(false)
+  source      String?
+  updatedAt   DateTime @updatedAt
+
+  @@unique([matchId, teamId, isPredicted])
+}
+
+model MatchStatistic {
+  id             String @id @default(cuid())
+  matchId        String
+  match          Match  @relation(fields: [matchId], references: [id])
+  teamId         String
+  possession     Int?
+  shotsOnTarget  Int?
+  shotsOffTarget Int?
+  corners        Int?
+  offsides       Int?
+  fouls          Int?
+
+  @@unique([matchId, teamId])
+}
+
+model MatchCommentator {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  name      String
+  role      String   @default("MAIN")
+  language  String?
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, name])
+}
+
+model Team {
+  id          String       @id @default(cuid())
+  externalId  String       @unique
+  name        String
+  slug        String       @unique
+  logoUrl     String?
+  founded     Int?
+  venueId     String?
+  venue       Venue?       @relation(fields: [venueId], references: [id])
+  coachId     String?      @unique
+  coach       Coach?       @relation("TeamCoach", fields: [coachId], references: [id])
+  bio         String? // نبذة تحريرية أصلية
+  players     PlayerTeam[]
+  homeMatches Match[]      @relation("HomeMatches")
+  awayMatches Match[]      @relation("AwayMatches")
+  coachFor    Coach?       @relation("CurrentTeam")
+  standings   Standing[]
+}
+
+model Player {
+  id          String       @id @default(cuid())
+  externalId  String       @unique
+  name        String
+  slug        String       @unique
+  photoUrl    String?
+  position    String?
+  nationality String?
+  birthDate   DateTime?
+  teams       PlayerTeam[]
+  transfers   Transfer[]
+  events      MatchEvent[]
+}
+
+model PlayerTeam {
+  id          String    @id @default(cuid())
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id])
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id])
+  shirtNumber Int?
+  from        DateTime?
+  to          DateTime?
+}
+
+model Transfer {
+  id       String   @id @default(cuid())
+  playerId String
+  player   Player   @relation(fields: [playerId], references: [id])
+  fromTeam String?
+  toTeam   String?
+  date     DateTime
+  fee      String?
+}
+
+model Coach {
+  id            String        @id @default(cuid())
+  name          String
+  bio           String?
+  photoUrl      String?
+  nationality   String?
+  birthDate     DateTime?
+  careerHistory Json? // Array of { club, role, from, to, matches, winRate }
+  currentTeamId String?       @unique
+  currentTeam   Team?         @relation("CurrentTeam", fields: [currentTeamId], references: [id])
+  team          Team?         @relation("TeamCoach")
+  trophies      CoachTrophy[]
+}
+
+model CoachTrophy {
+  id        String   @id @default(cuid())
+  coachId   String
+  coach     Coach    @relation(fields: [coachId], references: [id])
+  title     String // e.g., UEFA Champions League
+  season    String // e.g., 2021/22
+  teamName  String? // Club they won it with
+  createdAt DateTime @default(now())
+}
+
+model League {
+  id         String     @id @default(cuid())
+  externalId String     @unique
+  name       String
+  slug       String     @unique
+  logoUrl    String?
+  country    String?
+  matches    Match[]
+  standings  Standing[]
+}
+
+model Standing {
+  id           String @id @default(cuid())
+  leagueId     String
+  league       League @relation(fields: [leagueId], references: [id])
+  seasonId     String
+  teamId       String
+  team         Team   @relation(fields: [teamId], references: [id])
+  rank         Int
+  played       Int
+  won          Int
+  drawn        Int
+  lost         Int
+  goalsFor     Int
+  goalsAgainst Int
+  points       Int
+
+  @@unique([leagueId, seasonId, teamId])
+}
+
+model Venue {
+  id       String  @id @default(cuid())
+  name     String
+  city     String?
+  capacity Int?
+  teams    Team[]
+  matches  Match[]
+}
+
+model Referee {
+  id      String  @id @default(cuid())
+  name    String
+  matches Match[]
+}
+
+model Channel {
+  id           String         @id @default(cuid())
+  name         String
+  logoUrl      String?
+  country      String?
+  kind         ChannelKind    @default(GENERAL)
+  matches      MatchChannel[]
+  streamAssets StreamAsset[]
+}
+
+enum ChannelKind {
+  SPORTS
+  NEWS
+  MOVIE
+  SERIES
+  DOCUMENTARY
+  GENERAL
+}
+
+model MatchChannel {
+  id        String  @id @default(cuid())
+  matchId   String
+  match     Match   @relation(fields: [matchId], references: [id])
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id])
+
+  @@unique([matchId, channelId])
+}
+
+model News {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  title          String
+  shortTitle     String?
+  excerpt        String?
+  content        String
+  featuredImage  String?
+  ogImage        String?
+  authorId       String
+  author         User       @relation("AuthoredNews", fields: [authorId], references: [id])
+  editorId       String?
+  editor         User?      @relation("EditedNews", fields: [editorId], references: [id])
+  category       String
+  tags           String[]
+  sourceName     String?
+  sourceUrl      String?
+  status         NewsStatus @default(DRAFT)
+  publishedAt    DateTime?
+  updatedAt      DateTime   @updatedAt
+  seoTitle       String?
+  seoDescription String?
+  canonical      String?
+  views          Int        @default(0)
+  readingTime    Int        @default(0)
+  featured       Boolean    @default(false)
+  breaking       Boolean    @default(false)
+  aiAssisted     Boolean    @default(false)
+  isPremium      Boolean    @default(false)
+  publishAt      DateTime? // Scheduled publishing
+  isDuplicate    Boolean    @default(false)
+  originalId     String? // Link to original if duplicate
+  sourceLocale   String     @default("ar")
+  createdAt      DateTime   @default(now())
+
+  // Provenance Log
+  provenance Json? // JSON array of edits: { timestamp, userId, action, diff }
+  comments      Comment[]
+  translations  NewsTranslation[]
+  entityLinks   NewsEntityLink[]
+
+  @@index([status, publishedAt])
+}
+
+enum NewsStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  name               String?
+  emailVerified      DateTime?
+  image              String?
+  favoriteTeamId     String?
+  notificationPrefs  Json? // { goal: boolean, matchStart: boolean, matchEnd: boolean, breakingNews: boolean }
+  points             Int                @default(0)
+  badges             Json? // Array of { type: string, awardedAt: Date }
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  favorites          UserFavorite[]
+  predictions        Prediction[]
+  comments           Comment[]
+  subscriptions      Subscription[]
+  role               UserRole           @default(USER)
+  newsAuthored       News[]             @relation("AuthoredNews")
+  newsEdited         News[]             @relation("EditedNews")
+  notifications      Notification[]
+  pushSubscriptions  PushSubscription[]
+  matchReminders     MatchReminder[]
+  deskMessages       DeskMessage[]
+  accounts           Account[]
+  sessions           Session[]
+  createdAt          DateTime           @default(now())
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MatchReminder {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, matchId])
+  @@index([matchId])
+}
+
+enum SubscriptionStatus {
+  FREE
+  PREMIUM
+  VIP
+}
+
+model Prediction {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  matchId          String
+  match            Match    @relation(fields: [matchId], references: [id])
+  predictedOutcome Outcome // HOME_WIN | AWAY_WIN | DRAW
+  isCorrect        Boolean?
+  pointsAwarded    Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, matchId])
+}
+
+enum Outcome {
+  HOME_WIN
+  AWAY_WIN
+  DRAW
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  matchId   String?
+  match     Match?    @relation(fields: [matchId], references: [id])
+  newsId    String?
+  news      News?     @relation(fields: [newsId], references: [id])
+  parentId  String?
+  replies   Comment[] @relation("CommentReplies")
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id])
+  tier      SubscriptionStatus
+  startDate DateTime           @default(now())
+  endDate   DateTime?
+  status    String // ACTIVE | EXPIRED | CANCELLED
+  paymentId String? // Reference to payment gateway transaction
+}
+
+enum UserRole {
+  USER
+  SUPER_ADMIN
+  EDITOR
+  NEWS_EDITOR
+  MODERATOR
+  CONTENT_MANAGER
+  ADS_MANAGER
+}
+
+model UserFavorite {
+  id         String @id @default(cuid())
+  userId     String
+  user       User   @relation(fields: [userId], references: [id])
+  entityType String
+  entityId   String
+
+  @@unique([userId, entityType, entityId])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id])
+  matchId    String?
+  match      Match?           @relation(fields: [matchId], references: [id])
+  type       NotificationType
+  entityType String
+  entityId   String
+  payload    Json
+  sentAt     DateTime         @default(now())
+}
+
+enum NotificationType {
+  GOAL
+  MATCH_START
+  MATCH_END
+  BREAKING_NEWS
+}
+
+model AdSlot {
+  id          String  @id @default(cuid())
+  placement   String
+  isActive    Boolean @default(true)
+  impressions Int     @default(0)
+  clicks      Int     @default(0)
+}
+
+model Show {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String?
+  posterUrl   String?
+  backdropUrl String?
+  type        ShowType // MOVIE | SERIES | DOCUMENTARY
+  releaseYear Int?
+  rating      String? // e.g., PG-13, G, 18+
+  status      String    @default("DRAFT") // DRAFT | PUBLISHED
+  episodes    Episode[]
+  categories  String[]
+  isPremium   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, type])
+}
+
+enum ShowType {
+  MOVIE
+  SERIES
+  DOCUMENTARY
+}
+
+model Episode {
+  id            String   @id @default(cuid())
+  showId        String
+  show          Show     @relation(fields: [showId], references: [id])
+  seasonNumber  Int?
+  episodeNumber Int?
+  title         String?
+  description   String?
+  duration      Int? // in minutes
+  streamUrl     String? // Empty placeholder as per rules
+  drmType       String?
+  isFree         Boolean       @default(true)
+  streamAssets   StreamAsset[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  createdAt  DateTime @default(now())
+}
+
+model SystemAlert {
+  id         String        @id @default(cuid())
+  type       AlertType
+  severity   AlertSeverity @default(MEDIUM)
+  message    String
+  metadata   Json?
+  isResolved Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  resolvedAt DateTime?
+}
+
+enum AlertType {
+  CRON_FAILURE
+  API_ERROR
+  DATABASE_ERROR
+  SECURITY_BREACH
+  BACKUP_FAILED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model License {
+  id                String        @id @default(cuid())
+  type              LicenseType
+  provider          String? // Name of the licensing entity
+  scope             String // League/Competition/Season
+  territory         String[] // Geographic restrictions
+  startDate         DateTime
+  endDate           DateTime?
+  status            LicenseStatus @default(PENDING)
+  contractReference String? // External contract number
+  apiCredentialsRef String? // Reference name for Env Var — never store secrets here
+  streamAssets      StreamAsset[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+enum TranslationStatus {
+  DRAFT
+  APPROVED
+  REJECTED
+}
+
+enum TranslationSource {
+  HUMAN
+  MACHINE
+  EDITORIAL
+}
+
+model NewsTranslation {
+  id             String             @id @default(cuid())
+  newsId         String
+  news           News               @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  locale         String
+  title          String
+  excerpt        String?
+  content        String
+  seoTitle       String?
+  seoDescription String?
+  status         TranslationStatus  @default(DRAFT)
+  source         TranslationSource  @default(MACHINE)
+  providerKey    String?
+  reviewerId     String?
+  reviewedAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([newsId, locale])
+  @@index([locale, status])
+}
+
+model EntityTranslation {
+  id          String            @id @default(cuid())
+  entityType  String
+  entityId    String
+  locale      String
+  name        String
+  description String?
+  status      TranslationStatus @default(DRAFT)
+  source      TranslationSource @default(MACHINE)
+  providerKey String?
+  reviewerId  String?
+  reviewedAt  DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([entityType, entityId, locale])
+  @@index([entityType, locale, status])
+}
+
+model NewsEntityLink {
+  id         String   @id @default(cuid())
+  newsId     String
+  news       News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  entityType String
+  entityId   String
+  suggested  Boolean  @default(true)
+  confirmed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([newsId, entityType, entityId])
+  @@index([entityType, entityId, confirmed])
+}
+
+enum StreamProtocol {
+  HLS
+  DASH
+}
+
+enum StreamDrmType {
+  NONE
+  WIDEVINE
+  FAIRPLAY
+  PLAYREADY
+}
+
+enum StreamAssetStatus {
+  DRAFT
+  READY
+  LIVE
+  ENDED
+  DISABLED
+}
+
+model StreamAsset {
+  id                String            @id @default(cuid())
+  providerKey       String
+  externalAssetId   String
+  protocol          StreamProtocol
+  drmType           StreamDrmType     @default(NONE)
+  status            StreamAssetStatus @default(DRAFT)
+  matchId           String?
+  match             Match?            @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  channelId         String?
+  channel           Channel?          @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  episodeId         String?
+  episode           Episode?          @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+  licenseId         String?
+  license           License?          @relation(fields: [licenseId], references: [id], onDelete: SetNull)
+  geoAllow          String[]
+  startsAt          DateTime?
+  endsAt            DateTime?
+  entitlementTier   SubscriptionStatus @default(FREE)
+  apiCredentialsRef String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([providerKey, externalAssetId])
+  @@index([status, startsAt])
+  @@index([matchId, status])
+  @@index([channelId, status])
+  @@index([episodeId, status])
+}
+
+enum LicenseType {
+  STREAMING
+  DATA
+  CONTENT
+}
+
+enum LicenseStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum DeskChannel {
+  REPORT
+  CONTACT
+}
+
+enum DeskStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+model DeskMessage {
+  id            String      @id @default(cuid())
+  channel       DeskChannel
+  kind          String
+  pageUrl       String?
+  details       String
+  replyEmail    String?
+  locale        String?
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  status        DeskStatus  @default(NEW)
+  emailSentAt   DateTime?
+  emailSkip     String?
+  createdAt     DateTime    @default(now())
+  readAt        DateTime?
+
+  @@index([status, createdAt])
+  @@index([channel, createdAt])
+}
