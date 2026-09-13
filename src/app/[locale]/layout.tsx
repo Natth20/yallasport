@@ -14,7 +14,6 @@ import { LiveStatusProvider } from "@/lib/context/LiveStatusContext";
 import { PageShell } from "@/components/motion/PageMotion";
 import { routing } from "@/i18n/routing";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { cookies, headers } from "next/headers";
 import {
   CONTACT_EMAIL,
   SITE_NAME,
@@ -127,17 +126,9 @@ export default async function RootLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
-  const storedTheme = (await cookies()).get("yalla-theme")?.value;
-  const prefersColor = (await headers()).get("sec-ch-prefers-color-scheme");
-  const themeClass =
-    storedTheme === "light" || storedTheme === "dark"
-      ? storedTheme
-      : prefersColor === "dark" || prefersColor === "light"
-        ? prefersColor
-        : "";
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={`h-full scroll-smooth${themeClass ? ` ${themeClass}` : ""}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className="h-full scroll-smooth dark" data-scroll-behavior="smooth">
       <head>
         <meta name="theme-color" content={THEME_COLOR} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

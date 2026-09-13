@@ -8,21 +8,22 @@
     under this shared token set — not competing identities.
 */
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
+  --background: #0b1220;
+  --foreground: #f1f5f9;
+  --card: #131c2e;
+  --card-foreground: #f1f5f9;
   --primary: #f97316;
   --primary-foreground: #ffffff;
-  --secondary: #14532d;
-  --secondary-foreground: #ffffff;
-  --border: #e2e8f0;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --input: #e2e8f0;
+  --secondary: #22c55e;
+  --secondary-foreground: #0b1220;
+  --border: #263449;
+  --muted: #1a2438;
+  --muted-foreground: #94a3b8;
+  --input: #263449;
   --ring: #f97316;
   --font-sans: "Cairo", system-ui, -apple-system, sans-serif;
   --font-display: "Cairo", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
 }
 
 .dark {
@@ -31,7 +32,7 @@
   --card: #131c2e;
   --card-foreground: #f1f5f9;
   --primary: #f97316;
-  --primary-foreground: #0b1220;
+  --primary-foreground: #ffffff;
   --secondary: #22c55e;
   --secondary-foreground: #0b1220;
   --border: #263449;
@@ -68,165 +69,29 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  color-scheme: dark;
   @apply transition-colors duration-500 ease-in-out antialiased;
-}
-
-/* ── Premium light mode body canvas ── */
-html.light body,
-html:not(.dark) body {
-  background-image:
-    radial-gradient(ellipse 90% 50% at 5% -5%, rgba(249, 115, 22, 0.055) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 40% at 95% 105%, rgba(20, 83, 45, 0.045) 0%, transparent 55%);
-  background-attachment: fixed;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  @apply text-secondary dark:text-secondary font-black tracking-tighter;
+  @apply text-foreground font-black tracking-tighter;
 }
 
-/* ── Light mode: premium card elevation ── */
-html.light .bg-card,
-html:not(.dark) .bg-card {
-  box-shadow: 0 4px 16px rgba(15, 25, 35, 0.08), 0 1px 4px rgba(15, 25, 35, 0.04);
+/* Dark scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
 }
-
-/* ── Light mode: section headers (bg-brand-green) get depth ── */
-html.light .bg-brand-green,
-html:not(.dark) .bg-brand-green {
-  background: linear-gradient(
-    135deg,
-    #0d3d20 0%,
-    #14532d 35%,
-    #166534 68%,
-    #15803d 100%
-  ) !important;
-  box-shadow:
-    0 20px 60px rgba(20, 83, 45, 0.30),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+::-webkit-scrollbar-track {
+  background: #0b1220;
 }
-
-/* ── Light mode: stat / info blocks warm gradient ── */
-html.light .bg-muted,
-html:not(.dark) .bg-muted {
-  background: linear-gradient(145deg, #fdfcfa 0%, #f5f3ef 100%) !important;
-}
-
-/* ── Light mode: masthead premium feel ── */
-html.light .masthead-shell,
-html:not(.dark) .masthead-shell {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 254, 252, 0.97) 0%,
-    rgba(248, 246, 242, 0.94) 100%
-  ) !important;
-  border-color: rgba(20, 83, 45, 0.12) !important;
-  box-shadow:
-    0 12px 36px -24px rgba(20, 83, 45, 0.20),
-    0 2px 8px rgba(15, 25, 35, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
-}
-
-html.light .masthead-edge,
-html:not(.dark) .masthead-edge {
-  background: linear-gradient(
-    to left,
-    transparent,
-    rgba(20, 83, 45, 0.30),
-    rgba(249, 115, 22, 0.65),
-    rgba(20, 83, 45, 0.30),
-    transparent
-  );
-}
-
-html.light .masthead-link,
-html:not(.dark) .masthead-link {
-  color: rgb(71 85 105);
-}
-
-html.light .masthead-link:hover,
-html:not(.dark) .masthead-link:hover {
-  color: #14532d;
-  background: rgba(20, 83, 45, 0.06);
-}
-
-html.light .masthead-link.is-active,
-html:not(.dark) .masthead-link.is-active {
-  color: #14532d;
-  background: rgba(20, 83, 45, 0.09);
-}
-
-html.light .masthead-link.is-active::after,
-html:not(.dark) .masthead-link.is-active::after {
-  background: linear-gradient(90deg, transparent, #14532d, transparent);
-}
-
-html.light .masthead-login,
-html:not(.dark) .masthead-login {
-  background: #14532d;
-  color: #fff;
-}
-
-html.light .masthead-login:hover,
-html:not(.dark) .masthead-login:hover {
-  background: #f97316;
-  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.30);
-}
-
-/* ── Light mode: footer ── */
-html.light footer,
-html:not(.dark) footer {
-  background: linear-gradient(180deg, #f2f0eb 0%, #e8e5de 100%);
-  border-top: 1px solid rgba(15, 25, 35, 0.10);
-}
-
-/* ── Light mode: table enhancements ── */
-html.light thead tr,
-html:not(.dark) thead tr {
-  background: linear-gradient(to right, rgba(20, 83, 45, 0.06), rgba(20, 83, 45, 0.02));
-}
-
-html.light thead th,
-html:not(.dark) thead th {
-  color: #14532d;
-  font-weight: 700;
-}
-
-html.light tbody tr:hover,
-html:not(.dark) tbody tr:hover {
-  background-color: rgba(249, 115, 22, 0.035) !important;
-}
-
-/* ── Light mode: inputs ── */
-html.light input:focus,
-html:not(.dark) input:focus,
-html.light select:focus,
-html:not(.dark) select:focus,
-html.light textarea:focus,
-html:not(.dark) textarea:focus {
-  border-color: rgba(249, 115, 22, 0.45);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.10);
-  outline: none;
-}
-
-/* ── Light mode: scrollbar ── */
-html.light ::-webkit-scrollbar,
-html:not(.dark) ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-html.light ::-webkit-scrollbar-track,
-html:not(.dark) ::-webkit-scrollbar-track {
-  background: #f2f0eb;
-}
-html.light ::-webkit-scrollbar-thumb,
-html:not(.dark) ::-webkit-scrollbar-thumb {
-  background: rgba(20, 83, 45, 0.22);
+::-webkit-scrollbar-thumb {
+  background: #263449;
   border-radius: 999px;
 }
-html.light ::-webkit-scrollbar-thumb:hover,
-html:not(.dark) ::-webkit-scrollbar-thumb:hover {
-  background: rgba(249, 115, 22, 0.45);
+::-webkit-scrollbar-thumb:hover {
+  background: #f97316;
 }
 
 /* Editorial rooms share brand accents; layouts stay distinct on purpose */
@@ -26879,23 +26744,8 @@ a.club-scorer-row:hover {
   border-color: rgba(194, 106, 58, 0.18);
 }
 
-html:not(.dark) .contact-hero {
-  background:
-    linear-gradient(135deg, rgba(194, 106, 58, 0.06), transparent 42%),
-    rgba(255, 255, 255, 0.78);
-}
-
-html:not(.dark) .contact-wordmark,
-html:not(.dark) .contact-standfirst {
-  color: #0f172a !important;
-}
-
 .matchday-wordmark {
-  color: #0f172a !important;
-}
-
-.dark .matchday-wordmark {
-  color: #fff7ed !important;
+  color: var(--foreground) !important;
 }
 
 /* ===== Home house (first door) ===== */

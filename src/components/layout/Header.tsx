@@ -1,8 +1,7 @@
-﻿'use client';
+'use client';
 
 import React, { FormEvent, useEffect, useState } from 'react';
 import { ArrowUpRight, Menu, Search, UserRound, X } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { DataSaverToggle } from './DataSaverToggle';
 import { VoiceSearch } from './VoiceSearch';
@@ -129,7 +128,6 @@ export const Header: React.FC = () => {
 
             <div className="masthead-cluster hidden md:flex">
               <DataSaverToggle />
-              <ThemeToggle />
               <LanguageToggle />
             </div>
 
@@ -228,7 +226,6 @@ export const Header: React.FC = () => {
                   {t('navigation.controls')}
                 </p>
                 <div className="flex items-center gap-1">
-                  <ThemeToggle />
                   <LanguageToggle />
                 </div>
               </div>
