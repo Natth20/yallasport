@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,7 +10,6 @@ import {
   ChevronUp,
   Eye,
   ExternalLink,
-  FileText,
   ImagePlus,
   Loader2,
   Save,
@@ -34,8 +34,17 @@ export type DeskNewsItem = {
   isPremium: boolean;
   createdAt: Date | string;
   publishedAt: Date | string | null;
+  publishAt?: Date | string | null;
   slug?: string | null;
 };
+
+function toLocalInput(value?: Date | string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 
 export function NewsDeskEditor({
   items,
@@ -78,7 +87,7 @@ export function NewsDeskEditor({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(swallow("src/app/[locale]/admin/news/components/NewsDeskEditor.tsx:89", ({}), { persist: false }));
       if (!response.ok) {
         setError(
           typeof data.error === 'string'
@@ -89,7 +98,8 @@ export function NewsDeskEditor({
       }
       router.refresh();
       return data;
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/app/[locale]/admin/news/components/NewsDeskEditor.tsx:101", error, { persist: false });
       setError(pick(locale, 'تعذر الاتصال بالخادم.', 'Could not reach the server.'));
       return null;
     } finally {
@@ -159,7 +169,7 @@ export function NewsDeskEditor({
                     <button
                       type="button"
                       disabled={Boolean(busyId)}
-                      onClick={() => void call({ id: item.id, action: 'approve' }, item.id)}
+                      onClick={() => void call({ id: item.id, action: 'approve', publishAt: item.publishAt || null }, item.id)}
                       className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-600 disabled:opacity-50"
                     >
                       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
@@ -309,6 +319,15 @@ export function NewsDeskEditor({
                       <option value="ARCHIVED">ARCHIVED</option>
                     </select>
                   </label>
+                  <label className="inline-flex items-center gap-2">
+                    {pick(locale, 'جدولة النشر', 'Schedule')}
+                    <input
+                      type="datetime-local"
+                      value={toLocalInput(item.publishAt)}
+                      onChange={(e) => patchDraft(item.id, { publishAt: e.target.value || null })}
+                      className="rounded-md border border-border bg-card px-2 py-1 dark:border-border dark:bg-background"
+                    />
+                  </label>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -333,6 +352,7 @@ export function NewsDeskEditor({
                           breaking: item.breaking,
                           isPremium: item.isPremium,
                           status: item.status,
+                          publishAt: item.publishAt || null,
                           fetchImage: !item.featuredImage,
                         },
                         item.id
@@ -351,24 +371,6 @@ export function NewsDeskEditor({
                   >
                     <ImagePlus className="h-3.5 w-3.5" />
                     {pick(locale, 'جلب صورة من المصدر', 'Fetch image from source')}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={Boolean(busyId)}
-                    onClick={async () => {
-                      const data = await call({ id: item.id, action: 'enrich-body' }, item.id);
-                      if (data?.content) {
-                        patchDraft(item.id, {
-                          content: data.content as string,
-                          featuredImage: (data.featuredImage as string) || item.featuredImage,
-                          ogImage: (data.featuredImage as string) || item.ogImage,
-                        });
-                      }
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    {pick(locale, 'سحب النص الكامل من المصدر', 'Pull full text from source')}
                   </button>
                   {item.sourceUrl ? (
                     <a
@@ -452,7 +454,7 @@ export function EnrichNewsImagesButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'enrich-images' }),
       });
-      const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(swallow("src/app/[locale]/admin/news/components/NewsDeskEditor.tsx:455", ({}), { persist: false }));
       if (!response.ok) {
         setMessage(typeof data.error === 'string' ? data.error : pick(locale, 'فشل التحديث.', 'Update failed.'));
         return;
@@ -465,7 +467,8 @@ export function EnrichNewsImagesButton() {
         )
       );
       router.refresh();
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/app/[locale]/admin/news/components/NewsDeskEditor.tsx:469", error, { persist: false });
       setMessage(pick(locale, 'تعذر الاتصال بالخادم.', 'Could not reach the server.'));
     } finally {
       setBusy(false);

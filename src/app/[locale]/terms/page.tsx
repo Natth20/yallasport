@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { getLocale } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { pick } from '@/i18n/pick';
 import { TermsDeed } from '@/components/legal/TermsDeed';
 import type { Metadata } from 'next';
@@ -18,7 +20,15 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function TermsPage() {
+export default function TermsPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <TermsPageBody />
+    </Suspense>
+  );
+}
+
+async function TermsPageBody() {
   const locale = await getLocale();
   return <TermsDeed locale={locale} />;
 }

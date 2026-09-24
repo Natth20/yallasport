@@ -1,7 +1,7 @@
 import React from 'react';
 import { getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { HomeHouse } from '@/components/home/HomeHouse';
+import { FrontPage } from '@/components/front/FrontPage';
 import { pageMetadata, defaultTitle, defaultDescription } from '@/lib/seo/site';
 
 export const revalidate = 60;
@@ -17,6 +17,6 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function HomePage() {
-  return <HomeHouse />;
+export default function HomePage() {
+  return <FrontPage />;
 }

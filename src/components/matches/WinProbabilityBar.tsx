@@ -28,12 +28,15 @@ export function WinProbabilityBar({
 }: WinProbabilityBarProps) {
   const isAr = locale === 'ar';
 
-  // Calculate default plausible probabilities if not directly provided
-  let hp = homeProb ?? 45;
-  let dp = drawProb ?? 25;
-  let ap = awayProb ?? 30;
+  if (homeProb == null && awayProb == null && drawProb == null && (homeRank == null || awayRank == null)) {
+    return null;
+  }
 
-  if (homeProb === undefined && awayProb === undefined) {
+  let hp = homeProb ?? 33;
+  let dp = drawProb ?? 34;
+  let ap = awayProb ?? 33;
+
+  if (homeProb == null && awayProb == null && homeRank != null && awayRank != null) {
     if (homeRank && awayRank) {
       if (homeRank < awayRank) {
         hp = Math.min(65, 45 + (awayRank - homeRank) * 2);
@@ -76,11 +79,11 @@ export function WinProbabilityBar({
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-4 w-4 text-primary" />
           <h4 className="text-xs font-black uppercase tracking-wider text-foreground">
-            {isAr ? 'احتمالات الفوز الذكية (AI Win Probability)' : 'AI Win Probability'}
+            {isAr ? 'تقدير تحريري للنتيجة' : 'Editorial result estimate'}
           </h4>
         </div>
         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
-          YallaSport Analytics
+          {isAr ? 'ليست نموذجاً إحصائياً' : 'Not a statistical model'}
         </span>
       </div>
 

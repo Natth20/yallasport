@@ -1,6 +1,6 @@
-﻿import React from 'react';
+import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { User, Flag, MoreVertical, Plus } from 'lucide-react';
+import { User, Flag } from 'lucide-react';
 import {getLocale} from 'next-intl/server';
 import {pick} from '@/i18n/pick';
 
@@ -16,12 +16,11 @@ export default async function PlayersAdminPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div>
         <h1 className="text-3xl font-black">{pick(locale, 'إدارة اللاعبين', 'Manage players')}</h1>
-        <button className="bg-orange-500 text-primary-foreground px-6 py-3 rounded-2xl font-black text-sm shadow-lg shadow-orange-500/20 flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          {pick(locale, 'إضافة لاعب', 'Add player')}
-        </button>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {pick(locale, 'عرض من القاعدة. لا إضافة يدوية من هنا.', 'Database list only. Players are not created from this screen.')}
+        </p>
       </div>
 
       <div className="bg-card dark:bg-background rounded-[2.5rem] shadow-xl border border-gray-50 dark:border-border overflow-hidden">
@@ -31,7 +30,6 @@ export default async function PlayersAdminPage() {
               <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground">{pick(locale, 'اللاعب', 'Player')}</th>
               <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground">{pick(locale, 'الجنسية', 'Nationality')}</th>
               <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground">{pick(locale, 'المركز', 'Position')}</th>
-              <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground text-left">{pick(locale, 'الإجراءات', 'Actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -55,11 +53,6 @@ export default async function PlayersAdminPage() {
                    <span className="text-xs font-black bg-orange-50 dark:bg-orange-950/20 text-orange-600 px-3 py-1 rounded-lg">
                       {player.position || '---'}
                    </span>
-                </td>
-                <td className="px-8 py-6 text-left">
-                   <button className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded-lg transition-colors">
-                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                   </button>
                 </td>
               </tr>
             ))}

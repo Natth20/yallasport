@@ -31,6 +31,7 @@ model Match {
   referee        Referee?           @relation(fields: [refereeId], references: [id])
   liveCommentary Json? // Array of { minute, text, type }
   lastSyncedAt   DateTime
+  attendance     Int?
   events         MatchEvent[]
   lineups        MatchLineup[]
   statistics     MatchStatistic[]
@@ -38,14 +39,21 @@ model Match {
   polls          MatchPoll[]
   predictions    Prediction[]
   comments       Comment[]
+  reactions      MatchReaction[]
   notifications  Notification[] // Track notifications sent for this match
   commentators   MatchCommentator[]
   reminders      MatchReminder[]
   streamAssets   StreamAsset[]
+  sportId        String?
+  sport          Sport?             @relation(fields: [sportId], references: [id])
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
   @@index([status, kickoffAt, leagueId])
+  @@index([homeTeamId, status, kickoffAt])
+  @@index([awayTeamId, status, kickoffAt])
+  @@index([kickoffAt])
+  @@index([leagueId, kickoffAt])
 }
 
 model MatchPoll {
@@ -53,8 +61,20 @@ model MatchPoll {
   matchId   String
   match     Match    @relation(fields: [matchId], references: [id])
   question  String
-  options   Json // { "Home Wins": 0, "Draw": 0, "Away Wins": 0 }
+  options   Json // { home: 0, draw: 0, away: 0 }
   createdAt DateTime @default(now())
+}
+
+model MatchReaction {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  emoji     String
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([matchId, emoji])
+  @@index([matchId])
 }
 
 enum MatchStatus {
@@ -82,6 +102,9 @@ model MatchEvent {
   detail      String?
 
   @@index([matchId, minute])
+  @@index([matchId, type])
+  @@index([playerId, type])
+  @@index([type])
 }
 
 model MatchLineup {
@@ -142,6 +165,7 @@ model Team {
   awayMatches Match[]      @relation("AwayMatches")
   coachFor    Coach?       @relation("CurrentTeam")
   standings   Standing[]
+  officialName String?
 }
 
 model Player {
@@ -156,6 +180,7 @@ model Player {
   teams       PlayerTeam[]
   transfers   Transfer[]
   events      MatchEvent[]
+  officialName String?
 }
 
 model PlayerTeam {
@@ -167,21 +192,37 @@ model PlayerTeam {
   shirtNumber Int?
   from        DateTime?
   to          DateTime?
+
+  @@index([teamId, to])
+  @@index([playerId])
 }
 
 model Transfer {
-  id       String   @id @default(cuid())
-  playerId String
-  player   Player   @relation(fields: [playerId], references: [id])
-  fromTeam String?
-  toTeam   String?
-  date     DateTime
-  fee      String?
+  id               String   @id @default(cuid())
+  externalId       String?  @unique
+  playerId         String
+  player           Player   @relation(fields: [playerId], references: [id])
+  playerExternalId String?
+  fromTeam         String?
+  toTeam           String?
+  fromLogo         String?
+  toLogo           String?
+  fromTeamId       String?
+  toTeamId         String?
+  date             DateTime
+  fee              String?
+  type             String?
+  syncedAt         DateTime @default(now())
+
+  @@index([playerId, date])
+  @@index([date])
+  @@index([toTeam])
 }
 
 model Coach {
   id            String        @id @default(cuid())
   name          String
+  slug          String?       @unique
   bio           String?
   photoUrl      String?
   nationality   String?
@@ -204,14 +245,18 @@ model CoachTrophy {
 }
 
 model League {
-  id         String     @id @default(cuid())
-  externalId String     @unique
-  name       String
-  slug       String     @unique
-  logoUrl    String?
-  country    String?
-  matches    Match[]
-  standings  Standing[]
+  id           String               @id @default(cuid())
+  externalId   String               @unique
+  name         String
+  officialName String?
+  slug         String               @unique
+  logoUrl      String?
+  country      String?
+  sportId      String?
+  sport        Sport?               @relation(fields: [sportId], references: [id])
+  matches      Match[]
+  standings    Standing[]
+  seasons      CompetitionSeason[]
 }
 
 model Standing {
@@ -231,6 +276,8 @@ model Standing {
   points       Int
 
   @@unique([leagueId, seasonId, teamId])
+  @@index([leagueId, seasonId, rank])
+  @@index([teamId, seasonId])
 }
 
 model Venue {
@@ -319,6 +366,7 @@ model News {
   entityLinks   NewsEntityLink[]
 
   @@index([status, publishedAt])
+  @@index([category, status, publishedAt])
 }
 
 enum NewsStatus {
@@ -452,8 +500,12 @@ model Comment {
   parentId  String?
   replies   Comment[] @relation("CommentReplies")
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  hiddenAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([matchId, createdAt])
+  @@index([newsId])
 }
 
 model Subscription {
@@ -576,6 +628,20 @@ model SystemAlert {
   isResolved Boolean       @default(false)
   createdAt  DateTime      @default(now())
   resolvedAt DateTime?
+}
+
+model BackupRun {
+  id              String   @id @default(cuid())
+  kind            String
+  status          String
+  counts          Json
+  restoreVerified Boolean  @default(false)
+  restoreNote     String?
+  mailSent        Boolean  @default(false)
+  mailDetail      String?
+  createdAt       DateTime @default(now())
+
+  @@index([kind, createdAt])
 }
 
 enum AlertType {
@@ -768,4 +834,105 @@ model DeskMessage {
 
   @@index([status, createdAt])
   @@index([channel, createdAt])
+}
+
+/// Top of Sport → Competition (League) → Season → Event (Match / SportEvent).
+model Sport {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  officialName String
+  name         String
+  leagues      League[]
+  matches      Match[]
+  events       SportEvent[]
+  createdAt    DateTime   @default(now())
+}
+
+model CompetitionSeason {
+  id           String    @id @default(cuid())
+  leagueId     String
+  league       League    @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  year         Int
+  officialName String?
+  startsAt     DateTime?
+  endsAt       DateTime?
+  isCurrent    Boolean   @default(false)
+
+  @@unique([leagueId, year])
+  @@index([year])
+}
+
+/// Event node; 1:1 with Match so football stays on Match without rebuilding pages.
+model SportEvent {
+  id             String   @id @default(cuid())
+  sportId        String
+  sport          Sport    @relation(fields: [sportId], references: [id])
+  competitionId  String
+  seasonYear     Int
+  matchId        String   @unique
+  kickoffAt      DateTime
+  status         String
+
+  @@index([sportId, kickoffAt])
+  @@index([competitionId, seasonYear])
+}
+
+model ApiProvider {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  name           String
+  baseUrl        String
+  quotaLimit     Int?
+  quotaRemaining Int?
+  quotaResetAt   DateTime?
+  lastError      String?
+  lastSuccessAt  DateTime?
+  logs           ApiRequestLog[]
+}
+
+enum YoutubeClipKind {
+  VIDEO
+  SHORT
+}
+
+enum YoutubeClipStatus {
+  PUBLISHED
+  ARCHIVED
+}
+
+model YoutubeClip {
+  id           String            @id @default(cuid())
+  youtubeId    String            @unique
+  title        String
+  channelId    String
+  channelTitle String
+  description    String?
+  lang           String            @default("en")
+  thumbnailUrl String?
+  publishedAt  DateTime
+  kind         YoutubeClipKind   @default(VIDEO)
+  status       YoutubeClipStatus @default(PUBLISHED)
+  durationSec  Int?
+  fetchedAt    DateTime          @default(now())
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([status, kind, publishedAt])
+  @@index([channelId, publishedAt])
+}
+
+model ApiRequestLog {
+  id          String       @id @default(cuid())
+  providerId  String?
+  provider    ApiProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  providerKey String
+  path        String
+  status      Int?
+  outcome     String
+  durationMs  Int
+  error       String?
+  createdAt   DateTime     @default(now())
+
+  @@index([providerKey, createdAt])
+  @@index([outcome, createdAt])
 }

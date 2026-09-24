@@ -1,10 +1,16 @@
+import { swallow } from '@/lib/ops/caught';
 import { ClientTime } from '@/components/datetime/ClientTime';
+import { CrestImage } from '@/components/common/CrestImage';
 import { Link } from '@/i18n/navigation';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
 import { sportsData } from '@/lib/sports-data';
+import { currentFootballSeason } from '@/lib/sports-data/season';
+import { safeRedisGet } from '@/lib/redis';
 import { LeaderboardExplorer, UserRankItem, RealScorerItem } from './LeaderboardExplorer';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { predictionAccuracy, rankByPoints, scorerDeskSlug, settledStreak } from '@/lib/predictions/rank';
+import './predictions-house.css';
 
 function initials(name: string | null) {
   const parts = (name || '').trim().split(/\s+/).filter(Boolean);
@@ -16,30 +22,37 @@ function initials(name: string | null) {
     .toUpperCase();
 }
 
+const SCORER_LEAGUES = [
+  { id: '39', ar: 'الدوري الإنجليزي الممتاز', en: 'Premier League' },
+  { id: '140', ar: 'الليغا', en: 'La Liga' },
+  { id: '2', ar: 'دوري أبطال أوروبا', en: 'UEFA Champions League' },
+  { id: '307', ar: 'دوري روشن السعودي', en: 'Saudi Pro League' },
+] as const;
+
 export async function PredictionsHouse() {
   const t = await getTranslations('board');
   const locale = await getLocale();
   const session = await auth();
   const now = new Date();
+  const season = String(currentFootballSeason());
   const openWhere = { status: 'NOT_STARTED' as const, kickoffAt: { gte: now } };
+  const participantWhere = { OR: [{ points: { gt: 0 } }, { predictions: { some: {} } }] };
 
   const [
     rows,
+    peopleCount,
+    pointsAgg,
     slipCount,
     settledCount,
     openCount,
     openMatches,
     moodRows,
     me,
-    eplScorers,
-    laligaScorers,
-    uclScorers,
-    splScorers,
+    liveMeta,
+    ...scorerPacks
   ] = await Promise.all([
     prisma.user.findMany({
-      where: {
-        OR: [{ points: { gt: 0 } }, { predictions: { some: {} } }],
-      },
+      where: participantWhere,
       select: {
         id: true,
         name: true,
@@ -47,8 +60,11 @@ export async function PredictionsHouse() {
         points: true,
         _count: { select: { predictions: true } },
       },
+      orderBy: [{ points: 'desc' }, { predictions: { _count: 'desc' } }],
       take: 80,
     }),
+    prisma.user.count({ where: participantWhere }),
+    prisma.user.aggregate({ where: participantWhere, _sum: { points: true } }),
     prisma.prediction.count(),
     prisma.prediction.count({ where: { isCorrect: { not: null } } }),
     prisma.match.count({ where: openWhere }),
@@ -71,78 +87,91 @@ export async function PredictionsHouse() {
     }),
     session?.user?.email
       ? prisma.user.findUnique({
-          where: { email: session.user.email },
-          select: {
-            id: true,
-            name: true,
-            points: true,
-            _count: { select: { predictions: true } },
-          },
-        })
+        where: { email: session.user.email },
+        select: {
+          id: true,
+          name: true,
+          points: true,
+          _count: { select: { predictions: true } },
+        },
+      })
       : Promise.resolve(null),
-    sportsData.getTopScorers('39', '2024').catch(() => []),
-    sportsData.getTopScorers('140', '2024').catch(() => []),
-    sportsData.getTopScorers('2', '2024').catch(() => []),
-    sportsData.getTopScorers('307', '2024').catch(() => []),
+    safeRedisGet<{ syncedAt?: string; predictionsSettled?: number }>('sports:meta:live'),
+    ...SCORER_LEAGUES.map((league) =>
+      sportsData.getTopScorers(league.id, season).catch(swallow('PredictionsHouse.scorers', [])),
+    ),
   ]);
 
-  const realScorerItems: RealScorerItem[] = [
-    ...(eplScorers || []).map((s: any, idx: number) => ({
-      id: `epl-${s.player.id}`,
-      name: s.player.name,
-      slug: s.player.slug,
-      photoUrl: s.player.photoUrl || null,
-      teamName: s.teamName,
-      goals: s.goals,
-      leagueName: locale === 'ar' ? 'الدوري الإنجليزي الممتاز' : 'Premier League',
-      rank: idx + 1,
-    })),
-    ...(laligaScorers || []).map((s: any, idx: number) => ({
-      id: `laliga-${s.player.id}`,
-      name: s.player.name,
-      slug: s.player.slug,
-      photoUrl: s.player.photoUrl || null,
-      teamName: s.teamName,
-      goals: s.goals,
-      leagueName: locale === 'ar' ? 'الدوري الإسباني (لا ليغا)' : 'La Liga',
-      rank: idx + 1,
-    })),
-    ...(uclScorers || []).map((s: any, idx: number) => ({
-      id: `ucl-${s.player.id}`,
-      name: s.player.name,
-      slug: s.player.slug,
-      photoUrl: s.player.photoUrl || null,
-      teamName: s.teamName,
-      goals: s.goals,
-      leagueName: locale === 'ar' ? 'دوري أبطال أوروبا' : 'UEFA Champions League',
-      rank: idx + 1,
-    })),
-    ...(splScorers || []).map((s: any, idx: number) => ({
-      id: `spl-${s.player.id}`,
-      name: s.player.name,
-      slug: s.player.slug,
-      photoUrl: s.player.photoUrl || null,
-      teamName: s.teamName,
-      goals: s.goals,
-      leagueName: locale === 'ar' ? 'دوري روشن السعودي' : 'Saudi Pro League',
-      rank: idx + 1,
-    })),
-  ];
-
-  const mySlips = me
-    ? await prisma.prediction.findMany({
-        where: { userId: me.id, matchId: { in: openMatches.map((match) => match.id) } },
-        select: { matchId: true, predictedOutcome: true },
+  const scorerIds = scorerPacks.flatMap((pack) => (pack || []).map((row) => row.player.id));
+  const ledgerPlayers =
+    scorerIds.length > 0
+      ? await prisma.player.findMany({
+        where: { externalId: { in: scorerIds } },
+        select: { externalId: true, slug: true },
       })
+      : [];
+  const slugByExt = new Map(ledgerPlayers.map((row) => [row.externalId, row.slug]));
+
+  const realScorerItems: RealScorerItem[] = SCORER_LEAGUES.flatMap((league, packIndex) =>
+    (scorerPacks[packIndex] || []).map((s, idx) => ({
+      id: `${league.id}-${s.player.id}`,
+      name: s.player.name,
+      slug: slugByExt.get(s.player.id) || scorerDeskSlug(s.player.name, s.player.id),
+      photoUrl: s.player.photoUrl || null,
+      teamName: s.teamName,
+      goals: s.goals,
+      leagueName: locale === 'ar' ? league.ar : league.en,
+      rank: idx + 1,
+    })),
+  );
+
+  const myOpenSlips = me
+    ? await prisma.prediction.findMany({
+      where: { userId: me.id, matchId: { in: openMatches.map((match) => match.id) } },
+      select: { matchId: true, predictedOutcome: true },
+    })
     : [];
-  const myByMatch = new Map(mySlips.map((slip) => [slip.matchId, slip.predictedOutcome]));
+  const myByMatch = new Map(myOpenSlips.map((slip) => [slip.matchId, slip.predictedOutcome]));
 
-  const ranked = [...rows].sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    return b._count.predictions - a._count.predictions;
-  });
+  const myHistory = me
+    ? await prisma.prediction.findMany({
+      where: { userId: me.id },
+      orderBy: { createdAt: 'desc' },
+      take: 8,
+      select: {
+        predictedOutcome: true,
+        isCorrect: true,
+        pointsAwarded: true,
+        match: {
+          select: {
+            id: true,
+            homeTeam: { select: { name: true } },
+            awayTeam: { select: { name: true } },
+          },
+        },
+      },
+    })
+    : [];
+  const mySettled = me
+    ? await prisma.prediction.groupBy({
+      by: ['isCorrect'],
+      where: { userId: me.id, isCorrect: { not: null } },
+      _count: { _all: true },
+    })
+    : [];
+  const settledOk = mySettled.find((row) => row.isCorrect === true)?._count._all ?? 0;
+  const settledAll = mySettled.reduce((sum, row) => sum + row._count._all, 0);
+  const accuracy = predictionAccuracy(settledOk, settledAll);
+  const streak = settledStreak(myHistory);
 
-  const userRankItems: UserRankItem[] = ranked.map((u, idx) => ({
+  const aboveMe = me
+    ? await prisma.user.count({
+      where: { AND: [participantWhere, { points: { gt: me.points } }] },
+    })
+    : 0;
+  const myRank = me && me._count.predictions > 0 ? rankByPoints(aboveMe) : null;
+
+  const userRankItems: UserRankItem[] = rows.map((u, idx) => ({
     id: u.id,
     name: u.name,
     image: u.image,
@@ -151,22 +180,21 @@ export async function PredictionsHouse() {
     rank: idx + 1,
   }));
 
-  const pointsOnBoard = ranked.reduce((sum, row) => sum + row.points, 0);
-  const podium = ranked.filter((row) => row.points > 0).slice(0, 3);
-  const myIndex = me ? ranked.findIndex((row) => row.id === me.id) : -1;
-  const onBoard = myIndex >= 0;
+  const pointsOnBoard = pointsAgg._sum.points ?? 0;
+  const podium = rows.filter((row) => row.points > 0).slice(0, 3);
+  const onBoard = Boolean(myRank);
 
   const moodMap = Object.fromEntries(moodRows.map((row) => [row.predictedOutcome, row._count._all]));
   const mood = [
-    { key: 'HOME_WIN', label: t('door_home'), value: moodMap.HOME_WIN ?? 0, color: 'bg-emerald-500' },
-    { key: 'DRAW', label: t('door_draw'), value: moodMap.DRAW ?? 0, color: 'bg-amber-500' },
-    { key: 'AWAY_WIN', label: t('door_away'), value: moodMap.AWAY_WIN ?? 0, color: 'bg-cyan-500' },
+    { key: 'HOME_WIN', label: t('door_home'), value: moodMap.HOME_WIN ?? 0, color: 'var(--ys-green)' },
+    { key: 'DRAW', label: t('door_draw'), value: moodMap.DRAW ?? 0, color: 'var(--ys-orange)' },
+    { key: 'AWAY_WIN', label: t('door_away'), value: moodMap.AWAY_WIN ?? 0, color: '#22d3ee' },
   ];
   const moodTotal = mood.reduce((sum, item) => sum + item.value, 0);
 
   const tally = [
     { value: openCount, label: t('tally_open') },
-    { value: ranked.length, label: t('tally_people') },
+    { value: peopleCount, label: t('tally_people') },
     { value: slipCount, label: t('tally_slips') },
     { value: pointsOnBoard, label: t('tally_points') },
     { value: settledCount, label: t('tally_settled') },
@@ -179,106 +207,90 @@ export async function PredictionsHouse() {
     { no: '04', title: t('rule_4_title'), body: t('rule_4_body') },
   ];
 
-  return (
-    <div className="relative min-h-screen pb-24 overflow-hidden">
-      {/* Dynamic Arena Lighting */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-amber-500/15 via-primary/10 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute top-1/2 -right-40 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl" />
+  const outcomeLabel = (value: string) =>
+    value === 'HOME_WIN' ? t('door_home') : value === 'AWAY_WIN' ? t('door_away') : t('door_draw');
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12 pt-8">
-        {/* ——— Hero: The Champions Arena ——— */}
-        <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-card/90 via-card/60 to-card/30 p-6 md:p-10 backdrop-blur-2xl shadow-2xl">
+  return (
+    <div className="predictions-house relative min-h-screen overflow-hidden pb-16">
+      <div className="mx-auto max-w-7xl space-y-12 px-4 pt-8 sm:px-6 lg:px-8">
+        <header className="ph-hero">
           <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
             <div className="space-y-6 lg:col-span-8">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-0.5 text-xs font-bold tracking-wider text-amber-400 uppercase border border-amber-500/30">
-                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="ph-kicker">
                   {t('house')} · {t('folio')}
                 </span>
-                <span className="text-xs text-muted-foreground">·</span>
-                <span className="text-xs font-mono text-emerald-400 font-bold">
-                  SEASON 2026
-                </span>
+                <span className="font-mono text-xs font-bold text-emerald-500">{now.getFullYear()}</span>
+                {liveMeta?.syncedAt ? (
+                  <span className="text-xs text-muted-foreground">
+                    {t('last_settled')}: <ClientTime value={liveMeta.syncedAt} />
+                  </span>
+                ) : null}
               </div>
-
               <div className="space-y-3">
-                <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-                  {t('headline')}
-                </h1>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                  {t('standfirst')}
-                </p>
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">{t('headline')}</h1>
+                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">{t('standfirst')}</p>
+                <p className="text-xs font-bold text-primary">{t('points_rule')}</p>
               </div>
-
-              {/* Tally Stats Strip */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="ph-tally">
                 {tally.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center">
-                    <span className="font-mono text-xl font-black text-white block">{item.value}</span>
-                    <span className="text-[11px] text-muted-foreground truncate block mt-0.5">{item.label}</span>
-                  </div>
+                  <article key={item.label}>
+                    <strong>{item.value}</strong>
+                    <span>{item.label}</span>
+                  </article>
                 ))}
               </div>
             </div>
 
-            {/* Right Column: User Ranking Card */}
             <div className="lg:col-span-4">
-              <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-card/50 to-card/20 p-6 backdrop-blur-md shadow-inner space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="8" r="7" />
-                      <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-                    </svg>
-                    {locale === 'en' ? 'Your Standing' : 'بطاقة ترتيبك'}
-                  </span>
-                  {onBoard && (
-                    <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 font-mono text-[11px] font-bold text-emerald-400 border border-emerald-500/30">
-                      #{myIndex + 1}
+              <div className="ph-card space-y-4 rounded-2xl border-amber-500/30 p-6">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-500">{t('place_kicker')}</span>
+                  {onBoard && myRank ? (
+                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 font-mono text-[11px] font-bold text-emerald-400">
+                      #{myRank}
                     </span>
-                  )}
+                  ) : null}
                 </div>
-
                 {me ? (
                   onBoard ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/20 font-bold text-amber-400">
                           {initials(me.name)}
                         </div>
                         <div>
-                          <p className="text-sm font-black text-white">{me.name}</p>
-                          <p className="text-xs text-muted-foreground font-mono">
+                          <p className="text-sm font-black text-foreground">{me.name}</p>
+                          <p className="font-mono text-xs text-muted-foreground">
                             {me.points} {t('col_points')} · {me._count.predictions} {t('col_slips')}
                           </p>
                         </div>
                       </div>
-                      <p className="text-xs text-emerald-400 font-medium">
-                        {locale === 'en' ? 'You are competing on the official board!' : 'أنت منافس معتمد في جدول الترتيب الرسمي!'}
-                      </p>
+                      <div className="flex flex-wrap gap-2 text-[11px] font-bold">
+                        {accuracy != null ? (
+                          <span className="ph-chip is-ok">
+                            {t('accuracy')}: {accuracy}%
+                          </span>
+                        ) : null}
+                        {streak > 0 ? (
+                          <span className="ph-chip is-wait">
+                            {t('streak')}: {streak}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">{t('place_none')}</p>
-                      <Link
-                        href="/matches"
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
-                      >
+                      <Link href="/matches" className="inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
                         {t('empty_cta')}
                       </Link>
                     </div>
                   )
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">
-                      {locale === 'en'
-                        ? 'Sign in to log your predictions and climb the hall of fame.'
-                        : 'سجل دخولك لوضع توقعاتك ودخول لوحة الشرف الرسمية.'}
-                    </p>
-                    <Link
-                      href="/login"
-                      className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-black transition hover:bg-amber-400"
-                    >
+                    <p className="text-xs text-muted-foreground">{t('login_hint')}</p>
+                    <Link href="/login" className="inline-flex rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-black">
                       {t('login_cta')}
                     </Link>
                   </div>
@@ -288,179 +300,142 @@ export async function PredictionsHouse() {
           </div>
         </header>
 
-        {/* ——— Top 3 Champions Podium ——— */}
-        {podium.length > 0 && (
-          <section className="space-y-6">
-            <div className="text-center space-y-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                TOP PREDICTORS
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-white">
-                {locale === 'en' ? 'The Champions Podium' : 'منصة التتويج الكبرى'}
-              </h2>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-3 max-w-4xl mx-auto items-end pt-4">
-              {/* 2nd Place */}
-              {podium[1] && (
-                <div className="order-2 sm:order-1 rounded-3xl border border-slate-400/30 bg-gradient-to-b from-slate-400/10 via-card/50 to-card/20 p-6 text-center backdrop-blur-xl shadow-xl transition-all hover:scale-105">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-400/20 text-slate-300 font-mono text-sm font-black border border-slate-400/30 mb-4">
-                    2
+        {me && myHistory.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-lg font-black">{t('your_ledger')}</h2>
+            <div className="ph-ledger">
+              {myHistory.map((slip) => (
+                <Link key={slip.match.id} href={`/match/${slip.match.id}`} className="ph-slip">
+                  <strong className="text-sm">
+                    {slip.match.homeTeam.name} × {slip.match.awayTeam.name}
+                  </strong>
+                  <em>
+                    {outcomeLabel(slip.predictedOutcome)}
+                    {slip.pointsAwarded ? ` · ${slip.pointsAwarded}` : ''}
+                  </em>
+                  <span
+                    className={`ph-chip ${slip.isCorrect === true ? 'is-ok' : slip.isCorrect === false ? 'is-no' : 'is-wait'
+                      }`}
+                  >
+                    {slip.isCorrect === true ? t('slip_ok') : slip.isCorrect === false ? t('slip_miss') : t('slip_wait')}
                   </span>
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-400/15 border-2 border-slate-400/40 text-slate-200 font-bold overflow-hidden">
-                    {podium[1].image ? <img src={podium[1].image} alt="" className="h-full w-full object-cover" /> : initials(podium[1].name)}
-                  </div>
-                  <h3 className="font-bold text-white text-base truncate">{podium[1].name || t('unnamed')}</h3>
-                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-400/10 px-3 py-1 font-mono text-xs font-bold text-slate-300">
-                    <span>{podium[1].points}</span>
-                    <span className="text-[10px] text-muted-foreground">{t('col_points')}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* 1st Place (Winner - Raised) */}
-              {podium[0] && (
-                <div className="order-1 sm:order-2 rounded-3xl border-2 border-amber-400/60 bg-gradient-to-b from-amber-500/25 via-card/70 to-card/30 p-8 text-center backdrop-blur-xl shadow-2xl shadow-amber-500/10 transition-all hover:scale-105 relative -mt-4">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-black shadow-md">
-                    CHAMPION 👑
-                  </div>
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-400/20 text-amber-300 font-mono text-base font-black border border-amber-400/40 mb-4">
-                    1
-                  </span>
-                  <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-500/20 border-2 border-amber-400 text-amber-300 font-black text-xl overflow-hidden shadow-lg shadow-amber-500/20">
-                    {podium[0].image ? <img src={podium[0].image} alt="" className="h-full w-full object-cover" /> : initials(podium[0].name)}
-                  </div>
-                  <h3 className="font-extrabold text-white text-lg truncate">{podium[0].name || t('unnamed')}</h3>
-                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-400/20 px-4 py-1.5 font-mono text-sm font-black text-amber-300 border border-amber-400/30">
-                    <span>{podium[0].points}</span>
-                    <span className="text-xs text-amber-400/80">{t('col_points')}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* 3rd Place */}
-              {podium[2] && (
-                <div className="order-3 sm:order-3 rounded-3xl border border-amber-700/30 bg-gradient-to-b from-amber-700/10 via-card/50 to-card/20 p-6 text-center backdrop-blur-xl shadow-xl transition-all hover:scale-105">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-700/20 text-amber-600 font-mono text-sm font-black border border-amber-700/30 mb-4">
-                    3
-                  </span>
-                  <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-700/15 border-2 border-amber-700/40 text-amber-600 font-bold overflow-hidden">
-                    {podium[2].image ? <img src={podium[2].image} alt="" className="h-full w-full object-cover" /> : initials(podium[2].name)}
-                  </div>
-                  <h3 className="font-bold text-white text-base truncate">{podium[2].name || t('unnamed')}</h3>
-                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-700/10 px-3 py-1 font-mono text-xs font-bold text-amber-500">
-                    <span>{podium[2].points}</span>
-                    <span className="text-[10px] text-muted-foreground">{t('col_points')}</span>
-                  </div>
-                </div>
-              )}
+                </Link>
+              ))}
             </div>
           </section>
-        )}
+        ) : null}
 
-        {/* ——— Global Community Sentiment (Mood Tracker) ——— */}
-        <section className="rounded-3xl border border-white/10 bg-card/40 p-6 sm:p-8 backdrop-blur-xl">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div>
-              <p className="text-xs font-bold text-primary uppercase tracking-widest">{t('mood_kicker')}</p>
-              <h2 className="text-xl font-extrabold text-white mt-1">{t('mood_title')}</h2>
+        {podium.length > 0 ? (
+          <section className="space-y-6">
+            <div className="space-y-2 text-center">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-500">{t('podium_kicker')}</span>
+              <h2 className="text-2xl font-black text-foreground sm:text-3xl">{t('podium_title')}</h2>
             </div>
-            <span className="text-xs text-muted-foreground font-mono">
-              {moodTotal} {locale === 'en' ? 'Total Slips Analyzed' : 'توقع مسجل في البورصة'}
-            </span>
-          </div>
+            <div className="ph-podium mx-auto max-w-4xl">
+              {[podium[1], podium[0], podium[2]].map((seat, visual) => {
+                if (!seat) return <div key={visual} />;
+                const place = visual === 1 ? 1 : visual === 0 ? 2 : 3;
+                const seatClass = place === 1 ? 'is-gold' : place === 2 ? 'is-silver' : 'is-bronze';
+                return (
+                  <article key={seat.id} className={`ph-seat ph-card is-place-${place} ${seatClass}`}>
+                    {place === 1 ? <span className="ph-crown">👑 {t('champion')}</span> : null}
+                    <span className={`ph-medal is-${place}`} aria-hidden>
+                      <b>{place}</b>
+                    </span>
+                    <div className="ph-seat-face mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl font-bold">
+                      {seat.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={seat.image} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        initials(seat.name)
+                      )}
+                    </div>
+                    <h3 className="truncate text-base font-bold">{seat.name || t('unnamed')}</h3>
+                    <p className="mt-2 font-mono text-xs font-bold">
+                      {seat.points} {t('col_points')}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : peopleCount === 0 ? (
+          <p className="rounded-2xl border border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">
+            {t('empty_body')}
+          </p>
+        ) : null}
 
-          {/* Unified Sentiment Progress Bar */}
-          <div className="h-4 w-full overflow-hidden rounded-full bg-white/5 flex mb-4">
-            {mood.map((item) => {
-              const pct = moodTotal ? Math.round((item.value / moodTotal) * 100) : 0;
-              return (
-                <div
-                  key={item.key}
-                  style={{ width: `${pct}%` }}
-                  className={`${item.color} h-full transition-all duration-500 first:rounded-s-full last:rounded-e-full`}
-                  title={`${item.label}: ${pct}%`}
-                />
-              );
-            })}
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            {mood.map((item) => {
-              const pct = moodTotal ? Math.round((item.value / moodTotal) * 100) : 0;
-              return (
-                <div key={item.key} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] p-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`h-3 w-3 rounded-full ${item.color}`} />
-                    <span className="text-xs font-bold text-white">{item.label}</span>
+        {moodTotal > 0 ? (
+          <section className="ph-mood rounded-3xl p-6 sm:p-8">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('mood_kicker')}</p>
+                <h2 className="mt-1 text-xl font-extrabold">{t('mood_title')}</h2>
+              </div>
+              <span className="font-mono text-xs text-muted-foreground">
+                {moodTotal} {t('mood_count')}
+              </span>
+            </div>
+            <div className="ph-mood-bar mb-4">
+              {mood.map((item) => {
+                const pct = Math.round((item.value / moodTotal) * 100);
+                return <i key={item.key} className="ys-grow-x" style={{ width: `${pct}%`, background: item.color }} title={`${item.label}: ${pct}%`} />;
+              })}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {mood.map((item) => {
+                const pct = Math.round((item.value / moodTotal) * 100);
+                return (
+                  <div key={item.key} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
+                    <span className="text-xs font-bold">{item.label}</span>
+                    <span className="font-mono text-sm font-black">{pct}%</span>
                   </div>
-                  <div className="text-end">
-                    <span className="font-mono text-sm font-black text-white">{pct}%</span>
-                    <span className="block text-[10px] text-muted-foreground font-mono">({item.value})</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
-        {/* ——— Open Prediction Fixtures ——— */}
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold text-primary uppercase tracking-widest">{t('prog_kicker')}</p>
-              <h2 className="text-xl sm:text-2xl font-black text-white mt-1">{t('prog_title')}</h2>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('prog_kicker')}</p>
+              <h2 className="mt-1 text-xl font-black sm:text-2xl">{t('prog_title')}</h2>
             </div>
-            <Link
-              href="/matches"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
-            >
-              {t('door_matches')} →
+            <Link href="/matches" className="text-xs font-bold text-primary hover:underline">
+              {t('door_matches')}
             </Link>
           </div>
-
           {openMatches.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-8 rounded-2xl border border-white/5 bg-card/20">
-              {t('prog_empty')}
-            </p>
+            <p className="rounded-2xl border border-border bg-card/20 py-8 text-center text-xs text-muted-foreground">{t('prog_empty')}</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {openMatches.map((match) => {
                 const mine = myByMatch.get(match.id);
                 return (
-                  <Link
-                    key={match.id}
-                    href={`/match/${match.id}`}
-                    className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-card/40 p-4 transition-all duration-300 hover:border-primary/40 hover:bg-card/70 hover:-translate-y-1"
-                  >
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-3 text-[11px]">
-                      <span className="text-muted-foreground truncate">{match.league.name}</span>
+                  <Link key={match.id} href={`/match/${match.id}`} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4">
+                    <div className="mb-3 flex items-center justify-between border-b border-border pb-2 text-[11px]">
+                      <span className="truncate text-muted-foreground">{match.league.name}</span>
                       <ClientTime value={match.kickoffAt} className="font-mono font-bold text-primary" />
                     </div>
-
                     <div className="space-y-2 py-1">
                       <div className="flex items-center gap-2">
-                        {match.homeTeam.logoUrl && <img src={match.homeTeam.logoUrl} alt="" className="h-5 w-5 object-contain" />}
-                        <span className="text-xs font-bold text-white truncate">{match.homeTeam.name}</span>
+                        <CrestImage src={match.homeTeam.logoUrl} name={match.homeTeam.name} size={20} className="h-5 w-5 object-contain" />
+                        <span className="truncate text-xs font-bold">{match.homeTeam.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {match.awayTeam.logoUrl && <img src={match.awayTeam.logoUrl} alt="" className="h-5 w-5 object-contain" />}
-                        <span className="text-xs font-bold text-white truncate">{match.awayTeam.name}</span>
+                        <CrestImage src={match.awayTeam.logoUrl} name={match.awayTeam.name} size={20} className="h-5 w-5 object-contain" />
+                        <span className="truncate text-xs font-bold">{match.awayTeam.name}</span>
                       </div>
                     </div>
-
-                    <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
-                      <span className="text-muted-foreground font-mono">
+                    <div className="mt-3 flex items-center justify-between border-t border-border pt-2 text-[11px]">
+                      <span className="font-mono text-muted-foreground">
                         {match._count.predictions} {t('prog_slips')}
                       </span>
                       {mine ? (
-                        <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
-                          {t('prog_yours')}
-                        </span>
+                        <span className="ph-chip is-ok">{t('prog_yours')}</span>
                       ) : (
-                        <span className="text-primary font-bold group-hover:underline">
-                          {t('prog_open')} →
-                        </span>
+                        <span className="font-bold text-primary">{t('prog_open')}</span>
                       )}
                     </div>
                   </Link>
@@ -470,51 +445,48 @@ export async function PredictionsHouse() {
           )}
         </section>
 
-        {/* ——— Full Interactive Leaderboard & Scorers Explorer with Voice Search ——— */}
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold text-primary uppercase tracking-widest">{t('list_kicker')}</p>
-              <h2 className="text-xl sm:text-2xl font-black text-white mt-1">{t('list_title')}</h2>
+              <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('list_kicker')}</p>
+              <h2 className="mt-1 text-xl font-black sm:text-2xl">{t('list_title')}</h2>
             </div>
-            <span className="text-xs text-muted-foreground font-mono">
-              {ranked.length} {locale === 'en' ? 'Racers' : 'متسابق'} · {realScorerItems.length} {locale === 'en' ? 'Top Scorers' : 'هدّاف عالمي'}
+            <span className="font-mono text-xs text-muted-foreground">
+              {peopleCount} {t('racers')} · {realScorerItems.length} {t('scorers_count')} · {season}/{Number(season) + 1}
             </span>
           </div>
-
           <LeaderboardExplorer
             userRanks={userRankItems}
             realScorers={realScorerItems}
             currentUserId={me?.id}
             locale={locale}
             labels={{
-              searchPlaceholder: locale === 'ar' ? 'ابحث عن متسابق، لاعب، أو فريق بالاسم أو الصوت...' : 'Search racer, player, or team by name or voice...',
-              voiceListening: locale === 'ar' ? 'جارٍ الاستماع... تحدث الآن 🎙️' : 'Listening... Speak now 🎙️',
-              voiceUnsupported: locale === 'ar' ? 'المتصفح لا يدعم البحث الصوتي المباشر' : 'Voice search is not supported in this browser',
-              tabUsers: locale === 'ar' ? '🏆 متصدرو التوقعات' : '🏆 Community Leaderboard',
-              tabScorers: locale === 'ar' ? '⚽ هدافو الدوريات العالمية' : '⚽ Global Top Scorers',
-              colRank: locale === 'ar' ? 'الترتيب' : 'Rank',
-              colName: locale === 'ar' ? 'الاسم' : 'Name',
-              colPredictions: locale === 'ar' ? 'التوقعات' : 'Slips',
-              colPoints: locale === 'ar' ? 'النقاط' : 'Points',
-              colGoals: locale === 'ar' ? 'الأهداف' : 'Goals',
-              colTeam: locale === 'ar' ? 'الفريق' : 'Team',
-              colLeague: locale === 'ar' ? 'البطولة' : 'League',
-              emptyMessage: locale === 'ar' ? 'لا توجد نتائج مطابقة لبحثك' : 'No matching results found',
-              clearSearch: locale === 'ar' ? 'مسح البحث' : 'Clear search',
+              searchPlaceholder: t('search_placeholder'),
+              voiceListening: t('voice_listening'),
+              voiceUnsupported: t('voice_unsupported'),
+              tabUsers: t('tab_users'),
+              tabScorers: t('tab_scorers'),
+              colRank: t('col_rank'),
+              colName: t('col_name'),
+              colPredictions: t('col_slips'),
+              colPoints: t('col_points'),
+              colGoals: t('col_goals'),
+              colTeam: t('col_team'),
+              colLeague: t('col_league'),
+              emptyMessage: t('search_empty'),
+              clearSearch: t('clear_search'),
             }}
           />
         </section>
 
-        {/* ——— Fair Play Rules ——— */}
-        <section className="rounded-3xl border border-white/10 bg-card/40 p-6 sm:p-8 backdrop-blur-xl">
-          <h2 className="text-lg font-bold text-white mb-4">{t('rules_title')}</h2>
+        <section className="ph-rules rounded-3xl p-6 sm:p-8">
+          <h2 className="mb-4 text-lg font-bold">{t('rules_title')}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {rules.map((rule) => (
-              <div key={rule.no} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+              <div key={rule.no} className="rounded-2xl border border-border bg-card p-4">
                 <span className="font-mono text-xs font-bold text-primary">{rule.no}</span>
-                <h3 className="text-xs font-bold text-white mt-1.5 mb-1">{rule.title}</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{rule.body}</p>
+                <h3 className="mt-1.5 mb-1 text-xs font-bold">{rule.title}</h3>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">{rule.body}</p>
               </div>
             ))}
           </div>

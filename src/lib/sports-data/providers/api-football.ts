@@ -1,4 +1,5 @@
-import { SportsDataProvider } from '../interface';
+import { sportsApiFetch } from '../provider-http';
+import type { SportsDataProvider } from '../interface';
 import { 
   NormalizedMatch, 
   NormalizedMatchDetail, 
@@ -22,6 +23,7 @@ interface ApiFixture {
     referee?: string;
     status: { short: string; elapsed?: number };
     venue: { id?: number; name?: string; city?: string };
+    attendance?: number | null;
   };
   teams: { home: ApiTeam; away: ApiTeam };
   league: ApiTeam & { round?: string; country?: string; season?: number };
@@ -112,59 +114,15 @@ interface ApiScorer {
  * Maps external API responses to our internal Normalized types.
  */
 export class ApiFootballProvider implements SportsDataProvider {
-  private apiKey: string;
-
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-  }
-
-  private getTransport(): { baseUrl: string; headers: Record<string, string> } {
-    const isRapidAPI = !process.env.SPORTS_API_PROVIDER || process.env.SPORTS_API_PROVIDER === 'rapidapi';
-    if (isRapidAPI) {
-      return {
-        baseUrl: 'https://api-football-v1.p.rapidapi.com/v3',
-        headers: {
-          'x-rapidapi-key': this.apiKey,
-          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-        },
-      };
-    }
-    return {
-      baseUrl: 'https://v3.football.api-sports.io',
-      headers: {
-        'x-apisports-key': this.apiKey,
-      },
-    };
-  }
+  constructor(_apiKey: string) {}
 
   private async fetch<T>(endpoint: string): Promise<ApiEnvelope<T>> {
-    try {
-      const { baseUrl, headers } = this.getTransport();
-      const response = await fetch(`${baseUrl}${endpoint}`, {
-        headers,
-        cache: 'no-store',
-        signal: AbortSignal.timeout(4000),
-      });
+    const data = await sportsApiFetch<ApiEnvelope<T>>(endpoint);
+    return data ?? { response: [] };
+  }
 
-      if (!response.ok) {
-        console.error(`[API_FOOTBALL_ERROR]: ${response.status} ${response.statusText}`);
-        return { response: [] }; // Return empty structure
-      }
-
-      return await response.json() as ApiEnvelope<T>;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const isTimeout =
-        (error instanceof Error && error.name === 'TimeoutError') ||
-        message.toLowerCase().includes('timeout') ||
-        message.toLowerCase().includes('aborted');
-      if (isTimeout) {
-        console.warn(`[API_FOOTBALL_TIMEOUT]: ${endpoint}`);
-      } else {
-        console.error(`[API_FOOTBALL_FETCH_FAILED]: ${message.slice(0, 180)}`);
-      }
-      return { response: [] };
-    }
+  async getRaw<T = unknown>(path: string): Promise<T | null> {
+    return sportsApiFetch<T>(path);
   }
 
   private mapStatus(status: string): MatchStatus {
@@ -256,7 +214,7 @@ export class ApiFootballProvider implements SportsDataProvider {
       isSubstitute,
     });
 
-    let lineups: NormalizedLineup[] = lineupsData.response.map((lineup) => ({
+    const lineups: NormalizedLineup[] = lineupsData.response.map((lineup) => ({
       teamId: String(lineup.team.id),
       formation: lineup.formation || undefined,
       players: (lineup.startXI || []).map((player) => mapPlayer(player)),
@@ -265,38 +223,6 @@ export class ApiFootballProvider implements SportsDataProvider {
       status: 'CONFIRMED' as const,
       source: 'API' as const,
     }));
-
-    if (lineups.length === 0 && status === 'NOT_STARTED') {
-      const inferLineup = async (teamId: string) => {
-        const recent = await this.fetch<ApiFixture>(`/fixtures?team=${teamId}&last=5&status=FT`);
-        for (const fixture of recent.response) {
-          const historical = await this.fetch<ApiLineup>(`/fixtures/lineups?fixture=${fixture.fixture.id}`);
-          const teamLineup = (historical.response || []).find(
-            (lineup) => String(lineup.team.id) === teamId
-          );
-          if (teamLineup) {
-            return {
-              teamId,
-              formation: teamLineup.formation || undefined,
-              players: (teamLineup.startXI || []).map((player) => mapPlayer(player)),
-              bench: (teamLineup.substitutes || []).map((player) => mapPlayer(player, true)),
-              coach: teamLineup.coach
-                ? { id: String(teamLineup.coach.id), name: teamLineup.coach.name }
-                : undefined,
-              status: 'PREDICTED' as const,
-              source: 'INFERRED' as const,
-            };
-          }
-        }
-        return null;
-      };
-
-      const inferredLineups = await Promise.all([
-        inferLineup(String(f.teams.home.id)),
-        inferLineup(String(f.teams.away.id)),
-      ]);
-      lineups = inferredLineups.flatMap((lineup) => lineup ? [lineup] : []);
-    }
 
     const statistics = statisticsData.response.map((teamStats) => {
       const value = (type: string) =>
@@ -357,6 +283,7 @@ export class ApiFootballProvider implements SportsDataProvider {
         city: f.fixture.venue.city || undefined,
       } : undefined,
       referee: f.fixture.referee ? { name: f.fixture.referee } : undefined,
+      attendance: typeof f.fixture.attendance === 'number' ? f.fixture.attendance : undefined,
       events: eventsData.response.map((event) => ({
         id: event.id ? String(event.id) : undefined,
         type: event.type === 'Goal'
@@ -375,14 +302,10 @@ export class ApiFootballProvider implements SportsDataProvider {
       lineups,
       statistics,
       channels: [],
-      lineupStatus: lineups.some((lineup) => lineup.status === 'CONFIRMED')
-        ? 'CONFIRMED'
-        : lineups.length > 0 ? 'PREDICTED' : 'PENDING',
+      lineupStatus: lineups.length > 0 ? 'CONFIRMED' : 'PENDING',
       availability: {
         events: eventsData.response?.length ? 'AVAILABLE' : 'PENDING',
-        lineups: lineups.some((lineup) => lineup.status === 'CONFIRMED')
-          ? 'CONFIRMED'
-          : lineups.length ? 'PREDICTED' : 'PENDING',
+        lineups: lineups.length > 0 ? 'CONFIRMED' : 'PENDING',
         statistics: statistics.length ? 'AVAILABLE' : 'PENDING',
         broadcast: 'PENDING',
       },

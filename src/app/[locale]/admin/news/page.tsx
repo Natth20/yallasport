@@ -1,4 +1,5 @@
-﻿import React from 'react';
+import { swallow } from '@/lib/ops/caught';
+import React from 'react';
 import { NewsDeskEditor, EnrichNewsImagesButton } from './components/NewsDeskEditor';
 import { NewsLinksReview } from './NewsLinksReview';
 import { prisma } from '@/lib/prisma';
@@ -28,6 +29,7 @@ const newsDeskSelect = {
   isPremium: true,
   createdAt: true,
   publishedAt: true,
+  publishAt: true,
 } as const;
 
 export default async function AdminNewsPage({
@@ -91,7 +93,7 @@ export default async function AdminNewsPage({
         take: 50,
         select: newsDeskSelect,
       })
-      .catch(() => []),
+      .catch(swallow("src/app/[locale]/admin/news/page.tsx:95", [])),
     prisma.newsEntityLink
       .findMany({
         where: { suggested: true },
@@ -99,7 +101,7 @@ export default async function AdminNewsPage({
         orderBy: { createdAt: 'desc' },
         take: 30,
       })
-      .catch(() => []),
+      .catch(swallow("src/app/[locale]/admin/news/page.tsx:103", [])),
     prisma.systemAlert
       .findMany({
         where: {
@@ -109,7 +111,7 @@ export default async function AdminNewsPage({
         orderBy: { createdAt: 'desc' },
         take: 6,
       })
-      .catch(() => []),
+      .catch(swallow("src/app/[locale]/admin/news/page.tsx:113", [])),
     prisma.news
       .count({
         where: {
@@ -117,7 +119,7 @@ export default async function AdminNewsPage({
           OR: [{ breaking: true }, { title: { contains: 'عاجل' } }, { title: { contains: 'breaking', mode: 'insensitive' } }],
         },
       })
-      .catch(() => 0),
+      .catch(swallow("src/app/[locale]/admin/news/page.tsx:121", 0)),
     prisma.news
       .findMany({
         where: { sourceName: { not: null } },
@@ -125,7 +127,7 @@ export default async function AdminNewsPage({
         select: { sourceName: true },
         take: 40,
       })
-      .catch(() => []),
+      .catch(swallow("src/app/[locale]/admin/news/page.tsx:129", [])),
   ]);
 
   const missingImages = rows.filter((row) => !(row.featuredImage || row.ogImage)).length;

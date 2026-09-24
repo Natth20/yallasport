@@ -1,4 +1,4 @@
-﻿import { auth } from '@/lib/auth/auth';
+import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getTranslations } from 'next-intl/server';

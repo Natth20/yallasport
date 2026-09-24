@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { AboutHouse } from '@/components/about/AboutHouse';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
@@ -16,6 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function AboutPage() {
-  return <AboutHouse />;
+export default function AboutPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <AboutHouse />
+    </Suspense>
+  );
 }

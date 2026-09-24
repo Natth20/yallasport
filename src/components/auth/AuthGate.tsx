@@ -3,6 +3,7 @@ import { BrandMark } from '@/components/brand/BrandMark';
 import { PitchWatermark, TicketBarcode, WaxSeal } from '@/components/decor/CraftMarks';
 import { Link } from '@/i18n/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import './auth-gate.css';
 
 export async function AuthGate({
   code,
@@ -76,7 +77,7 @@ export async function AuthGate({
             </Link>
             <p className={`auth-kicker pitch mt-14 ${arabic ? 'is-ar' : ''}`}>{kicker}</p>
             <p className="auth-pitch-title">{title}</p>
-            <p className="mt-6 max-w-md text-[15px] leading-8 text-white/55">{lead}</p>
+            <p className="auth-pitch-lead">{lead}</p>
             <div className="mt-8 flex flex-wrap gap-2">
               {seals.map((seal) => (
                 <span key={seal} className={`auth-seal ${arabic ? 'is-ar' : ''}`}>
@@ -87,8 +88,8 @@ export async function AuthGate({
           </div>
           <div className="relative flex items-end justify-between gap-6">
             <div>
-              <p className="font-mono text-[11px] text-white/35">{code}</p>
-              <TicketBarcode className="mt-3 text-white/40" />
+              <p className="auth-pitch-meta">{code}</p>
+              <TicketBarcode className="auth-pitch-barcode" />
             </div>
             <WaxSeal label={t('gate').replace(' ', '\n')} className="hidden xl:flex" />
           </div>

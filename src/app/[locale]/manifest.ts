@@ -12,8 +12,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     background_color: '#000000',
     theme_color: '#f97316',
     icons: [
-      { src: '/images/logo.jpg', sizes: '192x192', type: 'image/jpeg' },
-      { src: '/images/logo.jpg', sizes: '512x512', type: 'image/jpeg' }
+      { src: '/images/logo.png', sizes: '192x192', type: 'image/png' },
+      { src: '/images/logo.png', sizes: '512x512', type: 'image/png' }
     ]
   };
 }

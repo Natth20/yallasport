@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ArrowUpLeft, Globe, Radio, Search, Star, Target } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { ClientTime } from '@/components/datetime/ClientTime';
@@ -8,6 +8,7 @@ import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { LeagueDeskCard } from '@/components/leagues/LeagueDeskCard';
 import { DeskRule, EditionPlate, EndMark, PhotoCorners, StorySpine } from '@/components/news/NewsOrnaments';
 import { pick } from '@/i18n/pick';
+import './leagues-atlas.css';
 
 type Crest = { name: string; logoUrl: string | null };
 type Venue = { name: string; city: string | null } | null;
@@ -132,6 +133,7 @@ export function LeaguesAtlas({
   sortedLeagues,
   chapterEntries,
   unlocated,
+  directoryCapped = false,
   jumpCountries,
   visibleCountries,
   extraCountryCount,
@@ -162,8 +164,9 @@ export function LeaguesAtlas({
   liveBoard: LiveMatch[];
   liveGoalByMatch: Map<string, { minute: number; extraMinute: number | null; playerName: string | null; player: { name: string } | null }>;
   sortedLeagues: AtlasLeague[];
-  chapterEntries: Array<[string, AtlasLeague[]]>;
+  chapterEntries: Array<{ country: string; rows: AtlasLeague[]; total: number }>;
   unlocated: AtlasLeague[];
+  directoryCapped?: boolean;
   jumpCountries: Array<{ country: string; live: number; count: number; nextKickoff: Date | null }>;
   visibleCountries: string[];
   extraCountryCount: number;
@@ -193,18 +196,14 @@ export function LeaguesAtlas({
     leagueSlug: string;
   }>;
 }) {
-  const crestOrbit = sortedLeagues
-    .filter((league) => Boolean(league.logoUrl))
-    .slice(0, 12);
-
   return (
-    <div className="league-atlas min-h-screen pb-28">
+    <div className="league-atlas min-h-screen pb-16">
       <span className="atlas-flood atlas-flood-a" aria-hidden />
       <span className="atlas-flood atlas-flood-b" aria-hidden />
       {liveMatches.length > 0 && (
         <div className="atlas-wire">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-5 py-2.5 sm:px-6 lg:px-8">
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/15 px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.18em] text-rose-300">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/15 px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.18em] text-rose-700 dark:text-rose-300">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
               {pick(locale, 'مباشر', 'Live')}
             </span>
@@ -213,11 +212,11 @@ export function LeaguesAtlas({
                 <Link
                   key={match.id}
                   href={`/match/${match.id}`}
-                  className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-orange-50/70 hover:text-orange-400"
+                  className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-foreground/80 hover:text-orange-500"
                 >
                   <span className="max-w-[8rem] truncate">{match.homeTeam.name}</span>
                   {hasScore(match.homeScore, match.awayScore) ? (
-                    <span className="tabular-nums text-orange-50">
+                    <span className="tabular-nums atlas-ink">
                       {match.homeScore}–{match.awayScore}
                     </span>
                   ) : (
@@ -232,30 +231,26 @@ export function LeaguesAtlas({
       )}
 
       <section className="atlas-hero">
-        <span className="atlas-arch" aria-hidden="true" />
-        <PhotoCorners className="pointer-events-none absolute inset-4 opacity-40 sm:inset-6" />
-
-        <div className="relative mx-auto max-w-7xl px-5 pb-12 pt-5 sm:px-6 lg:px-8">
-          <header className="atlas-mast mb-8">
+        <div className="relative mx-auto max-w-7xl px-5 pb-8 pt-4 sm:px-6 lg:px-8">
+          <header className="atlas-mast mb-5">
             <div className="flex flex-wrap items-end gap-4">
               <EditionPlate year={now.getFullYear()} label={pick(locale, 'الموسم', 'Season')} />
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-orange-400/90">
-                  Yalla <span className="text-orange-50/80">Atlas</span>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-orange-500">
+                  Yalla <span className="atlas-ink">Atlas</span>
                 </p>
                 <h1 className="atlas-mast-wordmark mt-2">
                   {pick(locale, 'البطولات', 'Leagues')}
                 </h1>
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-orange-50/45">
+                <div className="atlas-hero-meta">
                   <span className="inline-flex items-center gap-1.5">
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        liveMatches.length > 0
-                          ? 'animate-pulse bg-rose-400'
-                          : providerIsLive
-                            ? 'bg-emerald-400'
-                            : 'bg-amber-400'
-                      }`}
+                      className={`h-1.5 w-1.5 rounded-full ${liveMatches.length > 0
+                        ? 'animate-pulse bg-rose-400'
+                        : providerIsLive
+                          ? 'bg-emerald-400'
+                          : 'bg-amber-400'
+                        }`}
                     />
                     {liveMatches.length > 0
                       ? pick(locale, `${liveMatches.length} مباراة على الملعب`, `${liveMatches.length} live now`)
@@ -272,7 +267,7 @@ export function LeaguesAtlas({
                 </div>
               </div>
             </div>
-            <p className="max-w-sm text-sm font-medium leading-7 text-orange-50/55">
+            <p className="atlas-hero-lede">
               {pick(
                 locale,
                 'جداول ومباشر ومواعيد من المصدر فقط — بلا تعبئة وبلا أرقام وهمية.',
@@ -281,25 +276,10 @@ export function LeaguesAtlas({
             </p>
           </header>
 
-          <DeskRule className="mb-8 opacity-70" />
-
-          {crestOrbit.length > 0 ? (
-            <div className="atlas-crest-orbit mb-8" aria-hidden>
-              {crestOrbit.map((league, index) => (
-                <span
-                  key={league.id}
-                  className="atlas-crest-orbit-item"
-                  style={{ animationDelay: `${index * 90}ms` }}
-                  title={league.name}
-                >
-                  <LeagueCrest name={league.name} logoUrl={league.logoUrl} className="h-full w-full" />
-                </span>
-              ))}
-            </div>
-          ) : null}
+          <DeskRule className="mb-5 opacity-70" />
 
           {census.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="atlas-census">
               {census.map((stat) => (
                 <div key={stat.label} className="atlas-stat" data-live={stat.live ? 'true' : 'false'}>
                   <strong className="tabular-nums">{stat.value}</strong>
@@ -310,43 +290,48 @@ export function LeaguesAtlas({
           ) : null}
 
           {spotlightLeague && (spotlightLeague.liveMatch || spotlightLeague.podium.length > 0 || spotlightLeague.nextMatch || spotlightLeague.lastResult) && (
-            <div className="atlas-programme relative mt-8 rounded-[1.6rem]">
+            <div className="atlas-programme relative mt-5 rounded-[1.6rem]">
               <PhotoCorners className="pointer-events-none absolute inset-3 opacity-30" />
-              <div className="relative grid lg:grid-cols-[auto_1.1fr_.9fr]">
-                <div className="flex items-center justify-center border-b border-white/10 px-8 py-8 lg:border-b-0 lg:border-e">
-                  <div className="flex h-32 w-32 items-center justify-center rounded-full border border-white/10 bg-card p-5 shadow-[0_24px_48px_-28px_rgba(0,0,0,0.7)]">
+              <div
+                className={`relative grid ${spotlightLeague.podium.length > 0 || spotlightLiveMatches.length > 0
+                  ? 'lg:grid-cols-[auto_minmax(0,1.1fr)_minmax(0,0.9fr)]'
+                  : 'lg:grid-cols-[auto_minmax(0,1fr)]'
+                  }`}
+              >
+                <div className="flex items-center justify-center border-b border-border px-6 py-6 lg:border-b-0 lg:border-e">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border border-border bg-card p-4 shadow-[0_18px_36px_-24px_rgba(15,25,42,0.45)]">
                     <LeagueCrest name={spotlightLeague.name} logoUrl={spotlightLeague.logoUrl} className="h-full w-full text-4xl" />
                   </div>
                 </div>
-                <div className="relative p-6 sm:p-8">
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-orange-50/50">
+                <div className="relative p-5 sm:p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] atlas-muted">
                     <span className="inline-flex items-center gap-2">
                       <span className="rounded-full bg-orange-500 px-2.5 py-1 text-[9px] font-bold text-primary-foreground">
                         {pick(locale, 'البطولة المختارة', 'Featured league')}
                       </span>
                       {spotlightLeague.country && (
                         <span className="inline-flex items-center gap-1.5">
-                          <Globe className="h-3.5 w-3.5 text-orange-400" />
+                          <Globe className="h-3.5 w-3.5 text-orange-500" />
                           {spotlightLeague.country}
                         </span>
                       )}
                       {spotlightLeague.season && <span>· {spotlightLeague.season}</span>}
                     </span>
                     {spotlightLeague.liveMatch ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/15 px-2.5 py-1 text-[10px] font-bold text-rose-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/30 bg-rose-500/15 px-2.5 py-1 text-[10px] font-bold text-rose-600 dark:text-rose-300">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
                         {pick(locale, 'مباشر الآن', 'Live now')}
                         {spotlightLeague.census.live > 1 ? ` · ${spotlightLeague.census.live}` : ''}
                       </span>
                     ) : spotlightLeague.nextMatch ? (
-                      <ClientTime value={spotlightLeague.nextMatch.kickoffAt} className="font-semibold text-orange-400" />
+                      <ClientTime value={spotlightLeague.nextMatch.kickoffAt} className="font-semibold text-orange-500" />
                     ) : null}
                   </div>
 
-                  <h2 className="mt-5 text-2xl font-bold tracking-[-0.04em] text-orange-50 sm:text-4xl">{spotlightLeague.name}</h2>
-                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-orange-50/45">
+                  <h2 className="mt-4 text-2xl font-bold tracking-[-0.04em] atlas-ink sm:text-3xl">{spotlightLeague.name}</h2>
+                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] atlas-muted">
                     {spotlightLeague.census.live > 0 && (
-                      <span className="font-semibold text-rose-300">
+                      <span className="font-semibold text-rose-600 dark:text-rose-300">
                         {spotlightLeague.census.live} {pick(locale, 'مباشرة', 'live')}
                       </span>
                     )}
@@ -375,29 +360,29 @@ export function LeaguesAtlas({
                   {spotlightLeague.nextMatch && (
                     <Link
                       href={`/match/${spotlightLeague.nextMatch.id}`}
-                      className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-card/[0.04] px-4 py-3 text-[11px] hover:border-orange-400/40"
+                      className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-[11px] hover:border-orange-400/40"
                     >
                       <span className="min-w-0">
-                        <span className="block text-[10px] font-semibold text-orange-400">
+                        <span className="block text-[10px] font-semibold text-orange-500">
                           {pick(locale, 'المباراة القادمة', 'Next match')}
                           {spotlightLeague.nextMatch.round ? ` · ${spotlightLeague.nextMatch.round}` : ''}
                         </span>
-                        <span className="mt-1 block font-semibold text-orange-50">
+                        <span className="mt-1 block font-semibold atlas-ink">
                           {spotlightLeague.nextMatch.homeTeam.name} × {spotlightLeague.nextMatch.awayTeam.name}
                         </span>
                       </span>
-                      <span className="flex shrink-0 flex-col items-end gap-0.5 text-orange-50/45">
+                      <span className="flex shrink-0 flex-col items-end gap-0.5 atlas-muted">
                         {spotlightLeague.nextMatch.venue?.name && (
                           <span className="hidden max-w-40 truncate sm:inline">{spotlightLeague.nextMatch.venue.name}</span>
                         )}
-                        <ClientTime value={spotlightLeague.nextMatch.kickoffAt} className="font-semibold text-orange-400" />
+                        <ClientTime value={spotlightLeague.nextMatch.kickoffAt} className="font-semibold text-orange-500" />
                       </span>
                     </Link>
                   )}
 
                   {spotlightLeague.lastResult &&
                     hasScore(spotlightLeague.lastResult.homeScore, spotlightLeague.lastResult.awayScore) && (
-                      <Link href={`/match/${spotlightLeague.lastResult.id}`} className="mt-3 flex items-center justify-between gap-3 text-[11px] text-orange-50/45">
+                      <Link href={`/match/${spotlightLeague.lastResult.id}`} className="mt-3 flex items-center justify-between gap-3 text-[11px] atlas-muted">
                         <span>
                           {pick(locale, 'آخر نتيجة:', 'Latest result:')} {spotlightLeague.lastResult.homeTeam.name}{' '}
                           {spotlightLeague.lastResult.homeScore}–{spotlightLeague.lastResult.awayScore} {spotlightLeague.lastResult.awayTeam.name}
@@ -407,7 +392,7 @@ export function LeaguesAtlas({
                       </Link>
                     )}
 
-                  <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+                  <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
                     <LeagueFollowChip
                       leagueId={spotlightLeague.id}
                       isLoggedIn={loggedIn}
@@ -417,7 +402,7 @@ export function LeaguesAtlas({
                     {spotlightLeague.standings > 0 && (
                       <Link
                         href={`/league/${spotlightLeague.slug}/standings`}
-                        className="inline-flex h-11 items-center rounded-xl border border-white/15 px-4 text-[11px] font-semibold text-orange-50/80 hover:border-orange-400/40"
+                        className="inline-flex h-10 items-center rounded-xl border border-border px-4 text-[11px] font-semibold atlas-ink hover:border-orange-400/40"
                       >
                         {pick(locale, 'الجدول', 'Table')}
                       </Link>
@@ -425,14 +410,14 @@ export function LeaguesAtlas({
                     {spotlightLeague.census.finished > 0 && (
                       <Link
                         href={`/league/${spotlightLeague.slug}/archive`}
-                        className="inline-flex h-11 items-center rounded-xl border border-white/15 px-4 text-[11px] font-semibold text-orange-50/80 hover:border-orange-400/40"
+                        className="inline-flex h-10 items-center rounded-xl border border-border px-4 text-[11px] font-semibold atlas-ink hover:border-orange-400/40"
                       >
                         {pick(locale, 'الأرشيف', 'Archive')}
                       </Link>
                     )}
                     <Link
                       href={`/league/${spotlightLeague.slug}`}
-                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-[11px] font-bold text-primary-foreground hover:bg-orange-400"
+                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-5 text-[11px] font-bold text-primary-foreground hover:bg-orange-400"
                     >
                       {pick(locale, 'فتح البطولة', 'Open league')}
                       <ArrowUpLeft className="h-3.5 w-3.5" />
@@ -441,35 +426,35 @@ export function LeaguesAtlas({
                 </div>
 
                 {spotlightLeague.podium.length > 0 ? (
-                  <div className="relative border-t border-white/10 bg-card/[0.03] p-6 sm:p-8 lg:border-s lg:border-t-0">
-                    <span className="text-[10px] font-semibold tracking-[0.18em] text-orange-400">
+                  <div className="relative border-t border-border bg-foreground/[0.03] p-5 sm:p-6 lg:border-s lg:border-t-0">
+                    <span className="text-[10px] font-semibold tracking-[0.18em] text-orange-500">
                       {pick(locale, 'لمحة الجدول', 'Table snapshot')}
                     </span>
-                    <h3 className="mt-1 text-base font-semibold text-orange-50">{pick(locale, 'المراكز الأولى', 'Top positions')}</h3>
-                    <div className="mt-5 space-y-3">
+                    <h3 className="mt-1 text-base font-semibold atlas-ink">{pick(locale, 'المراكز الأولى', 'Top positions')}</h3>
+                    <div className="mt-4 space-y-2">
                       {spotlightLeague.podium.map((row) => (
                         <Link
                           key={row.id}
                           href={`/team/${row.team.slug}`}
-                          className="relative flex items-center gap-3 rounded-xl border border-white/10 bg-card/[0.04] px-3 py-3 hover:border-orange-400/35"
+                          className="relative flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 hover:border-orange-400/35"
                         >
                           <span className={medalClass(row.rank)}>{String(row.rank).padStart(2, '0')}</span>
-                          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-card/40 p-1.5">
+                          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-card p-1.5">
                             <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-full w-full text-sm" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <strong className="block truncate text-[11px] text-orange-50">{row.team.name}</strong>
-                            <span className="text-[9px] text-orange-50/40">
+                            <strong className="block truncate text-[11px] atlas-ink">{row.team.name}</strong>
+                            <span className="text-[9px] atlas-muted">
                               {row.played} {pick(locale, 'لعب', 'played')} · {row.won} {pick(locale, 'ف', 'W')}
                               {` · ${goalDifference(row.goalsFor, row.goalsAgainst)}`}
                             </span>
                           </div>
-                          <strong className="text-sm tabular-nums text-orange-400">{row.points}</strong>
+                          <strong className="text-sm tabular-nums text-orange-500">{row.points}</strong>
                         </Link>
                       ))}
                     </div>
                     {spotlightLeague.leader && spotlightLeague.runnerUp && (
-                      <p className="mt-4 text-[10px] text-orange-50/40">
+                      <p className="mt-4 text-[10px] atlas-muted">
                         {pick(locale, 'الفارق', 'Gap')} {spotlightLeague.leader.points - spotlightLeague.runnerUp.points}{' '}
                         {pick(locale, 'نقطة بين', 'points between')} {spotlightLeague.leader.team.name} {pick(locale, 'و', 'and')}{' '}
                         {spotlightLeague.runnerUp.team.name}
@@ -478,11 +463,11 @@ export function LeaguesAtlas({
                   </div>
                 ) : spotlightLiveMatches.length > 0 ? (
                   <div className="relative border-t border-rose-500/20 bg-rose-500/10 p-5 sm:p-6 lg:border-s lg:border-t-0">
-                    <div className="mb-4 flex items-center justify-between">
-                      <span className="text-[10px] font-semibold tracking-[0.18em] text-rose-300">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-[10px] font-semibold tracking-[0.18em] text-rose-600 dark:text-rose-300">
                         {pick(locale, 'على الملعب', 'On the pitch')}
                       </span>
-                      <span className="text-[11px] font-bold text-rose-300">
+                      <span className="text-[11px] font-bold text-rose-600 dark:text-rose-300">
                         {spotlightLiveMatches.length} {pick(locale, 'مباشرة', 'live')}
                       </span>
                     </div>
@@ -491,18 +476,18 @@ export function LeaguesAtlas({
                         <Link
                           key={match.id}
                           href={`/match/${match.id}`}
-                          className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5"
+                          className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5"
                         >
-                          <span className="w-10 shrink-0 text-[10px] font-bold text-rose-300">{liveClock(match, locale)}</span>
-                          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-orange-50">{match.homeTeam.name}</span>
+                          <span className="w-10 shrink-0 text-[10px] font-bold text-rose-600 dark:text-rose-300">{liveClock(match, locale)}</span>
+                          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold atlas-ink">{match.homeTeam.name}</span>
                           {hasScore(match.homeScore, match.awayScore) ? (
-                            <strong className="shrink-0 text-[12px] tabular-nums text-orange-50">
+                            <strong className="shrink-0 text-[12px] tabular-nums atlas-ink">
                               {match.homeScore}–{match.awayScore}
                             </strong>
                           ) : (
-                            <span className="text-[9px] text-rose-300">{pick(locale, 'مباشر', 'Live')}</span>
+                            <span className="text-[9px] text-rose-600 dark:text-rose-300">{pick(locale, 'مباشر', 'Live')}</span>
                           )}
-                          <span className="min-w-0 flex-1 truncate text-start text-[11px] font-semibold text-orange-50">
+                          <span className="min-w-0 flex-1 truncate text-start text-[11px] font-semibold atlas-ink">
                             {match.awayTeam.name}
                           </span>
                         </Link>
@@ -546,7 +531,7 @@ export function LeaguesAtlas({
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-6 lg:px-8">
+      <main className="relative mx-auto max-w-7xl px-5 py-6 sm:px-6 lg:px-8">
         {followedLeagues.length > 0 && (
           <section className="mb-10">
             <div className="mb-4 flex items-center justify-between">
@@ -580,7 +565,7 @@ export function LeaguesAtlas({
         )}
 
         {liveMatches.length > 0 && (
-          <section className="atlas-desk relative mb-12">
+          <section className="atlas-desk is-live relative mb-12">
             <div className="flex items-center justify-between border-b border-border px-6 py-5 dark:border-border">
               <div>
                 <span className="atlas-section-kicker text-rose-500">{pick(locale, 'على الملعب', 'On the pitch')}</span>
@@ -615,7 +600,7 @@ export function LeaguesAtlas({
                         </span>
                       </span>
                       {hasScore(match.homeScore, match.awayScore) ? (
-                        <strong className="rounded-lg bg-card px-2.5 py-1 text-[13px] font-bold tabular-nums text-orange-50">
+                        <strong className="rounded-lg bg-foreground/5 px-2.5 py-1 text-[13px] font-bold tabular-nums text-foreground">
                           {match.homeScore}–{match.awayScore}
                         </strong>
                       ) : (
@@ -648,12 +633,22 @@ export function LeaguesAtlas({
               <div>
                 <span className="atlas-section-kicker">{pick(locale, 'حسب الدولة', 'By country')}</span>
                 <h2 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">
-                  {selectedCountry === 'all' ? pick(locale, 'دليل البطولات', 'League directory') : selectedCountry}
+                  {selectedCountry === 'all'
+                    ? directoryCapped
+                      ? pick(locale, 'أبرز البطولات', 'Featured leagues')
+                      : pick(locale, 'دليل البطولات', 'League directory')
+                    : selectedCountry}
                 </h2>
                 <DeskRule className="mt-3 max-w-xs opacity-60" />
               </div>
               <span className="text-[12px] text-muted-foreground">
-                {sortedLeagues.length} {pick(locale, 'بطولة', 'leagues')}
+                {directoryCapped
+                  ? pick(
+                    locale,
+                    `عرض مختار من ${sortedLeagues.length} بطولة — اختر دولة لرؤية الكل`,
+                    `A desk selection of ${sortedLeagues.length} leagues — pick a country to see all`
+                  )
+                  : `${sortedLeagues.length} ${pick(locale, 'بطولة', 'leagues')}`}
                 <span className="mx-2 text-muted-foreground">·</span>
                 <ClientTime value={now} options={{ weekday: 'long', day: 'numeric', month: 'short' }} />
                 {selectedCountry !== 'all' && (
@@ -671,11 +666,10 @@ export function LeaguesAtlas({
               <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
                 <Link
                   href={countryHref('all')}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold ${
-                    selectedCountry === 'all'
-                      ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
-                      : 'border border-border bg-card text-muted-foreground hover:text-foreground dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
-                  }`}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold ${selectedCountry === 'all'
+                    ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
+                    : 'border border-border bg-card text-muted-foreground hover:text-foreground dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
+                    }`}
                 >
                   {pick(locale, 'كل الدول', 'All countries')}
                 </Link>
@@ -685,13 +679,12 @@ export function LeaguesAtlas({
                     <Link
                       key={country}
                       href={countryHref(country)}
-                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${
-                        selectedCountry === country
-                          ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
-                          : liveHere > 0
-                            ? 'border border-rose-200 bg-rose-500/10 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300'
-                            : 'border border-border bg-card text-muted-foreground hover:text-foreground dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
-                      }`}
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${selectedCountry === country
+                        ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
+                        : liveHere > 0
+                          ? 'border border-rose-200 bg-rose-500/10 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300'
+                          : 'border border-border bg-card text-muted-foreground hover:text-foreground dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
+                        }`}
                     >
                       {liveHere > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />}
                       {country}
@@ -704,24 +697,25 @@ export function LeaguesAtlas({
               </div>
             )}
 
-            <div className="space-y-10">
-              {chapterEntries.map(([country, rows], chapterIndex) => {
+            <div className="space-y-7">
+              {chapterEntries.map(({ country, rows, total }, chapterIndex) => {
                 const liveInCountry = rows.filter((league) => league.liveMatch).length;
                 const nextKickoff = jumpCountries.find((entry) => entry.country === country)?.nextKickoff;
+                const hidden = Math.max(0, total - rows.length);
                 return (
                   <section key={country} id={countryAnchor(country)} className="atlas-chapter scroll-mt-[8.5rem]">
-                    <div className="atlas-chapter-head mb-5">
+                    <div className="atlas-chapter-head mb-4">
                       <StorySpine mark="YS" folio={String(chapterIndex + 1).padStart(2, '0')} className="atlas-chapter-spine" />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-end justify-between gap-2">
                           <div>
                             <span className="atlas-section-kicker">
-                              {pick(locale, 'فصل', 'Chapter')} {String(chapterIndex + 1).padStart(2, '0')}
+                              {pick(locale, 'دولة', 'Country')} {String(chapterIndex + 1).padStart(2, '0')}
                             </span>
                             <h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">{country}</h3>
                           </div>
                           <span className="text-[11px] text-muted-foreground">
-                            {rows.length} {pick(locale, 'بطولة', 'leagues')}
+                            {total} {pick(locale, 'بطولة', 'leagues')}
                             {liveInCountry > 0 ? ` · ${liveInCountry} ${pick(locale, 'مباشر', 'live')}` : ''}
                             {nextKickoff ? (
                               <>
@@ -746,6 +740,16 @@ export function LeaguesAtlas({
                         </div>
                       ))}
                     </div>
+                    {hidden > 0 ? (
+                      <div className="mt-3 flex justify-end">
+                        <Link
+                          href={countryHref(country)}
+                          className="text-[12px] font-semibold text-orange-500 hover:underline"
+                        >
+                          {pick(locale, `كل بطولات ${country} · ${total}`, `All ${country} leagues · ${total}`)}
+                        </Link>
+                      </div>
+                    ) : null}
                   </section>
                 );
               })}
@@ -780,159 +784,161 @@ export function LeaguesAtlas({
         )}
 
         {(upcomingMatches.length > 0 || titleRaces.length > 0) && (
-        <section className="mt-10 grid gap-5 md:grid-cols-2">
-          {upcomingMatches.length > 0 && (
-            <div className="atlas-desk">
-              <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
-                <h2 className="text-base font-bold text-foreground dark:text-foreground">{pick(locale, 'أقرب المباريات', 'Upcoming matches')}</h2>
-                <Link href="/matches" className="text-[11px] font-semibold text-muted-foreground hover:text-orange-500">
-                  {pick(locale, 'الجدول', 'Schedule')}
-                </Link>
-              </div>
-              <div className="divide-y divide-slate-100 dark:divide-white/10">
-                {upcomingMatches.map((match) => (
-                  <Link key={match.id} href={`/match/${match.id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-card/[0.04]">
-                    <div className="hidden w-32 sm:block">
-                      <span className="block truncate text-[9px] text-muted-foreground">
-                        {match.league.name}
-                        {match.round ? ` · ${match.round}` : ''}
-                      </span>
-                      <ClientTime value={match.kickoffAt} className="mt-1 block text-[11px] font-bold text-orange-500" />
-                    </div>
-                    <span className="min-w-0 flex-1 truncate text-end text-[12px] font-semibold">{match.homeTeam.name}</span>
-                    <span className="text-[9px] text-muted-foreground">×</span>
-                    <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">{match.awayTeam.name}</span>
+          <section className={`mt-8 grid gap-5 ${upcomingMatches.length > 0 && titleRaces.length > 0 ? 'md:grid-cols-2' : ''}`}>
+            {upcomingMatches.length > 0 && (
+              <div className="atlas-desk is-upcoming">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
+                  <h2 className="text-base font-bold text-foreground dark:text-foreground">{pick(locale, 'أقرب المباريات', 'Upcoming matches')}</h2>
+                  <Link href="/matches" className="text-[11px] font-semibold text-muted-foreground hover:text-orange-500">
+                    {pick(locale, 'الجدول', 'Schedule')}
                   </Link>
-                ))}
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-white/10">
+                  {upcomingMatches.map((match) => (
+                    <Link key={match.id} href={`/match/${match.id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-card/[0.04]">
+                      <div className="hidden w-32 sm:block">
+                        <span className="block truncate text-[9px] text-muted-foreground">
+                          {match.league.name}
+                          {match.round ? ` · ${match.round}` : ''}
+                        </span>
+                        <ClientTime value={match.kickoffAt} className="mt-1 block text-[11px] font-bold text-orange-500" />
+                      </div>
+                      <span className="min-w-0 flex-1 truncate text-end text-[12px] font-semibold">{match.homeTeam.name}</span>
+                      <span className="text-[9px] text-muted-foreground">×</span>
+                      <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">{match.awayTeam.name}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {titleRaces.length > 0 && (
-            <div className="atlas-desk">
-              <div className="border-b border-border px-5 py-4 dark:border-border">
-                <h2 className="text-base font-bold text-foreground dark:text-foreground">{pick(locale, 'أضيق سباقات الصدارة', 'Closest title races')}</h2>
+            {titleRaces.length > 0 && (
+              <div className="atlas-desk is-race">
+                <div className="border-b border-border px-5 py-4 dark:border-border">
+                  <h2 className="text-base font-bold text-foreground dark:text-foreground">
+                    {pick(locale, 'أضيق سباقات الصدارة', 'Closest title races')}
+                  </h2>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-white/10">
+                  {titleRaces.map((race) => (
+                    <Link
+                      key={race.league.id}
+                      href={`/league/${race.league.slug}/standings`}
+                      className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-card p-1.5">
+                        <LeagueCrest name={race.leader.team.name} logoUrl={race.leader.team.logoUrl} className="h-full w-full" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <strong className="block truncate text-[12px] text-foreground dark:text-foreground">{race.leader.team.name}</strong>
+                        <span className="mt-1 block truncate text-[10px] text-muted-foreground">
+                          {race.league.name} · {pick(locale, 'أمام', 'ahead of')} {race.runnerUp.team.name}
+                        </span>
+                      </div>
+                      <div className="text-start">
+                        <strong className="block text-lg tabular-nums text-orange-500">{race.gap}</strong>
+                        <span className="text-[10px] text-muted-foreground">{pick(locale, 'نقطة فارق', 'point gap')}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-              <div className="divide-y divide-slate-100 dark:divide-white/10">
-                {titleRaces.map((race) => (
-                  <Link
-                    key={race.league.id}
-                    href={`/league/${race.league.slug}/standings`}
-                    className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-card p-1.5">
-                      <LeagueCrest name={race.leader.team.name} logoUrl={race.leader.team.logoUrl} className="h-full w-full" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <strong className="block truncate text-[12px] text-foreground dark:text-foreground">{race.leader.team.name}</strong>
-                      <span className="mt-1 block truncate text-[10px] text-muted-foreground">
-                        {race.league.name} · {pick(locale, 'أمام', 'ahead of')} {race.runnerUp.team.name}
-                      </span>
-                    </div>
-                    <div className="text-start">
-                      <strong className="block text-lg tabular-nums text-orange-500">{race.gap}</strong>
-                      <span className="text-[10px] text-muted-foreground">{pick(locale, 'نقطة فارق', 'point gap')}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
+            )}
+          </section>
         )}
 
         {(recentResults.length > 0 || scorers.length > 0) && (
-        <section className="mt-5 space-y-5">
-          {recentResults.length > 0 && (
-            <div className="atlas-results">
-              <div className="atlas-results-head">
-                <div>
-                  <span className="atlas-section-kicker">{pick(locale, 'من المصدر', 'From source')}</span>
-                  <h2>{pick(locale, 'آخر النتائج', 'Latest results')}</h2>
+          <section className="mt-5 space-y-5">
+            {recentResults.length > 0 && (
+              <div className="atlas-results">
+                <div className="atlas-results-head">
+                  <div>
+                    <span className="atlas-section-kicker">{pick(locale, 'من المصدر', 'From source')}</span>
+                    <h2>{pick(locale, 'آخر النتائج', 'Latest results')}</h2>
+                  </div>
+                  <DeskRule className="atlas-results-rule" />
                 </div>
-                <DeskRule className="atlas-results-rule" />
-              </div>
-              <div className="atlas-results-grid">
-                {recentResults.map((match) => (
-                  <Link key={match.id} href={`/match/${match.id}`} className="atlas-result-slip">
-                    <div className="atlas-result-slip-meta">
-                      <span className="truncate pe-10">
-                        {match.league.name}
-                        {match.round ? ` · ${match.round}` : ''}
-                      </span>
-                      <ClientTime value={match.kickoffAt} />
-                    </div>
-                    <div className="atlas-result-slip-body">
-                      <span className="atlas-result-side is-home">
-                        <span className="atlas-result-crest">
-                          <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full" />
+                <div className="atlas-results-grid">
+                  {recentResults.map((match) => (
+                    <Link key={match.id} href={`/match/${match.id}`} className="atlas-result-slip">
+                      <div className="atlas-result-slip-meta">
+                        <span className="truncate pe-10">
+                          {match.league.name}
+                          {match.round ? ` · ${match.round}` : ''}
                         </span>
-                        <strong className="truncate">{match.homeTeam.name}</strong>
-                      </span>
-                      <span className="atlas-result-score" aria-label={`${match.homeScore}-${match.awayScore}`}>
-                        <b className="tabular-nums">{match.homeScore}</b>
-                        <i>–</i>
-                        <b className="tabular-nums">{match.awayScore}</b>
-                      </span>
-                      <span className="atlas-result-side is-away">
-                        <span className="atlas-result-crest">
-                          <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full" />
+                        <ClientTime value={match.kickoffAt} />
+                      </div>
+                      <div className="atlas-result-slip-body">
+                        <span className="atlas-result-side is-home">
+                          <span className="atlas-result-crest">
+                            <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full" />
+                          </span>
+                          <strong className="truncate">{match.homeTeam.name}</strong>
                         </span>
-                        <strong className="truncate">{match.awayTeam.name}</strong>
-                      </span>
-                    </div>
-                    <span className="atlas-result-slip-mark">{pick(locale, 'نهاية', 'FT')}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {scorers.length > 0 && (
-            <div className="atlas-desk">
-              <div className="border-b border-border px-5 py-4 dark:border-border">
-                <h2 className="text-base font-bold text-foreground dark:text-foreground">
-                  {pick(locale, 'هدافو آخر 14 يوماً', 'Scorers — last 14 days')}
-                </h2>
-              </div>
-              <div className="divide-y divide-slate-100 dark:divide-white/10">
-                {scorers.map((scorer, index) => {
-                  const href = scorer.player.slug ? `/player/${scorer.player.slug}` : undefined;
-                  const row = (
-                    <>
-                      <span className="w-5 text-[11px] font-bold tabular-nums text-orange-500">{String(index + 1).padStart(2, '0')}</span>
-                      <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-orange-500/10">
-                        {scorer.player.photoUrl ? (
-                          <img src={scorer.player.photoUrl} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <Target className="h-4 w-4 text-orange-500" />
-                        )}
+                        <span className="atlas-result-score" aria-label={`${match.homeScore}-${match.awayScore}`}>
+                          <b className="tabular-nums">{match.homeScore}</b>
+                          <i>–</i>
+                          <b className="tabular-nums">{match.awayScore}</b>
+                        </span>
+                        <span className="atlas-result-side is-away">
+                          <span className="atlas-result-crest">
+                            <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full" />
+                          </span>
+                          <strong className="truncate">{match.awayTeam.name}</strong>
+                        </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <strong className="block truncate text-[12px]">{scorer.player.name}</strong>
-                        <span className="text-[9px] text-muted-foreground">{[scorer.teamName, scorer.league?.name].filter(Boolean).join(' · ')}</span>
-                      </div>
-                      <strong className="text-lg font-bold tabular-nums text-orange-500">{scorer.goals}</strong>
-                    </>
-                  );
-                  return href ? (
-                    <Link key={scorer.player.id} href={href} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted">
-                      {row}
+                      <span className="atlas-result-slip-mark">{pick(locale, 'نهاية', 'FT')}</span>
                     </Link>
-                  ) : (
-                    <div key={scorer.player.id} className="flex items-center gap-4 px-5 py-4">
-                      {row}
-                    </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </section>
+            )}
+
+            {scorers.length > 0 && (
+              <div className="atlas-desk is-scorers">
+                <div className="border-b border-border px-5 py-4 dark:border-border">
+                  <h2 className="text-base font-bold text-foreground dark:text-foreground">
+                    {pick(locale, 'هدافو آخر 14 يوماً', 'Scorers — last 14 days')}
+                  </h2>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-white/10">
+                  {scorers.map((scorer, index) => {
+                    const href = scorer.player.slug ? `/player/${scorer.player.slug}` : undefined;
+                    const row = (
+                      <>
+                        <span className="w-5 text-[11px] font-bold tabular-nums text-orange-500">{String(index + 1).padStart(2, '0')}</span>
+                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-orange-500/10">
+                          {scorer.player.photoUrl ? (
+                            <img src={scorer.player.photoUrl} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <Target className="h-4 w-4 text-orange-500" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <strong className="block truncate text-[12px]">{scorer.player.name}</strong>
+                          <span className="text-[9px] text-muted-foreground">{[scorer.teamName, scorer.league?.name].filter(Boolean).join(' · ')}</span>
+                        </div>
+                        <strong className="text-lg font-bold tabular-nums text-orange-500">{scorer.goals}</strong>
+                      </>
+                    );
+                    return href ? (
+                      <Link key={scorer.player.id} href={href} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted">
+                        {row}
+                      </Link>
+                    ) : (
+                      <div key={scorer.player.id} className="flex items-center gap-4 px-5 py-4">
+                        {row}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
         )}
 
         {leagueNews.length > 0 && (
-          <section className="atlas-desk mt-5">
+          <section className="atlas-desk is-news mt-5">
             <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
               <div>
                 <span className="atlas-section-kicker">{pick(locale, 'من الأطلس', 'From the atlas')}</span>

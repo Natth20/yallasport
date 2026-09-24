@@ -1,0 +1,103 @@
+/* ══════════════════════════════════════════════════════════════════════
+   YALLA SPORT — CONTACT HOUSE & EDITORIAL DESK
+   Ultra-Minimalist Luxury Design
+   ══════════════════════════════════════════════════════════════════════ */
+
+.contact-house {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+/* Very subtle background light */
+.contact-house::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 50vh;
+  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--primary) 5%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.contact-house .contact-hero {
+  position: relative;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+html.dark .contact-house .contact-hero {
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+}
+
+.contact-house .contact-form-card {
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+html.dark .contact-house .contact-form-card {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+}
+
+.contact-house .contact-form-card:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+}
+
+.contact-house .contact-input {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  background: color-mix(in srgb, var(--background) 50%, transparent);
+  color: var(--foreground);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.contact-house .contact-input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.contact-house .contact-input:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+}
+
+.contact-house .contact-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--background);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
+  transform: translateY(-1px);
+}
+
+.contact-house .contact-receipt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(16px);
+}
+
+html.dark .contact-house .contact-receipt {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+}

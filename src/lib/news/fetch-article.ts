@@ -1,9 +1,16 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import { formatNewsHtml } from '@/lib/news/format-body';
 import { pickImageFromHtml } from '@/lib/news/enrich-source';
+import { isProtectedFullTextSource } from '@/lib/news/import-copy';
 import { isTrustedNewsUrl } from '@/lib/news/trusted-sources';
 
 const ARTICLE_SELECTORS = [
   '[itemprop="articleBody"]',
+  '.wysiwyg',
+  '.c-article__body',
+  '.articleBody',
+  '.story-content',
+  '.news-article-body',
   'article[data-component="text-block"]',
   '.article-body',
   '.article__body',
@@ -39,26 +46,39 @@ function stripNoise(html: string) {
     .replace(/\son\w+='[^']*'/gi, '');
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function extractBySelector(html: string, selector: string): string | null {
   // Attribute / class / tag lightweight extraction without a DOM parser.
-  if (selector.startsWith('[itemprop="') && selector.endsWith('"]')) {
-    const prop = selector.slice('[itemprop="'.length, -2);
+  const attrOnly = selector.match(/^\[([a-z0-9:-]+)=["']([^"']+)["']\]$/i);
+  if (attrOnly) {
+    const [, attr, value] = attrOnly;
     const re = new RegExp(
-      `<([a-z0-9]+)[^>]*itemprop=["']${prop}["'][^>]*>([\\s\\S]*?)<\\/\\1>`,
+      `<([a-z0-9]+)[^>]*${escapeRegExp(attr)}=["']${escapeRegExp(value)}["'][^>]*>([\\s\\S]*?)<\\/\\1>`,
       'i'
     );
-    const match = html.match(re);
-    return match?.[2] || null;
+    return html.match(re)?.[2] || null;
+  }
+
+  const taggedAttr = selector.match(/^([a-z0-9]+)\[([a-z0-9:-]+)=["']([^"']+)["']\]$/i);
+  if (taggedAttr) {
+    const [, tag, attr, value] = taggedAttr;
+    const re = new RegExp(
+      `<${escapeRegExp(tag)}[^>]*${escapeRegExp(attr)}=["']${escapeRegExp(value)}["'][^>]*>([\\s\\S]*?)<\\/${escapeRegExp(tag)}>`,
+      'i'
+    );
+    return html.match(re)?.[1] || null;
   }
 
   if (selector.startsWith('.')) {
-    const cls = selector.slice(1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cls = escapeRegExp(selector.slice(1));
     const re = new RegExp(
       `<([a-z0-9]+)[^>]*class=["'][^"']*${cls}[^"']*["'][^>]*>([\\s\\S]*?)<\\/\\1>`,
       'i'
     );
-    const match = html.match(re);
-    return match?.[2] || null;
+    return html.match(re)?.[2] || null;
   }
 
   if (selector.includes(' ')) {
@@ -68,9 +88,9 @@ function extractBySelector(html: string, selector: string): string | null {
     return extractBySelector(outer, parts.slice(1).join(' ')) || outer;
   }
 
+  if (!/^[a-z0-9]+$/i.test(selector)) return null;
   const re = new RegExp(`<${selector}[^>]*>([\\s\\S]*?)<\\/${selector}>`, 'i');
-  const match = html.match(re);
-  return match?.[1] || null;
+  return html.match(re)?.[1] || null;
 }
 
 function keepReadableBlocks(chunk: string, baseUrl: string) {
@@ -147,10 +167,10 @@ export type ScrapedArticle = {
 export async function fetchTrustedSourceArticle(
   sourceUrl: string | null | undefined
 ): Promise<ScrapedArticle | null> {
-  if (!sourceUrl || !isTrustedNewsUrl(sourceUrl)) return null;
+  if (!sourceUrl || !isTrustedNewsUrl(sourceUrl) || isProtectedFullTextSource(sourceUrl)) return null;
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
+  const timer = setTimeout(() => controller.abort(), 8000);
 
   try {
     const response = await fetch(sourceUrl, {
@@ -170,7 +190,12 @@ export async function fetchTrustedSourceArticle(
     let best = '';
     let bestWords = 0;
     for (const selector of ARTICLE_SELECTORS) {
-      const extracted = extractBySelector(slice, selector);
+      let extracted: string | null = null;
+      try {
+        extracted = extractBySelector(slice, selector);
+      } catch {
+        continue;
+      }
       if (!extracted) continue;
       const cleaned = keepReadableBlocks(extracted, sourceUrl);
       const words = wordCount(cleaned);
@@ -188,7 +213,8 @@ export async function fetchTrustedSourceArticle(
       image: pickImageFromHtml(best, sourceUrl),
       words: bestWords,
     };
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/news/fetch-article.ts:192", error);
     return null;
   } finally {
     clearTimeout(timer);
@@ -201,8 +227,15 @@ export async function resolveFullArticleBody(input: {
   sourceUrl?: string | null;
   force?: boolean;
 }) {
+  if (isProtectedFullTextSource(input.sourceUrl)) {
+    const current = (input.content || '').trim();
+    return { html: formatNewsHtml(current), image: null as string | null, enriched: false, words: wordCount(current) };
+  }
   const current = (input.content || '').trim();
   const currentWords = wordCount(current);
+  if (!input.force && currentWords >= 280) {
+    return { html: formatNewsHtml(current), image: null as string | null, enriched: false, words: currentWords };
+  }
   const scraped = await fetchTrustedSourceArticle(input.sourceUrl);
   if (!scraped) {
     return { html: formatNewsHtml(current), image: null as string | null, enriched: false, words: currentWords };

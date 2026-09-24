@@ -1,10 +1,12 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Copy, Share2 } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { pick } from '@/i18n/pick';
+import { copyText } from '@/lib/clipboard';
 
 function currentUrl() {
   if (typeof window === 'undefined') return '';
@@ -86,24 +88,10 @@ export function NewsShareMenu({ title }: { title: string }) {
   const copy = async () => {
     const { url } = sharePayload();
     if (!url) return;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      try {
-        const input = document.createElement('input');
-        input.value = url;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1800);
-      } catch {
-        // ignore
-      }
-    }
+    const ok = await copyText(url);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
   };
 
   const nativeShare = async () => {
@@ -115,7 +103,8 @@ export function NewsShareMenu({ title }: { title: string }) {
         setOpen(false);
         return;
       }
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/components/news/NewsShareMenu.tsx:118", error, { persist: false });
       // cancelled or unsupported — fall through to copy
     }
     await copy();
@@ -140,37 +129,37 @@ export function NewsShareMenu({ title }: { title: string }) {
   const panel =
     open && mounted && coords
       ? createPortal(
-          <div
-            id={menuId}
-            ref={panelRef}
-            className="news-share-panel"
-            role="menu"
-            style={{
-              position: 'fixed',
-              top: coords.top,
-              left: coords.left,
-              right: 'auto',
-              insetInlineStart: 'auto',
-            }}
-          >
-            <button type="button" role="menuitem" onClick={openWhatsApp}>
-              WhatsApp
-            </button>
-            <button type="button" role="menuitem" onClick={openX}>
-              X
-            </button>
-            <button type="button" role="menuitem" onClick={() => void copy()}>
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied
-                ? pick(locale, 'تم النسخ', 'Copied')
-                : pick(locale, 'نسخ الرابط', 'Copy link')}
-            </button>
-            <button type="button" role="menuitem" onClick={() => void nativeShare()}>
-              {pick(locale, 'مشاركة الجهاز', 'Device share')}
-            </button>
-          </div>,
-          document.body
-        )
+        <div
+          id={menuId}
+          ref={panelRef}
+          className="news-share-panel"
+          role="menu"
+          style={{
+            position: 'fixed',
+            top: coords.top,
+            left: coords.left,
+            right: 'auto',
+            insetInlineStart: 'auto',
+          }}
+        >
+          <button type="button" role="menuitem" onClick={openWhatsApp}>
+            WhatsApp
+          </button>
+          <button type="button" role="menuitem" onClick={openX}>
+            X
+          </button>
+          <button type="button" role="menuitem" onClick={() => void copy()}>
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied
+              ? pick(locale, 'تم النسخ', 'Copied')
+              : pick(locale, 'نسخ الرابط', 'Copy link')}
+          </button>
+          <button type="button" role="menuitem" onClick={() => void nativeShare()}>
+            {pick(locale, 'مشاركة الجهاز', 'Device share')}
+          </button>
+        </div>,
+        document.body
+      )
       : null;
 
   return (

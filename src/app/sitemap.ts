@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { publishedNewsWhere } from '@/lib/i18n/localized-content';
@@ -15,14 +16,18 @@ const STATIC_ROUTES: Array<{
   { path: '/live', changeFrequency: 'always', priority: 0.9 },
   { path: '/news', changeFrequency: 'hourly', priority: 0.9 },
   { path: '/leagues', changeFrequency: 'daily', priority: 0.85 },
-  { path: '/tv-guide', changeFrequency: 'hourly', priority: 0.75 },
   { path: '/search', changeFrequency: 'weekly', priority: 0.5 },
-  { path: '/watch', changeFrequency: 'weekly', priority: 0.6 },
-  { path: '/vod', changeFrequency: 'weekly', priority: 0.55 },
   { path: '/leaderboard', changeFrequency: 'daily', priority: 0.4 },
   { path: '/about', changeFrequency: 'monthly', priority: 0.4 },
   { path: '/contact', changeFrequency: 'monthly', priority: 0.35 },
   { path: '/compare', changeFrequency: 'weekly', priority: 0.4 },
+  { path: '/compare-players', changeFrequency: 'weekly', priority: 0.4 },
+  { path: '/transfers', changeFrequency: 'daily', priority: 0.55 },
+  { path: '/stats', changeFrequency: 'hourly', priority: 0.6 },
+  { path: '/photos', changeFrequency: 'hourly', priority: 0.5 },
+  { path: '/videos', changeFrequency: 'hourly', priority: 0.55 },
+  { path: '/videos/reels', changeFrequency: 'hourly', priority: 0.5 },
+  { path: '/videos/archive', changeFrequency: 'weekly', priority: 0.3 },
   { path: '/privacy', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/terms', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/copyright', changeFrequency: 'yearly', priority: 0.2 },
@@ -117,7 +122,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...localizedUrl(`/match/${match.id}`, 'hourly', 0.6, match.updatedAt || match.kickoffAt || now)
       );
     }
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/app/sitemap.ts:125", error);
     // Sitemap must still ship static routes if the database is unreachable.
   }
 

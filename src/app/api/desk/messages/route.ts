@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: 'too_many' }, { status: 429 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/desk/messages/route.ts:22", null, { persist: false }));
   if (typeof body?.company === 'string' && body.company.trim()) {
     return NextResponse.json({ ok: true, stored: true, emailed: false });
   }

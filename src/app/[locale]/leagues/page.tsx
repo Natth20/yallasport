@@ -1,4 +1,5 @@
-import React from 'react';
+import { swallow } from '@/lib/ops/caught';
+import React, { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
@@ -11,6 +12,7 @@ import { pick } from '@/i18n/pick';
 import { localizeEntityMap, newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
 import { dateKeyInTimezone, dayBoundsInTimezone, normalizeTimezone } from '@/lib/datetime/format';
 import { pageMetadata } from '@/lib/seo/site';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 
 export const revalidate = 60;
 
@@ -39,7 +41,59 @@ function latestSeason(ids: string[]) {
   return [...ids].sort((first, second) => second.localeCompare(first, 'en', { numeric: true }))[0];
 }
 
-export default async function LeaguesPage({
+const DIRECTORY_COUNTRIES = 6;
+const DIRECTORY_PER_COUNTRY = 6;
+const DIRECTORY_COUNTRY_LIMIT = 18;
+
+function spotlightScore(league: {
+  slug: string;
+  name: string;
+  standings: number;
+  census: { total: number; live: number };
+}) {
+  const hay = `${league.slug} ${league.name}`.toLowerCase();
+  if (/\bgirone\b|\bu-?19\b|\bu-?21\b|\bu-?23\b|reserves?|\byouth\b|primavera|\bii\b|\b2nd\b|serie[- ]?[bcd]\b|friendl(y|ies)|ودية/.test(hay)) {
+    return league.standings > 0 ? 8 + Math.min(league.census.live, 4) : Math.min(league.census.live, 3);
+  }
+
+  let desk = 0;
+  const desks: Array<[RegExp, number]> = [
+    [/uefa[- ]champions|champions[- ]league|دوري أبطال أوروبا/, 100],
+    [/premier[- ]league|الدوري الإنجليزي/, 96],
+    [/la[- ]liga|laliga|الليغا|الدوري الإسباني/, 94],
+    [/serie[- ]a\b|الدوري الإيطالي/, 90],
+    [/bundesliga|البوندسليغا/, 88],
+    [/ligue[- ]1/, 84],
+    [/saudi|pro[- ]league|دوري روشن|الدوري السعودي/, 93],
+    [/egypt|الدوري المصري/, 91],
+    [/europa[- ]league/, 72],
+    [/afc[- ]champions|أبطال آسيا/, 70],
+    [/eredivisie/, 52],
+    [/primeira|liga[- ]portugal/, 50],
+  ];
+  for (const [pattern, weight] of desks) {
+    if (pattern.test(hay)) desk = Math.max(desk, weight);
+  }
+
+  const table = league.standings > 0 ? 28 : 0;
+  const live = league.census.live > 0 ? 10 : 0;
+  const activity = Math.min(league.census.total, 24);
+  return desk * 12 + table + live + activity;
+}
+
+export default function LeaguesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; country?: string; filter?: string; sort?: string }>;
+}) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <LeaguesPageBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function LeaguesPageBody({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; country?: string; filter?: string; sort?: string }>;
@@ -174,7 +228,7 @@ export default async function LeaguesPage({
         },
       },
     })
-    .catch(() => []);
+    .catch(swallow("src/app/[locale]/leagues/page.tsx:177", []));
 
   for (const league of leagues) {
     league.name = nameMap.get(`LEAGUE:${league.id}`) || league.name;
@@ -235,16 +289,11 @@ export default async function LeaguesPage({
     );
   });
 
+  const spotlightPool = filteredLeagues.length > 0 ? filteredLeagues : leagues;
   const spotlightLeague =
-    [...sortedLeagues]
-      .filter((league) => liveLeagueIds.has(league.id))
-      .sort((first, second) =>
-        second.standings - first.standings ||
-        second.census.total - first.census.total ||
-        second.census.live - first.census.live
-      )[0] ??
-    sortedLeagues.find((league) => league.standings > 0 || league.census.total > 0) ??
-    sortedLeagues[0];
+    [...spotlightPool].sort((first, second) => spotlightScore(second) - spotlightScore(first))[0] ??
+    spotlightPool.find((league) => league.standings > 0 || league.census.total > 0) ??
+    spotlightPool[0];
 
   if (spotlightLeague) {
     const spotlightPodium = await loadSpotlightPodium(spotlightLeague.id);
@@ -269,7 +318,7 @@ export default async function LeaguesPage({
     .filter((match) => hasScore(match.homeScore, match.awayScore))
     .sort((first, second) => second.kickoffAt.getTime() - first.kickoffAt.getTime())
     .slice(0, 6);
-  const liveBoard = liveMatches.slice(0, 16);
+  const liveBoard = liveMatches.slice(0, 8);
   const liveGoalByMatch = new Map<string, (typeof liveGoals)[number]>();
   for (const event of liveGoals) {
     if (!liveGoalByMatch.has(event.matchId)) liveGoalByMatch.set(event.matchId, event);
@@ -320,12 +369,17 @@ export default async function LeaguesPage({
   }
   for (const list of chapters.values()) {
     list.sort((first, second) => {
+      const scoreDiff = spotlightScore(second) - spotlightScore(first);
+      if (scoreDiff) return scoreDiff;
       const liveDiff = Number(Boolean(second.liveMatch)) - Number(Boolean(first.liveMatch));
       if (liveDiff) return liveDiff;
       return second.census.total + second.standings - (first.census.total + first.standings);
     });
   }
   const chapterEntries = [...chapters.entries()].sort((first, second) => {
+    const firstScore = Math.max(0, ...first[1].map((league) => spotlightScore(league)));
+    const secondScore = Math.max(0, ...second[1].map((league) => spotlightScore(league)));
+    if (secondScore !== firstScore) return secondScore - firstScore;
     const firstLive = first[1].some((league) => liveLeagueIds.has(league.id)) ? 1 : 0;
     const secondLive = second[1].some((league) => liveLeagueIds.has(league.id)) ? 1 : 0;
     if (secondLive !== firstLive) return secondLive - firstLive;
@@ -333,6 +387,16 @@ export default async function LeaguesPage({
     const secondMatches = second[1].reduce((total, league) => total + league.census.total, 0);
     return secondMatches - firstMatches || first[0].localeCompare(second[0], locale);
   });
+  const browseDesk = selectedCountry === 'all' && !query && activeFilter === 'all';
+  const countryCardCap = browseDesk || selectedCountry === 'all' ? DIRECTORY_PER_COUNTRY : DIRECTORY_COUNTRY_LIMIT;
+  const visibleChapters = (browseDesk ? chapterEntries.slice(0, DIRECTORY_COUNTRIES) : chapterEntries).map(
+    ([country, rows]) => ({
+      country,
+      rows: rows.slice(0, countryCardCap),
+      total: rows.length,
+    })
+  );
+  const visibleUnlocated = unlocated.slice(0, browseDesk ? DIRECTORY_PER_COUNTRY : DIRECTORY_COUNTRY_LIMIT);
 
   const countryHref = (country: string) => {
     const nextParams = new URLSearchParams();
@@ -405,8 +469,9 @@ export default async function LeaguesPage({
       liveBoard={liveBoard}
       liveGoalByMatch={liveGoalByMatch}
       sortedLeagues={sortedLeagues}
-      chapterEntries={chapterEntries}
-      unlocated={unlocated}
+      chapterEntries={visibleChapters}
+      unlocated={visibleUnlocated}
+      directoryCapped={browseDesk}
       jumpCountries={jumpCountries}
       visibleCountries={visibleCountries}
       extraCountryCount={extraCountryCount}

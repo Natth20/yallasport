@@ -1,4 +1,6 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
@@ -23,7 +25,8 @@ const DEFAULT_SETTINGS: SettingsContextType = {
 function readDataSaver(): boolean {
   try {
     return JSON.parse(localStorage.getItem(DATA_SAVER_KEY) || 'false') === true;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/context/SettingsContext.tsx:26", error, { persist: false });
     return false;
   }
 }
@@ -31,6 +34,11 @@ function readDataSaver(): boolean {
 function syncDataSaverDom(enabled: boolean) {
   document.documentElement.dataset.dataSaver = enabled ? 'on' : 'off';
   document.cookie = `yalla-data-saver=${enabled ? '1' : '0'}; path=/; max-age=31536000; samesite=lax`;
+}
+
+function syncReducedMotionDom() {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.dataset.reducedMotion = reduce ? 'on' : 'off';
 }
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,6 +57,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setTimezoneState(nextTimezone);
     setTimezoneMode(savedTimezone && savedTimezone !== 'auto' ? 'manual' : 'auto');
     document.cookie = `yalla-tz=${encodeURIComponent(nextTimezone)}; path=/; max-age=31536000; samesite=lax`;
+    syncReducedMotionDom();
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotion = () => syncReducedMotionDom();
+    motion.addEventListener('change', onMotion);
+    return () => motion.removeEventListener('change', onMotion);
   }, []);
 
   useEffect(() => {

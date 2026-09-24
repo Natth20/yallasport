@@ -1,16 +1,18 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  Search, 
-  Mic, 
-  MicOff, 
-  Trophy, 
-  Flame, 
-  Sparkles, 
-  TrendingUp, 
-  Target, 
-  Medal, 
+import {
+  Search,
+  Mic,
+  MicOff,
+  Trophy,
+  Flame,
+  Sparkles,
+  TrendingUp,
+  Target,
+  Medal,
   X,
   Volume2
 } from 'lucide-react';
@@ -124,7 +126,8 @@ export function LeaderboardExplorer({
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
-        } catch {
+        } catch (error) {
+          reportCaughtError("src/components/predictions/LeaderboardExplorer.tsx:127", error, { persist: false });
           // ignore
         }
       }
@@ -145,7 +148,8 @@ export function LeaderboardExplorer({
       try {
         setSpeechError(null);
         recognitionRef.current.start();
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/components/predictions/LeaderboardExplorer.tsx:148", error, { persist: false });
         recognitionRef.current.stop();
       }
     }
@@ -179,35 +183,33 @@ export function LeaderboardExplorer({
   return (
     <div className="space-y-6">
       {/* Search Bar & Voice Bar */}
-      <div className="relative rounded-3xl border border-white/15 bg-gradient-to-r from-card/80 via-card/50 to-card/80 p-3 sm:p-4 backdrop-blur-2xl shadow-xl shadow-black/20">
+      <div className="relative rounded-3xl border border-border bg-gradient-to-r from-card/80 via-card/50 to-card/80 p-3 sm:p-4 backdrop-blur-2xl shadow-xl shadow-black/20">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Main Tabs */}
-          <div className="flex rounded-2xl bg-black/40 p-1.5 border border-white/10 shrink-0">
+          <div className="flex rounded-2xl bg-muted p-1.5 border border-border shrink-0">
             <button
               onClick={() => setActiveTab('users')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                activeTab === 'users'
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${activeTab === 'users'
                   ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/25 scale-[1.02]'
-                  : 'text-muted-foreground hover:text-white'
-              }`}
+                  : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               <Trophy className="h-4 w-4" />
               <span>{labels.tabUsers}</span>
-              <span className="rounded-full bg-black/30 px-1.5 py-0.2 text-[10px] font-mono">
+              <span className="rounded-full bg-muted px-1.5 py-0.2 text-[10px] font-mono">
                 {userRanks.length}
               </span>
             </button>
             <button
               onClick={() => setActiveTab('scorers')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                activeTab === 'scorers'
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${activeTab === 'scorers'
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/25 scale-[1.02]'
-                  : 'text-muted-foreground hover:text-white'
-              }`}
+                  : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
               <Target className="h-4 w-4" />
               <span>{labels.tabScorers}</span>
-              <span className="rounded-full bg-black/30 px-1.5 py-0.2 text-[10px] font-mono">
+              <span className="rounded-full bg-muted px-1.5 py-0.2 text-[10px] font-mono">
                 {realScorers.length}
               </span>
             </button>
@@ -222,18 +224,17 @@ export function LeaderboardExplorer({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={isListening ? labels.voiceListening : labels.searchPlaceholder}
-                className={`w-full rounded-2xl border bg-black/30 py-2.5 pe-20 ps-10 text-xs font-medium text-white placeholder:text-muted-foreground focus:outline-none transition-all ${
-                  isListening
+                className={`w-full rounded-2xl border bg-muted py-2.5 pe-20 ps-10 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${isListening
                     ? 'border-red-500 ring-2 ring-red-500/30 animate-pulse'
-                    : 'border-white/10 focus:border-primary focus:ring-1 focus:ring-primary'
-                }`}
+                    : 'border-border focus:border-primary focus:ring-1 focus:ring-primary'
+                  }`}
               />
               <div className="absolute end-2 flex items-center gap-1.5">
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
                     title={labels.clearSearch}
-                    className="rounded-full p-1 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
+                    className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -242,12 +243,11 @@ export function LeaderboardExplorer({
                 <button
                   type="button"
                   onClick={toggleVoiceSearch}
-                  title={isListening ? 'Stop recording' : 'Start voice search'}
-                  className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
-                    isListening
-                      ? 'bg-red-500 text-white shadow-lg shadow-red-500/40 animate-bounce'
-                      : 'bg-white/10 text-muted-foreground hover:bg-primary hover:text-primary-foreground'
-                  }`}
+                  title={isListening ? labels.voiceListening : labels.searchPlaceholder}
+                  className={`relative flex h-8 w-8 items-center justify-center rounded-xl transition-all ${isListening
+                      ? 'bg-red-500 text-foreground shadow-lg shadow-red-500/40 animate-bounce'
+                      : 'bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground'
+                    }`}
                 >
                   {isListening ? <Mic className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   {isListening && (
@@ -267,16 +267,15 @@ export function LeaderboardExplorer({
 
         {/* League selector chips if in Scorers tab */}
         {activeTab === 'scorers' && leagues.length > 2 && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-3 border-t border-white/5">
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-3 border-t border-border">
             {leagues.map((lg) => (
               <button
                 key={lg}
                 onClick={() => setSelectedLeague(lg)}
-                className={`rounded-xl px-3 py-1 text-[11px] font-bold transition-all ${
-                  selectedLeague === lg
+                className={`rounded-xl px-3 py-1 text-[11px] font-bold transition-all ${selectedLeague === lg
                     ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
-                }`}
+                    : 'bg-muted text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
               >
                 {lg === 'ALL' ? (locale === 'ar' ? 'جميع الدوريات' : 'All Leagues') : lg}
               </button>
@@ -287,7 +286,7 @@ export function LeaderboardExplorer({
 
       {/* Content Area */}
       {activeTab === 'users' ? (
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl shadow-2xl">
+        <div className="overflow-hidden rounded-3xl border border-border bg-card/40 backdrop-blur-xl shadow-2xl">
           {filteredUsers.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-sm text-muted-foreground">{labels.emptyMessage}</p>
@@ -295,7 +294,7 @@ export function LeaderboardExplorer({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-start text-xs">
-                <thead className="border-b border-white/10 bg-white/5 text-[11px] font-bold text-muted-foreground uppercase">
+                <thead className="border-b border-border bg-muted text-[11px] font-bold text-muted-foreground uppercase">
                   <tr>
                     <th className="px-5 py-4 text-start w-20">{labels.colRank}</th>
                     <th className="px-5 py-4 text-start">{labels.colName}</th>
@@ -303,32 +302,31 @@ export function LeaderboardExplorer({
                     <th className="px-5 py-4 text-end w-36">{labels.colPoints}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-border">
                   {filteredUsers.map((user) => {
                     const isYou = user.id === currentUserId;
                     const rankMedal =
                       user.rank === 1
                         ? '🥇'
                         : user.rank === 2
-                        ? '🥈'
-                        : user.rank === 3
-                        ? '🥉'
-                        : null;
+                          ? '🥈'
+                          : user.rank === 3
+                            ? '🥉'
+                            : null;
 
                     return (
                       <tr
                         key={user.id}
-                        className={`transition-colors ${
-                          isYou
-                            ? 'bg-primary/15 font-bold text-white shadow-inner'
-                            : 'hover:bg-white/[0.04] text-foreground/90'
-                        }`}
+                        className={`transition-colors ${isYou
+                            ? 'bg-primary/15 font-bold text-foreground shadow-inner'
+                            : 'hover:bg-muted text-foreground/90'
+                          }`}
                       >
                         <td className="px-5 py-4 font-mono font-bold text-sm">
                           {rankMedal ? (
                             <span className="inline-flex items-center gap-1.5">
                               <span className="text-base">{rankMedal}</span>
-                              <span className="text-xs text-amber-400">0{user.rank}</span>
+                              <span className="text-xs text-amber-400">{String(user.rank).padStart(2, '0')}</span>
                             </span>
                           ) : (
                             <span className="text-muted-foreground">{String(user.rank).padStart(2, '0')}</span>
@@ -336,7 +334,7 @@ export function LeaderboardExplorer({
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 font-black text-white overflow-hidden border border-white/10 shadow-sm">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted font-black text-foreground overflow-hidden border border-border shadow-sm">
                               {user.image ? (
                                 <img src={user.image} alt="" className="h-full w-full object-cover" />
                               ) : (
@@ -344,7 +342,7 @@ export function LeaderboardExplorer({
                               )}
                             </div>
                             <div className="min-w-0">
-                              <span className="block truncate font-bold text-white text-sm">
+                              <span className="block truncate font-bold text-foreground text-sm">
                                 {user.name || (locale === 'ar' ? 'متسابق مجهول' : 'Anonymous')}
                               </span>
                               {isYou && (
@@ -373,7 +371,7 @@ export function LeaderboardExplorer({
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-card/40 backdrop-blur-xl shadow-2xl">
+        <div className="overflow-hidden rounded-3xl border border-border bg-card/40 backdrop-blur-xl shadow-2xl">
           {filteredScorers.length === 0 ? (
             <div className="p-12 text-center">
               <p className="text-sm text-muted-foreground">{labels.emptyMessage}</p>
@@ -381,7 +379,7 @@ export function LeaderboardExplorer({
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-start text-xs">
-                <thead className="border-b border-white/10 bg-white/5 text-[11px] font-bold text-muted-foreground uppercase">
+                <thead className="border-b border-border bg-muted text-[11px] font-bold text-muted-foreground uppercase">
                   <tr>
                     <th className="px-5 py-4 text-start w-20">{labels.colRank}</th>
                     <th className="px-5 py-4 text-start">{labels.colName}</th>
@@ -390,27 +388,27 @@ export function LeaderboardExplorer({
                     <th className="px-5 py-4 text-end w-32">{labels.colGoals}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-border">
                   {filteredScorers.map((scorer) => {
                     const rankMedal =
                       scorer.rank === 1
                         ? '🥇'
                         : scorer.rank === 2
-                        ? '🥈'
-                        : scorer.rank === 3
-                        ? '🥉'
-                        : null;
+                          ? '🥈'
+                          : scorer.rank === 3
+                            ? '🥉'
+                            : null;
 
                     return (
                       <tr
                         key={`${scorer.leagueName}-${scorer.id}`}
-                        className="transition-colors hover:bg-white/[0.04] text-foreground/90"
+                        className="transition-colors hover:bg-muted text-foreground/90"
                       >
                         <td className="px-5 py-4 font-mono font-bold text-sm">
                           {rankMedal ? (
                             <span className="inline-flex items-center gap-1.5">
                               <span className="text-base">{rankMedal}</span>
-                              <span className="text-xs text-amber-400">0{scorer.rank}</span>
+                              <span className="text-xs text-amber-400">{String(scorer.rank).padStart(2, '0')}</span>
                             </span>
                           ) : (
                             <span className="text-muted-foreground">{String(scorer.rank).padStart(2, '0')}</span>
@@ -421,14 +419,14 @@ export function LeaderboardExplorer({
                             href={`/player/${scorer.slug}`}
                             className="group flex items-center gap-3"
                           >
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 font-bold overflow-hidden border border-white/10 shadow-sm shrink-0">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted font-bold overflow-hidden border border-border shadow-sm shrink-0">
                               <img
                                 src={scorer.photoUrl || '/placeholder-player.svg'}
                                 alt=""
                                 className="h-full w-full object-cover"
                               />
                             </div>
-                            <span className="font-extrabold text-white text-sm group-hover:text-primary transition-colors">
+                            <span className="font-extrabold text-foreground text-sm group-hover:text-primary transition-colors">
                               {scorer.name}
                             </span>
                           </Link>
@@ -437,7 +435,7 @@ export function LeaderboardExplorer({
                           {scorer.teamName || '—'}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="inline-block rounded-lg bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground border border-white/5">
+                          <span className="inline-block rounded-lg bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground border border-border">
                             {scorer.leagueName}
                           </span>
                         </td>

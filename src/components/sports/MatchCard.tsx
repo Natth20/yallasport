@@ -1,9 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import type { NormalizedMatch, NormalizedMatchEvent } from '@/lib/sports-data/types';
 import { Link } from '@/i18n/navigation';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { CrestImage } from '@/components/common/CrestImage';
 import { Heart } from 'lucide-react';
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 
 export type MatchCardEvent = Pick<NormalizedMatchEvent, 'type' | 'minute' | 'teamId'> & {
   extraMinute?: number;
@@ -86,6 +88,8 @@ export async function MatchCard({
 }: MatchCardProps) {
   const locale = await getLocale();
   const t = await getTranslations('sports');
+  const homeName = localizePlainName(locale, match.homeTeam.name);
+  const awayName = localizePlainName(locale, match.awayTeam.name);
   const isLive = match.status === 'LIVE' || match.status === 'HALFTIME';
   const isHalftime = match.status === 'HALFTIME';
   const finished = match.status === 'FINISHED';
@@ -143,11 +147,10 @@ export async function MatchCard({
 
         <div className="fixture-teams">
           <div className="fixture-team is-home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={match.homeTeam.logoUrl || '/placeholder-team.png'} alt="" />
+            <CrestImage src={match.homeTeam.logoUrl} alt="" size={28} />
             <div className="min-w-0">
               <strong className={homeWon ? 'is-winner' : awayWon ? 'is-muted' : undefined}>
-                {match.homeTeam.name}
+                {homeName}
               </strong>
               {(homeForm?.length || homePlace) && (
                 <div className="fixture-team-meta">
@@ -169,11 +172,10 @@ export async function MatchCard({
           </div>
 
           <div className="fixture-team is-away">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={match.awayTeam.logoUrl || '/placeholder-team.png'} alt="" />
+            <CrestImage src={match.awayTeam.logoUrl} alt="" size={28} />
             <div className="min-w-0">
               <strong className={awayWon ? 'is-winner' : homeWon ? 'is-muted' : undefined}>
-                {match.awayTeam.name}
+                {awayName}
               </strong>
               {(awayForm?.length || awayPlace) && (
                 <div className="fixture-team-meta">
@@ -212,66 +214,66 @@ export async function MatchCard({
         h2h ||
         round ||
         hasLicensedStream) && (
-        <div className="fixture-card-foot">
-          <div className="min-w-0 flex-1">
-            {h2h && h2h.homeWins + h2h.draws + h2h.awayWins > 0 ? (
-              <p>
-                {t('head_to_head')}
-                {' · '}
-                <span className="text-emerald-600">{h2h.homeWins}{t('win_short')}</span>{' '}
-                <span className="text-muted-foreground">{h2h.draws}{t('draw_short')}</span>{' '}
-                <span className="text-orange-500">{h2h.awayWins}{t('win_short')}</span>
-                {h2h.lastScore ? ` · ${h2h.lastScore}` : ''}
-              </p>
+          <div className="fixture-card-foot">
+            <div className="min-w-0 flex-1">
+              {h2h && h2h.homeWins + h2h.draws + h2h.awayWins > 0 ? (
+                <p>
+                  {t('head_to_head')}
+                  {' · '}
+                  <span className="text-emerald-600">{h2h.homeWins}{t('win_short')}</span>{' '}
+                  <span className="text-muted-foreground">{h2h.draws}{t('draw_short')}</span>{' '}
+                  <span className="text-orange-500">{h2h.awayWins}{t('win_short')}</span>
+                  {h2h.lastScore ? ` · ${h2h.lastScore}` : ''}
+                </p>
+              ) : null}
+              {scorers.length > 0 ? (
+                <p>
+                  {[
+                    homeScorers
+                      .map((event) => `${event.player ? `${event.player} ` : ''}${formatMinute(event)}'`)
+                      .join(locale === 'ar' ? '، ' : ', '),
+                    awayScorers
+                      .map((event) => `${event.player ? `${event.player} ` : ''}${formatMinute(event)}'`)
+                      .join(locale === 'ar' ? '، ' : ', '),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              ) : match.venue ? (
+                <p>{[match.venue, venueCity].filter(Boolean).join(' · ')}</p>
+              ) : country ? (
+                <p>{country}</p>
+              ) : null}
+              {(round ||
+                yellowCount > 0 ||
+                redCount > 0 ||
+                homeFormation ||
+                awayFormation ||
+                (homePossession != null && awayPossession != null)) && (
+                  <p>
+                    {[
+                      round ? t('round_label', { round }) : '',
+                      homeFormation || awayFormation
+                        ? [homeFormation, awayFormation].filter(Boolean).join(' × ')
+                        : '',
+                      homePossession != null && awayPossession != null
+                        ? `${homePossession}%–${awayPossession}%`
+                        : '',
+                      yellowCount > 0 ? t('yellow_cards', { count: yellowCount }) : '',
+                      redCount > 0 ? t('red_cards', { count: redCount }) : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </p>
+                )}
+            </div>
+            {hasLicensedStream ? (
+              <span className="fixture-chip is-stream">{t('licensed_feed')}</span>
+            ) : channel ? (
+              <span className="fixture-chip">{channel}</span>
             ) : null}
-            {scorers.length > 0 ? (
-              <p>
-                {[
-                  homeScorers
-                    .map((event) => `${event.player ? `${event.player} ` : ''}${formatMinute(event)}'`)
-                    .join(locale === 'ar' ? '، ' : ', '),
-                  awayScorers
-                    .map((event) => `${event.player ? `${event.player} ` : ''}${formatMinute(event)}'`)
-                    .join(locale === 'ar' ? '، ' : ', '),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-            ) : match.venue ? (
-              <p>{[match.venue, venueCity].filter(Boolean).join(' · ')}</p>
-            ) : country ? (
-              <p>{country}</p>
-            ) : null}
-            {(round ||
-              yellowCount > 0 ||
-              redCount > 0 ||
-              homeFormation ||
-              awayFormation ||
-              (homePossession != null && awayPossession != null)) && (
-              <p>
-                {[
-                  round ? t('round_label', { round }) : '',
-                  homeFormation || awayFormation
-                    ? [homeFormation, awayFormation].filter(Boolean).join(' × ')
-                    : '',
-                  homePossession != null && awayPossession != null
-                    ? `${homePossession}%–${awayPossession}%`
-                    : '',
-                  yellowCount > 0 ? t('yellow_cards', { count: yellowCount }) : '',
-                  redCount > 0 ? t('red_cards', { count: redCount }) : '',
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-            )}
           </div>
-          {hasLicensedStream ? (
-            <span className="fixture-chip is-stream">{t('licensed_feed')}</span>
-          ) : channel ? (
-            <span className="fixture-chip">{channel}</span>
-          ) : null}
-        </div>
-      )}
+        )}
 
       {isLive && liveProgress != null ? (
         <span className="fixture-progress" aria-hidden>

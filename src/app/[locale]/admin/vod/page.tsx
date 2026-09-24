@@ -1,10 +1,10 @@
-﻿// src/app/admin/vod/page.tsx
+// src/app/admin/vod/page.tsx
 import React from "react";
 import { prisma } from "@/lib/prisma";
-import { Film, Plus, Edit, Trash, PlayCircle, Eye } from "lucide-react";
-import {Link} from "@/i18n/navigation";
-import {getLocale} from "next-intl/server";
-import {pick} from "@/i18n/pick";
+import { Film, Eye } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { getLocale } from "next-intl/server";
+import { pick } from "@/i18n/pick";
 
 export default async function AdminVODPage() {
   const locale = await getLocale();
@@ -15,15 +15,11 @@ export default async function AdminVODPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black dark:text-foreground">{pick(locale, 'إدارة المحتوى الترفيهي', 'Manage VOD content')}</h2>
-          <p className="text-muted-foreground text-sm mt-1">{pick(locale, 'إضافة وإدارة الأفلام، المسلسلات، والوثائقيات.', 'Add and manage films, series and documentaries.')}</p>
-        </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-primary-foreground px-6 py-3 rounded-2xl font-black text-xs flex items-center gap-3 shadow-lg shadow-orange-500/20 transition-all">
-          <Plus className="w-4 h-4" />
-          {pick(locale, 'إضافة عمل جديد', 'Add title')}
-        </button>
+      <div>
+        <h2 className="text-2xl font-black dark:text-foreground">{pick(locale, 'إدارة المحتوى الترفيهي', 'Manage VOD content')}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {pick(locale, 'عرض العروض المنشورة في القاعدة. لا تعديل من أزرار وهمية.', 'Shows stored in the database. Editing is not available on this screen.')}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
@@ -59,12 +55,6 @@ export default async function AdminVODPage() {
               <Link href={`/vod/${show.slug}`} className="p-3 bg-muted dark:bg-slate-700 rounded-xl text-muted-foreground hover:text-orange-500 transition-all" title={pick(locale, 'معاينة', 'Preview')}>
                 <Eye className="w-5 h-5" />
               </Link>
-              <button className="p-3 bg-muted dark:bg-slate-700 rounded-xl text-muted-foreground hover:text-blue-500 transition-all" title={pick(locale, 'تعديل', 'Edit')}>
-                <Edit className="w-5 h-5" />
-              </button>
-              <button className="p-3 bg-red-50 dark:bg-red-950/20 rounded-xl text-red-500 hover:bg-red-100 transition-all" title={pick(locale, 'حذف', 'Delete')}>
-                <Trash className="w-5 h-5" />
-              </button>
             </div>
           </div>
         ))}

@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import { isTrustedNewsUrl } from '@/lib/news/trusted-sources';
 
 const META_KEYS = [
@@ -12,7 +13,8 @@ function absolutize(raw: string, baseUrl: string): string | null {
     const url = new URL(raw, baseUrl);
     if (!/^https?:$/i.test(url.protocol)) return null;
     return url.toString();
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/news/enrich-source.ts:15", error);
     return null;
   }
 }
@@ -81,7 +83,8 @@ export async function fetchTrustedSourceImage(sourceUrl: string | null | undefin
     }
 
     return pickImageFromHtml(html, sourceUrl);
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/news/enrich-source.ts:84", error);
     return null;
   } finally {
     clearTimeout(timer);
@@ -103,9 +106,115 @@ export async function resolveNewsImage(input: {
   return fetchTrustedSourceImage(input.sourceUrl);
 }
 
+/** Keep the stored URL unless a known CDN thumb can be enlarged without breaking the file. */
+export function upgradeNewsImageUrl(raw: string): string {
+  const cleaned = raw.trim().replace(/&amp;/g, '&');
+  const withProtocol = cleaned.startsWith('//') ? `https:${cleaned}` : cleaned;
+  try {
+    const url = new URL(withProtocol);
+    if (url.protocol === 'http:') url.protocol = 'https:';
+    if (!/^https:$/i.test(url.protocol)) return raw;
+
+    if (url.hostname.includes('ichef.bbci.co.uk')) {
+      url.pathname = url.pathname
+        .replace(/\/news\/\d+\//i, '/news/976/')
+        .replace(/\/ace\/(?:standard|ws)\/\d+\//i, '/ace/standard/976/');
+    }
+
+    const guim = url.pathname.match(/^\/img\/media\/(.+)\/master\/([^/]+)$/i);
+    if ((url.hostname === 'i.guim.co.uk' || url.hostname.endsWith('.guim.co.uk')) && guim) {
+      return `https://media.guim.co.uk/${guim[1]}/${guim[2]}`;
+    }
+
+    if (url.hostname.includes('skynewsarabia.com')) {
+      url.pathname = url.pathname.replace(
+        /\/(\d{2,4})\/(\d{2,4})\/(\d+-\d+\.(?:jpe?g|webp|png))$/i,
+        (full, wide, _high, file) =>
+          Number(wide) < 800 ? `/1200/675/${file}` : full,
+      );
+    }
+
+    url.pathname = url.pathname.replace(/-\d{2,4}x\d{2,4}(?=\.[a-z]{3,4}$)/i, '');
+    url.pathname = url.pathname
+      .replace(/\/(?:thumb|thumbs|small|xs)\//gi, '/')
+      .replace(/\/(?:150|200|240|320|460|640)\//g, '/1024/');
+
+    for (const key of ['w', 'width', 'ow'] as const) {
+      if (!url.searchParams.has(key)) continue;
+      const wide = Number(url.searchParams.get(key) || 0);
+      if (wide > 0 && wide < 900) url.searchParams.set(key, '1200');
+    }
+
+    return url.toString();
+  } catch (error) {
+    reportCaughtError('src/lib/news/enrich-source.ts:upgradeNewsImageUrl', error);
+    return raw;
+  }
+}
+
+/** Larger CDN variant for the photo hall — same file, higher width when the host allows it. */
+export function upgradeGalleryImageUrl(raw: string): string {
+  const base = upgradeNewsImageUrl(raw);
+  try {
+    const url = new URL(base);
+    if (url.hostname.includes('ichef.bbci.co.uk')) {
+      url.pathname = url.pathname
+        .replace(/\/news\/\d+\//i, '/news/1376/')
+        .replace(/\/ace\/(?:standard|ws)\/\d+\//i, '/ace/standard/1376/');
+    }
+    if (url.hostname.includes('skynewsarabia.com')) {
+      url.pathname = url.pathname.replace(
+        /\/(\d{2,4})\/(\d{2,4})\/(\d+-\d+\.(?:jpe?g|webp|png))$/i,
+        '/1600/900/$3',
+      );
+    }
+    for (const key of ['w', 'width', 'ow'] as const) {
+      if (!url.searchParams.has(key)) continue;
+      const wide = Number(url.searchParams.get(key) || 0);
+      if (wide > 0 && wide < 1600) url.searchParams.set(key, '1600');
+    }
+    return url.toString();
+  } catch (error) {
+    reportCaughtError('src/lib/news/enrich-source.ts:upgradeGalleryImageUrl', error);
+    return base;
+  }
+}
+
+export function galleryImageSrcSet(raw: string): string | undefined {
+  try {
+    const url = new URL(upgradeNewsImageUrl(raw));
+    if (url.hostname.includes('ichef.bbci.co.uk') && /\/news\/\d+\//i.test(url.pathname)) {
+      return [800, 976, 1376, 1536]
+        .map((wide) => `${url.toString().replace(/\/news\/\d+\//i, `/news/${wide}/`)} ${wide}w`)
+        .join(', ');
+    }
+    if (url.hostname.includes('ichef.bbci.co.uk') && /\/ace\/(?:standard|ws)\/\d+\//i.test(url.pathname)) {
+      return [800, 976, 1376, 1536]
+        .map((wide) => `${url.toString().replace(/\/ace\/(?:standard|ws)\/\d+\//i, `/ace/standard/${wide}/`)} ${wide}w`)
+        .join(', ');
+    }
+    return undefined;
+  } catch (error) {
+    reportCaughtError('src/lib/news/enrich-source.ts:galleryImageSrcSet', error);
+    return undefined;
+  }
+}
+
+function looksCompressedThumb(url: string) {
+  return (
+    /\/(?:thumb|thumbs|small|xs|150|200|240|320|460)\b/i.test(url) ||
+    /skynewsarabia\.com\/images\/.+\d{2,3}\/\d{2,3}\/\d+-/i.test(url) ||
+    /[?&](?:w|width|ow)=\d{1,3}\b/i.test(url)
+  );
+}
+
 export function publicStoryImage(story: {
   featuredImage?: string | null;
   ogImage?: string | null;
 }): string | null {
-  return story.featuredImage?.trim() || story.ogImage?.trim() || null;
+  const featured = story.featuredImage?.trim() || '';
+  const og = story.ogImage?.trim() || '';
+  const chosen =
+    featured && og && looksCompressedThumb(featured) && !looksCompressedThumb(og) ? og : featured || og;
+  return chosen ? upgradeNewsImageUrl(chosen) : null;
 }

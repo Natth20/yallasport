@@ -43,4 +43,8 @@ export class DevelopmentProvider implements SportsDataProvider {
   async getLeagueArchive(_leagueId: string): Promise<NormalizedLeagueSeason[]> {
     return [];
   }
+
+  async getRaw<T = unknown>(_path: string): Promise<T | null> {
+    return null;
+  }
 }

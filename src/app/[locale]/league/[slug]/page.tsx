@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
-import { auth } from '@/lib/auth/auth';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { LeagueDossier } from '@/components/leagues/LeagueDossier';
 import { pick } from '@/i18n/pick';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
+import { walkLocalizeNames, localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { FrontSkeleton } from '@/components/front/FrontMark';
+
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -32,14 +35,28 @@ export async function generateMetadata({
   }
   return pageMetadata({
     locale,
-    title: league.name,
+    title: localizePlainName(locale, league.name),
     description: `${pick(locale, 'ملف', 'Profile for')} ${league.name}${league.country ? ` ${pick(locale, 'من', 'from')} ${league.country}` : ''} — ${pick(locale, 'الجدول، الترتيب، الأخبار والمباريات من مصدر البيانات الحقيقي.', 'schedule, standings, news and matches from the real data source.')}`,
     path: `/league/${slug}`,
     images: [league.logoUrl],
   });
 }
 
-export default async function LeaguePage({
+export default function LeaguePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ season?: string }>;
+}) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <LeaguePageBody params={params} searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function LeaguePageBody({
   params,
   searchParams,
 }: {
@@ -49,18 +66,9 @@ export default async function LeaguePage({
   const locale = await getLocale();
   const { slug } = await params;
   const { season } = await searchParams;
-  const session = await auth();
   const dossier = await loadLeagueDossier(slug, { season });
   if (!dossier) notFound();
-
-  const userFollow = session?.user?.id
-    ? await prisma.userFavorite
-        .findFirst({
-          where: { userId: session.user.id, entityId: dossier.league.id, entityType: 'LEAGUE' },
-          select: { id: true },
-        })
-        .catch(() => null)
-    : null;
+  walkLocalizeNames(locale, dossier);
 
   return (
     <>
@@ -77,8 +85,8 @@ export default async function LeaguePage({
         locale={locale}
         now={new Date()}
         dossier={dossier}
-        isLoggedIn={Boolean(session?.user)}
-        initialIsFollowing={Boolean(userFollow)}
+        isLoggedIn={false}
+        initialIsFollowing={false}
       />
     </>
   );

@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { syncLicensedCatalogFromEnv, ingestLicensedCatalog } from '@/lib/streaming/ingest';
@@ -10,7 +11,7 @@ export const POST = auth(async function POST(req) {
     return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/admin/streaming/sync/route.ts:13", null, { persist: false }));
   if (body && typeof body === 'object' && (body.channels || body.shows || body.assets)) {
     const counts = await ingestLicensedCatalog(body as LicensedCatalogPayload);
     return NextResponse.json({ success: true, source: 'body', ...counts });

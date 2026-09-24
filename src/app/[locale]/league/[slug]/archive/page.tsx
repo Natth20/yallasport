@@ -1,4 +1,6 @@
-﻿import React from 'react';
+import { reportCaughtError } from '@/lib/ops/caught';
+import React, { Suspense } from 'react';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
@@ -10,6 +12,8 @@ import { pick } from '@/i18n/pick';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
+
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -39,7 +43,15 @@ export async function generateMetadata({
   });
 }
 
-export default async function LeagueArchivePage({ params }: { params: Promise<{ slug: string }> }) {
+export default function LeagueArchivePage(props: { params: Promise<{ slug: string }> }) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <LeagueArchivePageBody params={props.params} />
+    </Suspense>
+  );
+}
+
+async function LeagueArchivePageBody({ params }: { params: Promise<{ slug: string }> }) {
   const locale = await getLocale();
   const { slug } = await params;
   const dossier = await loadLeagueDossier(slug);
@@ -185,7 +197,8 @@ async function softChampions(leagueId: string) {
         team: { select: { name: true, logoUrl: true, slug: true } },
       },
     });
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/app/[locale]/league/[slug]/archive/page.tsx:190", error);
     return [];
   }
 }

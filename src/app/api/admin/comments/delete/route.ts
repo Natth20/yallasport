@@ -1,14 +1,11 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
+import { prisma } from '@/lib/prisma';
 
-/**
- * API Route: /api/admin/comments/delete
- * Allows moderators/admins to delete comments.
- */
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session || !['SUPER_ADMIN', 'MODERATOR'].includes(session.user?.role as string)) {
+  if (!session?.user?.id || !['SUPER_ADMIN', 'MODERATOR'].includes(session.user?.role as string)) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -19,13 +16,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Invalid comment' }, { status: 400 });
     }
 
-    await prisma.comment.delete({
-      where: { id: commentId }
-    });
+    await prisma.$executeRaw`UPDATE "Comment" SET "parentId" = NULL WHERE "parentId" = ${commentId}`;
+    await prisma.$executeRaw`DELETE FROM "Comment" WHERE id = ${commentId}`;
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: 'COMMENT_DELETE',
+        entityType: 'Comment',
+        entityId: commentId,
+      },
+    }).catch(swallow("src/app/api/admin/comments/delete/route.ts:27", undefined));
 
-    // Redirect back to comments page (locale middleware rewrites /admin)
     return NextResponse.redirect(new URL('/admin/comments', req.url));
-  } catch (error: any) {
+  } catch (error) {
     console.error('[COMMENT_DELETE_ERROR]:', error);
     return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }

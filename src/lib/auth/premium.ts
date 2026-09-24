@@ -3,6 +3,9 @@ import 'server-only';
 import { prisma } from '@/lib/prisma';
 import type { SubscriptionStatus } from '@/generated/prisma';
 
+/** Paid plans stay off until a real Stripe/PayPal account exists. */
+export const PAYMENTS_ENABLED = false;
+
 const TIER_RANK: Record<string, number> = {
   FREE: 0,
   PREMIUM: 1,
@@ -23,6 +26,7 @@ export function canAccessPremiumContent(opts: {
   role?: string | null;
 }): boolean {
   if (!opts.requiresPremium) return true;
+  if (!PAYMENTS_ENABLED) return true;
   return isPremiumSubscriber(opts.subscriptionStatus, opts.role);
 }
 
@@ -38,6 +42,7 @@ export function subscriptionLabel(
   status: SubscriptionStatus | string | null | undefined,
   locale: string
 ): string {
+  if (!PAYMENTS_ENABLED) return locale === 'ar' ? 'مجاني' : 'Free';
   if (status === 'VIP') return 'VIP';
   if (status === 'PREMIUM') return locale === 'ar' ? 'مميز' : 'Premium';
   return locale === 'ar' ? 'مجاني' : 'Free';

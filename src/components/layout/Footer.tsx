@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowUpRight, Mail } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
@@ -7,6 +7,7 @@ import { BrandMark } from '@/components/brand/BrandMark';
 
 export async function Footer() {
   const t = await getTranslations();
+  const locale = await getLocale();
   const year = new Date().getFullYear();
 
   const arena = [
@@ -14,20 +15,28 @@ export async function Footer() {
     { name: t('common.leagues'), href: '/leagues' },
     { name: t('common.news'), href: '/news' },
     { name: t('common.broadcasts'), href: '/live' },
-    { name: t('common.watch'), href: '/watch' },
-    { name: t('common.tv_guide'), href: '/tv-guide' },
   ];
 
   const explore = [
     { name: t('footer.about'), href: '/about' },
-    { name: t('footer.leaderboard'), href: '/leaderboard' },
     { name: t('common.search'), href: '/search' },
-    { name: t('common.comparison'), href: '/compare' },
+    { name: t('common.favorites'), href: '/favorites' },
     { name: t('footer.connect'), href: '/contact' },
+  ];
+
+  const tools = [
+    { name: t('footer.leaderboard'), href: '/leaderboard' },
+    { name: t('common.comparison'), href: '/compare' },
+    { name: t('common.player_compare'), href: '/compare-players' },
+    { name: t('common.transfers'), href: '/transfers' },
+    { name: t('common.stats'), href: '/stats' },
+    { name: t('common.photos'), href: '/photos' },
+    { name: t('common.video'), href: '/videos' },
   ];
 
   const legal = [
     { name: t('common.privacy'), href: '/privacy' },
+    { name: t('common.cookies'), href: '/cookies' },
     { name: t('common.terms'), href: '/terms' },
     { name: t('footer.copyright'), href: '/copyright' },
     { name: t('common.report'), href: '/report' },
@@ -54,16 +63,15 @@ export async function Footer() {
     },
     {
       index: '03',
-      title: t('footer.gate_watch'),
+      title: t('common.matches'),
       copy: t('footer.gate_watch_copy'),
-      href: '/watch',
+      href: '/matches',
     },
   ];
 
   return (
     <footer className="relative overflow-hidden border-t border-border/70 bg-card/60 backdrop-blur-2xl">
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/10 via-primary/5 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 right-10 h-60 w-60 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-72 w-full max-w-6xl rounded-full bg-gradient-to-b from-primary/6 via-transparent to-transparent blur-3xl" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 pt-10 pb-6">
         {/* Masthead Sub-Bar */}
@@ -86,10 +94,10 @@ export async function Footer() {
         <div className="grid gap-10 border-b border-border/60 py-10 md:grid-cols-12 md:gap-8 lg:py-12">
           <div className="flex flex-col gap-4 md:col-span-7 xl:col-span-5">
             <Link href="/" className="group inline-flex items-center gap-3.5 self-start" aria-label="Yalla Sport">
-              <BrandMark size={46} className="transition-transform duration-500 group-hover:scale-105 drop-shadow-[0_4px_12px_rgba(249,115,22,0.3)]" />
+              <BrandMark size={46} className="" />
               <span className="flex flex-col">
                 <span className="text-xl font-black leading-none tracking-tight text-foreground">
-                  YALLA SPORT
+                  {locale === 'ar' ? 'يلا سبورت' : 'YALLA SPORT'}
                 </span>
                 <span className="mt-1.5 text-[9px] font-black uppercase tracking-[0.32em] text-primary">
                   {t('footer.tagline')}
@@ -111,7 +119,7 @@ export async function Footer() {
                 <Link
                   key={gate.href}
                   href={gate.href}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-card/80 p-4 transition-all hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5"
+                  className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card/80 p-4 transition-all hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="tabular-nums text-[10px] font-black tracking-widest text-muted-foreground/60">
@@ -134,12 +142,13 @@ export async function Footer() {
         {/* Navigation Columns & Contact Ticket */}
         <div className="grid gap-10 py-10 md:grid-cols-12 md:gap-8 lg:py-12">
           <nav
-            className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:order-last md:col-span-12 xl:order-none xl:col-span-7"
+            className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:order-last md:col-span-12 xl:order-none xl:col-span-7"
             aria-label={t('footer.sitemap')}
           >
             <FooterColumn index="01" title={t('footer.arena')} links={arena} />
             <FooterColumn index="02" title={t('footer.explore')} links={explore} />
-            <FooterColumn index="03" title={t('footer.legal')} links={legal} className="col-span-2 sm:col-span-1" />
+            <FooterColumn index="03" title={t('footer.tools')} links={tools} />
+            <FooterColumn index="04" title={t('footer.legal')} links={legal} />
           </nav>
 
           <div className="md:col-span-5 xl:col-span-5">
@@ -154,16 +163,16 @@ export async function Footer() {
               </div>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t('footer.write_us_copy')}</p>
               <p className="mt-1 text-[11px] text-muted-foreground/70">{t('footer.desk_note')}</p>
-              
+
               <a
                 href="mailto:contact@yallasport.com"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground shadow-md shadow-primary/25 transition-all hover:scale-102 hover:brightness-110 active:scale-98"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground"
               >
                 <Mail className="h-3.5 w-3.5" />
                 <span>{t('footer.email_cta')}</span>
               </a>
 
-              <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/5 text-[11px] text-muted-foreground">
+              <div className="mt-3 flex items-center justify-between pt-2 border-t border-border text-[11px] text-muted-foreground">
                 <span>{t('footer.desk')}:</span>
                 <span className="font-mono text-foreground/80">contact@yallasport.com</span>
               </div>

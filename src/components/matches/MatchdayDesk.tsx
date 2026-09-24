@@ -1,9 +1,10 @@
-﻿import { Link } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { MatchCountdown } from '@/components/sports/MatchCountdown';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { Bell, Radio, Timer, Users } from 'lucide-react';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 
 export type DeskMatch = {
   id: string;
@@ -149,7 +150,7 @@ function DeskCard({
   return (
     <Link
       href={`/match/${match.id}`}
-      className={`min-w-[220px] flex-1 rounded-xl border px-3 py-3 transition-transform hover:-translate-y-0.5 ${
+      className={`min-w-[220px] flex-1 rounded-xl border px-3 py-3 ${
         live
           ? 'border-orange-400/35 bg-orange-50/80 dark:border-orange-300/25 dark:bg-card/[0.04]'
           : 'border-border bg-card dark:border-border dark:bg-muted'
@@ -162,15 +163,13 @@ function DeskCard({
         {match.channel ? <span className="shrink-0 truncate text-orange-500">{match.channel}</span> : null}
       </div>
       <div className="flex items-center gap-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={match.homeTeam.logoUrl || '/placeholder-team.png'} alt="" className="h-6 w-6 object-contain" />
+        <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6" />
         <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-foreground dark:text-foreground">
           {match.homeTeam.name}
         </span>
       </div>
       <div className="mt-1.5 flex items-center gap-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={match.awayTeam.logoUrl || '/placeholder-team.png'} alt="" className="h-6 w-6 object-contain" />
+        <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6" />
         <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-foreground dark:text-foreground">
           {match.awayTeam.name}
         </span>

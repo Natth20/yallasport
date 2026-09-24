@@ -1,10 +1,14 @@
-﻿import {Link} from '@/i18n/navigation';
+import { Suspense } from 'react';
+import { FrontSkeleton } from '@/components/front/FrontMark';
+import { Link } from '@/i18n/navigation';
 import { Bell } from 'lucide-react';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
 import { NotificationSettings } from '../../profile/NotificationSettings';
-import {getLocale} from 'next-intl/server';
-import {pick} from '@/i18n/pick';
+import { getLocale } from 'next-intl/server';
+import { pick } from '@/i18n/pick';
+import { HouseStage } from '@/components/house/HouseStage';
+import { HousePlate } from '@/components/house/HouseMark';
 
 const defaults = {
   goal: true,
@@ -13,7 +17,15 @@ const defaults = {
   breakingNews: true,
 };
 
-export default async function NotificationSettingsPage() {
+export default function NotificationSettingsPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <NotificationSettingsPageBody />
+    </Suspense>
+  );
+}
+
+async function NotificationSettingsPageBody() {
   const locale = await getLocale();
   const session = await auth();
   if (!session?.user?.id) {
@@ -35,13 +47,14 @@ export default async function NotificationSettingsPage() {
   const preferences = { ...defaults, ...(user?.notificationPrefs as Partial<typeof defaults> ?? {}) };
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-16">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500">{pick(locale, 'مركز التنبيهات', 'Notification Center')}</span>
-      <h1 className="mt-3 text-3xl font-bold">{pick(locale, 'إعدادات التنبيهات', 'Notification settings')}</h1>
-      <p className="mt-3 text-sm font-medium text-muted-foreground">{pick(locale, 'اختر التنبيهات التي تريد استقبالها. تذكير بداية المباراة يُرسل قبل 15 دقيقة.', 'Choose which alerts to receive. Match-start reminders are sent 15 minutes before kickoff.')}</p>
-      <div className="mt-8 rounded-2xl border border-border bg-card p-4 dark:border-border dark:bg-card/[0.04]">
+    <HouseStage
+      kicker={pick(locale, 'مركز التنبيهات', 'Notification Center')}
+      title={pick(locale, 'إعدادات التنبيهات', 'Notification settings')}
+      lead={pick(locale, 'اختر التنبيهات التي تريد استقبالها. تذكير بداية المباراة يُرسل قبل 15 دقيقة.', 'Choose which alerts to receive. Match-start reminders are sent 15 minutes before kickoff.')}
+    >
+      <HousePlate className="mt-8 p-4">
         <NotificationSettings initialPrefs={preferences} />
-      </div>
-    </div>
+      </HousePlate>
+    </HouseStage>
   );
 }

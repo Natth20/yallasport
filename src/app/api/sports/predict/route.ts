@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: 'Too many requests' }, { status: 429 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/sports/predict/route.ts:26", null, { persist: false }));
   const matchId = isEntityId(body?.matchId) ? body.matchId : '';
   const outcome = body?.outcome;
 

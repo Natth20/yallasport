@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const TOKEN_TTL_MS = 90_000;
@@ -43,7 +44,8 @@ export function verifyPlaybackToken(token: string): PlaybackTokenPayload | null 
     const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as PlaybackTokenPayload;
     if (!payload.assetId || !payload.userId || payload.exp < Date.now()) return null;
     return payload;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/streaming/playback-token.ts:46", error);
     return null;
   }
 }

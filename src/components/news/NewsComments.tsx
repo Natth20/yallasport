@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useState } from 'react';
 import { MessageSquare, Send, User as UserIcon } from 'lucide-react';
@@ -26,12 +26,14 @@ export function NewsComments({
   const [comments, setComments] = useState(initialComments);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!isLoggedIn || !text.trim() || busy) return;
     setBusy(true);
+    setError(null);
     try {
       const res = await fetch('/api/sports/comments', {
         method: 'POST',
@@ -39,7 +41,22 @@ export function NewsComments({
         body: JSON.stringify({ newsId, content: text.trim() }),
       });
       const data = await res.json();
-      if (data.success && data.comment) {
+      if (!res.ok || !data.success) {
+        const code = data?.error;
+        setError(
+          code === 'unauthorized'
+            ? t('chat_error_auth')
+            : code === 'flagged'
+              ? t('chat_error_flagged')
+              : code === 'spam'
+                ? t('chat_error_spam')
+                : code === 'no_links'
+                  ? t('chat_error_links')
+                  : t('chat_error_generic'),
+        );
+        return;
+      }
+      if (data.comment) {
         setComments((prev) => [...prev, data.comment]);
         setText('');
         requestAnimationFrame(() => {
@@ -93,6 +110,7 @@ export function NewsComments({
 
       <div className="border-t border-gray-50 px-6 py-4 dark:border-border">
         {isLoggedIn ? (
+          <>
           <form onSubmit={submit} className="relative">
             <input
               value={text}
@@ -110,6 +128,8 @@ export function NewsComments({
               <Send className="h-4 w-4" />
             </button>
           </form>
+          {error ? <p className="mt-2 text-xs font-bold text-red-500">{error}</p> : null}
+          </>
         ) : (
           <p className="py-2 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
             <Link href="/login" className="text-orange-500 hover:underline">

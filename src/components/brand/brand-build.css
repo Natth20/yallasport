@@ -1,0 +1,198 @@
+.ys-build {
+  --ys-build-ink: #020617; /* Very dark slate for luxury dark mode */
+  min-height: calc(100dvh - var(--ys-mast-offset, 4.65rem));
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+  background: var(--ys-build-ink);
+  transition: background-color 0.5s ease;
+}
+
+.ys-build.is-compact {
+  min-height: 42vh;
+  background: transparent;
+}
+
+html.light .ys-build:not(.is-compact) {
+  --ys-build-ink: #f8fafc; /* Very light, clean slate for light mode */
+}
+
+/* Elegant ambient glow instead of messy noise */
+.ys-build::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--primary) 5%, transparent) 0%, transparent 60%);
+  pointer-events: none;
+  animation: ys-breathe-glow 6s ease-in-out infinite alternate;
+}
+
+@keyframes ys-breathe-glow {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+.ys-build-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  z-index: 1;
+}
+
+.ys-build-orbit {
+  position: relative;
+  width: min(50vw, 200px);
+  height: min(50vw, 200px);
+  display: grid;
+  place-items: center;
+  animation: ys-stage-enter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ys-build.is-compact .ys-build-orbit {
+  width: 120px;
+  height: 120px;
+}
+
+/* Clean, minimalist rings */
+.ys-build-ring,
+.ys-build-ring-2 {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  pointer-events: none;
+}
+
+.ys-build-ring {
+  animation: ys-spin-smooth 12s linear infinite;
+  border-top-color: color-mix(in srgb, var(--primary) 80%, transparent);
+  border-right-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.ys-build-ring-2 {
+  inset: 15%;
+  animation: ys-spin-smooth 8s linear infinite reverse;
+  border-bottom-color: color-mix(in srgb, var(--primary) 60%, transparent);
+  border-left-color: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.ys-build-halo {
+  position: absolute;
+  inset: 25%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 15%, transparent), transparent 70%);
+  filter: blur(20px);
+  animation: ys-halo-pulse 3s ease-in-out infinite;
+}
+
+.ys-build-mark {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 55%;
+  aspect-ratio: 1;
+}
+
+.ys-build-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px color-mix(in srgb, var(--primary) 30%, transparent));
+  animation: ys-logo-float 4s ease-in-out infinite;
+}
+
+/* Hiding unused complex trace animations for a cleaner look */
+.ys-build-trace,
+.ys-build-corner,
+.ys-build-scan,
+.ys-build-dust,
+.ys-build-grid,
+.ys-build-vignette,
+.ys-build-logo-ghost,
+.ys-build-logo-reveal {
+  display: none !important;
+}
+
+.ys-build-word {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  animation: ys-word-fade 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+.ys-build-word strong {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--foreground);
+}
+
+.ys-build-word span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  color: var(--primary);
+  opacity: 0.8;
+}
+
+.ys-build.is-compact .ys-build-word {
+  display: none;
+}
+
+/* Elegant sleek loading bar */
+.ys-build-bar {
+  width: min(35vw, 140px);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  animation: ys-word-fade 1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+}
+
+.ys-build-bar i {
+  display: block;
+  height: 100%;
+  width: 30%;
+  border-radius: inherit;
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+  animation: ys-bar-slide 1.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+/* Minimalist Animations (Forced ON) */
+@keyframes ys-spin-smooth {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ys-halo-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes ys-stage-enter {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ys-word-fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ys-bar-slide {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(350%); }
+}
+
+@keyframes ys-logo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}

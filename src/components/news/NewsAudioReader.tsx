@@ -1,4 +1,6 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
@@ -24,7 +26,8 @@ export function NewsAudioReader({ text }: { text: string }) {
     return () => {
       try {
         window.speechSynthesis?.cancel();
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/components/news/NewsAudioReader.tsx:27", error, { persist: false });
         // ignore
       }
     };

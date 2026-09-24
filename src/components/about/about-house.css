@@ -1,0 +1,121 @@
+/* ══════════════════════════════════════════════════════════════════════
+   YALLA SPORT — ABOUT HOUSE & BRAND SANCTUARY
+   Ultra-Minimalist Luxury Design
+   ══════════════════════════════════════════════════════════════════════ */
+
+.about-house {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+/* Very subtle background light, no harsh colors */
+.about-house::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 60vh;
+  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--primary) 6%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.about-house .about-maison-hero {
+  position: relative;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+html.dark .about-house .about-maison-hero {
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+}
+
+.about-house .about-stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+  padding: 1.5rem;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  backdrop-filter: blur(12px);
+}
+
+.about-house .about-stat-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08);
+}
+
+html.dark .about-house .about-stat-card:hover {
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
+}
+
+.about-house .about-stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline-start: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 40%, transparent), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.about-house .about-stat-card:hover::after {
+  opacity: 1;
+}
+
+.about-house .about-pillar-card {
+  position: relative;
+  height: 100%;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  background: color-mix(in srgb, var(--card) 40%, transparent);
+  padding: 2rem;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  backdrop-filter: blur(12px);
+}
+
+.about-house .about-pillar-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .about-house .about-pillar-card:hover {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+}
+
+.about-house .about-door-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
+  backdrop-filter: blur(12px);
+}
+
+.about-house .about-door-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .about-house .about-door-card:hover {
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
+}

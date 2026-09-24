@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ChevronUp, ListOrdered, ArrowUpRight } from 'lucide-react';
 
 export type LexRailItem = { id: string; label: string };
 
@@ -8,18 +9,13 @@ export function LexProgress() {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
-    const target = document.querySelector<HTMLElement>('.lex-scroll');
-    if (!target) return;
-
     const update = () => {
-      const rect = target.getBoundingClientRect();
-      const start = rect.top + window.scrollY - window.innerHeight * 0.35;
-      const span = rect.height - window.innerHeight * 0.35;
-      if (span <= 0) {
-        setValue(1);
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (scrollHeight <= 0) {
+        setValue(0);
         return;
       }
-      const ratio = (window.scrollY - start) / span;
+      const ratio = window.scrollY / scrollHeight;
       setValue(Math.min(1, Math.max(0, ratio)));
     };
 
@@ -32,11 +28,20 @@ export function LexProgress() {
     };
   }, []);
 
-  // return (
-  //   <div className="lex-progress" aria-hidden>
-  //     <span style={{ transform: `scaleX(${value})` }} />
-  //   </div>
-  // );
+  return (
+    <div
+      className="fixed top-0 inset-x-0 h-1 z-50 pointer-events-none bg-black/10 dark:bg-white/5"
+      aria-hidden
+    >
+      <div
+        className="h-full bg-[var(--lex-accent)] transition-all duration-150 ease-out shadow-[0_0_12px_var(--lex-accent)]"
+        style={{
+          width: `${Math.round(value * 100)}%`,
+          transformOrigin: 'start',
+        }}
+      />
+    </div>
+  );
 }
 
 export function LexRail({
@@ -49,8 +54,8 @@ export function LexRail({
   readLabel: string;
 }) {
   const [active, setActive] = useState(items[0]?.id ?? '');
-  const [read, setRead] = useState(0);
-  const listRef = useRef<HTMLOListElement>(null);
+  const [readPct, setReadPct] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -62,14 +67,16 @@ export function LexRail({
     if (sections.length === 0) return;
 
     const pickActive = () => {
-      const line = window.innerHeight * 0.32;
+      const threshold = window.innerHeight * 0.35;
       let current = sections[0];
       for (const node of sections) {
-        if (node.getBoundingClientRect().top <= line) current = node;
+        if (node.getBoundingClientRect().top <= threshold) {
+          current = node;
+        }
       }
       setActive(current.id);
       const index = sections.findIndex((node) => node.id === current.id);
-      setRead(Math.round(((index + 1) / sections.length) * 100));
+      setReadPct(Math.round(((index + 1) / sections.length) * 100));
     };
 
     pickActive();
@@ -84,43 +91,67 @@ export function LexRail({
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    const node = list.querySelector<HTMLElement>('[data-active="1"]');
+    const node = list.querySelector<HTMLElement>('[data-active="true"]');
     if (!node) return;
     const top = node.offsetTop - list.clientHeight / 2 + node.clientHeight / 2;
     list.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   }, [active]);
 
-  return (
-    <div className="lex-rail-inner">
-      <p className="lex-rail-head">
-        <span>{heading}</span>
-        <b>{String(items.length).padStart(2, '0')}</b>
-      </p>
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-      <ol className="lex-rail-list" ref={listRef}>
+  return (
+    <div className="lex-rail-card">
+      <div className="lex-rail-header">
+        <div className="flex items-center gap-2">
+          <ListOrdered className="w-4 h-4 text-[var(--lex-accent)]" />
+          <span className="lex-rail-title">{heading}</span>
+        </div>
+        <span className="lex-rail-progress-pct">{readPct}%</span>
+      </div>
+
+      <div className="w-full bg-secondary/50 h-1.5 rounded-full overflow-hidden mb-3">
+        <div
+          className="bg-[var(--lex-accent)] h-full transition-all duration-300 rounded-full"
+          style={{ width: `${readPct}%` }}
+        />
+      </div>
+
+      <ul className="lex-rail-list" ref={listRef}>
         {items.map((item, index) => (
           <li key={item.id}>
             <a
               href={`#${item.id}`}
-              data-active={item.id === active ? '1' : undefined}
-              aria-current={item.id === active ? 'true' : undefined}
+              className="lex-rail-link group"
+              data-active={item.id === active ? 'true' : 'false'}
+              onClick={(e) => {
+                e.preventDefault();
+                const target = document.getElementById(item.id);
+                if (target) {
+                  const y = target.getBoundingClientRect().top + window.scrollY - 90;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+              }}
             >
-              <em>{String(index + 1).padStart(2, '0')}</em>
-              <span>{item.label}</span>
+              <span className="text-[10px] font-mono font-bold opacity-60 group-hover:opacity-100">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span className="truncate flex-1">{item.label}</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </a>
           </li>
         ))}
-      </ol>
+      </ul>
 
-      <div className="lex-rail-meter">
-        <p>
-          <span>{readLabel}</span>
-          <b>{read}%</b>
-        </p>
-        <i>
-          <span style={{ width: `${read}%` }} />
-        </i>
-      </div>
+      <button
+        onClick={scrollToTop}
+        type="button"
+        className="mt-3 w-full py-2 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 rounded-lg border border-border/60 hover:border-[var(--lex-accent)] text-muted-foreground hover:text-[var(--lex-accent)] hover:bg-[var(--lex-accent-soft)] transition-all cursor-pointer"
+      >
+        <ChevronUp className="w-3.5 h-3.5" />
+        <span>{readLabel === 'Read so far' ? 'Back to top' : 'العودة للأعلى'}</span>
+      </button>
     </div>
   );
 }

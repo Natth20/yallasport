@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Bell, BellOff, Loader2, Star } from 'lucide-react';

@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import { prisma } from '@/lib/prisma';
 import { sportsData } from '@/lib/sports-data';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
@@ -110,7 +111,8 @@ export async function loadLeaguesAtlasData(input: {
       for (const match of apiLive.slice(0, 12)) {
         try {
           await persistNormalizedMatch(match);
-        } catch {
+        } catch (error) {
+          reportCaughtError("src/lib/leagues/load-atlas.ts:113", error);
           // keep going — one fixture failure must not empty the board
         }
       }

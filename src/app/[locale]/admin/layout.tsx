@@ -1,9 +1,12 @@
-﻿import React from "react";
+import React from "react";
 import {Link} from "@/i18n/navigation";
 import { auth } from "@/lib/auth/auth";
+import { ADMIN_NAV, isStaffRole } from "@/lib/auth/admin-access";
 import { redirect } from "next/navigation";
 import {getLocale} from "next-intl/server";
 import {pick} from "@/i18n/pick";
+import { SignOutButton } from "@/components/auth/SignOutButton";
+import "@/components/admin/admin-desk.css";
 
 /**
  * AdminLayout - Wraps all admin pages.
@@ -18,33 +21,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const role = session.user?.role as string;
+  if (!isStaffRole(role)) {
+    redirect("/");
+  }
 
-  // Permission Map for Sidebar Links
-  const links = [
-    { label: pick(locale, "الرئيسية", "Home"), href: "/admin", roles: ["SUPER_ADMIN", "EDITOR", "NEWS_EDITOR", "MODERATOR", "CONTENT_MANAGER", "ADS_MANAGER"] },
-    { label: pick(locale, "إدارة الأخبار", "Manage news"), href: "/admin/news", roles: ["SUPER_ADMIN", "EDITOR", "NEWS_EDITOR", "MODERATOR"] },
-    { label: pick(locale, "التقويم التحريري", "Editorial calendar"), href: "/admin/news/calendar", roles: ["SUPER_ADMIN", "EDITOR", "NEWS_EDITOR"] },
-    { label: pick(locale, "إدارة التعليقات", "Manage comments"), href: "/admin/comments", roles: ["SUPER_ADMIN", "MODERATOR"] },
-    { label: pick(locale, "صندوق المكتب", "Desk inbox"), href: "/admin/inbox", roles: ["SUPER_ADMIN", "MODERATOR", "EDITOR"] },
-    { label: pick(locale, "لوحة المتصدرين", "Leaderboard"), href: "/leaderboard", roles: ["SUPER_ADMIN", "EDITOR", "NEWS_EDITOR", "MODERATOR", "CONTENT_MANAGER", "ADS_MANAGER"] },
-    { label: pick(locale, "إدارة المباريات", "Manage matches"), href: "/admin/matches", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
-    { label: pick(locale, "إدارة البطولات", "Manage leagues"), href: "/admin/leagues", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
-    { label: pick(locale, "إدارة الأندية", "Manage teams"), href: "/admin/teams", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
-    { label: pick(locale, "إدارة اللاعبين", "Manage players"), href: "/admin/players", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
-    { label: pick(locale, "إدارة المحتوى", "Manage VOD"), href: "/admin/vod", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
-    { label: pick(locale, "دليل القنوات", "TV Guide"), href: "/admin/tv-guide", roles: ["SUPER_ADMIN", "EDITOR"] },
-    { label: pick(locale, "إدارة الإعلانات", "Manage ads"), href: "/admin/ads", roles: ["SUPER_ADMIN", "ADS_MANAGER"] },
-    { label: pick(locale, "التراخيص", "Licenses"), href: "/admin/licenses", roles: ["SUPER_ADMIN"] },
-    { label: pick(locale, "أصول البث", "Stream assets"), href: "/admin/streaming", roles: ["SUPER_ADMIN"] },
-    { label: pick(locale, "الترجمات", "Translations"), href: "/admin/translations", roles: ["SUPER_ADMIN", "EDITOR", "NEWS_EDITOR"] },
-    { label: pick(locale, "المستخدمون", "Users"), href: "/admin/users", roles: ["SUPER_ADMIN"] },
-    { label: pick(locale, "مؤشرات الأداء", "KPIs"), href: "/admin/kpis", roles: ["SUPER_ADMIN"] },
-  ];
-
-  const filteredLinks = links.filter(link => link.roles.includes(role));
+  const filteredLinks = ADMIN_NAV.filter((link) => link.roles.includes(role)).map((link) => ({
+    href: link.href,
+    label: pick(locale, link.ar, link.en),
+  }));
 
   return (
-    <div className="flex h-screen bg-muted dark:bg-background">
+    <div className="admin-desk flex h-screen bg-muted dark:bg-background">
       {/* Sidebar */}
       <aside className="w-64 bg-brand-green text-white shadow-lg overflow-y-auto shrink-0">
         <div className="p-8">
@@ -79,9 +66,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <span className="text-xs font-black block text-muted-foreground uppercase">{role}</span>
                 <span className="text-sm font-bold text-foreground dark:text-foreground">{session.user?.name || pick(locale, "مدير النظام", "System administrator")}</span>
               </div>
-              <button className="bg-red-50 dark:bg-red-950/20 text-red-600 px-4 py-2 rounded-xl text-xs font-black transition-colors hover:bg-red-100">
-                {pick(locale, "تسجيل الخروج", "Sign out")}
-              </button>
+              <SignOutButton
+                locale={locale}
+                label={pick(locale, "تسجيل الخروج", "Sign out")}
+                className="flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 px-4 py-2 rounded-xl text-xs font-black transition-colors hover:bg-red-100"
+              />
             </div>
           </div>
         </header>

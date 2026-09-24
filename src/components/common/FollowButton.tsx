@@ -1,6 +1,7 @@
 'use client';
+import { swallow } from '@/lib/ops/caught';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import {useTranslations} from 'next-intl';
 
@@ -12,19 +13,43 @@ interface FollowButtonProps {
   variant?: 'primary' | 'ghost';
 }
 
-/**
- * FollowButton - Generic component for following/favoriting teams, matches, or leagues.
- */
 export const FollowButton: React.FC<FollowButtonProps> = ({ 
   entityId, 
   entityType, 
-  isLoggedIn, 
+  isLoggedIn: loggedInProp,
   initialIsFollowing,
   variant = 'ghost'
 }) => {
   const t = useTranslations('sports');
+  const [isLoggedIn, setIsLoggedIn] = useState(loggedInProp);
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/user/favorite')
+      .then(async (response) => {
+        if (cancelled) return;
+        if (response.status === 401) {
+          setIsLoggedIn(false);
+          return;
+        }
+        if (!response.ok) return;
+        setIsLoggedIn(true);
+        const data = await response.json();
+        const list = Array.isArray(data?.favorites) ? data.favorites : [];
+        setIsFollowing(
+          list.some(
+            (row: { entityId?: string; entityType?: string }) =>
+              row.entityType === entityType && row.entityId === entityId,
+          ),
+        );
+      })
+      .catch(swallow("src/components/common/FollowButton.tsx:47", undefined));
+    return () => {
+      cancelled = true;
+    };
+  }, [entityId, entityType]);
 
   const toggleFollow = async () => {
     if (!isLoggedIn) {

@@ -4,6 +4,7 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { ArrowUpRight, Menu, Search, UserRound, X } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
 import { DataSaverToggle } from './DataSaverToggle';
+import { ThemeToggle } from './ThemeToggle';
 import { VoiceSearch } from './VoiceSearch';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { BroadcastsLink } from './BroadcastsLink';
@@ -47,7 +48,7 @@ export const Header: React.FC = () => {
     { name: t('common.news'), href: '/news' },
     { name: t('common.leagues'), href: '/leagues' },
     { name: t('common.matches'), href: '/matches' },
-    { name: t('common.watch'), href: '/watch' },
+    { name: t('common.video'), href: '/videos' },
   ];
 
   const isActive = (href: string) =>
@@ -72,11 +73,11 @@ export const Header: React.FC = () => {
 
           <Link href="/" className="masthead-brand group" aria-label="Yalla Sport">
             <span className="masthead-brand-mark">
-              <BrandMark size={40} priority className="transition-transform duration-500 group-hover:scale-105" />
+              <BrandMark size={40} priority className="" />
             </span>
             <span className="hidden min-w-0 flex-col sm:flex">
               <span className="text-[15px] font-extrabold leading-none tracking-[-0.05em] text-foreground dark:text-foreground">
-                YALLA SPORT
+                {dir === 'rtl' ? 'يلا سبورت' : 'YALLA SPORT'}
               </span>
               <span className="mt-1.5 flex items-center gap-2 text-[8px] font-bold uppercase tracking-[0.28em] text-orange-500">
                 <span className="hidden h-px w-3 bg-orange-400/50 sm:block" />
@@ -127,6 +128,7 @@ export const Header: React.FC = () => {
             </form>
 
             <div className="masthead-cluster hidden md:flex">
+              <ThemeToggle />
               <DataSaverToggle />
               <LanguageToggle />
             </div>
@@ -196,6 +198,8 @@ export const Header: React.FC = () => {
                 }}
               />
               <DataSaverToggle />
+              <ThemeToggle />
+              <LanguageToggle />
             </div>
 
             <nav className="space-y-1.5" aria-label={t('navigation.mobile')}>

@@ -2,8 +2,11 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { VodTitle } from '@/components/streaming/VodTitle';
+import { requireLicensedStreaming } from '@/lib/streaming/public-door';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
+
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -35,6 +38,7 @@ export async function generateMetadata({
 }
 
 export default async function ShowDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
+  await requireLicensedStreaming();
   const { slug } = await params;
   const locale = await getLocale();
 

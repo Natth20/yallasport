@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 /**
  * Trusted football / sports news hosts only.
  * Public pages and RSS import must resolve to one of these domains.
@@ -99,7 +100,8 @@ export function hostFromUrl(raw: string | null | undefined): string | null {
   try {
     const host = new URL(raw).hostname.toLowerCase().replace(/^www\./, '');
     return host || null;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/news/trusted-sources.ts:102", error);
     return null;
   }
 }
@@ -127,11 +129,13 @@ export function isTrustedRssFeedUrl(raw: string | null | undefined): boolean {
           incoming.hostname.replace(/^www\./, '') === allowed.hostname.replace(/^www\./, '') &&
           incoming.pathname.replace(/\/$/, '') === allowed.pathname.replace(/\/$/, '')
         );
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/lib/news/trusted-sources.ts:130", error);
         return false;
       }
     });
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/news/trusted-sources.ts:134", error);
     return false;
   }
 }

@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +31,7 @@ export const NewsReviewList: React.FC<{ items: NewsItem[] }> = ({ items }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action }),
       });
-      const payload = await response.json().catch(() => ({}));
+      const payload = await response.json().catch(swallow("src/app/[locale]/admin/news/components/NewsReviewList.tsx:33", ({}), { persist: false }));
       if (!response.ok) {
         setError(
           typeof payload.error === 'string'
@@ -40,7 +41,8 @@ export const NewsReviewList: React.FC<{ items: NewsItem[] }> = ({ items }) => {
         return;
       }
       router.refresh();
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/app/[locale]/admin/news/components/NewsReviewList.tsx:44", error, { persist: false });
       setError(pick(locale, 'تعذر الاتصال بالخادم.', 'Could not reach the server.'));
     } finally {
       setBusyId(null);

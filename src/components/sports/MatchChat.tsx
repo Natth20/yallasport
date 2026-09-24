@@ -1,4 +1,5 @@
 'use client';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, MessageSquare, Send, Shield, User as UserIcon } from 'lucide-react';
@@ -104,7 +105,8 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
           latestStamp.current = next[next.length - 1]!.createdAt;
           return next.slice(-120);
         });
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/components/sports/MatchChat.tsx:108", error, { persist: false });
         // Keep the room available if a poll fails.
       }
     };
@@ -148,7 +150,7 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId, content: text }),
       });
-      const data = await res.json().catch(() => null);
+      const data = await res.json().catch(swallow("src/components/sports/MatchChat.tsx:151", null, { persist: false }));
       if (!res.ok || !data?.success) {
         setError(mapError(data?.error, t));
         return;
@@ -162,7 +164,8 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
       });
       setNewComment('');
       stickToBottom.current = true;
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/components/sports/MatchChat.tsx:166", error, { persist: false });
       setError(t('chat_error_generic'));
     } finally {
       setSubmitting(false);
@@ -175,12 +178,12 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
     <div className="match-chat">
       <div className="match-chat-head">
         <div className="match-chat-head-copy">
-          <span className="match-chat-folio" aria-hidden>
-            LIVE
+            <span className="match-chat-folio" aria-hidden>
+            CHAT
           </span>
           <div>
             <span className="atlas-section-kicker text-primary">{t('chat')}</span>
-            <h3 className="match-chat-title">{t('live_chat')}</h3>
+            <h3 className="match-chat-title">{t('chat')}</h3>
           </div>
         </div>
         <div className="match-chat-meta">

@@ -5,10 +5,13 @@ import { auth } from '@/lib/auth/auth';
 import { WatchBooth } from '@/components/streaming/WatchBooth';
 import { getWatchTarget, upcomingLicensedWindows, licensedAssetsForMatch } from '@/lib/streaming/catalog';
 import { STREAMING_ENABLED } from '@/lib/streaming';
+import { requireLicensedStreaming } from '@/lib/streaming/public-door';
 import { countryFromHeaders, isEntitled, isGeoAllowed } from '@/lib/streaming/entitlement';
 import { relatedNewsForMatch } from '@/lib/news/entity-suggest';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
+
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -41,6 +44,7 @@ export async function generateMetadata({
 }
 
 export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireLicensedStreaming();
   const locale = await getLocale();
   const { id } = await params;
   const session = await auth();

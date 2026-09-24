@@ -1,4 +1,6 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import React, { useState, useEffect } from 'react';
 import { Smartphone, Download, X, Sparkles } from 'lucide-react';
@@ -38,7 +40,9 @@ export function PwaInstallBanner({ locale = 'ar' }: { locale?: string }) {
     setVisible(false);
     try {
       localStorage.setItem('ys_pwa_dismissed', 'true');
-    } catch {}
+    } catch (error) {
+      reportCaughtError("src/components/pwa/PwaInstallBanner.tsx:41", error, { persist: false });
+    }
   };
 
   if (!visible) return null;
@@ -65,7 +69,7 @@ export function PwaInstallBanner({ locale = 'ar' }: { locale?: string }) {
           <button
             type="button"
             onClick={handleInstall}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground shadow-md shadow-primary/20 hover:scale-105 active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-1.5 text-xs font-black text-primary-foreground"
           >
             <Download className="h-3.5 w-3.5" />
             <span>{isAr ? 'تثبيت' : 'Install'}</span>

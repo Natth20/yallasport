@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 export function clientIp(req: Request) {
   const forwarded = req.headers.get('x-forwarded-for');
   if (forwarded) {
@@ -17,7 +18,8 @@ export function isSafeHttpUrl(raw: unknown) {
   let url: URL;
   try {
     url = new URL(raw);
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/security/http.ts:20", error, { persist: false });
     return false;
   }
 

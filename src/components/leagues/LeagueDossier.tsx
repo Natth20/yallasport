@@ -7,6 +7,8 @@ import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
 import { DeskRule, EndMark, StorySpine } from '@/components/news/NewsOrnaments';
 import { pick } from '@/i18n/pick';
 import type { LeagueDossierData, StandingZone } from '@/lib/leagues/load-dossier';
+import { Reveal } from '@/components/motion/PageMotion';
+import './league-house.css';
 
 function gd(row: { goalsFor: number; goalsAgainst: number }) {
   return row.goalsFor - row.goalsAgainst;
@@ -296,7 +298,7 @@ export function LeagueDossier({
         ) : null}
 
         <div className="league-body-grid">
-          <div className="league-main-column space-y-10">
+          <Reveal className="league-main-column space-y-10">
             {spotlight ? (
               <section id="folio-spotlight" className="scroll-mt-28 club-rise">
                 <Link href={`/match/${spotlight.id}`} className="league-feature-card">
@@ -760,8 +762,9 @@ export function LeagueDossier({
                 </div>
               </section>
             ) : null}
-          </div>
+          </Reveal>
 
+          <Reveal>
           <aside className="league-aside league-aside-lux space-y-6">
             {standings.length > 0 ? (
               <section id="folio-table" className="league-table-plate scroll-mt-28 club-rise">
@@ -864,6 +867,7 @@ export function LeagueDossier({
               ))}
             </section>
           </aside>
+          </Reveal>
         </div>
       </div>
     </div>

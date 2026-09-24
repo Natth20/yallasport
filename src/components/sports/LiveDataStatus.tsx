@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { CloudOff, Database, Loader2, Radio } from 'lucide-react';
 import { useLiveStatus } from '@/lib/context/LiveStatusContext';

@@ -1,0 +1,947 @@
+.nk-hall {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100dvh - 4.65rem);
+  padding-bottom: 4rem;
+  color: var(--foreground);
+}
+
+.nk-aura,
+.nk-grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.nk-aura {
+  background:
+    radial-gradient(ellipse 50% 28% at 50% -8%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 62%);
+}
+
+.nk-grain {
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.15) 0.55px, transparent 0.7px);
+  background-size: 3px 3px;
+}
+
+.nk-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: 1.15rem 1.1rem 0;
+}
+
+@media (min-width: 720px) {
+  .nk-inner {
+    padding: 1.5rem 1.6rem 0;
+  }
+}
+
+.nk-board {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+.nk-rail {
+  display: grid;
+  gap: 1.6rem;
+}
+
+@media (min-width: 1100px) {
+  .nk-board {
+    grid-template-columns: minmax(0, 1fr) minmax(17rem, 19rem);
+    gap: 2.4rem;
+  }
+
+  .nk-rail {
+    position: sticky;
+    top: 5.4rem;
+  }
+}
+
+.nk-mast {
+  display: grid;
+  gap: 1.2rem;
+  padding: 1.2rem 1.3rem 1.25rem;
+  margin-bottom: 1.6rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+}
+
+@media (min-width: 900px) {
+  .nk-mast {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 1.8rem;
+    padding: 1.3rem 1.45rem 1.35rem;
+  }
+}
+
+.nk-mast-copy {
+  min-width: 0;
+}
+
+.nk-kicker {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.nk-mast h1 {
+  margin: 0.28rem 0 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--foreground);
+}
+
+.nk-lead {
+  margin: 0.55rem 0 0;
+  max-width: 42rem;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: var(--muted-foreground);
+}
+
+.nk-meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(4.4rem, 1fr));
+  gap: 0.35rem 1.35rem;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .nk-meters {
+    grid-template-columns: repeat(4, minmax(4.4rem, auto));
+  }
+}
+
+.nk-meters>div {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.nk-meters dt {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.nk-meters dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.nk-meters dd.is-time {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.nk-close {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2.6rem;
+  padding-top: 2.2rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.nk-atlas {
+  display: grid;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1080px) {
+  .nk-atlas {
+    grid-template-columns: minmax(0, 1.75fr) minmax(18rem, 0.8fr);
+  }
+}
+
+.nk-panel {
+  min-width: 0;
+  padding: 1.2rem 1.3rem 1.3rem;
+  border-radius: 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  background: color-mix(in srgb, var(--card) 52%, transparent);
+}
+
+.nk-panel-head p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.nk-panel-head h2 {
+  margin: 0.22rem 0 1.15rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.nk-pulse {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0;
+  padding-top: 0.15rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.nk-pulse-day {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 0.55rem;
+  min-height: 0;
+  padding: 0.95rem 0.95rem 0.15rem;
+  border-radius: 0;
+  border: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: none;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-pulse-day:first-child {
+  border-inline-start: 0;
+  padding-inline-start: 0;
+}
+
+.nk-pulse-day small {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--primary);
+}
+
+.nk-pulse-day strong {
+  font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+  color: var(--foreground);
+}
+
+.nk-pulse-day em {
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.nk-desks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+@media (min-width: 720px) {
+  .nk-desks {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2.2rem;
+  }
+}
+
+.nk-desk {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) 2.6rem;
+  align-items: center;
+  column-gap: 0.65rem;
+  min-height: 2.85rem;
+  padding: 0.7rem 0;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: none;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-desk b {
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+}
+
+.nk-desk em {
+  min-width: 0;
+  font-style: normal;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-desk strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--muted-foreground);
+}
+
+.nk-desk.is-on {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: none;
+}
+
+.nk-desk.is-on em,
+.nk-desk.is-on strong {
+  color: var(--primary);
+}
+
+.nk-wire {
+  margin: 1.5rem 0 0;
+}
+
+.nk-wire-list {
+  display: grid;
+  gap: 1.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 860px) {
+  .nk-wire-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.2rem;
+  }
+}
+
+.nk-wire-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 0;
+  border: 0;
+  background: none;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-wire-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.9rem;
+  background: #070b12;
+}
+
+.nk-wire-media img,
+.nk-wire-media .cover-image,
+.nk-wire-media>span:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+.nk-wire-num {
+  position: absolute;
+  z-index: 2;
+  inset-inline-start: 0.65rem;
+  bottom: 0.6rem;
+  padding: 0.16rem 0.42rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #fff 22%, transparent);
+  background: color-mix(in srgb, #070b12 64%, transparent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.nk-wire-copy {
+  display: grid;
+  align-content: start;
+  gap: 0.32rem;
+  min-width: 0;
+  padding: 0.7rem 0.05rem 0;
+}
+
+.nk-wire-copy strong {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  word-spacing: 0.07em;
+  line-height: 1.4;
+  min-height: 2.8em;
+  unicode-bidi: isolate;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nk-wire-copy em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.nk-wire-copy strong[dir='ltr'] {
+  font-family: "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.01em;
+  word-spacing: 0.08em;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.nk-wire-copy small {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.nk-ledger ul {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nk-ledger li {
+  display: grid;
+  align-content: center;
+  gap: 0.3rem;
+  min-height: 0;
+  padding: 1.05rem 0;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: none;
+}
+
+.nk-ledger li:last-child {
+  border-bottom: 0;
+}
+
+.nk-ledger em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.nk-ledger b {
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.nk-ledger small {
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.nk-tools {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+  padding: 1.2rem 1.3rem 1.25rem;
+  border-radius: 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  background: color-mix(in srgb, var(--card) 52%, transparent);
+}
+
+.nk-tool-row {
+  display: grid;
+  gap: 0.45rem;
+}
+
+@media (min-width: 760px) {
+  .nk-tool-row {
+    grid-template-columns: 4.6rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.7rem 1rem;
+  }
+}
+
+.nk-tools>div>p,
+.nk-tool-row>p {
+  margin: 0;
+  padding-top: 0.2rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.nk-search {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.nk-search label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.nk-search input {
+  width: 100%;
+  height: 2.7rem;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: none;
+  color: var(--foreground);
+  outline: none;
+}
+
+.nk-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.15rem;
+}
+
+.nk-index a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.2rem 0;
+  border-radius: 0;
+  border: 0;
+  background: none;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-index a em {
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.nk-index a b {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.nk-index a.is-on {
+  border: 0;
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--primary) 80%, transparent);
+  background: none;
+}
+
+.nk-index a.is-on em,
+.nk-index a.is-on b {
+  color: var(--primary);
+}
+
+.nk-index.is-source a {
+  min-width: 0;
+}
+
+.nk-stage {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.nk-front {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-front-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 1rem;
+  background: #070b12;
+}
+
+.nk-front-media img,
+.nk-front-media .cover-image,
+.nk-front-media>span:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+.nk-bracket {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1.5px solid color-mix(in srgb, var(--primary) 70%, #fff);
+  opacity: 0.28;
+}
+
+.nk-bracket.is-tl {
+  top: 0.65rem;
+  inset-inline-start: 0.65rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.nk-bracket.is-tr {
+  top: 0.65rem;
+  inset-inline-end: 0.65rem;
+  border-inline-start: 0;
+  border-bottom: 0;
+}
+
+.nk-bracket.is-bl {
+  bottom: 0.65rem;
+  inset-inline-start: 0.65rem;
+  border-inline-end: 0;
+  border-top: 0;
+}
+
+.nk-bracket.is-br {
+  bottom: 0.65rem;
+  inset-inline-end: 0.65rem;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+.nk-front-copy {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.25rem 0.15rem 0.2rem;
+}
+
+.nk-front-copy em,
+.nk-card-copy em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.nk-front-copy strong {
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  word-spacing: 0.08em;
+  line-height: 1.45;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+}
+
+.nk-card-copy strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  word-spacing: 0.07em;
+  line-height: 1.45;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+}
+
+.nk-front-copy strong[dir='ltr'],
+.nk-front-copy b[dir='ltr'],
+.nk-card-copy strong[dir='ltr'] {
+  font-family: "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.01em;
+  word-spacing: 0.08em;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.nk-front-copy b {
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nk-front-copy small,
+.nk-card-copy small {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.nk-side {
+  display: grid;
+  gap: 1.35rem;
+}
+
+@media (min-width: 760px) {
+  .nk-side {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nk-side .nk-card {
+    grid-template-columns: 1fr;
+    padding: 0.15rem 0.15rem 0.7rem;
+  }
+
+  .nk-side .nk-card-media {
+    aspect-ratio: 16 / 10;
+    width: 100%;
+  }
+
+  .nk-side .nk-card-copy strong {
+    -webkit-line-clamp: 2;
+    min-height: 2.8em;
+  }
+}
+
+.nk-card {
+  display: grid;
+  grid-template-columns: 6.4rem minmax(0, 1fr);
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.45rem;
+  border-radius: 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-card-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 0.85rem;
+  background: #070b12;
+  border: 0;
+}
+
+.nk-card-media img,
+.nk-card-media .cover-image,
+.nk-card-media>span:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nk-card-copy {
+  display: grid;
+  align-content: center;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.nk-card-copy strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nk-log {
+  display: grid;
+  gap: 1.4rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 860px) {
+  .nk-log {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 1.4rem;
+  }
+}
+
+.nk-folio {
+  margin-top: 1.6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+}
+
+.nk-log .nk-card-copy strong {
+  -webkit-line-clamp: 2;
+  min-height: 2.8em;
+}
+
+.nk-log .nk-card {
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: none;
+}
+
+.nk-log .nk-card-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.9rem;
+  border: 0;
+}
+
+.nk-log .nk-card-copy {
+  gap: 0.32rem;
+  padding: 0.75rem 0.1rem 0;
+}
+
+
+.nk-hall .news-circulation,
+.nk-hall .news-rail-panel {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  border-radius: 1.2rem;
+  background: color-mix(in srgb, var(--card) 48%, transparent);
+  box-shadow: none;
+}
+
+.nk-hall .news-section-head {
+  align-items: start;
+  gap: 0.6rem;
+}
+
+.nk-hall .news-section-head h2 {
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  line-height: 1.3;
+}
+
+.nk-hall .news-desk-desks {
+  flex-wrap: wrap;
+  overflow: visible;
+  gap: 0.4rem;
+}
+
+.nk-hall .news-empty-desk {
+  position: relative;
+  overflow: hidden;
+  min-height: 18rem;
+  margin-bottom: 1.1rem;
+  border-radius: 1.4rem;
+  border: 1px dashed color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+}
+
+.nk-hall .news-colophon-mark {
+  margin-top: 2.4rem;
+  font-size: clamp(2.2rem, 7vw, 4.4rem);
+  opacity: 0.55;
+}
+
+/* ===== Interaction layer (hover / focus / motion) ===== */
+.nk-front-media img,
+.nk-front-media .cover-image,
+.nk-card-media img,
+.nk-card-media .cover-image {
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nk-front:hover .nk-front-media img,
+.nk-front:hover .nk-front-media .cover-image,
+.nk-card:hover .nk-card-media img,
+.nk-card:hover .nk-card-media .cover-image {
+  transform: scale(1.03);
+}
+
+.nk-front-copy strong,
+.nk-card-copy strong,
+.nk-wire-item strong,
+.nk-wire-item b {
+  transition: color 180ms ease;
+}
+
+.nk-front:hover .nk-front-copy strong,
+.nk-card:hover .nk-card-copy strong,
+.nk-wire-item:hover strong,
+.nk-wire-item:hover b {
+  color: var(--primary);
+}
+
+.nk-front-media,
+.nk-card-media {
+  transition: box-shadow 220ms ease;
+}
+
+.nk-front:hover .nk-front-media,
+.nk-card:hover .nk-card-media {
+  box-shadow: 0 12px 28px -22px color-mix(in srgb, var(--ys-ink, #0b1220) 50%, transparent);
+}
+
+.nk-wire-item {
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.nk-wire-item:hover {
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  transform: translateX(calc(var(--nk-dir, 1) * 3px));
+}
+
+.nk-front:focus-visible,
+.nk-card:focus-visible,
+.nk-wire-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 0.6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .nk-front-media img,
+  .nk-card-media img,
+  .nk-front:hover .nk-front-media img,
+  .nk-card:hover .nk-card-media img,
+  .nk-wire-item:hover {
+    transition: none;
+    transform: none;
+  }
+}

@@ -1,3 +1,4 @@
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 // src/lib/sports-data/cached-provider.ts
 import { SportsDataProvider } from './interface';
 import { safeRedisGet, safeRedisSet } from '../redis';
@@ -31,10 +32,21 @@ async function withBudget<T>(task: Promise<T>, fallback: T, ms = 3500): Promise<
   }
 }
 
+function rawCacheTtl(path: string) {
+  if (/live/i.test(path)) return 15;
+  if (/standings|topscorers|topassists|topyellow|topred|players\/top/i.test(path)) return 300;
+  if (/transfers/i.test(path)) return 180;
+  if (/players\?search=/i.test(path)) return 180;
+  if (/players|teams|coachs|leagues/i.test(path)) return 3600;
+  if (/fixtures/i.test(path)) return 60;
+  return 120;
+}
+
 export class CachedSportsDataProvider implements SportsDataProvider {
   private baseProvider: SportsDataProvider;
-  private CACHE_TTL = 30; // 30 seconds for live data
-  private LONG_CACHE_TTL = 3600; // 1 hour for static data
+  private CACHE_TTL = 15; // live fixtures
+  private LONG_CACHE_TTL = 3600; // player / team profile payloads
+  private TABLE_TTL = 300; // standings / scorers
 
   constructor(baseProvider: SportsDataProvider) {
     this.baseProvider = baseProvider;
@@ -42,23 +54,28 @@ export class CachedSportsDataProvider implements SportsDataProvider {
 
   async getLiveMatches(): Promise<NormalizedMatch[]> {
     const cacheKey = 'live_matches';
+    try {
+      const fresh = await withBudget(this.baseProvider.getLiveMatches(), []);
+      if (fresh.length > 0) {
+        const syncedAt = new Date().toISOString();
+        const source = isLiveSportsApi() ? 'LIVE' : 'EMPTY';
+        const envelope: LiveMatchesPayload = {
+          matches: fresh,
+          freshness: { syncedAt, cachedAt: syncedAt, source, staleAfterSeconds: 120 },
+        };
+        await Promise.all([
+          safeRedisSet(cacheKey, fresh, { ex: this.CACHE_TTL }),
+          safeRedisSet('sports:live:all', envelope, { ex: 300 }),
+          safeRedisSet('sports:meta:live', { syncedAt, matchCount: fresh.length, fixtureCount: fresh.length, source }, { ex: 300 }),
+        ]);
+        return fresh;
+      }
+    } catch (error) {
+      reportCaughtError("src/lib/sports-data/cached-provider.ts:71", error);
+      // Degraded: last trusted cache below.
+    }
     const cached = await safeRedisGet<NormalizedMatch[]>(cacheKey);
-    if (cached) return cached.map(hydrateMatch);
-
-    const fresh = await withBudget(this.baseProvider.getLiveMatches(), []);
-    if (fresh.length === 0) return [];
-    const syncedAt = new Date().toISOString();
-    const source = isLiveSportsApi() ? 'LIVE' : 'EMPTY';
-    const envelope: LiveMatchesPayload = {
-      matches: fresh,
-      freshness: { syncedAt, cachedAt: syncedAt, source, staleAfterSeconds: 120 },
-    };
-    await Promise.all([
-      safeRedisSet(cacheKey, fresh, { ex: this.CACHE_TTL }),
-      safeRedisSet('sports:live:all', envelope, { ex: 120 }),
-      safeRedisSet('sports:meta:live', { syncedAt, matchCount: fresh.length, fixtureCount: fresh.length, source }, { ex: 300 }),
-    ]);
-    return fresh;
+    return cached ? cached.map(hydrateMatch) : [];
   }
 
   async getMatchById(id: string): Promise<NormalizedMatchDetail> {
@@ -67,7 +84,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
     if (cached) return hydrateMatch(cached);
 
     const fresh = await withBudget(
-      this.baseProvider.getMatchById(id).catch(() => null),
+      this.baseProvider.getMatchById(id).catch(swallow("src/lib/sports-data/cached-provider.ts:83", null)),
       null as NormalizedMatchDetail | null
     );
     if (!fresh) throw new Error('Match not found');
@@ -82,7 +99,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
     if (cached) return cached;
 
     const fresh = await withBudget(
-      this.baseProvider.getTeamById(id).catch(() => null),
+      this.baseProvider.getTeamById(id).catch(swallow("src/lib/sports-data/cached-provider.ts:98", null)),
       null as NormalizedTeam | null
     );
     if (!fresh) throw new Error('Team not found');
@@ -97,7 +114,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
 
     const fresh = await withBudget(this.baseProvider.getStandings(leagueId, season), []);
     if (fresh.length > 0) {
-      await safeRedisSet(cacheKey, fresh, { ex: this.LONG_CACHE_TTL });
+      await safeRedisSet(cacheKey, fresh, { ex: this.TABLE_TTL });
     }
     return fresh;
   }
@@ -109,7 +126,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
 
     const fresh = await withBudget(this.baseProvider.getTopScorers(leagueId, season), []);
     if (fresh.length > 0) {
-      await safeRedisSet(cacheKey, fresh, { ex: this.LONG_CACHE_TTL });
+      await safeRedisSet(cacheKey, fresh, { ex: this.TABLE_TTL });
     }
     return fresh;
   }
@@ -128,13 +145,18 @@ export class CachedSportsDataProvider implements SportsDataProvider {
 
   async getMatchesByDate(date: string): Promise<NormalizedMatch[]> {
     const cacheKey = `matches_${date}`;
+    try {
+      const fresh = await withBudget(this.baseProvider.getMatchesByDate(date), []);
+      if (fresh.length > 0) {
+        await safeRedisSet(cacheKey, fresh, { ex: 300 });
+        return fresh;
+      }
+    } catch (error) {
+      reportCaughtError("src/lib/sports-data/cached-provider.ts:151", error);
+      // Degraded
+    }
     const cached = await safeRedisGet<NormalizedMatch[]>(cacheKey);
-    if (cached) return cached.map(hydrateMatch);
-
-    const fresh = await withBudget(this.baseProvider.getMatchesByDate(date), []);
-    if (fresh.length === 0) return [];
-    await safeRedisSet(cacheKey, fresh, { ex: 300 });
-    return fresh;
+    return cached ? cached.map(hydrateMatch) : [];
   }
 
   async getLeagueArchive(leagueId: string): Promise<NormalizedLeagueSeason[]> {
@@ -147,5 +169,29 @@ export class CachedSportsDataProvider implements SportsDataProvider {
       await safeRedisSet(cacheKey, fresh, { ex: 86400 });
     }
     return fresh;
+  }
+
+  async getRaw<T = unknown>(path: string): Promise<T | null> {
+    const cacheKey = `sports:raw:${path}`;
+    const ttl = rawCacheTtl(path);
+    const cached = await safeRedisGet<T>(cacheKey);
+    if (cached != null) {
+      const rows = (cached as { response?: unknown[] } | null)?.response;
+      const emptySearch = /players\?search=/i.test(path) && Array.isArray(rows) && rows.length === 0;
+      if (!emptySearch) return cached;
+    }
+    try {
+      const budget = /players\?search=/i.test(path) ? 10000 : 3500;
+      const fresh = await withBudget(this.baseProvider.getRaw<T>(path), null as T | null, budget);
+      const rows = (fresh as { response?: unknown[] } | null)?.response;
+      const emptySearch = /players\?search=/i.test(path) && Array.isArray(rows) && rows.length === 0;
+      if (fresh != null && !emptySearch) {
+        await safeRedisSet(cacheKey, fresh, { ex: ttl });
+        return fresh;
+      }
+    } catch (error) {
+      reportCaughtError("src/lib/sports-data/cached-provider.ts:179", error);
+    }
+    return cached ?? null;
   }
 }

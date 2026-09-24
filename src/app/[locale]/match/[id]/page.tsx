@@ -1,7 +1,9 @@
-import React, { type ReactNode } from 'react';
-import { MapPin, Radio, Shield, Users } from 'lucide-react';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
+import React, { Suspense, type ReactNode } from 'react';
+import { MapPin, Radio, Shield, Ticket, Users } from 'lucide-react';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
+import { visibleCommentsWhere } from '@/lib/comments/visibility';
 import { NewsCard } from '@/components/news/NewsCard';
 import { MatchStreamPlayer } from '@/components/streaming/MatchStreamPlayer';
 import { Link } from '@/i18n/navigation';
@@ -14,12 +16,15 @@ import { MatchAIAnalyst } from '@/components/sports/MatchAIAnalyst';
 import { MatchJsonLd } from '@/components/seo/SportsJsonLd';
 import { WinProbabilityBar } from '@/components/matches/WinProbabilityBar';
 import { LiveMatchReactions } from '@/components/matches/LiveMatchReactions';
-import { MatchAlertBell } from '@/components/matches/MatchAlertBell';
 import { FloatingStreamDock } from '@/components/streaming/FloatingStreamDock';
 import { notFound } from 'next/navigation';
 import { getResolvedMatchDetail } from '@/lib/sports-data/match-resolver';
+import { paintNormalizedMatches } from '@/lib/i18n/localized-content';
+import { walkLocalizeNames, localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { MatchDossier, type FormLetter } from '@/components/sports/MatchDossier';
 import { MatchQuickActions } from '@/components/sports/MatchQuickActions';
+import { HomeFanPoll } from '@/components/home/HomeFanPoll';
+import { parsePollOptions } from '@/lib/polls/match-poll';
 import { MATCH_LIST_INCLUDE, toNormalizedMatch, toNormalizedStanding } from '@/lib/sports-data/from-db';
 import { STREAMING_ENABLED } from '@/lib/streaming';
 import { licensedAssetForMatch } from '@/lib/streaming/catalog';
@@ -28,6 +33,10 @@ import { DeskRule } from '@/components/news/NewsOrnaments';
 import { getLocale } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
+import { CrestImage } from '@/components/common/CrestImage';
+import { FrontSkeleton } from '@/components/front/FrontMark';
+
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const locale = await getLocale();
@@ -55,17 +64,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const hasScore = match.homeScore != null && match.awayScore != null;
     const scoreBit = hasScore ? ` ${match.homeScore}-${match.awayScore}` : '';
     const vs = pick(locale, 'ضد', 'vs');
-    const title = `${match.homeTeam.name}${hasScore ? scoreBit : ''} ${vs} ${match.awayTeam.name}`;
+    const homeName = localizePlainName(locale, match.homeTeam.name);
+    const awayName = localizePlainName(locale, match.awayTeam.name);
+    const title = `${homeName}${hasScore ? scoreBit : ''} ${vs} ${awayName}`;
     const description = hasScore
       ? pick(
           locale,
-          `تغطية مباراة ${match.homeTeam.name} و${match.awayTeam.name} بالنتيجة ${match.homeScore}-${match.awayScore} من مصدر البيانات الحقيقي.`,
-          `Coverage of ${match.homeTeam.name} vs ${match.awayTeam.name} at ${match.homeScore}-${match.awayScore} from the real data source.`
+          `تغطية مباراة ${homeName} و${awayName} بالنتيجة ${match.homeScore}-${match.awayScore} من مصدر البيانات الحقيقي.`,
+          `Coverage of ${homeName} vs ${awayName} at ${match.homeScore}-${match.awayScore} from the real data source.`
         )
       : pick(
           locale,
-          `تغطية مباراة ${match.homeTeam.name} ضد ${match.awayTeam.name}: التشكيلة، الأحداث، والقنوات من المصدر الحقيقي دون نتائج وهمية.`,
-          `Coverage of ${match.homeTeam.name} vs ${match.awayTeam.name}: lineups, events, and TV listings from the real source — no invented scores.`
+          `تغطية مباراة ${homeName} ضد ${awayName}: التشكيلة، الأحداث، والقنوات من المصدر الحقيقي دون نتائج وهمية.`,
+          `Coverage of ${homeName} vs ${awayName}: lineups, events, and TV listings from the real source — no invented scores.`
         );
     return pageMetadata({
       locale,
@@ -74,7 +85,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       path: `/match/${id}`,
       images: [match.homeTeam.logoUrl, match.awayTeam.logoUrl],
     });
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/app/[locale]/match/[id]/page.tsx:87", error);
     return pageMetadata({
       locale,
       title: pick(locale, 'مركز المباراة', 'Match center'),
@@ -102,14 +114,24 @@ function belongsToTeam(teamId: string, team: { id: string; externalId: string })
   return teamId === team.id || teamId === team.externalId;
 }
 
-export default async function MatchCenterPage({ params }: { params: Promise<{ id: string }> }) {
+export default function MatchCenterPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <MatchCenterBody params={params} />
+    </Suspense>
+  );
+}
+
+async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) {
   const locale = await getLocale();
   const { id } = await params;
   const session = await auth();
   const match = await getResolvedMatchDetail(id);
   if (!match) notFound();
+  await paintNormalizedMatches(locale, [match]);
+  const commentWhere = await visibleCommentsWhere({ matchId: match.id });
 
-  const [h2hRows, standingRows, relatedNews, userPrediction, matchComments, userFollow, userReminder, formRows, licensedAsset] =
+  const [h2hRows, standingRows, relatedNews, userPrediction, matchComments, userFollow, userReminder, formRows, licensedAsset, existingPoll] =
     await Promise.all([
       prisma.match
         .findMany({
@@ -125,7 +147,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
           take: 8,
           include: MATCH_LIST_INCLUDE,
         })
-        .catch(() => []),
+        .catch(swallow("src/app/[locale]/match/[id]/page.tsx:139", [])),
       prisma.standing
         .findMany({
           where: { leagueId: match.league.id },
@@ -133,8 +155,8 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
           take: 40,
           include: { team: true },
         })
-        .catch(() => []),
-      relatedNewsForMatch(match.id, locale, 3).catch(() => []),
+        .catch(swallow("src/app/[locale]/match/[id]/page.tsx:147", [])),
+      relatedNewsForMatch(match.id, locale, 3).catch(swallow("src/app/[locale]/match/[id]/page.tsx:148", [])),
       session?.user?.email
         ? prisma.prediction
             .findFirst({
@@ -143,16 +165,16 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
                 user: { email: session.user.email },
               },
             })
-            .catch(() => null)
+            .catch(swallow("src/app/[locale]/match/[id]/page.tsx:157", null))
         : null,
       prisma.comment
         .findMany({
-          where: { matchId: match.id },
+          where: commentWhere,
           include: { user: { select: { name: true, role: true } } },
           orderBy: { createdAt: 'asc' },
           take: 50,
         })
-        .catch(() => []),
+        .catch(swallow("src/app/[locale]/match/[id]/page.tsx:166", [])),
       session?.user?.email
         ? prisma.userFavorite
             .findFirst({
@@ -162,7 +184,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
                 user: { email: session.user.email },
               },
             })
-            .catch(() => null)
+            .catch(swallow("src/app/[locale]/match/[id]/page.tsx:176", null))
         : null,
       session?.user?.id
         ? prisma.matchReminder
@@ -170,7 +192,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
               where: { userId_matchId: { userId: session.user.id, matchId: match.id } },
               select: { id: true },
             })
-            .catch(() => null)
+            .catch(swallow("src/app/[locale]/match/[id]/page.tsx:184", null))
         : null,
       prisma.match
         .findMany({
@@ -188,11 +210,16 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
           take: 16,
           select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
         })
-        .catch(() => []),
-      licensedAssetForMatch(match.id).catch(() => null),
+        .catch(swallow("src/app/[locale]/match/[id]/page.tsx:202", [])),
+      licensedAssetForMatch(match.id).catch(swallow("src/app/[locale]/match/[id]/page.tsx:203", null)),
+      prisma.matchPoll
+        .findFirst({ where: { matchId: match.id }, orderBy: { createdAt: 'desc' } })
+        .catch(swallow("src/app/[locale]/match/[id]/page.tsx:206", null)),
     ]);
 
   const h2hMatches = h2hRows.map(toNormalizedMatch);
+  await paintNormalizedMatches(locale, h2hMatches);
+  walkLocalizeNames(locale, standingRows);
   const latestSeason = standingRows[0]?.seasonId;
   const leagueStandings = standingRows
     .filter((row) => row.seasonId === latestSeason)
@@ -226,6 +253,15 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
       : []),
     ...(match.referee?.name
       ? [{ icon: Shield, label: pick(locale, 'الحكم', 'Referee'), value: match.referee.name }]
+      : []),
+    ...(typeof match.attendance === 'number'
+      ? [
+          {
+            icon: Ticket,
+            label: pick(locale, 'الحضور', 'Attendance'),
+            value: match.attendance.toLocaleString(locale),
+          },
+        ]
       : []),
     ...(match.channels.length
       ? [
@@ -274,6 +310,22 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
     { home: 0, draw: 0, away: 0 }
   );
 
+  const pollRow = existingPoll;
+  const pollCounts = pollRow ? parsePollOptions(pollRow.options) : null;
+  const matchPollView = pollRow && pollCounts
+    ? {
+        id: pollRow.id,
+        matchId: match.id,
+        question: pollRow.question,
+        category: match.league.name,
+        options: [
+          { key: 'home' as const, label: match.homeTeam.name, votes: pollCounts.home, logoUrl: match.homeTeam.logoUrl },
+          { key: 'draw' as const, label: locale === 'en' ? 'Draw' : 'تعادل', votes: pollCounts.draw },
+          { key: 'away' as const, label: match.awayTeam.name, votes: pollCounts.away, logoUrl: match.awayTeam.logoUrl },
+        ],
+      }
+    : null;
+
   const homeStats = match.statistics.find((item) => belongsToTeam(item.teamId, match.homeTeam));
   const awayStats = match.statistics.find((item) => belongsToTeam(item.teamId, match.awayTeam));
   const hasBrief =
@@ -319,11 +371,6 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
         leagueCountry={match.league.country ?? undefined}
         headerActions={
           <>
-            <MatchAlertBell
-              matchId={match.id}
-              matchTitle={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
-              locale={locale}
-            />
             <FollowButton
               entityId={match.id}
               entityType="MATCH"
@@ -346,21 +393,24 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
         }
       >
         <div className="space-y-4">
+          {homeStanding && awayStanding ? (
           <WinProbabilityBar
             homeTeamName={match.homeTeam.name}
             awayTeamName={match.awayTeam.name}
-            homeRank={homeStanding?.rank}
-            awayRank={awayStanding?.rank}
+            homeRank={homeStanding.rank}
+            awayRank={awayStanding.rank}
             locale={locale}
           />
+          ) : null}
           <LiveMatchReactions matchId={match.id} locale={locale} />
+          {matchPollView ? <HomeFanPoll locale={locale} poll={matchPollView} /> : null}
         </div>
 
         {hasBrief ? (
           <FolioPanel
             folio="05"
             kicker={pick(locale, 'ملخص', 'Brief')}
-            title={pick(locale, 'قراءة من الأرقام', 'Reading the numbers')}
+            title={pick(locale, 'قراءة تحريرية من الأرقام', 'Editorial reading of the numbers')}
           >
             <MatchAIAnalyst
               homeName={match.homeTeam.name}
@@ -408,12 +458,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
                 <div key={row!.team.id} className="match-side-team">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-bold tabular-nums text-orange-500">{row!.rank}</span>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={row!.team.logoUrl || '/placeholder-team.png'}
-                      alt=""
-                      className="h-6 w-6 object-contain"
-                    />
+                    <CrestImage src={row!.team.logoUrl} alt="" size={24} className="h-6 w-6 object-contain" />
                     <span className="truncate text-[12px] font-bold text-foreground dark:text-foreground">
                       {row!.team.name}
                     </span>
@@ -496,12 +541,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
                 >
                   <span className="text-[10px] font-bold tabular-nums text-white/30">{row.rank}</span>
                   <span className="flex min-w-0 items-center gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={row.team.logoUrl || '/placeholder-team.png'}
-                      alt=""
-                      className="h-5 w-5 object-contain"
-                    />
+                    <CrestImage src={row.team.logoUrl} alt="" size={20} className="h-5 w-5 object-contain" />
                     <span className="truncate text-[11px] font-bold">{row.team.name}</span>
                   </span>
                   <span className="text-center text-[10px] tabular-nums text-white/60">{row.played}</span>
@@ -576,7 +616,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
       <div className="match-plate match-chat-plate overflow-hidden !p-0">
         <MatchChat
           matchId={match.id}
-          isLoggedIn={!!session}
+          isLoggedIn={Boolean(session?.user?.id)}
           initialComments={matchComments.map((comment) => ({
             id: comment.id,
             content: comment.content,

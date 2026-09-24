@@ -29,7 +29,7 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/icon.png',
     badge: data.badge || '/icon.png',
     data: { url: data.url || '/matches' },
-    vibrate: [200, 100, 200, 100, 400],
+    vibrate: [],
     tag: 'yallasport-live-alert',
     renotify: true,
     actions: [

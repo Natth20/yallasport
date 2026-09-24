@@ -1,18 +1,23 @@
-﻿import { cookies, headers } from 'next/headers';
+import { swallow } from '@/lib/ops/caught';
+import { Suspense, type ReactNode } from 'react';
+import { cookies, headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { listLinearCatalog, listLiveCatalog, listPublishedLibrary, listTonightTvGuide, upcomingLicensedWindows } from '@/lib/streaming/catalog';
 import { countryFromHeaders, isGeoAllowed } from '@/lib/streaming/entitlement';
+import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { STREAMING_ENABLED } from '@/lib/streaming';
 import { pick } from '@/i18n/pick';
 import { BrandMark } from '@/components/brand/BrandMark';
-import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
-import { DeskRule, EditionPlate, PhotoCorners } from '@/components/news/NewsOrnaments';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { dateKeyInTimezone, dayBoundsInTimezone, normalizeTimezone } from '@/lib/datetime/format';
 import { isMajorLeague, matchdayWeight } from '@/lib/sports-data/matchday-weight';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
+import { FrontSkeleton } from '@/components/front/FrontMark';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
+import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
+import '@/components/live/live-hall.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('live');
@@ -27,20 +32,31 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const isLiveStatus = (status?: string) => status === 'LIVE' || status === 'HALFTIME';
 
-function SectionMark({ folio, title, lead }: { folio: string; title: string; lead?: string }) {
+function BandHead({ folio, title, lead, extra }: { folio: string; title: string; lead?: string; extra?: ReactNode }) {
   return (
-    <div className="watch-section-mark">
-      <div className="watch-section-mark-row">
-        <span aria-hidden>{folio}</span>
+    <div className="live-band-head">
+      <div className="live-mark">
+        <i>{folio}</i>
         <h2>{title}</h2>
       </div>
-      {lead ? <p className="watch-section-lead">{lead}</p> : null}
-      <DeskRule className="mt-3 max-w-xs opacity-45" />
+      {extra ?? (lead ? <p>{lead}</p> : null)}
     </div>
   );
 }
 
-export default async function LivePage({
+export default function LivePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ leagueId?: string; channelId?: string }>;
+}) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <LivePageBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function LivePageBody({
   searchParams,
 }: {
   searchParams: Promise<{ leagueId?: string; channelId?: string }>;
@@ -56,25 +72,24 @@ export default async function LivePage({
   const timezone = normalizeTimezone((await cookies()).get('yalla-tz')?.value);
   const todayKey = dateKeyInTimezone(new Date(), timezone);
   const { start, end } = dayBoundsInTimezone(todayKey, timezone);
-  const editionYear = new Date().getFullYear();
 
   const items = STREAMING_ENABLED
     ? await listLiveCatalog({
-        country,
-        leagueId: leagueId || undefined,
-        channelId: channelId || undefined,
-      }).catch(() => [])
+      country,
+      leagueId: leagueId || undefined,
+      channelId: channelId || undefined,
+    }).catch(swallow("src/app/[locale]/live/page.tsx:67", []))
     : [];
 
   const linear = STREAMING_ENABLED
     ? await listLinearCatalog({
-        country,
-        channelId: channelId || undefined,
-      }).catch(() => [])
+      country,
+      channelId: channelId || undefined,
+    }).catch(swallow("src/app/[locale]/live/page.tsx:74", []))
     : [];
 
   const library = STREAMING_ENABLED
-    ? await listPublishedLibrary({ take: 12 }).catch(() => [])
+    ? await listPublishedLibrary({ take: 12 }).catch(swallow("src/app/[locale]/live/page.tsx:78", []))
     : [];
 
   const tvRows = await listTonightTvGuide({
@@ -82,11 +97,16 @@ export default async function LivePage({
     end,
     leagueId: leagueId || undefined,
     channelId: channelId || undefined,
-  }).catch(() => [] as Awaited<ReturnType<typeof listTonightTvGuide>>);
+  }).catch(swallow("src/app/[locale]/live/page.tsx:86", [] as Awaited<ReturnType<typeof listTonightTvGuide>>));
 
   const upcoming = STREAMING_ENABLED
-    ? (await upcomingLicensedWindows(8).catch(() => [])).filter((asset) => isGeoAllowed(country, asset.geoAllow))
+    ? (await upcomingLicensedWindows(8).catch(swallow("src/app/[locale]/live/page.tsx:89", []))).filter((asset) => isGeoAllowed(country, asset.geoAllow))
     : [];
+  walkLocalizeNames(locale, items);
+  walkLocalizeNames(locale, linear);
+  walkLocalizeNames(locale, tvRows);
+  walkLocalizeNames(locale, upcoming);
+  walkLocalizeNames(locale, library);
 
   type CatalogItem = (typeof items)[number];
   type Program = { match: CatalogItem['match']; assets: CatalogItem[] };
@@ -119,9 +139,11 @@ export default async function LivePage({
     return weight(second) - weight(first);
   });
 
-  const featuredSports = programs[0];
-  const featuredLinear = !featuredSports ? linear[0] : null;
-  const featuredLive = isLiveStatus(featuredSports?.match?.status) || featuredLinear?.status === 'LIVE';
+  const featuredSports = STREAMING_ENABLED ? programs[0] : undefined;
+  const featuredListing =
+    tvRows.find((row) => isLiveStatus(row.match.status)) ?? tvRows[0] ?? null;
+  const featuredLive =
+    isLiveStatus(featuredSports?.match?.status) || isLiveStatus(featuredListing?.match.status);
 
   type ChannelCard = {
     id: string;
@@ -188,306 +210,245 @@ export default async function LivePage({
   const scoreLabel = (home?: number | null, away?: number | null) =>
     typeof home === 'number' && typeof away === 'number' ? `${home} : ${away}` : '–';
 
+  const featuredMatch = featuredSports?.match ?? featuredListing?.match ?? null;
+  const featuredAssets = featuredSports?.assets ?? [];
+  const featuredLeague = featuredMatch?.league.name;
+  const featuredChannel = featuredSports?.assets[0]?.channel?.name ?? featuredListing?.channel?.name;
+
   return (
-    <div className="watch-booth broadcast-studio relative min-h-screen pb-20">
-      <span className="watch-drape" />
-      <span className="watch-foil" aria-hidden />
-      <span className="watch-ambient" aria-hidden />
-      <span className="watch-corner is-tl" aria-hidden />
-      <span className="watch-corner is-tr" aria-hidden />
-      <span className="watch-corner is-bl" aria-hidden />
-      <span className="watch-corner is-br" aria-hidden />
+    <div className="live-hall">
+      <span className="live-aura" aria-hidden />
+      <span className="live-grain" aria-hidden />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-0 sm:px-6 booth-first-band">
-        <header className="watch-marquee watch-marquee-lux">
-          <div className="flex min-w-0 items-start gap-4">
-            <BrandMark size={44} />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">
-                  {t('studio_kicker')}
-                </p>
-                <EditionPlate year={editionYear} label={t('title')} className="watch-edition" />
+      <div className="live-inner">
+        <HeroEnter>
+          <header className="live-mast">
+            <div className="live-mast-brand">
+              <BrandMark size={52} priority />
+              <div className="live-mast-copy">
+                <p className="live-kicker">{t('studio_kicker')}</p>
+                <h1>{t('title')}</h1>
+                <p className="live-mast-lead">{t('description')}</p>
               </div>
-              <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-foreground dark:text-foreground sm:text-5xl">{t('title')}</h1>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-foreground dark:text-foreground/50">{t('description')}</p>
-              <DeskRule className="mt-4 max-w-sm opacity-50" />
             </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/watch" className="watch-chip-link">
-              {tw('title')}
-            </Link>
-            {featuredLive ? (
-              <span className="watch-live-pill">
-                <i />
-                {t('now_on_air')}
-              </span>
-            ) : null}
-          </div>
-        </header>
+            <div className="live-meters">
+              <div className={`live-meter${featuredLive ? ' is-hot' : ''}`}>
+                <b>{featuredLive ? 'LIVE' : '—'}</b>
+                <span>{t('now_on_air')}</span>
+              </div>
+              <div className="live-meter">
+                <b>{tvRows.length}</b>
+                <span>{t('listing_count')}</span>
+              </div>
+              <div className="live-meter">
+                <b>{channelWall.length}</b>
+                <span>{t('channel_count')}</span>
+              </div>
+            </div>
+          </header>
+        </HeroEnter>
 
-        <div className="watch-signature mt-6">
-          <div className={programs.length > 0 ? 'is-lead' : ''}>
-            <strong>{programs.length}</strong>
-            <span>{t('program_count')}</span>
-          </div>
-          <div className={linear.length > 0 && programs.length === 0 ? 'is-lead' : ''}>
-            <strong>{linear.length}</strong>
-            <span>{t('linear_wall')}</span>
-          </div>
-          <div>
-            <strong>{library.length}</strong>
-            <span>{t('vod_shelf')}</span>
-          </div>
-        </div>
-
-        <section className="mt-10">
-          <SectionMark
-            folio="01"
-            title={featuredSports ? t('now_on_air') : featuredLinear ? t('linear_wall') : t('now_on_air')}
-          />
-          <div className="watch-gate watch-gate-lux mt-5">
-            <div className="watch-gate-screen">
-              {featuredSports ? (
-                <div className="watch-featured-stage is-broadcast">
-                  <span className="broadcast-snow" />
-                  <PhotoCorners className="watch-stage-corners" />
-                  <div className="watch-featured-meta">
-                    <em>
-                      {featuredSports.match?.league.name}
-                      {featuredSports.assets[0]?.channel?.name
-                        ? ` · ${featuredSports.assets[0].channel.name}`
-                        : ''}
-                    </em>
-                    <span className={`watch-live-pill is-compact${featuredLive ? '' : ' is-ready'}`}>
-                      <i />
-                      {featuredLive
-                        ? featuredSports.match?.minute
-                          ? `${t('now_on_air')} ${featuredSports.match.minute}'`
-                          : t('now_on_air')
+        <Reveal className="live-screen">
+          <div className="live-screen-bezel">
+            <span className="live-scan" aria-hidden />
+            {featuredMatch || featuredSports ? (
+              <div className="live-stage">
+                <div className="live-stage-top">
+                  <em>
+                    {[featuredLeague, featuredChannel].filter(Boolean).join(' · ')}
+                  </em>
+                  <span className={`live-pill${featuredLive ? '' : ' is-ready'}`}>
+                    <i />
+                    {featuredLive
+                      ? featuredSports?.match?.minute
+                        ? `${t('now_on_air')} ${featuredSports.match.minute}'`
+                        : t('now_on_air')
+                      : featuredListing
+                        ? t('on_television')
                         : t('watch')}
-                    </span>
+                  </span>
+                </div>
+                <div className="live-duel">
+                  <div className="live-side">
+                    {featuredMatch ? (
+                      <LeagueCrest
+                        name={featuredMatch.homeTeam.name}
+                        logoUrl={featuredMatch.homeTeam.logoUrl}
+                        className="live-crest"
+                      />
+                    ) : null}
+                    <strong>
+                      {featuredMatch?.homeTeam.name ?? featuredChannel}
+                    </strong>
                   </div>
-
-                  <div className="watch-featured-duel">
-                    <div className="watch-featured-side">
-                      {featuredSports.match ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={featuredSports.match.homeTeam.logoUrl || '/placeholder-team.png'}
-                          alt=""
-                          className="watch-featured-crest"
-                        />
-                      ) : null}
-                      <strong>
-                        {featuredSports.match?.homeTeam.name ?? featuredSports.assets[0]?.channel?.name}
-                      </strong>
-                    </div>
-                    <div className="watch-featured-score">
-                      <strong className={featuredLive ? 'is-live' : ''}>
-                        {scoreLabel(featuredSports.match?.homeScore, featuredSports.match?.awayScore)}
-                      </strong>
-                      <span>VS</span>
-                    </div>
-                    <div className="watch-featured-side is-away">
-                      {featuredSports.match ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={featuredSports.match.awayTeam.logoUrl || '/placeholder-team.png'}
-                          alt=""
-                          className="watch-featured-crest"
-                        />
-                      ) : null}
-                      <strong>{featuredSports.match?.awayTeam.name ?? ''}</strong>
-                    </div>
+                  <div className="live-score">
+                    <b className={featuredLive ? 'is-live' : ''}>
+                      {scoreLabel(featuredMatch?.homeScore, featuredMatch?.awayScore)}
+                    </b>
+                    <span>VS</span>
                   </div>
-
-                  <div className="watch-featured-actions">
-                    {featuredSports.assets.map((asset) => (
-                      <Link key={asset.id} href={`/watch/${asset.id}`} className="watch-featured-cta">
+                  <div className="live-side is-away">
+                    {featuredMatch ? (
+                      <LeagueCrest
+                        name={featuredMatch.awayTeam.name}
+                        logoUrl={featuredMatch.awayTeam.logoUrl}
+                        className="live-crest"
+                      />
+                    ) : null}
+                    <strong>{featuredMatch?.awayTeam.name ?? ''}</strong>
+                  </div>
+                </div>
+                <div className="live-actions">
+                  {STREAMING_ENABLED
+                    ? featuredAssets.map((asset) => (
+                      <Link key={asset.id} href={`/watch/${asset.id}`} className="live-cta">
                         {asset.channel?.name || t('watch_here')}
                       </Link>
-                    ))}
-                    {featuredSports.match ? (
-                      <Link href={`/match/${featuredSports.match.id}`} className="watch-chip-link is-ghost">
-                        {t('match_center')}
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-              ) : featuredLinear ? (
-                <div className="watch-featured-stage is-broadcast">
-                  <span className="broadcast-snow" />
-                  <PhotoCorners className="watch-stage-corners" />
-                  <div className="watch-featured-meta">
-                    <em>
-                      {featuredLinear.channel?.name}
-                      {featuredLinear.channel?.kind ? ` · ${featuredLinear.channel.kind}` : ''}
-                    </em>
-                    <span className="watch-live-pill is-compact">
-                      <i />
-                      {t('now_on_air')}
-                    </span>
-                  </div>
-                  <h2 className="watch-featured-title">
-                    {featuredLinear.channel?.name || t('linear_wall')}
-                  </h2>
-                  <div className="watch-featured-actions">
-                    <Link href={`/watch/${featuredLinear.id}`} className="watch-featured-cta">
-                      {t('watch_here')}
+                    ))
+                    : null}
+                  {featuredMatch ? (
+                    <Link href={`/match/${featuredMatch.id}`} className="live-ghost">
+                      {t('match_center')}
                     </Link>
-                  </div>
+                  ) : null}
                 </div>
-              ) : (
-                <div className="watch-empty-stage">
-                  <span className="broadcast-snow" />
-                  <PitchWatermark className="pointer-events-none absolute h-44 w-auto text-white/10" />
-                  <PhotoCorners className="watch-stage-corners" />
-                  <span className="watch-empty-seal" aria-hidden>
-                    YS
-                  </span>
-                  <p>{t('empty')}</p>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="live-empty">
+                <p>{t('empty')}</p>
+              </div>
+            )}
           </div>
-        </section>
+        </Reveal>
 
-        {(leagues.length > 1 || channelWall.length > 1 || leagueId || channelId) && (
-          <section className="mt-8 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{t('filters')}</p>
+        {(leagues.length > 1 || channelWall.length > 1 || leagueId || channelId) ? (
+          <Reveal className="live-band">
+            <div className="live-band-head">
+              <div className="live-mark">
+                <i>01</i>
+                <h2>{t('filters')}</h2>
+              </div>
               {leagueId || channelId ? (
-                <Link href="/live" className="watch-chip-link is-ghost">
-                  {pick(locale, 'عرض كل القنوات', 'Show every channel')}
-                </Link>
+                <Link href="/live">{pick(locale, 'عرض كل القنوات', 'Show every channel')}</Link>
               ) : null}
             </div>
-            {leagues.length > 0 ? (
-              <div className="watch-filter-rail">
-                {leagues.map((league) => {
-                  const active = leagueId === league.id;
-                  return (
-                    <Link
-                      key={league.id}
-                      href={pageHref({ leagueId: active ? undefined : league.id })}
-                      className={`watch-filter-chip${active ? ' is-active' : ''}`}
-                    >
-                      {league.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={league.logoUrl} alt="" />
-                      ) : null}
-                      {league.name}
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : null}
-            {channelWall.length > 0 ? (
-              <div className="watch-filter-rail">
-                {channelWall.map((channel) => {
-                  const active = channelId === channel.id;
-                  return (
-                    <Link
-                      key={channel.id}
-                      href={pageHref({ channelId: active ? undefined : channel.id })}
-                      className={`watch-filter-chip${active ? ' is-active' : ''}`}
-                    >
-                      {channel.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={channel.logoUrl} alt="" />
-                      ) : null}
-                      {channel.name}
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : null}
-          </section>
-        )}
-
-        <div className="mt-12 grid gap-10 xl:grid-cols-[minmax(0,1fr)_21rem]">
-          <div className="space-y-12">
-            <section>
-              <SectionMark folio="02" title={t('channels_wall')} lead={t('tonight')} />
+            <div className="live-filters">
+              {leagues.length > 0 ? (
+                <div className="live-rail">
+                  {leagues.map((league) => {
+                    const active = leagueId === league.id;
+                    return (
+                      <Link
+                        key={league.id}
+                        href={pageHref({ leagueId: active ? undefined : league.id })}
+                        className={`live-chip${active ? ' is-on' : ''}`}
+                      >
+                        {league.logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={league.logoUrl} alt="" />
+                        ) : null}
+                        {league.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
               {channelWall.length > 0 ? (
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  {channelWall.map((channel, index) => {
+                <div className="live-rail">
+                  {channelWall.map((channel) => {
+                    const active = channelId === channel.id;
+                    return (
+                      <Link
+                        key={channel.id}
+                        href={pageHref({ channelId: active ? undefined : channel.id })}
+                        className={`live-chip${active ? ' is-on' : ''}`}
+                      >
+                        {channel.logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={channel.logoUrl} alt="" />
+                        ) : null}
+                        {channel.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </Reveal>
+        ) : null}
+
+        <div className="live-deck">
+          <div>
+            <Reveal className="live-band">
+              <BandHead folio="02" title={t('channels_wall')} lead={t('tonight')} />
+              {channelWall.length > 0 ? (
+                <div className="live-channels">
+                  {channelWall.map((channel) => {
                     const liveListing = channel.listings.find((row) => isLiveStatus(row.match.status)) ?? channel.listings[0];
                     const headline = channel.playable[0]?.match ?? liveListing?.match;
                     return (
-                      <article key={channel.id} className="broadcast-channel-lux">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="broadcast-channel-crest">
+                      <article key={channel.id} className="live-channel">
+                        <div className="live-channel-top">
+                          <div className="live-channel-id">
+                            <div className="live-channel-crest">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={channel.logoUrl || '/placeholder.png'} alt="" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-primary">
-                                {String(index + 1).padStart(2, '0')}
-                              </p>
-                              <h3 className="truncate text-[16px] font-black text-white">{channel.name}</h3>
-                              <p className="text-[10px] font-medium text-white/40">
+                            <div>
+                              <h3>{channel.name}</h3>
+                              <p>
                                 {[channel.country, channel.playable.length ? t('watch_here') : t('tv_only')]
                                   .filter(Boolean)
                                   .join(' · ')}
                               </p>
                             </div>
                           </div>
-                          {channel.playable.length > 0 ? (
-                            <span className="watch-live-pill is-compact">
-                              <i />
-                              {t('now_on_air')}
-                            </span>
-                          ) : (
-                            <span className="watch-ready-pill is-compact">{t('on_television')}</span>
-                          )}
+                          <span className={`live-pill${channel.playable.length ? '' : ' is-ready'}`}>
+                            <i />
+                            {channel.playable.length ? t('now_on_air') : t('on_television')}
+                          </span>
                         </div>
 
                         {headline ? (
-                          <div className="broadcast-channel-match">
-                            <div className="flex min-w-0 items-center gap-2">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={headline.homeTeam.logoUrl || '/placeholder-team.png'} alt="" />
-                              <span className="truncate text-[13px] font-bold text-white">
-                                {headline.homeTeam.name} × {headline.awayTeam.name}
-                              </span>
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={headline.awayTeam.logoUrl || '/placeholder-team.png'} alt="" />
-                            </div>
-                            <span className="shrink-0 text-[11px] font-black tabular-nums text-primary">
+                          <div className="live-matchline">
+                            <span>
+                              <LeagueCrest name={headline.homeTeam.name} logoUrl={headline.homeTeam.logoUrl} className="h-5 w-5" />
+                              {headline.homeTeam.name} × {headline.awayTeam.name}
+                              <LeagueCrest name={headline.awayTeam.name} logoUrl={headline.awayTeam.logoUrl} className="h-5 w-5" />
+                            </span>
+                            <em>
                               {isLiveStatus(headline.status) ? (
                                 scoreLabel(headline.homeScore, headline.awayScore)
                               ) : (
                                 <ClientTime value={headline.kickoffAt} />
                               )}
-                            </span>
+                            </em>
                           </div>
                         ) : null}
 
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {channel.playable.map((asset) => (
-                            <Link key={asset.id} href={`/watch/${asset.id}`} className="watch-chip-link is-solid">
-                              {t('watch_here')}
-                            </Link>
-                          ))}
+                        <div className="live-actions">
+                          {STREAMING_ENABLED
+                            ? channel.playable.map((asset) => (
+                              <Link key={asset.id} href={`/watch/${asset.id}`} className="live-cta">
+                                {t('watch_here')}
+                              </Link>
+                            ))
+                            : null}
                           {headline ? (
-                            <Link href={`/match/${headline.id}`} className="watch-chip-link is-ghost">
+                            <Link href={`/match/${headline.id}`} className="live-ghost">
                               {t('match_center')}
                             </Link>
                           ) : null}
                         </div>
 
                         {channel.listings.length > 1 ? (
-                          <ul className="broadcast-channel-listings">
+                          <ul className="live-listings">
                             {channel.listings.slice(0, 4).map((row) => (
                               <li key={row.id}>
                                 <span>
                                   {row.match.homeTeam.name} × {row.match.awayTeam.name}
                                 </span>
-                                <ClientTime value={row.match.kickoffAt} className="tabular-nums text-white/40" />
+                                <ClientTime value={row.match.kickoffAt} />
                               </li>
                             ))}
                           </ul>
@@ -497,63 +458,62 @@ export default async function LivePage({
                   })}
                 </div>
               ) : (
-                <div className="watch-aside-empty mt-5 text-center">
+                <div className="live-void">
                   <p>{t('empty_tv')}</p>
-                  <Link href="/matches" className="watch-chip-link is-solid mt-4 inline-flex">
+                  <Link href="/matches" className="live-cta" style={{ marginTop: '0.9rem' }}>
                     {pick(locale, 'برنامج المباريات', 'Match programme')}
                   </Link>
                 </div>
               )}
-            </section>
+            </Reveal>
 
             {programs.length > 0 ? (
-              <section>
-                <SectionMark folio="03" title={t('schedule')} />
-                <div className="mt-5 grid gap-3 md:grid-cols-2">
-                  {programs.map((program, index) => (
-                    <article key={program.assets[0].id} className="broadcast-program-card">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] text-white/40">
-                          {program.match?.league.name}
-                          {program.match &&
+              <Reveal className="live-band">
+                <BandHead folio="03" title={t('schedule')} />
+                <div className="live-programs">
+                  {programs.map((program) => (
+                    <article key={program.assets[0].id} className="live-program">
+                      <p>
+                        {program.match?.league.name}
+                        {program.match &&
                           isMajorLeague({
                             name: program.match.league.name,
                             slug: program.match.league.slug,
                             country: program.match.league.country ?? undefined,
                           })
-                            ? ` · ${pick(locale, 'كبرى', 'Major')}`
-                            : ''}
-                        </p>
-                        <span className="text-[9px] font-black tabular-nums text-primary">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                      </div>
-                      <h3 className="mt-1 text-[15px] font-black text-white">
+                          ? ` · ${pick(locale, 'كبرى', 'Major')}`
+                          : ''}
+                      </p>
+                      <h3>
                         {program.match
                           ? `${program.match.homeTeam.name} × ${program.match.awayTeam.name}`
                           : program.assets[0]?.channel?.name}
                       </h3>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {program.assets.map((asset) => (
-                          <Link key={asset.id} href={`/watch/${asset.id}`} className="watch-chip-link is-ghost">
-                            {asset.channel?.name || t('watch')}
-                          </Link>
-                        ))}
+                      <div className="live-actions" style={{ marginTop: '0.7rem' }}>
+                        {STREAMING_ENABLED
+                          ? program.assets.map((asset) => (
+                            <Link key={asset.id} href={`/watch/${asset.id}`} className="live-ghost">
+                              {asset.channel?.name || t('watch')}
+                            </Link>
+                          ))
+                          : program.match ? (
+                            <Link href={`/match/${program.match.id}`} className="live-ghost">
+                              {t('match_center')}
+                            </Link>
+                          ) : null}
                       </div>
                     </article>
                   ))}
                 </div>
-              </section>
+              </Reveal>
             ) : null}
 
             {linear.length > 0 ? (
-              <section>
-                <SectionMark folio="04" title={t('linear_wall')} />
-                <div className="watch-live-rail mt-5">
-                  {linear.map((asset, index) => (
-                    <Link key={asset.id} href={`/watch/${asset.id}`} className="watch-live-chip">
-                      <span>{String(index + 1).padStart(2, '0')}</span>
-                      <strong>{asset.channel?.name || t('title')}</strong>
+              <Reveal className="live-band">
+                <BandHead folio="04" title={t('linear_wall')} />
+                <div className="live-linear">
+                  {linear.map((asset) => (
+                    <Link key={asset.id} href={`/watch/${asset.id}`}>
                       <em>
                         {asset.channel?.kind === 'NEWS'
                           ? t('kind_news')
@@ -565,96 +525,64 @@ export default async function LivePage({
                                 ? t('now_on_air')
                                 : tw('ready_status')}
                       </em>
+                      <strong>{asset.channel?.name || t('title')}</strong>
                     </Link>
                   ))}
                 </div>
-              </section>
+              </Reveal>
             ) : null}
 
             {library.length > 0 ? (
-              <section>
-                <SectionMark folio="05" title={t('vod_shelf')} />
-                <div className="vod-library mt-5">
-                  {library.map((show, index) => {
+              <Reveal className="live-band">
+                <BandHead folio="05" title={t('vod_shelf')} />
+                <div className="live-programs">
+                  {library.map((show) => {
                     const firstEpisode = show.episodes[0];
                     return (
-                      <article
-                        key={show.id}
-                        className={`vod-shelf-card${index === 0 ? ' is-lead' : ''}`}
-                      >
-                        <Link href={`/vod/${show.slug}`} className="vod-shelf-media">
-                          {show.posterUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={show.posterUrl} alt="" />
-                          ) : (
-                            <div className="vod-shelf-empty">{show.title}</div>
-                          )}
-                        </Link>
-                        <div className="vod-shelf-copy">
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-primary">
-                            {show.type}
-                            {show.releaseYear ? ` · ${show.releaseYear}` : ''}
-                          </p>
-                          <h3>
-                            <Link href={`/vod/${show.slug}`}>{show.title}</Link>
-                          </h3>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <Link href={`/vod/${show.slug}`} className="watch-chip-link is-ghost">
-                              {tw('open_title')}
+                      <article key={show.id} className="live-program">
+                        <p>
+                          {show.type}
+                          {show.releaseYear ? ` · ${show.releaseYear}` : ''}
+                        </p>
+                        <h3>
+                          <Link href={`/vod/${show.slug}`}>{show.title}</Link>
+                        </h3>
+                        <div className="live-actions" style={{ marginTop: '0.7rem' }}>
+                          <Link href={`/vod/${show.slug}`} className="live-ghost">
+                            {tw('open_title')}
+                          </Link>
+                          {firstEpisode ? (
+                            <Link href={`/vod/player/${firstEpisode.id}`} className="live-cta">
+                              {tw('watch_asset')}
                             </Link>
-                            {firstEpisode ? (
-                              <Link
-                                href={`/vod/player/${firstEpisode.id}`}
-                                className="watch-chip-link is-solid"
-                              >
-                                {tw('watch_asset')}
-                              </Link>
-                            ) : null}
-                          </div>
+                          ) : null}
                         </div>
                       </article>
                     );
                   })}
                 </div>
-              </section>
+              </Reveal>
             ) : null}
           </div>
 
-          <aside className="watch-aside space-y-8">
-            {upcoming.length > 0 ? (
-              <section>
-                <SectionMark folio="04" title={t('coming_windows')} />
-                <ul className="mt-5 space-y-3">
-                  {upcoming.map((asset, index) => (
-                    <li key={asset.id}>
-                      <Link href={`/watch/${asset.id}`} className="watch-ticket watch-ticket-lux block px-4 py-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">
-                            {asset.channel?.name || t('title')}
-                          </p>
-                          <span className="text-[9px] font-black tabular-nums text-foreground/35">
-                            {String(index + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm font-black leading-6">
-                          {asset.match
-                            ? `${asset.match.homeTeam.name} vs ${asset.match.awayTeam.name}`
-                            : t('title')}
-                        </p>
-                        {asset.startsAt || asset.match?.kickoffAt ? (
-                          <ClientTime
-                            value={asset.startsAt ?? asset.match!.kickoffAt}
-                            className="mt-1 block text-[11px] text-foreground/45"
-                          />
-                        ) : null}
-                        <TicketBarcode className="mt-3 text-foreground/50" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-          </aside>
+          {upcoming.length > 0 ? (
+            <aside className="live-aside">
+              <BandHead folio="06" title={t('coming_windows')} />
+              {upcoming.map((asset) => (
+                <Link key={asset.id} href={`/watch/${asset.id}`} className="live-ticket">
+                  <p>{asset.channel?.name || t('title')}</p>
+                  <strong>
+                    {asset.match
+                      ? `${asset.match.homeTeam.name} × ${asset.match.awayTeam.name}`
+                      : t('title')}
+                  </strong>
+                  {asset.startsAt || asset.match?.kickoffAt ? (
+                    <ClientTime value={asset.startsAt ?? asset.match!.kickoffAt} />
+                  ) : null}
+                </Link>
+              ))}
+            </aside>
+          ) : null}
         </div>
       </div>
     </div>

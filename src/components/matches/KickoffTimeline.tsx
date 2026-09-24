@@ -1,4 +1,4 @@
-﻿import {Link} from '@/i18n/navigation';
+import {Link} from '@/i18n/navigation';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
 import {getTranslations} from 'next-intl/server';
 

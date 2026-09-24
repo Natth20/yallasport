@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { prisma } from '@/lib/prisma';
-import { STREAMING_ENABLED } from './factory';
+import { STREAMING_ENABLED } from './flag';
 import { isGeoAllowed, isWithinWindow } from './entitlement';
 
 const PLAYABLE = ['READY', 'LIVE'] as const;
@@ -252,7 +252,7 @@ export async function listTonightTvGuide(input: {
       channel: true,
     },
     orderBy: { match: { kickoffAt: 'asc' } },
-    take: 80,
+    take: 16,
   });
 }
 

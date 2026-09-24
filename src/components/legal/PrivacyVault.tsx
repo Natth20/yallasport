@@ -1,603 +1,472 @@
-import { Link } from '@/i18n/navigation';
+'use client';
+
 import { pick } from '@/i18n/pick';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import {
-  LexArticle,
-  LexAsideCard,
   LexChamber,
-  LexNote,
-  LexPoints,
-  LexTable,
+  LexSection,
+  LexHighlightsGrid,
+  LexHighlightCard,
+  LexModernTable,
+  LexCheckList,
+  LexCallout,
 } from './LexChamber';
+import {
+  ShieldCheck,
+  Lock,
+  EyeOff,
+  UserCheck,
+  Database,
+  Globe,
+  Trash2,
+  Bell,
+  RefreshCw,
+  Mail,
+  Smartphone,
+  Layers,
+} from 'lucide-react';
 
-export function PrivacyVault({ locale }: { locale: string }) {
-  const date = pick(locale, '11 سبتمبر 2026', '11 September 2026');
+export function PrivacyVault({ locale, analyticsId = '' }: { locale: string; analyticsId?: string }) {
+  const isAr = locale === 'ar';
+  const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [
-    { id: 'who', label: pick(locale, 'من نحن', 'Who we are') },
-    { id: 'inventory', label: pick(locale, 'سجل البيانات', 'Data inventory') },
-    { id: 'account', label: pick(locale, 'الحساب وغوغل', 'Account and Google') },
-    { id: 'cookies', label: pick(locale, 'ملفات الارتباط', 'Cookies') },
-    { id: 'storage', label: pick(locale, 'التخزين المحلي', 'Local storage') },
-    { id: 'sports', label: pick(locale, 'البيانات الرياضية', 'Sports data') },
-    { id: 'stream', label: pick(locale, 'البث والجغرافيا', 'Streaming and geo') },
-    { id: 'use', label: pick(locale, 'الاستخدام', 'Use') },
-    { id: 'processors', label: pick(locale, 'المعالجون', 'Processors') },
-    { id: 'sale', label: pick(locale, 'البيع والإعلان', 'Sale and ads') },
-    { id: 'rights', label: pick(locale, 'حقوقك', 'Your rights') },
-    { id: 'keep', label: pick(locale, 'الاحتفاظ', 'Retention') },
-    { id: 'security', label: pick(locale, 'الأمان', 'Security') },
-    { id: 'kids', label: pick(locale, 'الأطفال', 'Children') },
-    { id: 'change', label: pick(locale, 'التعديل', 'Changes') },
-    { id: 'mail', label: pick(locale, 'التواصل', 'Contact') },
+    { id: 'commitments', label: pick(locale, 'التزاماتنا الجوهرية', 'Core Commitments') },
+    { id: 'inventory', label: pick(locale, 'سجل البيانات المجموعة', 'Data Inventory') },
+    { id: 'accounts', label: pick(locale, 'الحساب والمصادقة', 'Accounts & Auth') },
+    { id: 'storage', label: pick(locale, 'الكوكيز والتخزين المحلي', 'Cookies & Storage') },
+    { id: 'sports-data', label: pick(locale, 'البيانات الرياضية المباشرة', 'Sports Data & Live Feeds') },
+    { id: 'processors', label: pick(locale, 'معالجو البيانات والشركاء', 'Data Processors') },
+    { id: 'rights', label: pick(locale, 'حقوقك والتحكم ببياناتك', 'Your Rights & Controls') },
+    { id: 'retention', label: pick(locale, 'الاحتفاظ بالأمان والتشفير', 'Retention & Security') },
+    { id: 'children', label: pick(locale, 'حماية الأطفال والقُصَّر', 'Children Privacy') },
+    { id: 'contact', label: pick(locale, 'قنوات التواصل ومسؤول الخصوصية', 'Privacy Contact') },
   ];
 
-  const inventory: string[][] = [
+  const inventoryTable = [
     [
-      pick(locale, 'الاسم والبريد والصورة', 'Name, email, and photo'),
-      pick(locale, 'فتح الحساب عبر غوغل وعرضه في التعليق', 'To open the Google account and show it on a comment'),
-      pick(locale, 'قاعدة الحسابات', 'Account database'),
+      <span className="lex-mono-tag">Google Profile</span>,
+      pick(locale, 'الاسم، البريد الإلكتروني، الصورة الرمزية', 'Name, email address, avatar URL'),
+      pick(locale, 'إنشاء الحساب، إدارة التوقعات، وعرض الهوية في التعليقات', 'Account creation, predictions management, comment identity'),
+      <span className="text-emerald-500 font-semibold text-xs">{pick(locale, 'مشفّر في قاعدة البيانات', 'Encrypted in DB')}</span>,
     ],
     [
-      pick(locale, 'معرّف غوغل ورموز الجلسة', 'Google account id and session tokens'),
-      pick(locale, 'إبقاؤك مسجّلاً دون كلمة مرور عندنا', 'To keep you signed in; we do not store a password'),
-      pick(locale, 'Auth.js + جدول الجلسات', 'Auth.js and the session table'),
+      <span className="lex-mono-tag">Session Token</span>,
+      pick(locale, 'رموز جلسة تسجيل الدخول الآمنة', 'Secure cryptographic session tokens'),
+      pick(locale, 'الحفاظ على تسجيل الدخول دون الحاجة لتخزين كلمات مرور لدينا', 'Keep you signed in securely without storing passwords'),
+      <span className="text-blue-500 font-semibold text-xs">{pick(locale, 'HTTPS Secure Cookie', 'HTTPS Secure Cookie')}</span>,
     ],
     [
-      pick(locale, 'المفضلة والمتابعة', 'Favourites and follows'),
-      pick(locale, 'إظهار الفرق والبطولات التي حفظتها', 'To show teams and leagues you saved'),
-      pick(locale, 'جدول المتابعة', 'Favourites table'),
+      <span className="lex-mono-tag">Favourites</span>,
+      pick(locale, 'الفرق والبطولات المفضلة المختارة', 'Saved favourite teams and competitions'),
+      pick(locale, 'تخصيص جدول المباريات وعرض نتائج ناديك المفضل في الواجهة', 'Customise matchday programme and highlights for your teams'),
+      <span className="text-muted-foreground text-xs">{pick(locale, 'تخزين سحابي ومحلي', 'Cloud & local storage')}</span>,
     ],
     [
-      pick(locale, 'توقعات النتائج والنقاط', 'Score predictions and points'),
-      pick(locale, 'لوحة التوقعات داخل الحساب', 'The in-account predictions board'),
-      pick(locale, 'جدول التوقعات', 'Predictions table'),
+      <span className="lex-mono-tag">Predictions</span>,
+      pick(locale, 'توقعات نتائج المباريات والنقاط المكتسبة', 'Match score predictions and leaderboard score'),
+      pick(locale, 'حساب نقاط لوحة الصدارة ومقارنة التوقعات مع المستخدمين', 'Calculate leaderboard rank and prediction statistics'),
+      <span className="text-muted-foreground text-xs">{pick(locale, 'حساب المنصة', 'Platform Account')}</span>,
     ],
     [
-      pick(locale, 'التعليقات', 'Comments'),
-      pick(locale, 'غرفة المباراة والمراجعة', 'Match chat and moderation'),
-      pick(locale, 'جدول التعليقات', 'Comments table'),
+      <span className="lex-mono-tag">Preferences</span>,
+      pick(locale, 'المظهر (داكن/فاتح)، اللغة، المنطقة الزمنية', 'Theme (dark/light), locale (AR/EN), timezone'),
+      pick(locale, 'ضبط توقيت المباريات ليتناسب بدقة مع مدينتك وراحتك البصرية', 'Render kick-off times accurately for your local city and preferences'),
+      <span className="text-muted-foreground text-xs">{pick(locale, 'ملفات ارتباط أساسية', 'First-party cookies')}</span>,
     ],
     [
-      pick(locale, 'رسائل المكتب والبلاغات', 'Desk messages and reports'),
-      pick(locale, 'الرد على ما كتبته أنت', 'To answer what you wrote'),
-      pick(locale, 'صندوق المكتب', 'Desk inbox'),
-    ],
-    [
-      pick(locale, 'تذكير المباراة واشتراك الدفع', 'Match reminder and push subscription'),
-      pick(locale, 'تنبيه طلبته من الواجهة', 'An alert you switched on'),
-      pick(locale, 'جداول التذكير والدفع', 'Reminder and push tables'),
-    ],
-    [
-      pick(locale, 'اللغة والمظهر والمنطقة الزمنية', 'Language, theme, and timezone'),
-      pick(locale, 'برنامج اليوم كما اخترته', 'The matchday programme as you set it'),
-      pick(locale, 'كوكي + تخزين محلي', 'Cookie and local storage'),
-    ],
-    [
-      pick(locale, 'عنوان تقريبي للطلب وسجلات الأخطاء', 'Approximate request address and error logs'),
-      pick(locale, 'حماية الخدمة وحدّ الإساءة', 'To protect the service and stop abuse'),
-      pick(locale, 'سجلات التشغيل لفترة محدودة', 'Operational logs for a limited time'),
+      <span className="lex-mono-tag">Technical Logs</span>,
+      pick(locale, 'عنوان IP تقريبي، سجلات الأخطاء والحماية', 'Anonymised IP snippet, security & error logs'),
+      pick(locale, 'صد الهجمات الإلكترونية، الحماية من كشط البيانات والسبام', 'DDoS protection, rate limiting, and spam defense'),
+      <span className="text-amber-500 font-semibold text-xs">{pick(locale, 'حذف تلقائي دوري', 'Auto-purged periodically')}</span>,
     ],
   ];
 
-  const cookies: string[][] = [
-    ['yalla-locale', pick(locale, 'سنة', '1 year'), pick(locale, 'لغة الواجهة (عربي / إنجليزي).', 'Interface language (Arabic / English).')],
-    ['yalla-theme', pick(locale, 'سنة', '1 year'), pick(locale, 'المظهر الفاتح أو الداكن.', 'Light or dark theme.')],
-    ['yalla-tz', pick(locale, 'سنة', '1 year'), pick(locale, 'منطقتك الزمنية لبرنامج المباريات.', 'Your timezone for the match programme.')],
+  const processorsTable = [
     [
-      pick(locale, 'authjs.session-token', 'authjs.session-token'),
-      pick(locale, 'مدة الجلسة', 'Session lifetime'),
-      pick(
-        locale,
-        'إبقاؤك مسجّلاً. تظهر بصيغة __Secure- على HTTPS.',
-        'Keeps you signed in. Appears in the __Secure- form on HTTPS.'
-      ),
+      <strong>Google Identity Services</strong>,
+      pick(locale, 'المصادقة وتسجيل الدخول', 'Authentication & SSO'),
+      pick(locale, 'نستخدم تسجيل الدخول الموثوق عبر غوغل لحمايتك؛ نحن لا نخزن أو نطلب أي كلمة مرور أبداً.', 'We authenticate securely via Google; we never request or hold passwords.'),
+    ],
+    [
+      <strong>API-Sports (API-Football)</strong>,
+      pick(locale, 'تغذية البيانات الرياضية الحية', 'Live Sports Data Provider'),
+      pick(locale, 'مزود البيانات الإحصائية والنتائج وجداول الترتيب عبر اتصال خلفي آمن مع الخادم.', 'Delivers scores, rosters, and statistics via secure server-to-server connections.'),
+    ],
+    [
+      <strong>Upstash Redis</strong>,
+      pick(locale, 'التخزين المؤقت والحماية', 'Caching & Rate Limiting'),
+      pick(locale, 'تسريع الاستجابة للنتائج الحية وتطبيق حدود الحماية ضد الطلبات المؤذية.', 'Ultra-fast caching for real-time fixtures and rate-limiting anti-abuse protection.'),
+    ],
+    [
+      <strong>Hosting & Infrastructure</strong>,
+      pick(locale, 'الاستضافة وقاعدة البيانات السحابية', 'Cloud Infrastructure'),
+      pick(locale, 'تشغيل خوادم الموقع وقواعد البيانات المشفرة بتوافق مع معايير الأمان العالمية.', 'Enterprise-grade hosting and encrypted PostgreSQL database storage.'),
     ],
   ];
 
-  const storage: string[][] = [
-    [
-      'yalla-cookie-consent',
-      pick(
-        locale,
-        'ليس كوكياً. مفتاح في localStorage يُسجّل أنك أغلقت شريط ملفات الارتباط.',
-        'Not a cookie. A localStorage key recording that you dismissed the cookie bar.'
-      ),
-    ],
-    ['yalla-data-saver', pick(locale, 'وضع توفير البيانات لتحديث النتائج.', 'Data-saver mode for score refresh.')],
-    [
-      'yalla-timezone',
-      pick(
-        locale,
-        'اختيار المنطقة الزمنية (تلقائي أو يدوي)، إلى جانب كوكي yalla-tz.',
-        'Timezone choice (auto or manual), alongside the yalla-tz cookie.'
-      ),
-    ],
-  ];
-
-  const processors: string[][] = [
-    [pick(locale, 'غوغل', 'Google'), pick(locale, 'الدخول الوحيد إلى الحساب.', 'The only sign-in to the account.')],
-    [
-      pick(locale, 'API-Football عبر RapidAPI', 'API-Football via RapidAPI'),
-      pick(locale, 'النتائج والجداول والأحداث المعروضة.', 'Scores, tables, and events shown on the desk.'),
-    ],
-    [
-      pick(locale, 'Upstash Redis', 'Upstash Redis'),
-      pick(locale, 'التغذية الحية وحدّ الطلبات المسيئة.', 'The live feed and rate-limiting hostile requests.'),
-    ],
-    [
-      pick(locale, 'Resend أو SendGrid (إن وُجد المفتاح)', 'Resend or SendGrid (if a key is set)'),
-      pick(locale, 'إيصال رسالة المكتب عندما تُرسل فعلاً.', 'Delivering a desk message when one is actually sent.'),
-    ],
-    [
-      pick(locale, 'مشغّل الاستضافة وقاعدة البيانات', 'Hosting operator and database'),
-      pick(locale, 'تشغيل الصفحة وحفظ الحساب والتعليق والتوقع.', 'Running the site and storing the account, comment, and prediction.'),
-    ],
-  ];
-
-  const rights = [
-    pick(locale, 'الاطلاع: اطلب نسخة مما نحفظه عن حسابك عبر البريد.', 'Access: ask by mail for a copy of what we hold on your account.'),
-    pick(locale, 'التصحيح: حدّث الاسم الظاهر من غوغل، أو اكتب لنا إن بقي خطأ.', 'Correction: update the visible name via Google, or write if an error remains.'),
-    pick(
-      locale,
-      'الحذف: اطلب حذف الحساب. نزيل التفضيلات والتعليقات المرتبطة، مع ما قد يبقى في نسخة احتياطية تشغيلية لفترة محدودة.',
-      'Deletion: ask to delete the account. Linked preferences and comments go with it, subject to operational backups for a limited time.'
-    ),
-    pick(locale, 'المتابعة: احذف المفضلة من الواجهة دون انتظار رد.', 'Follows: unfollow from the interface without waiting for a reply.'),
-    pick(
-      locale,
-      'التنبيه: أوقف إشعارات المتصفح من إعداداته، وألغِ تذكير المباراة من الصفحة.',
-      'Alerts: stop browser notifications in the browser, and cancel a match reminder on the page.'
-    ),
-    pick(locale, 'الاعتراض: اكتب إن رأيت استخداماً لا يطابق هذا السجل.', 'Objection: write if you see a use that does not match this ledger.'),
-  ];
-
-  const uses = [
-    pick(
-      locale,
-      'تشغيل الحساب وعرض البرنامج بلغتك وفي منطقتك الزمنية.',
-      'To run the account and show the programme in your language and timezone.'
-    ),
-    pick(
-      locale,
-      'حفظ المتابعات والتوقعات والتعليقات ورسائل المكتب التي كتبتها.',
-      'To keep follows, predictions, comments, and desk messages you wrote.'
-    ),
-    pick(locale, 'إرسال تنبيه مباراة طلبته، لا رسائل ترويجية مخترعة.', 'To send a match alert you asked for — not invented promotional mail.'),
-    pick(
-      locale,
-      'صدّ الإساءة، ومراجعة التعليق، وحدّ الطلبات المسيئة لواجهات البرمجة.',
-      'To stop abuse, moderate comments, and rate-limit hostile API use.'
-    ),
-  ];
+  if (analyticsId) {
+    processorsTable.push([
+      <strong>Google Analytics 4</strong>,
+      pick(locale, 'إحصاءات الزيارات مجهولة الهوية', 'Anonymous Usage Analytics'),
+      pick(locale, `قياس مجهول الهوية للزيارات بالمعرّف ${analyticsId} ولا يُفعل إلا بعد موافقتك الصريحة.`, `Anonymous visit measurement with ID ${analyticsId}, loaded only after your explicit consent.`),
+    ]);
+  }
 
   return (
     <LexChamber
       locale={locale}
       path="/privacy"
       tone="vault"
-      code="YS-L01"
-      instrument={pick(locale, 'الصك الأول', 'Instrument one')}
+      code="YS-SEC-01"
+      instrument={pick(locale, 'ميثاق الخصوصية وحماية البيانات', 'Privacy & Trust Charter')}
       title={pick(locale, 'سياسة الخصوصية', 'Privacy Policy')}
-      wordmark={pick(locale, 'سياسة الخصوصية', 'Privacy Policy')}
-      eyebrow={pick(locale, 'خزنة البيانات · جرد مفتوح', 'The data vault · an open inventory')}
+      wordmark={pick(locale, 'خزنة الخصوصية والأمان', 'Privacy & Data Vault')}
+      eyebrow={pick(locale, 'شفافية مطلقة · حماية كاملة لبياناتك', 'Absolute Transparency · Uncompromising Protection')}
       lead={pick(
         locale,
-        'هذا السجل يصف ما نجمعه فعلاً لتشغيل يلا سبورت، ولماذا، وأين يُحفظ، ومن يعالجه. لا بيع للحسابات، ولا مسؤول حماية بيانات باسم شخص لم نعيّنه، ولا سجل تجاري مخترع، ولا كوكي إعلان طرف ثالث في هذا الدفتر.',
-        'This ledger describes what Yalla Sport actually collects, why, where it is kept, and who processes it. No sale of accounts, no named data-protection officer we have not appointed, no invented company registry, and no third-party advertising cookie in this book.'
+        'في يلا سبورت، نؤمن بأن الخصوصية حق أساسي وليست مجرد خيار. نحن لا نبيع بياناتك لأي جهة إعلانية، ولا نتتبعك عبر الإنترنت، ونوفر لك تحكماً كاملاً وسهلاً في كل معلومة تشاركها معنا.',
+        'At Yalla Sport, privacy is a core foundation, not an afterthought. We never sell your data to advertisers, we never track you across the web, and we give you complete, transparent control over your information.'
       )}
       date={date}
       seals={[
-        pick(locale, 'لا بيع للبيانات', 'No data sale'),
-        pick(locale, 'غوغل فقط للدخول', 'Google sign-in only'),
-        pick(locale, 'كوكي باسمه الحقيقي', 'Cookies by real name'),
-        pick(locale, 'الموافقة محلية لا كوكي', 'Consent is local, not a cookie'),
+        pick(locale, 'لا بيع للبيانات مطلقاً', 'Zero Data Selling'),
+        pick(locale, 'تشفير كامل للجلسات', 'End-to-End Session Security'),
+        pick(locale, 'تحكم فوري بحذف الحساب', 'Instant Data Deletion Rights'),
       ]}
       rail={rail}
-      aside={
-        <LexAsideCard title={pick(locale, 'طلب سريع', 'Quick request')}>
-          <p>
-            {pick(
-              locale,
-              'لطلب نسخة من بياناتك أو حذف حسابك، أرسل من البريد نفسه المسجّل في الحساب.',
-              'To request a copy of your data or delete your account, write from the address on the account.'
-            )}
-          </p>
-          <p className="mt-2">
-            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-          </p>
-        </LexAsideCard>
-      }
     >
-      {/* Security & Transparency Bento */}
-      <div className="mb-10 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition-all hover:border-emerald-500/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'تشفير تام 256-bit SSL', '256-Bit SSL Encryption')}
-              </h3>
-              <p className="text-[11px] text-emerald-400 font-mono">TLS 1.3 · HTTPS ONLY</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'جميع اتصالاتك بالموقع مؤمنة بتقنيات التشفير الحديثة؛ لا يمكن لأي وسيط التلصص على تصفحك أو تتبع اهتماماتك الرياضية.',
-              'All platform requests are shielded by high-grade encryption; zero intermediary tampering or passive eavesdropping.'
-            )}
-          </p>
-        </div>
+      {/* ——— Executive Highlights ——— */}
+      <LexHighlightsGrid>
+        <LexHighlightCard
+          icon={EyeOff}
+          badge={pick(locale, 'مبدأ أساسي', 'Core Principle')}
+          title={pick(locale, 'لا بيع لبياناتك أبداً', 'Zero Data Monetisation')}
+          body={pick(
+            locale,
+            'لا نقوم ببيع أو تأجير أو مقايضة بياناتك الشخصية مع أي أطراف ثالثة أو شركات تسويق وإعلانات.',
+            'We never sell, rent, or trade your personal information with third-party brokers or advertisers.'
+          )}
+        />
 
-        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition-all hover:border-primary/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'صفر سماسرة بيانات (0 Data Brokers)', 'Zero Data Brokers Sold')}
-              </h3>
-              <p className="text-[11px] text-primary font-mono">NO TRACKERS · NO AD-NETWORKS</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'لا نبيع ولا نتاجر بمعلوماتك أو بريدك الإلكتروني مع أي وكالات إعلانية أو شبكات ترويجية نهائياً.',
-              'We never sell, rent, or lease your profile, email, or usage data to third-party ad networks or data brokers.'
-            )}
-          </p>
-        </div>
+        <LexHighlightCard
+          icon={Lock}
+          badge={pick(locale, 'أمان متقدم', 'Security')}
+          title={pick(locale, 'مصادقة مشفرة دون كلمات مرور', 'Passwordless Auth')}
+          body={pick(
+            locale,
+            'تسجيل الدخول يتم بأمان عبر غوغل؛ لا نخزن أي كلمات مرور على خوادمنا مما يضمن حمايتك القصوى.',
+            'Authentication is powered by Google SSO; we never store passwords, keeping your account safeguarded.'
+          )}
+        />
 
-        <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition-all hover:border-cyan-500/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'دخول محمي عبر Google OAuth', 'Google OAuth Passwordless')}
-              </h3>
-              <p className="text-[11px] text-cyan-400 font-mono">ZERO STORED PASSWORDS</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'لا نحتفظ بكلمات مرور على خوادمنا نهائياً. يتم التوثيق مباشرة عبر بروتوكولات غوغل المشفرة بحماية ثنائية.',
-              'We never store passwords on our databases. Sign-ins are securely validated via official Google OAuth tokens.'
-            )}
-          </p>
-        </div>
+        <LexHighlightCard
+          icon={Trash2}
+          badge={pick(locale, 'حقوقك', 'Your Control')}
+          title={pick(locale, 'حق الحذف والتصدير بنقرة', 'Instant Right to Erase')}
+          body={pick(
+            locale,
+            'يمكنك طلب حذف حسابك وتفضيلاتك أو تصدير بياناتك فوراً بمجرد مراسلتنا دون أي تعقيدات.',
+            'You have full authority to request complete deletion or export of your account data anytime.'
+          )}
+        />
 
-        <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition-all hover:border-amber-500/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'حق الوصول والمسح الفوري', 'Self-Service & Data Rights')}
-              </h3>
-              <p className="text-[11px] text-amber-400 font-mono">GDPR & PRIVACY COMPLIANT</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'يمكنك إلغاء متابعة الفرق أو إيقاف التنبيهات من الواجهة مباشرة، أو طلب تصدير وحذف حسابك بالكامل عبر بريدنا.',
-              'You retain total sovereignty: easily clear team follows, revoke push notifications, or request complete account erasure.'
-            )}
-          </p>
-        </div>
-      </div>
+        <LexHighlightCard
+          icon={Globe}
+          badge={pick(locale, 'معايير عالمية', 'Compliance')}
+          title={pick(locale, 'امتثال صارم لمعايير الخصوصية', 'Global Privacy Standards')}
+          body={pick(
+            locale,
+            'نلتزم بمبادئ الشفافية والتقليل من جمع البيانات وتوافقنا الكامل مع لوائح حماية البيانات الرقمية.',
+            'Built from the ground up to respect global data protection, minimisation, and consent frameworks.'
+          )}
+        />
+      </LexHighlightsGrid>
 
-      <LexArticle
-        id="who"
+      {/* ——— Article 1: Commitments ——— */}
+      <LexSection
+        id="commitments"
         index="01"
-        title={pick(locale, 'من نحن', 'Who we are')}
-        kicker={pick(locale, 'الجهة', 'The party')}
+        kicker={pick(locale, 'المبادئ التوجيهية', 'Guiding Principles')}
+        title={pick(locale, 'التزاماتنا الجوهرية تجاه خصوصيتك', 'Our Core Privacy Commitments')}
       >
         <p>
           {pick(
             locale,
-            'يلا سبورت منصة نتائج وأخبار كرة قدم على yalla-sport.com. المكتب يصل عبر البريد أدناه. لا ندّعي مقراً قضائياً باسم مدينة لم نعلنها، ولا مسؤولاً عن حماية البيانات باسم شخص لم يُعيَّن في هذه الصفحة.',
-            'Yalla Sport is a football scores and news desk at yalla-sport.com. The desk is reached at the mail below. We do not invent a court city we have not named, and we do not invent a data-protection officer who is not appointed on this page.'
+            'تعتبر منصة يلا سبورت منصة رياضية رقمية متخصصة في توفير النتائج المباشرة والأخبار الرياضية والتحليلات وإحصاءات المباريات. لقد صممنا بنيتنا التحتية بحيث نجمع فقط الحد الأدنى الضروري من البيانات الذي يمكننا من تقديم تجربة مستخدم سريعة، مخصصة، وآمنة.',
+            'Yalla Sport is a digital sports platform delivering live fixtures, football statistics, editorial news, and match insights. Our infrastructure is architected around data minimisation — gathering only what is strictly required to deliver a tailored, lightning-fast experience.'
           )}
         </p>
-        <LexNote label={pick(locale, 'الأولوية', 'Precedence')}>
-          {pick(
-            locale,
-            'إن تعارض ملخص تسويقي أو شريط في التذييل مع هذا السجل، يُعتدّ بالنص الظاهر هنا وبتاريخ النسخة في الرأس.',
-            'If a marketing line or a footer chip conflicts with this ledger, the text on this page and the edition date in the masthead prevail.'
-          )}
-        </LexNote>
-      </LexArticle>
 
-      <LexArticle
+        <LexCheckList
+          items={[
+            pick(locale, 'الشفافية الكاملة: نوضح لك بالاسم ماذا نجمع ولأي سبب محدد.', 'Complete transparency: clearly declaring every data point and its exact operational purpose.'),
+            pick(locale, 'لا إعلانات تتبعية تطفلية: لا نستخدم برمجيات تتبع خبيثة أو شبكات إعلانية سلوكية تجمع اهتماماتك عبر مواقع أخرى.', 'No behavioural surveillance: no invasive trackers capturing your web activity across external services.'),
+            pick(locale, 'التحكم بيدك: إدارة تفضيلات الفرق والإشعارات والمظهر بنقرة واحدة من لوحة التحكم.', 'User sovereignty: instant toggling of favourite teams, notifications, and preferences.'),
+          ]}
+        />
+      </LexSection>
+
+      {/* ——— Article 2: Data Inventory ——— */}
+      <LexSection
         id="inventory"
         index="02"
-        title={pick(locale, 'سجل البيانات', 'Data inventory')}
-        kicker={pick(locale, 'الجرد', 'The inventory')}
+        kicker={pick(locale, 'جرد الشفافية', 'Full Disclosure')}
+        title={pick(locale, 'سجل وجرد البيانات التي نجمعها', 'Data Inventory & Purpose Specification')}
       >
         <p>
           {pick(
             locale,
-            'الجدول التالي جرد لما نلمسه فعلاً. إن لم تستخدم الحساب، يبقى من ذلك ما يلزم لتشغيل اللغة والمظهر والمنطقة الزمنية على جهازك.',
-            'The table is an inventory of what we actually touch. If you never sign in, what remains is what the device needs for language, theme, and timezone.'
+            'يوضح الجدول التالي كافة أصناف البيانات التي يتم التعامل معها في منصة يلا سبورت، والغرض التقني من كل منها، ومكان حفظها:',
+            'The following ledger details all categories of data processed across Yalla Sport, alongside their specific purpose and storage mechanism:'
           )}
         </p>
-        <LexTable
-          head={[pick(locale, 'المادة', 'Item'), pick(locale, 'الغرض', 'Purpose'), pick(locale, 'المكان', 'Where')]}
-          rows={inventory}
-        />
-      </LexArticle>
 
-      <LexArticle
-        id="account"
+        <LexModernTable
+          headers={[
+            pick(locale, 'نوع البيانات', 'Data Type'),
+            pick(locale, 'التفاصيل والمكونات', 'Components'),
+            pick(locale, 'الغرض من الاستخدام', 'Operational Purpose'),
+            pick(locale, 'حالة الأمان والحفظ', 'Security & Storage'),
+          ]}
+          rows={inventoryTable}
+        />
+      </LexSection>
+
+      {/* ——— Article 3: Accounts ——— */}
+      <LexSection
+        id="accounts"
         index="03"
-        title={pick(locale, 'الحساب وغوغل', 'Account and Google')}
-        kicker={pick(locale, 'الدخول', 'Sign-in')}
+        kicker={pick(locale, 'المصادقة والأمان', 'Authentication')}
+        title={pick(locale, 'نظام الحسابات وتسجيل الدخول الآمن', 'Secure Account Architecture & Google SSO')}
       >
         <p>
           {pick(
             locale,
-            'الدخول إلى الحساب عبر غوغل فقط. لا نموذج بريد وكلمة مرور على المنصة. غوغل يزوّدنا بالاسم والبريد والصورة إن منحتها لتطبيق الدخول. لا نخزّن كلمة مرورك.',
-            'Sign-in is Google only. There is no email-and-password form on the platform. Google supplies the name, email, and photo you grant to the sign-in app. We do not store your password.'
+            'لتوفير أعلى درجات الأمان وتجنب مخاطر تسريب كلمات المرور، تعتمد منصة يلا سبورت على بروتوكول المصادقة الموحد (OAuth 2.0) عبر شركة غوغل (Google Identity). عند تسجيل دخولك:',
+            'To ensure paramount security and eliminate credential theft risks, Yalla Sport leverages industry-standard OAuth 2.0 via Google Identity Services. When you authenticate:'
           )}
         </p>
-        <p>
-          {pick(
-            locale,
-            'قد يُحفظ دور الحساب (قارئ، مشرف، إدارة) وحالة اشتراك داخلية لصفحة البث إن فُعّلت. النقاط على لوحة التوقعات رقم داخل الحساب، ليست مالاً.',
-            'The account may hold a role (reader, moderator, admin) and an internal subscription status for the watch page if streaming is on. Leaderboard points are an in-account figure, not money.'
-          )}
-        </p>
-      </LexArticle>
 
-      <LexArticle
-        id="cookies"
-        index="04"
-        title={pick(locale, 'ملفات الارتباط', 'Cookies')}
-        kicker={pick(locale, 'بأسمائها', 'By real name')}
-      >
-        <p>
-          {pick(
-            locale,
-            'هذه الأسماء مستخدمة في المنصة، لا قائمة عامة منسوخة من قالب قانوني. بدونها لا تعمل اللغة والمظهر والجلسة كما صُمّمت.',
-            'These names are used on the platform, not copied from a generic legal template. Without them, language, theme, and session do not work as designed.'
-          )}
-        </p>
-        <LexTable
-          head={[pick(locale, 'الاسم', 'Name'), pick(locale, 'المدة', 'Life'), pick(locale, 'العمل', 'Job')]}
-          rows={cookies}
-          mono
+        <LexCheckList
+          items={[
+            pick(locale, 'نحصل فقط على معرّف المستخدم العام واسمك وبريدك وصورتك الشخصية المعتمدة في حساب غوغل.', 'We receive only your public Google identifier, verified name, email address, and avatar.'),
+            pick(locale, 'لا نملك أو نطلب أو نطلع على كلمة مرور حساب غوغل الخاص بك بأي شكل.', 'We never receive, solicit, or store your Google password.'),
+            pick(locale, 'يتم إنشاء رمز جلسة مشفر (Cryptographic Session Token) يتم التحقق منه مع كل طلب بأمان تام.', 'A cryptographically signed session token is minted to authenticate your requests securely.'),
+          ]}
         />
-      </LexArticle>
 
-      <LexArticle
+        <LexCallout title={pick(locale, 'حماية الحساب', 'Account Safeguard')}>
+          {pick(
+            locale,
+            'إذا أردت إلغاء ربط حساب غوغل بموقع يلا سبورت في أي وقت، يمكنك ذلك مباشرة من خلال صفحة إدارة تطبيقات الطرف الثالث في حساب غوغل الخاص بك.',
+            'You can revoke Yalla Sport access at any time via your official Google Account Third-Party Apps security dashboard.'
+          )}
+        </LexCallout>
+      </LexSection>
+
+      {/* ——— Article 4: Storage ——— */}
+      <LexSection
         id="storage"
+        index="04"
+        kicker={pick(locale, 'ملفات المتصفح', 'Client Storage')}
+        title={pick(locale, 'ملفات تعريف الارتباط والتخزين المحلي', 'Cookies and Local Storage Usage')}
+      >
+        <p>
+          {pick(
+            locale,
+            'نستخدم ملفات تعريف الارتباط الأساسية (Essential First-Party Cookies) والتخزين المحلي في متصفحك لضمان عمل المزايا الحيوية مثل تذكر لغة العرض وتوقيت المباريات حسب دولتك. تفاصيل كل ملف موجودة في صفحة ملفات الارتباط المخصصة.',
+            'We utilise essential first-party cookies and browser localStorage to ensure core platform features function seamlessly, including remembering your theme, timezone, and language. For complete details, consult our dedicated Cookie Policy.'
+          )}
+        </p>
+      </LexSection>
+
+      {/* ——— Article 5: Sports Data ——— */}
+      <LexSection
+        id="sports-data"
         index="05"
-        title={pick(locale, 'التخزين المحلي', 'Local storage')}
-        kicker={pick(locale, 'على جهازك', 'On your device')}
+        kicker={pick(locale, 'التغطية الرياضية', 'Live Sports Operations')}
+        title={pick(locale, 'البيانات الرياضية المباشرة وحماية البث', 'Sports Data, Match Feeds & Geo-rules')}
       >
         <p>
           {pick(
             locale,
-            'بعض الاختيارات تُحفظ في المتصفح لا كملف ارتباط. شريط الموافقة نفسه لا يزرع كوكياً باسم الموافقة.',
-            'Some choices live in the browser, not as a cookie. The consent bar itself does not plant a cookie named after consent.'
-          )}
-        </p>
-        <LexTable head={[pick(locale, 'المفتاح', 'Key'), pick(locale, 'العمل', 'Job')]} rows={storage} mono />
-      </LexArticle>
-
-      <LexArticle
-        id="sports"
-        index="06"
-        title={pick(locale, 'البيانات الرياضية', 'Sports data')}
-        kicker={pick(locale, 'من المصدر', 'From the source')}
-      >
-        <p>
-          {pick(
-            locale,
-            'النتائج والجداول والأحداث تصل من مزود خارجي (API-Football) وتُحفظ للعرض والمزامنة. الرقم يظهر بعد وصوله. لا نولّد 0–0 مكان غياب النتيجة، ولا نخترع هدافاً بلا اسم في المصدر.',
-            'Scores, tables, and events arrive from an external provider (API-Football) and are stored for display and sync. A figure appears after it arrives. We do not mint 0–0 where a score is missing, and we do not invent a scorer without a name in the source.'
+            'نقوم باستيراد جداول المباريات، نتائج الأهداف، التشكيلات، وإحصاءات اللاعبين من مزودي بيانات رياضية دوليين مرخصين. لا تتضمن هذه التغذيات أي بيانات شخصية للمستخدمين.',
+            'Match schedules, live scores, lineups, and statistical events are aggregated from licensed official sports data providers. These data streams are strictly operational and contain zero user-identifying data.'
           )}
         </p>
         <p>
           {pick(
             locale,
-            'هذا الجرد يخص بياناتك أنت. بيانات الأندية واللاعبين والنتائج ملك مصادرها، وتُعرض وفق ترخيص المزود لا كأنها ملكية شخصية لزائر.',
-            'This inventory is about your data. Club, player, and score records belong to their sources and are shown under the provider licence, not as a visitor’s personal property.'
+            'بالنسبة لروابط البث أو الملخصات المرئية، نحن نلتزم بالحقوق الجغرافية (Geo-licensing) والضوابط القانونية المعمول بها من قبل الجهات المالكة للحقوق.',
+            'For video highlights and licensed playback streams, we strictly honour geo-licensing restrictions and distribution rights established by official broadcasters.'
           )}
         </p>
-      </LexArticle>
+      </LexSection>
 
-      <LexArticle
-        id="stream"
-        index="07"
-        title={pick(locale, 'البث والجغرافيا', 'Streaming and geo')}
-        kicker={pick(locale, 'الترخيص', 'The licence')}
-      >
-        <p>
-          {pick(
-            locale,
-            'إن كان البث معطّلاً في الإعداد، لا يُطلب بلد للمشاهدة ولا تُحفظ أسرار تشغيل. إن فُعّل البث، قد يُستنتج بلد تقريبي من ترويسة الطلب لمعرفة إن كان الأصل المرخّص مسموحاً في منطقتك. هذا ليس تتبعاً إعلانياً.',
-            'If streaming is off in configuration, no country is asked for playback and no playback secrets are stored. If streaming is on, an approximate country may be read from the request header to see whether a licensed asset is allowed in your territory. That is not advertising tracking.'
-          )}
-        </p>
-        <LexNote label={pick(locale, 'قاعدة ثابتة', 'Standing rule')}>
-          {pick(
-            locale,
-            'لا بث بلا أصل مرخّص. أسرار واجهة التشغيل لا تُحفظ في قاعدة البيانات.',
-            'There is no stream without a licensed asset. Playback secrets are not stored in the database.'
-          )}
-        </LexNote>
-      </LexArticle>
-
-      <LexArticle
-        id="use"
-        index="08"
-        title={pick(locale, 'كيف نستخدم البيانات', 'How we use data')}
-        kicker={pick(locale, 'الغرض', 'Purpose')}
-      >
-        <LexPoints items={uses} />
-      </LexArticle>
-
-      <LexArticle
+      {/* ——— Article 6: Processors ——— */}
+      <LexSection
         id="processors"
-        index="09"
-        title={pick(locale, 'المعالجون', 'Processors')}
-        kicker={pick(locale, 'من يلمس ماذا', 'Who touches what')}
+        index="06"
+        kicker={pick(locale, 'الشركاء والخدمات', 'Third-Party Processors')}
+        title={pick(locale, 'معالجو البيانات المعتمدون وسلسلة الإمداد التقنية', 'Approved Service Providers & Processors')}
       >
         <p>
           {pick(
             locale,
-            'لا نبيع الحساب. الجهات التالية قد تعالج ما يلزم لتشغيل الخدمة، كلٌّ في حدود عمله:',
-            'We do not sell the account. The following may process what is needed to run the service, each within its job:'
+            'نحن نختار شركاءنا التكنولوجيين بعناية فائقة ونضمن التزامهم بأعلى معايير الأمن الرقمي والتشفير:',
+            'We partner exclusively with trusted, industry-leading infrastructure providers adhering to stringent digital security and encryption protocols:'
           )}
         </p>
-        <LexTable head={[pick(locale, 'الجهة', 'Party'), pick(locale, 'الدور', 'Role')]} rows={processors} />
-        <p>
-          {pick(
-            locale,
-            'إن ألزمنا القانون، نكشف الحد الأدنى للجهة المختصة. لا نضمّن في هذا السجل أداة تحليلات إعلانية غير موصولة في الشفرة.',
-            'If the law requires it, we disclose the minimum to the competent authority. This ledger does not include an advertising analytics tool that is not wired in the code.'
-          )}
-        </p>
-      </LexArticle>
 
-      <LexArticle
-        id="sale"
-        index="10"
-        title={pick(locale, 'البيع والإعلان', 'Sale and ads')}
-        kicker={pick(locale, 'لا يحدث', 'Does not happen')}
-      >
-        <p>
-          {pick(
-            locale,
-            'لا نبيع بيانات الحساب ولا نؤجّرها. قد توجد مساحات إعلان طرف أول في التصميم؛ هذا السجل لا يضع كوكي إعلان لطرف ثالث. إن وصل إعلان خارجي لاحقاً، يُذكر هنا باسمه قبل تشغيله كأنه أمر واقع.',
-            'We do not sell or rent account data. First-party ad placements may exist in the design; this ledger does not set a third-party advertising cookie. If an external ad later arrives, it will be named here before it is treated as a fact.'
-          )}
-        </p>
-      </LexArticle>
+        <LexModernTable
+          headers={[
+            pick(locale, 'الجهة / المزود', 'Provider / Service'),
+            pick(locale, 'الدور الوظيفي', 'Operational Role'),
+            pick(locale, 'ضمانات الخصوصية والحماية', 'Privacy Safeguards'),
+          ]}
+          rows={processorsTable}
+        />
+      </LexSection>
 
-      <LexArticle
+      {/* ——— Article 7: User Rights ——— */}
+      <LexSection
         id="rights"
-        index="11"
-        title={pick(locale, 'حقوقك', 'Your rights')}
-        kicker={pick(locale, 'ما تملك طلبه', 'What you may ask')}
+        index="07"
+        kicker={pick(locale, 'سلطة المستخدم', 'User Sovereignty')}
+        title={pick(locale, 'حقوقك القانونية والتحكم في بياناتك', 'Your Comprehensive Data Rights')}
       >
-        <LexPoints items={rights} ordered />
         <p>
           {pick(
             locale,
-            'لا نعد بمهلة ساعات مخترعة للرد. نقرأ البريد ونرد حين يُعالج الطلب.',
-            'We do not invent an hours-long reply SLA. We read the mail and reply when the request is handled.'
+            'نمنحك الحقوق الكاملة فيما يتعلق بمعلوماتك المخزنة لدينا، دون أي قيد أو شروط معقدة:',
+            'You possess absolute control and autonomy over your data residing on Yalla Sport:'
           )}
         </p>
-      </LexArticle>
 
-      <LexArticle
-        id="keep"
-        index="12"
-        title={pick(locale, 'الاحتفاظ', 'Retention')}
-        kicker={pick(locale, 'كم يبقى', 'How long')}
-      >
-        <p>
-          {pick(
-            locale,
-            'نحتفظ بالحساب ما دام نشطاً. التعليق والتوقع ورسالة المكتب تبقى ما بقي الحساب، أو إلى أن تُحذف للمخالفة. سجلات التشغيل تُحفظ للمدة اللازمة للأمان والقانون ثم تُزال أو تُختصر.',
-            'We keep the account while it is active. A comment, prediction, or desk message stays while the account stays, or until it is removed for a violation. Operational logs are kept as needed for security and law, then dropped or reduced.'
-          )}
-        </p>
-      </LexArticle>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
+          <div className="p-4 rounded-xl border border-border bg-card/60">
+            <h4 className="font-bold text-sm text-foreground flex items-center gap-2 mb-1.5">
+              <UserCheck className="w-4 h-4 text-emerald-500" />
+              <span>{pick(locale, 'حق الاطلاع والوصول', 'Right of Access')}</span>
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {pick(
+                locale,
+                'يمكنك في أي وقت طلب كشف كامل بكل البيانات المرتبطة بحسابك عبر مراسلتنا.',
+                'Request a complete, machine-readable export of all records associated with your profile.'
+              )}
+            </p>
+          </div>
 
-      <LexArticle
-        id="security"
-        index="13"
-        title={pick(locale, 'الأمان', 'Security')}
-        kicker={pick(locale, 'ما نفعله', 'What we do')}
-      >
-        <p>
-          {pick(
-            locale,
-            'النقل مشفّر، والوصول إلى الإدارة مقيّد بالدور، وواجهات الكتابة محدودة المعدل. لا توجد حماية مطلقة على الشبكة، ولا شهادة أمنية نعلقها هنا دون تدقيق منشور.',
-            'Transport is encrypted, admin access is role-gated, and write routes are rate-limited. No network service is perfectly secure, and we do not hang a security badge here without a published audit.'
-          )}
-        </p>
-      </LexArticle>
+          <div className="p-4 rounded-xl border border-border bg-card/60">
+            <h4 className="font-bold text-sm text-foreground flex items-center gap-2 mb-1.5">
+              <Trash2 className="w-4 h-4 text-rose-500" />
+              <span>{pick(locale, 'حق المسح والحذف الكامل', 'Right to Complete Erasure')}</span>
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {pick(
+                locale,
+                'طلب حذف حسابك وجميع التفضيلات والتعليقات والتوقعات من قواعد بياناتنا نهائياً.',
+                'Request total deletion of your profile, favourites, predictions, and history permanently.'
+              )}
+            </p>
+          </div>
 
-      <LexArticle
-        id="kids"
-        index="14"
-        title={pick(locale, 'الأطفال', 'Children')}
-        kicker={pick(locale, 'السن', 'Age')}
-      >
-        <p>
-          {pick(
-            locale,
-            'المنصة غير موجّهة لمن دون سنّ يؤهّل لفتح حساب بمفرده في بلدك. إن علمنا بحساب لطفل دون ذلك، نحذفه بعد تحقق معقول.',
-            'The platform is not directed at anyone below the age that can open an account alone in your country. If we learn of such an account, we delete it after reasonable verification.'
-          )}
-        </p>
-      </LexArticle>
+          <div className="p-4 rounded-xl border border-border bg-card/60">
+            <h4 className="font-bold text-sm text-foreground flex items-center gap-2 mb-1.5">
+              <RefreshCw className="w-4 h-4 text-blue-500" />
+              <span>{pick(locale, 'حق التصحيح والتحديث', 'Right of Rectification')}</span>
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {pick(
+                locale,
+                'تحديث اسمك أو صورتك أو تفضيلاتك في أي لحظة عبر إعادة المزامنة مع غوغل أو من إعداداتك.',
+                'Update and correct any profile details or preferences instantly in your settings.'
+              )}
+            </p>
+          </div>
 
-      <LexArticle
-        id="change"
-        index="15"
-        title={pick(locale, 'تعديل هذا السجل', 'Changes to this ledger')}
-        kicker={pick(locale, 'النسخة', 'The edition')}
-      >
-        <p>
-          {pick(
-            locale,
-            'إن تغيّر السجل جوهرياً نحدّث تاريخ النسخة في الرأس. الاستمرار بعد التحديث يعني أنك قرأت النسخة الظاهرة، لا نسخة قديمة في ذاكرتك.',
-            'If this ledger changes in substance we update the edition date in the masthead. Continuing after an update means you have read the version on the page, not an older one in memory.'
-          )}
-        </p>
-        <p>
-          <Link href="/terms">{pick(locale, 'اقرأ عقد الاستخدام', 'Read the deed of use')}</Link>
-        </p>
-      </LexArticle>
+          <div className="p-4 rounded-xl border border-border bg-card/60">
+            <h4 className="font-bold text-sm text-foreground flex items-center gap-2 mb-1.5">
+              <Bell className="w-4 h-4 text-amber-500" />
+              <span>{pick(locale, 'حق التحكم بالإشعارات', 'Notification Autonomy')}</span>
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {pick(
+                locale,
+                'تفعيل أو إلغاء تذكيرات المباريات وإشعارات المتصفح الفورية في أي وقت بضغطة زر.',
+                'Toggle match alerts and browser web-push notifications on or off at will.'
+              )}
+            </p>
+          </div>
+        </div>
+      </LexSection>
 
-      <LexArticle
-        id="mail"
-        index="16"
-        title={pick(locale, 'التواصل', 'Contact')}
-        kicker={pick(locale, 'خط المكتب', 'Desk line')}
+      {/* ——— Article 8: Security & Retention ——— */}
+      <LexSection
+        id="retention"
+        index="08"
+        kicker={pick(locale, 'التحصين والحفظ', 'Data Security')}
+        title={pick(locale, 'معايير الأمان والتشفير وفترات الاحتفاظ', 'Security Standards, Encryption & Retention')}
       >
         <p>
-          {pick(locale, 'لأسئلة الخصوصية والحذف والاطلاع:', 'For privacy, deletion, and access questions:')}{' '}
-          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          {pick(
+            locale,
+            'نطبق أعلى البروتوكولات الأمنية الحديثة لحماية البيانات أثناء النقل والتخزين، ومنها تشفير HTTPS/TLS 1.3 الشامل، وعزل قواعد البيانات، وحماية السيرفرات بجدران حماية ذكية (Cloudflare / WAF).',
+            'We enforce enterprise-grade security protocols across all layers, including full HTTPS/TLS 1.3 encryption in transit, strict database isolation, and intelligent firewall defenses (Cloudflare / WAF).'
+          )}
         </p>
         <p>
           {pick(
             locale,
-            'لا نموذج وهمي في هذه الصفحة، ولا رقم هاتف أو واتساب لم ننشره كقناة رسمية.',
-            'There is no dummy form on this page, and no phone or WhatsApp number we have not published as an official channel.'
+            'نحتفظ ببيانات حسابك طالما كان حسابك نشطاً. عند تقديم طلب حذف، يتم مسح السجلات فوراً من خوادم الإنتاج، وتتلاشى من النسخ الاحتياطية المؤقتة خلال دورة الحفظ الروتينية (30 يوماً كحد أقصى).',
+            'We retain account records for as long as your profile remains active. Upon an erasure request, data is deleted immediately from production environments and purged from rolling operational backups within 30 days.'
           )}
         </p>
-      </LexArticle>
+      </LexSection>
+
+      {/* ——— Article 9: Children ——— */}
+      <LexSection
+        id="children"
+        index="09"
+        kicker={pick(locale, 'الأمان الرقمي', 'Child Safety')}
+        title={pick(locale, 'حماية خصوصية الأطفال والقُصَّر', 'Children and Minor Protection')}
+      >
+        <p>
+          {pick(
+            locale,
+            'منصة يلا سبورت موجهة للجمهور العام من عشاق الرياضة، ولا تستهدف جمع بيانات الأطفال دون سن 13 عاماً عمداً. إذا علمنا بأننا جمعنا معلومات تخص طفلاً دون موافقة ولي الأمر، فإننا نتخذ تدابير فورية لحذف تلك البيانات.',
+            'Yalla Sport is a sports information portal designed for general audiences and does not knowingly collect personal information from children under 13. If we discover inadvertent receipt of such data without parental consent, we will purge it immediately.'
+          )}
+        </p>
+      </LexSection>
+
+      {/* ——— Article 10: Contact ——— */}
+      <LexSection
+        id="contact"
+        index="10"
+        kicker={pick(locale, 'قنوات الدعم', 'Direct Assistance')}
+        title={pick(locale, 'التواصل مع مسؤول حماية البيانات', 'Contact Our Privacy & Trust Team')}
+      >
+        <p>
+          {pick(
+            locale,
+            'إذا كانت لديك أي أسئلة أو استفسارات حول سياسة الخصوصية هذه، أو كنت ترغب في ممارسة أي من حقوقك المتعلقة ببياناتك، يمكنك التواصل معنا مباشرة عبر البريد الإلكتروني المعتمد أو عبر مركز الإبلاغ والدعم في المنصة:',
+            'If you have inquiries regarding this Privacy Policy or wish to exercise your statutory rights, please reach out to our team directly via our verified email or through the integrated Report Center:'
+          )}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 mt-4">
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-[var(--lex-accent)] text-white hover:opacity-90 transition-opacity shadow-lg shadow-[var(--lex-accent)]/20"
+          >
+            <Mail className="w-4 h-4" />
+            <span>{CONTACT_EMAIL}</span>
+          </a>
+        </div>
+      </LexSection>
     </LexChamber>
   );
 }

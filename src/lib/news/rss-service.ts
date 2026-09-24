@@ -1,11 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import Parser from 'rss-parser';
 import { detectSourceLocale } from '@/lib/i18n/translation-provider';
-import { enqueueNewsTranslation } from '@/lib/i18n/backfill';
 import { suggestNewsEntities } from '@/lib/news/entity-suggest';
 import { pickRssBody, pickRssImage } from '@/lib/news/rss-fields';
-import { resolveNewsImage } from '@/lib/news/enrich-source';
-import { resolveFullArticleBody, wordCount } from '@/lib/news/fetch-article';
+import { resolveNewsImage, upgradeNewsImageUrl } from '@/lib/news/enrich-source';
+import { canonicalNewsUrl, newsUrlAliases } from '@/lib/news/canonical-url';
+import { clipImportedNewsCopy } from '@/lib/news/import-copy';
+import { readingTimeMinutes } from '@/lib/news/reading-time';
+import { pushProvenance } from '@/lib/news/provenance';
 import {
   TRUSTED_RSS_FEEDS,
   displaySourceName,
@@ -14,6 +16,7 @@ import {
   isTrustedRssFeedUrl,
 } from '@/lib/news/trusted-sources';
 import { classifyDesk, competitionTags } from '@/lib/news/desks';
+import { parseRssPublishedAt, shouldImportRssStory } from '@/lib/news/freshness';
 
 const parser = new Parser({
   customFields: {
@@ -47,7 +50,7 @@ export async function fetchRSSFeed(url: string): Promise<RSSItem[]> {
       return {
         title: item.title || '',
         link: item.link || '',
-        pubDate: item.pubDate || new Date().toISOString(),
+        pubDate: item.isoDate || item.pubDate || '',
         content: pickRssBody(mapped),
         image: pickRssImage({ ...mapped, link: item.link || '' }),
         source: feedTitle,
@@ -113,8 +116,15 @@ export async function importFromRSS(url: string) {
     if (isNonSportsNoise(item.title, item.content)) continue;
     if (!isFootballItem(item)) continue;
 
+    const aliases = newsUrlAliases(item.link);
     const existingNews = await prisma.news.findFirst({
-      where: { sourceUrl: item.link },
+      where: {
+        OR: [
+          ...aliases.map((sourceUrl) => ({ sourceUrl })),
+          { canonical: canonicalNewsUrl(item.link) },
+        ],
+      },
+      select: { id: true },
     });
     if (existingNews) continue;
 
@@ -125,83 +135,67 @@ export async function importFromRSS(url: string) {
     const uniqueSlug = `${slugBase || 'story'}-${Date.now()}`;
     // Prefer our curated outlet name over whatever title the feed ships with,
     // so the source ledger on /news reads consistently.
-    const sourceName = feed?.name ?? displaySourceName(item.source, item.link) ?? item.source;
+    const sourceName = feed?.name ?? displaySourceName(item.source, item.link) ?? item.source ?? item.link;
 
-    let body = item.content || item.title;
+    const copy = clipImportedNewsCopy({
+      title: item.title,
+      rssHtml: item.content,
+      sourceUrl: item.link,
+      sourceName,
+    });
     let image = item.image;
-    let enrichedBody = false;
-
-    if (wordCount(body) < 120) {
-      const fuller = await resolveFullArticleBody({
-        content: body,
-        sourceUrl: item.link,
-      });
-      if (fuller.enriched) {
-        body = fuller.html;
-        enrichedBody = true;
-      }
-      if (!image && fuller.image) image = fuller.image;
-    }
-
     if (!image) {
       image = await resolveNewsImage({
-        content: body,
+        content: copy.content,
         sourceUrl: item.link,
       });
     }
+    if (image) image = upgradeNewsImageUrl(image);
 
-    const plainForMeta = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     const breaking = looksBreaking(item.title);
-    // Keep the outlet's own publication time. Stamping our import time instead
-    // would collapse a week of reporting onto whatever day the cron last ran.
-    const sourceDate = new Date(item.pubDate);
-    const publishedAt = Number.isNaN(sourceDate.getTime()) ? new Date() : sourceDate;
+    const publishedAt = parseRssPublishedAt({ pubDate: item.pubDate });
+    if (!publishedAt || !shouldImportRssStory(publishedAt)) continue;
 
     const created = await prisma.news.create({
       data: {
         title: item.title,
-        excerpt: plainForMeta.slice(0, 220) || null,
-        content: body,
+        excerpt: copy.excerpt || null,
+        content: copy.content,
         featuredImage: image,
         ogImage: image,
         sourceName,
         sourceUrl: item.link,
+        canonical: canonicalNewsUrl(item.link),
         slug: uniqueSlug,
-        category: classifyDesk(item.title, plainForMeta),
-        tags: [
-          'football',
-          'rss',
-          'trusted',
-          ...competitionTags(item.title, plainForMeta),
-          ...(enrichedBody ? ['full-source'] : []),
-        ],
-        status: 'PUBLISHED',
+        category: classifyDesk(item.title, copy.content),
+        tags: ['football', 'rss', 'trusted', ...competitionTags(item.title, copy.content)],
+        status: 'PENDING_REVIEW',
         publishedAt,
         breaking,
+        featured: false,
         aiAssisted: false,
         authorId: systemUser.id,
-        sourceLocale: detectSourceLocale(`${item.title} ${plainForMeta}`),
-        readingTime: Math.max(1, Math.ceil((plainForMeta || item.title).split(/\s+/).length / 200)),
-        provenance: [
-          {
-            timestamp: new Date().toISOString(),
-            userId: systemUser.id,
-            action: 'IMPORT_RSS',
-            source: sourceName,
-            sourcePublishedAt: publishedAt.toISOString(),
-            feed: url,
-            enrichedBody,
-            breaking,
-          },
-        ],
+        sourceLocale: detectSourceLocale(`${item.title} ${copy.excerpt} ${copy.content}`),
+        readingTime: readingTimeMinutes(copy.content || copy.excerpt || item.title),
+        provenance: pushProvenance(null, {
+          userId: systemUser.id,
+          action: 'IMPORT_RSS',
+          source: sourceName,
+          arrivedAt: new Date().toISOString(),
+          sourcePublishedAt: publishedAt.toISOString(),
+          feed: url,
+          aiAssisted: false,
+          fullTextCopied: copy.fullTextCopied,
+          protectedSource: copy.protectedSource,
+          breaking,
+        }),
       },
     });
 
-    await enqueueNewsTranslation(created.id);
     await suggestNewsEntities({
       newsId: created.id,
       title: created.title,
-      content: created.content,
+      content: created.content || created.excerpt || created.title,
     });
     imported += 1;
   }

@@ -1,4 +1,6 @@
-﻿'use client';
+'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff } from 'lucide-react';
@@ -114,7 +116,8 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({ onResult, className = 
       };
 
       recognition.start();
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/components/layout/VoiceSearch.tsx:117", error, { persist: false });
       setIsListening(false);
       recognitionRef.current = null;
       window.alert(t('voice_failed'));

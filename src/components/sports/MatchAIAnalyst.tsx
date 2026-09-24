@@ -64,6 +64,9 @@ export function MatchAIAnalyst({
 
   return (
     <div className="space-y-3">
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+        {t('editorial_reading')}
+      </p>
       {notes.map((note) => (
         <div key={note.label} className="flex gap-3 rounded-2xl bg-muted px-4 py-3 dark:bg-card/[0.04]">
           {note.kind === 'discipline' ? (

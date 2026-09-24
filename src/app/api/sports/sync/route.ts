@@ -1,9 +1,11 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { sportsData } from '@/lib/sports-data';
 import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { logSystemAlert, AlertType, AlertSeverity } from '@/lib/monitoring';
 import { persistMatchDetail, persistNormalizedMatch } from '@/lib/sports-data/persistence';
+import { cronFixtureDateKeys, liveKickoffFloor } from '@/lib/sports-data/match-window';
 import { sendWebPush } from '@/lib/notifications/web-push';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { isAuthorizedCron } from '@/lib/security/cron';
@@ -21,17 +23,15 @@ export async function GET(req: Request) {
 
   try {
     const startedAt = Date.now();
-    const today = new Date();
-    const tomorrow = new Date(today.getTime() + 86400000);
-    const dateKey = (date: Date) => date.toISOString().slice(0, 10);
-    const [liveMatches, todayMatches, tomorrowMatches] = await Promise.all([
+    const dateKeys = cronFixtureDateKeys();
+    const [liveMatches, ...datedBatches] = await Promise.all([
       sportsData.getLiveMatches(),
-      sportsData.getMatchesByDate(dateKey(today)),
-      sportsData.getMatchesByDate(dateKey(tomorrow)),
+      ...dateKeys.map((date) => sportsData.getMatchesByDate(date)),
     ]);
-
     const allFixtures = Array.from(
-      new Map([...todayMatches, ...tomorrowMatches, ...liveMatches].map((match) => [String(match.externalId), match])).values()
+      new Map(
+        [...datedBatches.flat(), ...liveMatches].map((match) => [String(match.externalId), match]),
+      ).values(),
     );
     const persistedMatches = [];
     for (const match of allFixtures) {
@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     }
 
     for (const liveMatch of liveMatches) {
-      const detail = await sportsData.getMatchById(liveMatch.externalId).catch(() => null);
+      const detail = await sportsData.getMatchById(liveMatch.externalId).catch(swallow("src/app/api/sports/sync/route.ts:45", null));
       if (!detail) continue;
       const dbMatch = await persistMatchDetail(detail);
 
@@ -67,7 +67,7 @@ export async function GET(req: Request) {
             body: `${detail.homeTeam.name} ${detail.homeScore ?? 0} - ${detail.awayScore ?? 0} ${detail.awayTeam.name}`,
             url: `/match/${dbMatch.id}`,
             tag: `goal-${dbMatch.id}-${eventKey}`,
-            icon: '/images/logo.jpg',
+            icon: '/images/logo.png',
           };
           const deliveries = await Promise.allSettled(
             follower.user.pushSubscriptions.map((subscription) => sendWebPush(subscription, payload))
@@ -92,8 +92,16 @@ export async function GET(req: Request) {
       .filter((match) => match.status === 'FINISHED')
       .map((match) => match.id);
     const settlement = finishedIds.length
-      ? await settleFinishedPredictions(finishedIds).catch(() => ({ matches: 0, settled: 0, awarded: 0 }))
+      ? await settleFinishedPredictions(finishedIds).catch(swallow("src/app/api/sports/sync/route.ts:94", ({ matches: 0, settled: 0, awarded: 0 })))
       : { matches: 0, settled: 0, awarded: 0 };
+
+    const staleLive = await prisma.match.updateMany({
+      where: {
+        status: { in: ['LIVE', 'HALFTIME'] },
+        kickoffAt: { lt: liveKickoffFloor() },
+      },
+      data: { status: 'FINISHED' },
+    });
 
     const syncedAt = new Date().toISOString();
     const source = isLiveSportsApi() ? 'LIVE' : 'EMPTY';
@@ -117,6 +125,7 @@ export async function GET(req: Request) {
       success: true,
       syncedCount: persistedMatches.length,
       liveCount: liveMatches.length,
+      staleLiveClosed: staleLive.count,
       predictionsSettled: settlement.settled,
       pointsAwarded: settlement.awarded,
       timestamp: syncedAt,
@@ -126,7 +135,7 @@ export async function GET(req: Request) {
     console.error('[SYNC_ERROR]:', error);
     const message = error instanceof Error ? error.message : 'Unknown sync error';
     const stack = error instanceof Error ? error.stack : undefined;
-    
+
     // Log Critical Alert
     await logSystemAlert(
       AlertType.CRON_FAILURE,
@@ -135,8 +144,8 @@ export async function GET(req: Request) {
       { error: stack }
     );
 
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       error: message
     }, { status: 500 });
   }

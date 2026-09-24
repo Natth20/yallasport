@@ -1,4 +1,5 @@
-﻿import React from 'react';
+import React, { Suspense } from 'react';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
@@ -10,6 +11,8 @@ import { pick } from '@/i18n/pick';
 import { loadLeagueDossier, type LeagueMatchCard } from '@/lib/leagues/load-dossier';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
+
+export const revalidate = 180;
 
 export async function generateMetadata({
   params,
@@ -184,7 +187,18 @@ function MatchRow({
   );
 }
 
-export default async function LeagueFixturesPage({
+export default function LeagueFixturesPage(props: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ season?: string }>;
+}) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <LeagueFixturesPageBody params={props.params} searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
+
+async function LeagueFixturesPageBody({
   params,
   searchParams,
 }: {

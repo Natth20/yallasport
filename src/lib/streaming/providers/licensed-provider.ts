@@ -1,11 +1,11 @@
+import { swallow } from '@/lib/ops/caught';
 import type { PlaybackSession, StreamingProvider } from '../interface';
 
 /**
- * Plug the licensed vendor here when the API arrives.
- * Set STREAMING_ENABLED=true, STREAMING_PROVIDER=licensed,
- * STREAMING_PLAYBACK_URL and STREAMING_API_KEY.
- * Adjust the request/response mapping to match the vendor contract.
- * Until those values exist, mintPlayback returns null and the UI stays honest.
+ * Plug the licensed vendor here when a signed contract and vendor key exist.
+ * STREAMING_ENABLED is hardcoded false in factory.ts until then.
+ * After that: STREAMING_PROVIDER=licensed, STREAMING_PLAYBACK_URL, STREAMING_API_KEY.
+ * Until mintPlayback has a real endpoint, it returns null and the UI stays honest.
  */
 export class LicensedStreamingProvider implements StreamingProvider {
   readonly key = 'licensed';
@@ -34,10 +34,10 @@ export class LicensedStreamingProvider implements StreamingProvider {
         drmType: input.drmType,
         userId: input.userId,
       }),
-    }).catch(() => null);
+    }).catch(swallow("src/lib/streaming/providers/licensed-provider.ts:36", null));
 
     if (!response?.ok) return null;
-    const data = await response.json().catch(() => null) as {
+    const data = await response.json().catch(swallow("src/lib/streaming/providers/licensed-provider.ts:39", null, { persist: false })) as {
       manifestUrl?: string;
       licenseUrl?: string | null;
       protocol?: PlaybackSession['protocol'];

@@ -28,17 +28,17 @@ export async function enqueueNewsTranslation(newsId: string) {
     excerpt: news.excerpt,
     content: news.content
   });
-
+  if (!draft) return;
   await prisma.newsTranslation.create({
     data: {
       newsId,
       locale: target,
-      title: draft?.title || news.title,
-      excerpt: draft?.excerpt || news.excerpt,
-      content: draft?.content || news.content,
+      title: draft.title,
+      excerpt: draft.excerpt,
+      content: draft.content,
       status: 'DRAFT',
-      source: draft ? 'MACHINE' : 'MACHINE',
-      providerKey: draft?.providerKey || provider.key
+      source: 'MACHINE',
+      providerKey: draft.providerKey
     }
   });
 }
@@ -79,16 +79,17 @@ export async function backfillTranslations(userId: string) {
       name,
       description
     });
+    if (!draft) return;
     await prisma.entityTranslation.create({
       data: {
         entityType,
         entityId,
         locale: 'en',
-        name: draft?.name || name,
-        description: draft?.description || description,
+        name: draft.name,
+        description: draft.description,
         status: 'DRAFT',
         source: 'MACHINE',
-        providerKey: draft?.providerKey || provider.key
+        providerKey: draft.providerKey
       }
     });
     entitiesQueued += 1;

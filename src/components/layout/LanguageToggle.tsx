@@ -1,4 +1,4 @@
-﻿// src/components/layout/LanguageToggle.tsx
+// src/components/layout/LanguageToggle.tsx
 'use client';
 
 import React from 'react';

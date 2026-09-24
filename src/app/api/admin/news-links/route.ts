@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
@@ -10,7 +11,7 @@ export const POST = auth(async function POST(req) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/admin/news-links/route.ts:13", null, { persist: false }));
   const newsId = typeof body?.newsId === 'string' ? body.newsId : '';
   const entityType = typeof body?.entityType === 'string' ? body.entityType : '';
   const entityId = typeof body?.entityId === 'string' ? body.entityId : '';

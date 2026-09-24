@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { saveMatchMetadata, savePredictedLineup } from './actions';
 import {getLocale} from 'next-intl/server';

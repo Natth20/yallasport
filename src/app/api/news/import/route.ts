@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { importFromRSS } from '@/lib/news/rss-service';
 import { TRUSTED_RSS_FEEDS } from '@/lib/news/trusted-sources';
@@ -16,7 +17,7 @@ export const POST = auth(async function POST(req) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/news/import/route.ts:19", null, { persist: false }));
   const url = typeof body?.url === 'string' ? body.url.trim() : '';
   const useDefaults = body?.allTrusted === true;
 
@@ -24,7 +25,7 @@ export const POST = auth(async function POST(req) {
     if (useDefaults) {
       let imported = 0;
       for (const feed of TRUSTED_RSS_FEEDS) {
-        const result = await importFromRSS(feed.url).catch(() => ({ imported: 0 }));
+        const result = await importFromRSS(feed.url).catch(swallow("src/app/api/news/import/route.ts:27", ({ imported: 0 })));
         imported += result.imported;
       }
       return NextResponse.json({

@@ -1,0 +1,133 @@
+/* ══════════════════════════════════════════════════════════════════════
+   YALLA SPORT — PHOTO HALL
+   Ultra-Minimalist Luxury Design
+   ══════════════════════════════════════════════════════════════════════ */
+
+.photo-hall {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+/* Subtle cinematic background */
+.photo-hall::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 60vh;
+  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--primary) 6%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ph-easel {
+  position: relative;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+html.dark .ph-easel {
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5);
+}
+
+.ph-easel-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #020617; /* Always dark to make photos pop */
+  overflow: hidden;
+}
+
+.ph-easel-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ph-easel-plaque {
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--card) 10%, #020617);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ph-easel-plaque h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.ph-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--card) 20%, rgba(255, 255, 255, 0.1));
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.ph-nav-btn:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+.ph-nav-btn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.ph-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.ph-frame {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  cursor: pointer;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.ph-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.ph-frame:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.ph-frame:hover img {
+  transform: scale(1.05);
+}
+
+.ph-frame.is-active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+}

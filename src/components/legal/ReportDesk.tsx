@@ -1,66 +1,39 @@
-import { Link } from '@/i18n/navigation';
+'use client';
+
 import { pick } from '@/i18n/pick';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { DeskComposer } from './DeskComposer';
 import {
-  LexArticle,
-  LexAsideCard,
-  LexCards,
   LexChamber,
-  LexNote,
-  LexPoints,
+  LexSection,
+  LexHighlightsGrid,
+  LexHighlightCard,
+  LexCheckList,
+  LexCallout,
 } from './LexChamber';
+import {
+  AlertTriangle,
+  Clock,
+  ShieldCheck,
+  Zap,
+  Mail,
+  Trophy,
+  FileText,
+  Radio,
+  Flame,
+  Bug,
+  HelpCircle,
+} from 'lucide-react';
 
 export function ReportDesk({ locale }: { locale: string }) {
-  const date = pick(locale, '11 سبتمبر 2026', '11 September 2026');
+  const isAr = locale === 'ar';
+  const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [
-    { id: 'when', label: pick(locale, 'متى تبلّغ', 'When to report') },
-    { id: 'need', label: pick(locale, 'ماذا نحتاج', 'What we need') },
-    { id: 'send', label: pick(locale, 'الإرسال', 'Send') },
-    { id: 'after', label: pick(locale, 'بعد الإرسال', 'After you send') },
-  ];
-
-  const cases = [
-    {
-      title: pick(locale, 'رقم لا يطابق المصدر', 'A figure off the source'),
-      body: pick(
-        locale,
-        'نتيجة أو دقيقة أو جدول يختلف عما في المصدر الرياضي.',
-        'A score, minute or table that differs from the sports source.'
-      ),
-    },
-    {
-      title: pick(locale, 'خبر بلا اعتماد', 'An unapproved story'),
-      body: pick(
-        locale,
-        'خبر منشور يبدو بلا مصدر أو يخلط رأياً بخبر معتمد.',
-        'A published story that looks unsourced or mixes opinion with approved news.'
-      ),
-    },
-    {
-      title: pick(locale, 'علامة ليست لنا', 'A mark not ours'),
-      body: pick(
-        locale,
-        'شعار أو مقطع أو نص تظن أنه يُعرض بلا حق.',
-        'A crest, clip or text you believe is shown without right.'
-      ),
-    },
-    {
-      title: pick(locale, 'إساءة أو بث بلا ترخيص', 'Abuse or an unlicensed stream'),
-      body: pick(
-        locale,
-        'تعليق مسيء، أو بث يظهر رغم أن الترخيص غير قائم.',
-        'An abusive comment, or a stream showing when no licence stands.'
-      ),
-    },
-  ];
-
-  const needs = [
-    pick(locale, 'رابط الصفحة التي رأيت فيها المشكلة.', 'The URL of the page where you saw it.'),
-    pick(locale, 'الوقت التقريبي الذي ظهرت فيه.', 'The approximate time it appeared.'),
-    pick(locale, 'ما يظهر عندك على الشاشة.', 'What your screen shows.'),
-    pick(locale, 'ما يقوله المصدر إن كان بين يديك.', 'What the source says, if you have it.'),
+    { id: 'when-to-report', label: pick(locale, 'متى تبلّغ وفئات المشاكل', 'When to Report') },
+    { id: 'submit-form', label: pick(locale, 'نموذج الإرسال الفوري', 'Instant Submission Form') },
+    { id: 'workflow', label: pick(locale, 'مسار المعالجة وسرعة الرد', 'Processing Workflow & SLA') },
+    { id: 'channels', label: pick(locale, 'القنوات المباشرة البديلة', 'Alternative Channels') },
   ];
 
   return (
@@ -68,173 +41,196 @@ export function ReportDesk({ locale }: { locale: string }) {
       locale={locale}
       path="/report"
       tone="desk"
-      code="YS-L04"
-      instrument={pick(locale, 'خط المكتب', 'The desk line')}
-      title={pick(locale, 'إبلاغ عن محتوى', 'Report content')}
-      wordmark={pick(locale, 'إبلاغ عن محتوى', 'Report content')}
-      eyebrow={pick(locale, 'صندوق واحد · بلا وسطاء', 'One inbox · no middlemen')}
+      code="YS-DESK-01"
+      instrument={pick(locale, 'مركز البلاغات والدعم المباشر', 'Dispute & Report Center')}
+      title={pick(locale, 'إبلاغ عن محتوى أو مشكلة', 'Report an Issue')}
+      wordmark={pick(locale, 'مركز الإبلاغ والدعم الذكي', 'Report & Dispute Center')}
+      eyebrow={pick(locale, 'صندوق عمليات مباشر · مراجعة بشرية سريعة', 'Direct Operations Hub · Prompt Human Review')}
       lead={pick(
         locale,
-        'إن رأيت رقماً لا يطابق المصدر، أو خبراً بلا اعتماد، أو علامة ليست لنا، اكتب للمكتب. الإرسال يحفظ الرسالة في لوحة التحكم ويرسل نسخة إلى بريد الموقع إن كانت خدمة البريد مفعّلة.',
-        'If a figure does not match the source, a story is unapproved, or a mark is not ours, write to the desk. Submit stores it in the dashboard and copies the site email when mail is configured.'
+        'هل لاحظت نتيجة غير دقيقة، خبراً بلا مصدر، تعليقاً مسيئاً، أو مشكلة في حقوق النشر؟ استخدم هذا النموذج الذكي لإيصال بلاغك مباشرة إلى لوحة تحكم العمليات للتدخل والتحقق الفوري.',
+        'Spotted a score discrepancy, unsourced headline, abusive comment, or copyright concern? Use this streamlined operations form to dispatch your notice directly to our live desk for immediate review.'
       )}
       date={date}
       seals={[
-        pick(locale, 'صندوق اللوحة', 'Dashboard inbox'),
-        pick(locale, 'نسخة للبريد', 'Mail copy'),
-        pick(locale, 'المصدر أولاً', 'Source first'),
-        pick(locale, 'مرجع حقيقي لا تذكرة وهمية', 'A real reference, not a fake ticket'),
+        pick(locale, 'ربط مباشر بلوحة التحكم', 'Direct Dashboard Dispatch'),
+        pick(locale, 'مراجعة بشرية لكافة البلاغات', '100% Human Audited'),
+        pick(locale, 'رقم تتبع لكل بلاغ', 'Unique Ticket Reference'),
       ]}
       rail={rail}
-      aside={
-        <LexAsideCard title={pick(locale, 'قنوات أخرى', 'Other channels')}>
-          <p>
-            {pick(
-              locale,
-              'للمراسلة العامة استخدم صفحة التواصل. لبلاغ حقوق النشر راجع الصك الثالث.',
-              'For general mail use the contact page. For a rights notice see the third instrument.'
-            )}
-          </p>
-          <p className="mt-2">
-            <Link href="/contact">{pick(locale, 'صفحة التواصل', 'Contact page')}</Link>
-            {' · '}
-            <Link href="/copyright">{pick(locale, 'حقوق النشر', 'Copyright')}</Link>
-          </p>
-          <p className="mt-2">
-            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-          </p>
-        </LexAsideCard>
-      }
     >
-      {/* The VAR Incident Room Protocol Bento */}
-      <div className="mb-10 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition hover:border-rose-500/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="23 7 16 12 23 17 23 7" />
-                <rect width="14" height="14" x="1" y="5" rx="2" ry="2" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'غرفة تدقيق الـ VAR اللحظية', 'VAR Live Review Desk')}
-              </h3>
-              <p className="text-[11px] text-rose-400 font-mono">INSTANT VERIFICATION</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'عند الإبلاغ عن خطأ في نتيجة، دقيقة، أو حدث تحكيمي، يتولى فريق الرصد مطابقة البث ومصادر التغذية فوراً.',
-              'Discrepancies in live scores, event minutes, or player cards trigger immediate comparison against raw provider feeds.'
-            )}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition hover:border-emerald-500/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'زمن استجابة عاجل للبث الحي', 'High Priority Live SLA')}
-              </h3>
-              <p className="text-[11px] text-emerald-400 font-mono">&lt; 15 MINS IN LIVE MATCHES</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'البلاغات المتعلقة بالمباريات الجارية الآن تمنح الأولوية القصوى وتُعرض مباشرة في شاشة مراقبي العمليات.',
-              'Reports tagged to active live fixtures bypass normal triage and appear immediately on active duty operator dashboards.'
-            )}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition hover:border-cyan-500/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'رقم تتبع موثق لكل بلاغ', 'Unique Incident Tracking')}
-              </h3>
-              <p className="text-[11px] text-cyan-400 font-mono">AUTOMATED LOG RECORD</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'يتم تسجيل كل رسالة برقم تذكرة فريد في قاعدة البيانات وإرسال إشعار مباشر لبريد المتابعة الداخلي.',
-              'Each incident logs directly to our Postgres operations table, yielding a trackable ticket ID for follow-up.'
-            )}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card/40 to-card/20 p-5 backdrop-blur-md transition hover:border-primary/40">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">
-                {pick(locale, 'حماية المبلغين والسرية', 'Reporter Confidentiality')}
-              </h3>
-              <p className="text-[11px] text-primary font-mono">100% PRIVATE INTAKE</p>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {pick(
-              locale,
-              'بياناتك وبريدك الإلكتروني تظل سرية بالكامل ومحمية ولا تتم مشاركتها مع أي طرف خارجي على الإطلاق.',
-              'Your contact information and submission details remain strictly confidential and internal to Yalla Sport.'
-            )}
-          </p>
-        </div>
-      </div>
-
-      <LexArticle id="when" index="01" title={pick(locale, 'متى تبلّغ', 'When to report')} kicker={pick(locale, 'الحالات', 'The cases')}>
-        <LexCards rows={cases} />
-      </LexArticle>
-
-      <LexArticle id="need" index="02" title={pick(locale, 'ماذا نحتاج', 'What we need')} kicker={pick(locale, 'عناصر البلاغ', 'Notice parts')}>
-        <LexPoints items={needs} ordered />
-        <LexNote label={pick(locale, 'بصراحة', 'Plainly')}>
-          {pick(
+      {/* ——— Executive Highlights ——— */}
+      <LexHighlightsGrid>
+        <LexHighlightCard
+          icon={Zap}
+          badge={pick(locale, 'استجابة سريعة', 'High Priority')}
+          title={pick(locale, 'معالجة مباشرة دون وسطاء', 'Direct Desk Pipeline')}
+          body={pick(
             locale,
-            'كلّما كان البلاغ محدداً، كان الردّ أسرع. بلاغ بلا رابط قد يُهمل.',
-            'The more specific the notice, the faster the reply. A notice without a link may be set aside.'
+            'رسالتك تصل فوراً إلى غرفة عمليات التحرير والمطورين لاتخاذ الإجراء المناسب.',
+            'Your report is piped instantly into our operations dashboard for rapid editorial and technical remediation.'
           )}
-        </LexNote>
-      </LexArticle>
+        />
 
-      <LexArticle id="send" index="03" title={pick(locale, 'الإرسال', 'Send')} kicker={pick(locale, 'النموذج', 'The form')}>
-        <DeskComposer locale={locale} channel="report" />
-      </LexArticle>
+        <LexHighlightCard
+          icon={Trophy}
+          badge={pick(locale, 'دقة النتائج', 'Data Integrity')}
+          title={pick(locale, 'تصحيح النتائج الرياضية', 'Score Correction SLA')}
+          body={pick(
+            locale,
+            'يتم فحص أخطاء النتائج والتوقيتات وتصحيحها فوراً بمطابقتها مع التغذية الرسمية المعتمدة.',
+            'Discrepancies in live scores or match minute timers are reconciled immediately against official feeds.'
+          )}
+        />
 
-      <LexArticle id="after" index="04" title={pick(locale, 'بعد الإرسال', 'After you send')} kicker={pick(locale, 'ما يحدث', 'What happens')}>
+        <LexHighlightCard
+          icon={ShieldCheck}
+          badge={pick(locale, 'حماية الحقوق', 'Fast Takedown')}
+          title={pick(locale, 'مسار عاجل لحقوق الملكية', 'Urgent DMCA Track')}
+          body={pick(
+            locale,
+            'تُمنح بلاغات حقوق النشر والعلامات التجارية أولوية قصوى للحذف خلال 24-48 ساعة.',
+            'Intellectual property and copyright notices are prioritized for review and takedown within 24-48 hours.'
+          )}
+        />
+
+        <LexHighlightCard
+          icon={Clock}
+          badge={pick(locale, 'شفافية وتتبع', 'Tracking Ref')}
+          title={pick(locale, 'رقم مرجعي لكل بلاغ', 'Unique Case ID')}
+          body={pick(
+            locale,
+            'تحصل على رقم مرجعي رسمي فور الإرسال لتمكينك من متابعة حالة البلاغ عند الحاجة.',
+            'A cryptographic tracking code is generated on submission to monitor resolution progress.'
+          )}
+        />
+      </LexHighlightsGrid>
+
+      {/* ——— Article 1: When to Report ——— */}
+      <LexSection
+        id="when-to-report"
+        index="01"
+        kicker={pick(locale, 'دليل الفئات', 'Category Guide')}
+        title={pick(locale, 'متى تبلّغ وما هي الحالات التي نراجعها؟', 'When to Submit a Report & Covered Categories')}
+      >
         <p>
           {pick(
             locale,
-            'الرسائل الجدية تظهر في صندوق المكتب بلوحة التحكم، ونسخة إلى contact@yallasport.com عندما تكون خدمة البريد مفعّلة. مرجع المكتب الذي يظهر بعد الإرسال هو رقم السجل الحقيقي، لا تذكرة وهمية بمهلة ساعة. إن لزم تصحيح رقم رياضي ننتظر المصدر.',
-            'Genuine notices appear in the dashboard desk inbox, with a copy to contact@yallasport.com when mail is configured. The desk reference after submit is the real record id, not a fake one-hour ticket. If a sports figure must change, we wait for the source.'
+            'نرحب بملاحظات وبلاغات المشجعين والمستخدمين لمساعدتنا في الحفاظ على أعلى معايير الجودة والدقة الرياضية:',
+            'We value community vigilance to ensure Yalla Sport remains the most authentic and enjoyable sports destination:'
           )}
         </p>
-      </LexArticle>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
+          <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+            <Trophy className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-foreground">{pick(locale, 'خطأ في نتيجة أو جدول', 'Score or Table Discrepancy')}</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pick(locale, 'نتيجة غير صحيحة، هداف مفقود، أو بطاقة غير مسجلة.', 'Incorrect scoreline, missing goalscorer, or unrecorded red card.')}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+            <FileText className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-foreground">{pick(locale, 'خبر غير دقيق أو بلا مصدر', 'Inaccurate or Unsourced News')}</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pick(locale, 'خبر رياضي يحتوي على معلومات مضللة أو يفتقر لمصدر معتمد.', 'Misleading transfer rumour or news story lacking official source attribution.')}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-foreground">{pick(locale, 'حقوق نشر أو علامة تجارية', 'Copyright or Trademark Claim')}</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pick(locale, 'مادة مصورة أو محتوى ينتهك حقوق ملكيتك الفكرية.', 'Visual asset, clip, or text infringing on your proprietary rights.')}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl border border-border bg-card/60 flex items-start gap-3">
+            <Flame className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-foreground">{pick(locale, 'تعليق مسيء أو تحريض', 'Abusive Comment or Hate Speech')}</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pick(locale, 'تعليق ينتهك ميثاق الاحترام أو يحتوي على سباب أو عنصرية.', 'Chat message violating civility guidelines or containing toxic hostility.')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </LexSection>
+
+      {/* ——— Article 2: Submission Form ——— */}
+      <LexSection
+        id="submit-form"
+        index="02"
+        kicker={pick(locale, 'النموذج الذكي', 'Direct Desk Form')}
+        title={pick(locale, 'نموذج تقديم البلاغ المباشر', 'Direct Operations Desk Submission Form')}
+      >
+        <p className="mb-4">
+          {pick(
+            locale,
+            'يرجى ملء الحقول أدناه بأكبر قدر ممكن من الوضوح لنتمكن من التدخل السريع:',
+            'Please fill out the fields below with concise detail to enable swift investigation:'
+          )}
+        </p>
+
+        <DeskComposer locale={locale} channel="report" />
+      </LexSection>
+
+      {/* ——— Article 3: Workflow ——— */}
+      <LexSection
+        id="workflow"
+        index="03"
+        kicker={pick(locale, 'دورة المراجعة', 'Investigation Steps')}
+        title={pick(locale, 'ماذا يحدث بعد إرسال البلاغ؟', 'Post-Submission Review & Investigation Workflow')}
+      >
+        <p>
+          {pick(
+            locale,
+            'بمجرد الضغط على إرسال، يمر بلاغك بالخطوات التالية لضمان الحل العادل:',
+            'Upon submission, your case progresses through our standardized quality and legal workflow:'
+          )}
+        </p>
+
+        <LexCheckList
+          items={[
+            pick(locale, 'التسجيل الفوري: يُحفظ البلاغ في قاعدة بيانات المكتب ويُولد له رقم تتبع فريد.', 'Instant Logging: Stored securely in our central desk repository with a distinct reference ID.'),
+            pick(locale, 'المطابقة والتحقق: يقوم محرر أو مهندس مختص بمطابقة الواقعة مع مزودي البيانات وسجلات السيرفر.', 'Verification: Dedicated staff cross-reference the claim with sports providers and server traces.'),
+            pick(locale, 'التصحيح والإشعار: يتم إجراء التصحيح فور ثبوت الخطأ وإرسال تحديث لبريدك إن كنت قد زودتنا به.', 'Remediation & Notification: Immediate correction of data or asset removal, with email updates dispatched if provided.'),
+          ]}
+        />
+      </LexSection>
+
+      {/* ——— Article 4: Channels ——— */}
+      <LexSection
+        id="channels"
+        index="04"
+        kicker={pick(locale, 'قنوات الاتصال المباشرة', 'Direct Channels')}
+        title={pick(locale, 'قنوات المراسلة البديلة والمكتب الإداري', 'Direct Email Support & Alternative Channels')}
+      >
+        <p>
+          {pick(
+            locale,
+            'يمكنك أيضاً مراسلتنا مباشرة عبر البريد الإلكتروني الرسمي المعتمد:',
+            'You may also email our administrative and editorial desk directly:'
+          )}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 mt-3">
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-[var(--lex-accent)] text-white hover:opacity-90 transition-opacity"
+          >
+            <Mail className="w-4 h-4" />
+            <span>{CONTACT_EMAIL}</span>
+          </a>
+        </div>
+      </LexSection>
     </LexChamber>
   );
 }

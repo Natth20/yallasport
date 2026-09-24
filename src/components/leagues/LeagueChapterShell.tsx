@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react';
 import { LeagueChapterNav } from '@/components/leagues/LeagueChapterNav';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { pick } from '@/i18n/pick';
+import './league-house.css';
 
 type Chapter = 'hub' | 'standings' | 'scorers' | 'fixtures' | 'archive';
 

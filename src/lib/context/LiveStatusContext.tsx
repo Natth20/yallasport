@@ -1,7 +1,11 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useLocale } from 'next-intl';
 import type { DataFreshness, LiveMatchesPayload, NormalizedMatch } from '@/lib/sports-data/types';
+import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { useSettings } from './SettingsContext';
 
 type ConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'degraded';
@@ -16,6 +20,7 @@ const LiveStatusContext = createContext<LiveStatusContextValue | undefined>(unde
 
 export function LiveStatusProvider({ children }: { children: React.ReactNode }) {
   const { dataSaver } = useSettings();
+  const locale = useLocale();
   const [connection, setConnection] = useState<ConnectionState>('connecting');
   const [matches, setMatches] = useState<NormalizedMatch[]>([]);
   const [freshness, setFreshness] = useState<DataFreshness | null>(null);
@@ -27,7 +32,9 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
 
     const applyPayload = (payload: LiveMatchesPayload) => {
       if (disposed) return;
-      setMatches(payload.matches.map((match) => ({ ...match, kickoffAt: new Date(match.kickoffAt) })));
+      const next = payload.matches.map((match) => ({ ...match, kickoffAt: new Date(match.kickoffAt) }));
+      walkLocalizeNames(locale, next);
+      setMatches(next);
       setFreshness(payload.freshness);
       const syncedAt = payload.freshness.syncedAt;
       const age = syncedAt ? (Date.now() - new Date(syncedAt).getTime()) / 1000 : Number.POSITIVE_INFINITY;
@@ -35,6 +42,7 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
     };
 
     const poll = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       if (!navigator.onLine) {
         setConnection('offline');
         return;
@@ -43,8 +51,14 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
         const response = await fetch('/api/sports/live', { cache: 'no-store' });
         if (!response.ok) throw new Error('Live endpoint unavailable');
         applyPayload(await response.json());
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/lib/context/LiveStatusContext.tsx:51", error, { persist: false });
         setConnection('degraded');
+        setFreshness((current) =>
+          current
+            ? { ...current, source: current.source === 'LIVE' ? 'CACHE' : current.source }
+            : current,
+        );
       }
     };
 
@@ -53,17 +67,33 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
       void poll();
     };
     const handleOffline = () => setConnection('offline');
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    void poll();
-    if (!dataSaver && 'EventSource' in window) {
+    const attachLiveStream = () => {
+      if (dataSaver || !('EventSource' in window) || eventSource) return;
       eventSource = new EventSource('/api/sports/live/stream');
       eventSource.addEventListener('open', () => setConnection('connected'));
       eventSource.addEventListener('matches', (event) => {
+        if (document.hidden) return;
         applyPayload(JSON.parse((event as MessageEvent).data));
       });
       eventSource.addEventListener('error', () => setConnection(navigator.onLine ? 'reconnecting' : 'offline'));
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        eventSource?.close();
+        eventSource = null;
+        return;
+      }
+      attachLiveStream();
+      void poll();
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    void poll();
+    if (!dataSaver && 'EventSource' in window) {
+      attachLiveStream();
     } else {
       pollTimer = setInterval(poll, dataSaver ? 60000 : 30000);
     }
@@ -74,8 +104,9 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
       if (pollTimer) clearInterval(pollTimer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [dataSaver]);
+  }, [dataSaver, locale]);
 
   const value = useMemo(() => ({ connection, matches, freshness }), [connection, matches, freshness]);
   return <LiveStatusContext.Provider value={value}>{children}</LiveStatusContext.Provider>;

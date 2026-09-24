@@ -3,6 +3,7 @@ import 'server-only';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma';
 import { hostFromUrl, isTrustedNewsHost, TRUSTED_NEWS_HOSTS } from '@/lib/news/trusted-sources';
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 
 function trustedSourceUrlClause(): Prisma.NewsWhereInput {
   return {
@@ -41,14 +42,8 @@ export function publishedNewsWhere(): Prisma.NewsWhereInput {
   };
 }
 
-export function newsVisibleWhere(locale: string): Prisma.NewsWhereInput {
-  return {
-    ...publishedNewsWhere(),
-    OR: [
-      { sourceLocale: locale },
-      { translations: { some: { locale, status: 'APPROVED' } } },
-    ],
-  };
+export function newsVisibleWhere(_locale: string): Prisma.NewsWhereInput {
+  return publishedNewsWhere();
 }
 
 export function isPublicTrustedStory(story: { sourceUrl?: string | null }) {
@@ -72,7 +67,7 @@ export async function overlayNewsTranslation<
   const translation = await prisma.newsTranslation.findUnique({
     where: { newsId_locale: { newsId: record.id, locale } },
   });
-  if (!translation || translation.status !== 'APPROVED') return record;
+  if (!translation || (translation.status !== 'APPROVED' && translation.status !== 'DRAFT')) return record;
 
   return {
     ...record,
@@ -92,10 +87,14 @@ export async function overlayNewsList<
     where: {
       newsId: { in: records.map((item) => item.id) },
       locale,
-      status: 'APPROVED',
+      status: { in: ['APPROVED', 'DRAFT'] },
     },
   });
-  const byNews = new Map(translations.map((item) => [item.newsId, item]));
+  const byNews = new Map<string, (typeof translations)[number]>();
+  for (const item of translations) {
+    const current = byNews.get(item.newsId);
+    if (!current || item.status === 'APPROVED') byNews.set(item.newsId, item);
+  }
   return records.map((record) => {
     if ((record.sourceLocale || 'ar') === locale) return record;
     const translation = byNews.get(record.id);
@@ -127,7 +126,59 @@ export async function localizeEntityMap(
   const approved = new Map(rows.map((row) => [`${row.entityType}:${row.entityId}`, row.name]));
   for (const entity of entities) {
     const key = `${entity.entityType}:${entity.entityId}`;
-    map.set(key, approved.get(key) || entity.fallback);
+    map.set(key, approved.get(key) || localizePlainName(locale, entity.fallback));
   }
   return map;
+}
+
+type NamedTeam = { id: string; name: string };
+type NamedLeague = { id: string; name: string; country?: string | null };
+type NamedMatch = {
+  homeTeam: NamedTeam;
+  awayTeam: NamedTeam;
+  league: NamedLeague;
+  venue?: string;
+  events?: Array<{ player?: string; assistPlayer?: string; playerId?: string }>;
+  lineups?: Array<{
+    players?: Array<{ id: string; name: string }>;
+    bench?: Array<{ id: string; name: string }>;
+    coach?: { id?: string; name: string };
+  }>;
+  referee?: { name: string };
+  venueDetail?: { name: string; city?: string };
+  channels?: Array<{ name: string }>;
+};
+
+export async function paintNormalizedMatches(locale: string, matches: NamedMatch[]) {
+  const entities = matches.flatMap((match) => [
+    { entityType: 'TEAM', entityId: match.homeTeam.id, fallback: match.homeTeam.name },
+    { entityType: 'TEAM', entityId: match.awayTeam.id, fallback: match.awayTeam.name },
+    { entityType: 'LEAGUE', entityId: match.league.id, fallback: match.league.name },
+  ]);
+  const map = await localizeEntityMap(entities, locale);
+  for (const match of matches) {
+    match.homeTeam.name = map.get(`TEAM:${match.homeTeam.id}`) || match.homeTeam.name;
+    match.awayTeam.name = map.get(`TEAM:${match.awayTeam.id}`) || match.awayTeam.name;
+    match.league.name = map.get(`LEAGUE:${match.league.id}`) || match.league.name;
+    if (match.league.country) match.league.country = localizePlainName(locale, match.league.country);
+    if (match.venue) match.venue = localizePlainName(locale, match.venue);
+    if (match.referee) match.referee.name = localizePlainName(locale, match.referee.name);
+    if (match.venueDetail) {
+      match.venueDetail.name = localizePlainName(locale, match.venueDetail.name);
+      if (match.venueDetail.city) match.venueDetail.city = localizePlainName(locale, match.venueDetail.city);
+    }
+    for (const channel of match.channels || []) {
+      channel.name = localizePlainName(locale, channel.name);
+    }
+    for (const event of match.events || []) {
+      if (event.player) event.player = localizePlainName(locale, event.player);
+      if (event.assistPlayer) event.assistPlayer = localizePlainName(locale, event.assistPlayer);
+    }
+    for (const lineup of match.lineups || []) {
+      for (const player of [...(lineup.players || []), ...(lineup.bench || [])]) {
+        player.name = localizePlainName(locale, player.name);
+      }
+      if (lineup.coach) lineup.coach.name = localizePlainName(locale, lineup.coach.name);
+    }
+  }
 }

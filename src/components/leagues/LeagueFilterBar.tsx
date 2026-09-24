@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import {Link} from '@/i18n/navigation';
 import {useTranslations} from 'next-intl';
@@ -75,7 +75,7 @@ export function LeagueFilterBar({
                 active
                   ? live
                     ? 'bg-rose-600 text-white'
-                    : 'bg-background text-white dark:bg-card dark:text-foreground'
+                    : 'bg-foreground text-background'
                   : live
                     ? 'text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground'
@@ -83,7 +83,7 @@ export function LeagueFilterBar({
             >
               {live ? <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> : null}
               {t(filter.label)}
-              <span className={`tabular-nums ${active ? 'text-white/70' : live ? 'text-rose-400' : 'text-muted-foreground'}`}>
+              <span className={`tabular-nums ${active ? 'opacity-70' : live ? 'text-rose-400' : 'text-muted-foreground'}`}>
                 {counts[filter.value]}
               </span>
             </Link>

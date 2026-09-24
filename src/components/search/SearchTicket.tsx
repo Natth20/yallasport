@@ -1,4 +1,6 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -49,7 +51,8 @@ export function SearchTicket({
         );
         const data = await res.json();
         setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/components/search/SearchTicket.tsx:52", error, { persist: false });
         setSuggestions([]);
       } finally {
         setIsLoading(false);

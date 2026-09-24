@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://yalla-sport.com').replace(/\/$/, '');
 export const SITE_NAME = 'Yalla Sport';
 export const SITE_NAME_AR = 'يلا سبورت';
-export const LOGO_PATH = '/images/logo.jpg';
+export const LOGO_PATH = '/images/logo.png';
 export const THEME_COLOR = '#f97316';
 export const CONTACT_EMAIL = 'contact@yallasport.com';
 

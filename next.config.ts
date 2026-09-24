@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { STREAMING_ENABLED } from "./src/lib/streaming/flag";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -10,6 +11,7 @@ const contentSecurityPolicy = [
   "connect-src 'self' https: wss: ws: http://localhost:* http://127.0.0.1:*",
   "media-src 'self' blob: https:",
   "worker-src 'self' blob:",
+  "frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -46,6 +48,22 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+    ];
+  },
+  async redirects() {
+    const toLive = [
+      { source: "/:locale(ar|en)/tv-guide", destination: "/:locale/live", permanent: false },
+      { source: "/:locale(ar|en)/tv-guide/:path*", destination: "/:locale/live", permanent: false },
+      { source: "/:locale(ar|en)/video", destination: "/:locale/videos", permanent: false },
+      { source: "/:locale(ar|en)/video/:path*", destination: "/:locale/videos", permanent: false },
+    ];
+    if (STREAMING_ENABLED) return toLive;
+    return [
+      ...toLive,
+      { source: "/:locale(ar|en)/watch", destination: "/:locale/live", permanent: false },
+      { source: "/:locale(ar|en)/watch/:path*", destination: "/:locale/live", permanent: false },
+      { source: "/:locale(ar|en)/vod", destination: "/:locale/live", permanent: false },
+      { source: "/:locale(ar|en)/vod/:path*", destination: "/:locale/live", permanent: false },
     ];
   },
 };

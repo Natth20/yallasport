@@ -4,7 +4,8 @@ import type { StreamingProvider } from './interface';
 import { LicensedStreamingProvider } from './providers/licensed-provider';
 import { UnconfiguredStreamingProvider } from './providers/unconfigured-provider';
 
-export const STREAMING_ENABLED = process.env.STREAMING_ENABLED === 'true';
+export { STREAMING_ENABLED } from './flag';
+import { STREAMING_ENABLED } from './flag';
 
 export function getStreamingProvider(): StreamingProvider {
   const key = (process.env.STREAMING_PROVIDER || 'unconfigured').trim().toLowerCase();

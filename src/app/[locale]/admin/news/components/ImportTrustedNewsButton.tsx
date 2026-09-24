@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,7 +22,7 @@ export function ImportTrustedNewsButton() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ allTrusted: true }),
       });
-      const payload = await response.json().catch(() => ({}));
+      const payload = await response.json().catch(swallow("src/app/[locale]/admin/news/components/ImportTrustedNewsButton.tsx:24", ({}), { persist: false }));
       if (!response.ok) {
         setMessage(
           typeof payload.error === 'string'
@@ -36,7 +37,8 @@ export function ImportTrustedNewsButton() {
           : pick(locale, 'تم الاستيراد للمراجعة.', 'Imported for review.')
       );
       router.refresh();
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/app/[locale]/admin/news/components/ImportTrustedNewsButton.tsx:40", error, { persist: false });
       setMessage(pick(locale, 'تعذر الاتصال بالخادم.', 'Could not reach the server.'));
     } finally {
       setBusy(false);

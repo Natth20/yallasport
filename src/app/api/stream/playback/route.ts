@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
@@ -15,7 +16,7 @@ export const POST = auth(async function POST(req) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/stream/playback/route.ts:18", null, { persist: false }));
   const assetId = typeof body?.assetId === 'string' ? body.assetId : '';
   if (!assetId) {
     return NextResponse.json({ error: 'invalid_asset' }, { status: 400 });
@@ -64,7 +65,7 @@ export const POST = auth(async function POST(req) {
       entityType: 'StreamAsset',
       entityId: asset.id
     }
-  }).catch(() => undefined);
+  }).catch(swallow("src/app/api/stream/playback/route.ts:67", undefined));
 
   return NextResponse.json({
     token: createPlaybackToken({ assetId: asset.id, userId, country }),

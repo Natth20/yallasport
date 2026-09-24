@@ -1,9 +1,7 @@
 /**
  * Fills the news desk with real content from the trusted feeds.
  *
- * Pulls every allowlisted feed, files each story under a real desk, publishes
- * what came from a trusted host, backfills the missing og:images, and links
- * stories to the teams / leagues / matches already in the database.
+ * Pulls every allowlisted feed into PENDING_REVIEW. Never auto-publishes.
  *
  * The Supabase session pooler caps the project at 15 clients and the dev server
  * already holds five, so run this with the pool capped to a single connection:
@@ -16,7 +14,6 @@ import { importFromRSS } from '../src/lib/news/rss-service';
 import { TRUSTED_RSS_FEEDS, isTrustedNewsUrl } from '../src/lib/news/trusted-sources';
 import { classifyDesk, competitionTags } from '../src/lib/news/desks';
 import { fetchTrustedSourceImage, resolveNewsImage } from '../src/lib/news/enrich-source';
-import { resolveFullArticleBody, wordCount } from '../src/lib/news/fetch-article';
 import { suggestNewsEntities } from '../src/lib/news/entity-suggest';
 
 function log(step: string, detail: string) {
@@ -79,74 +76,29 @@ async function step2_reclassify() {
   log('reclassify', `${moved} stories refiled`);
 }
 
-/** Everything we imported came from an allowlisted outlet, so it can go live. */
-async function step3_publish() {
-  const desk = await retry('desk user', () =>
-    prisma.user.findUnique({ where: { email: 'system@yallasport.com' } })
-  );
+/** Never auto-publish. Archive rows that slipped in from an untrusted URL. */
+async function step3_gate() {
   const pending = await retry('pending read', () =>
     prisma.news.findMany({
       where: { status: 'PENDING_REVIEW' },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        sourceUrl: true,
-        featuredImage: true,
-        ogImage: true,
-        publishedAt: true,
-      },
+      select: { id: true, sourceUrl: true },
     })
   );
 
-  let published = 0;
   let rejected = 0;
   for (const row of pending) {
-    if (!isTrustedNewsUrl(row.sourceUrl)) {
-      await retry('archive', () => prisma.news.update({ where: { id: row.id }, data: { status: 'ARCHIVED' } }));
-      rejected += 1;
-      continue;
-    }
-
-    let content = row.content;
-    let image = row.featuredImage || row.ogImage;
-
-    if (wordCount(content) < 120) {
-      const fuller = await resolveFullArticleBody({ content, sourceUrl: row.sourceUrl });
-      if (fuller.enriched) content = fuller.html;
-      if (!image && fuller.image) image = fuller.image;
-    }
-    if (!image) image = await resolveNewsImage({ content, sourceUrl: row.sourceUrl });
-
-    const plain = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    await retry('publish', () =>
-      prisma.news.update({
-        where: { id: row.id },
-        data: {
-          content,
-          featuredImage: image,
-          ogImage: image,
-          excerpt: plain.slice(0, 220) || null,
-          readingTime: Math.max(1, Math.ceil(plain.split(/\s+/).length / 200)),
-          status: 'PUBLISHED',
-          // The importer already stamped the outlet's own date; only fall back
-          // to now for rows that predate that.
-          publishedAt: row.publishedAt ?? new Date(),
-          editorId: desk?.id ?? undefined,
-        },
-      })
-    );
-    published += 1;
-    if (published % 20 === 0) log('publish', `${published}/${pending.length}`);
+    if (isTrustedNewsUrl(row.sourceUrl)) continue;
+    await retry('archive', () => prisma.news.update({ where: { id: row.id }, data: { status: 'ARCHIVED' } }));
+    rejected += 1;
   }
-  log('publish', `${published} published, ${rejected} archived as untrusted`);
+  log('gate', `${pending.length} pending review, ${rejected} archived as untrusted, 0 auto-published`);
 }
 
 /** The original 13 rows arrived before image enrichment existed. */
 async function step4_images() {
   const missing = await retry('image read', () =>
     prisma.news.findMany({
-      where: { status: 'PUBLISHED', featuredImage: null, ogImage: null, sourceUrl: { not: null } },
+      where: { status: { in: ['PUBLISHED', 'PENDING_REVIEW'] }, featuredImage: null, ogImage: null, sourceUrl: { not: null } },
       select: { id: true, sourceUrl: true, content: true },
     })
   );
@@ -188,7 +140,10 @@ async function step5_link() {
 /** Suggested links are invisible to the public page until confirmed. */
 async function step6_confirm() {
   const { count } = await retry('confirm', () =>
-    prisma.newsEntityLink.updateMany({ where: { confirmed: false }, data: { confirmed: true } })
+    prisma.newsEntityLink.updateMany({
+      where: { confirmed: false, news: { status: 'PUBLISHED' } },
+      data: { confirmed: true },
+    })
   );
   log('confirm', `${count} entity links confirmed`);
 }
@@ -196,7 +151,7 @@ async function step6_confirm() {
 async function main() {
   await step1_import();
   await step2_reclassify();
-  await step3_publish();
+  await step3_gate();
   await step4_images();
   await step5_link();
   await step6_confirm();

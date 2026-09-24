@@ -1,4 +1,4 @@
-﻿import { Link } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { CalendarDays, History, ListOrdered, Target, Trophy } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 

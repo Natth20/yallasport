@@ -1,9 +1,9 @@
-﻿// src/components/layout/PWAInstallPrompt.tsx
+// src/components/layout/PWAInstallPrompt.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export const PWAInstallPrompt = () => {
   const t = useTranslations('ui');
@@ -41,14 +41,14 @@ export const PWAInstallPrompt = () => {
     <div className="fixed bottom-24 left-6 right-6 z-[95] md:hidden">
       <div className="bg-secondary text-white p-6 rounded-[2.5rem] shadow-2xl border border-white/10 backdrop-blur-xl flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <img src="/images/logo.jpg" alt="Yalla Sport" className="h-12 w-12 object-contain" style={{ width: 'auto', height: 'auto' }} />
+          <img src="/images/logo.png" alt="Yalla Sport" className="h-12 w-12 object-contain" />
           <div>
             <h4 className="font-black text-sm">{t('install_title')}</h4>
             <p className="text-[10px] text-white/60 font-bold">{t('install_text')}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleInstall}
             className="bg-orange-500 hover:bg-orange-600 text-primary-foreground text-[10px] font-black px-6 py-2.5 rounded-xl transition-all shadow-lg"
           >

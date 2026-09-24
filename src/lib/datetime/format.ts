@@ -1,10 +1,13 @@
+import { reportCaughtError } from '@/lib/ops/caught';
+/** Stored instants are UTC (Prisma DateTime). Display uses this IANA zone. Riyadh has no DST. */
 export const DEFAULT_TIMEZONE = 'Asia/Riyadh';
 
 export function isValidTimezone(timezone: string) {
   try {
     new Intl.DateTimeFormat('en', { timeZone: timezone }).format();
     return true;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/datetime/format.ts:7", error, { persist: false });
     return false;
   }
 }
@@ -21,6 +24,9 @@ export function formatKickoff(
 ) {
   return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-GB', {
     timeZone: normalizeTimezone(timezone),
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',

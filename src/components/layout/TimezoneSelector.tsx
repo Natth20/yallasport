@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Clock3 } from 'lucide-react';
 import { useSettings } from '@/lib/context/SettingsContext';

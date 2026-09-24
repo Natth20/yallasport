@@ -1,9 +1,30 @@
 'use client';
 
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { CONTACT_KINDS } from '@/lib/desk/kinds';
 import { useLocale, useTranslations } from 'next-intl';
 import { FormEvent, useState } from 'react';
+import {
+  Send,
+  CheckCircle,
+  Link as LinkIcon,
+  Copy,
+  AlertCircle,
+  HelpCircle,
+  ShieldCheck,
+  Scale,
+  Sparkles,
+  MessageSquare,
+} from 'lucide-react';
+
+const KIND_ICONS: Record<string, any> = {
+  enquiry: HelpCircle,
+  privacy: ShieldCheck,
+  rights: Scale,
+  press: Sparkles,
+  other: MessageSquare,
+};
 
 const KIND_KEYS = {
   enquiry: 'kind_enquiry',
@@ -16,6 +37,7 @@ const KIND_KEYS = {
 export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) {
   const t = useTranslations('post');
   const locale = useLocale();
+  const isAr = locale === 'ar';
   const [kind, setKind] = useState<string>(CONTACT_KINDS[0].id);
   const [url, setUrl] = useState('');
   const [details, setDetails] = useState('');
@@ -24,12 +46,28 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<null | { emailed: boolean; mail: string; deskId: string }>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copiedRef, setCopiedRef] = useState(false);
+
+  const fillCurrentUrl = () => {
+    if (typeof window !== 'undefined') {
+      setUrl(window.location.href);
+    }
+  };
+
+  const copyDeskId = (id: string) => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(id);
+      setCopiedRef(true);
+      setTimeout(() => setCopiedRef(false), 2500);
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
     setError(null);
     setResult(null);
+
     try {
       const res = await fetch('/api/desk/messages', {
         method: 'POST',
@@ -44,18 +82,21 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
           company,
         }),
       });
-      const data = await res.json().catch(() => null);
+
+      const data = await res.json().catch(swallow('src/components/contact/ContactLetter.tsx:47', null, { persist: false }));
       if (!res.ok || !data?.ok) {
         setError(res.status === 429 ? t('err_rate') : t('err_save'));
         return;
       }
+
       setResult({
         emailed: Boolean(data.emailed),
         mail: String(data.mail || ''),
         deskId: String(data.deskId || ''),
       });
       setDetails('');
-    } catch {
+    } catch (err) {
+      reportCaughtError('src/components/contact/ContactLetter.tsx:59', err, { persist: false });
       setError(t('err_net'));
     } finally {
       setBusy(false);
@@ -64,20 +105,15 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
 
   if (result) {
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card/50 to-card/20 p-6 sm:p-8 backdrop-blur-xl shadow-2xl text-start">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">{t('receipt_kicker')}</p>
-            <h3 className="text-lg sm:text-xl font-black text-white">{t('receipt_title')}</h3>
-          </div>
+      <div className="contact-receipt">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mb-4">
+          <CheckCircle className="w-8 h-8" />
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">{t('receipt_kicker')}</p>
+        <h3 className="text-xl sm:text-2xl font-black text-foreground mb-3">{t('receipt_title')}</h3>
+
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mb-6">
           {result.emailed
             ? t('receipt_mailed', { mail: CONTACT_EMAIL })
             : result.mail === 'not_configured'
@@ -86,16 +122,30 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
         </p>
 
         {result.deskId && (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-4">
-            <span className="text-xs text-muted-foreground">{t('receipt_ref')}</span>
-            <span className="font-mono text-xs font-bold text-primary">{result.deskId}</span>
+          <div className="flex flex-col items-center gap-2 mb-6">
+            <span className="text-xs text-muted-foreground uppercase font-semibold">
+              {t('receipt_ref')}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-sm font-bold text-primary bg-background/80 px-3.5 py-1.5 rounded-xl border border-border">
+                {result.deskId}
+              </span>
+              <button
+                type="button"
+                onClick={() => copyDeskId(result.deskId)}
+                className="p-2 rounded-xl border border-border bg-card hover:bg-accent text-foreground text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>{copiedRef ? (isAr ? 'تم النسخ' : 'Copied') : (isAr ? 'نسخ' : 'Copy')}</span>
+              </button>
+            </div>
           </div>
         )}
 
         <button
           type="button"
           onClick={() => setResult(null)}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white transition hover:bg-white/20"
+          className="px-6 py-2.5 rounded-xl font-bold text-xs bg-secondary hover:bg-secondary/80 text-foreground transition-all cursor-pointer border border-border"
         >
           {locale === 'en' ? 'Send another message' : 'إرسال رسالة أخرى'}
         </button>
@@ -105,61 +155,70 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Honeypot */}
       <div className="hidden" aria-hidden="true">
         <input tabIndex={-1} autoComplete="off" value={company} onChange={(event) => setCompany(event.target.value)} />
       </div>
 
-      {/* Topic selection radio pills */}
-      <fieldset className="space-y-2.5">
-        <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+      {/* Topic Selection Grid */}
+      <div className="space-y-2.5">
+        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
           {t('stamps_legend')}
-        </legend>
-        <div className="flex flex-wrap gap-2">
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {CONTACT_KINDS.map((item) => {
             const checked = kind === item.id;
+            const Icon = KIND_ICONS[item.id] || MessageSquare;
             return (
-              <label
+              <div
                 key={item.id}
-                className={`relative flex cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
+                onClick={() => setKind(item.id)}
+                className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
                   checked
-                    ? 'border-primary bg-primary/20 text-white shadow-sm shadow-primary/20'
-                    : 'border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/20 hover:text-white'
+                    ? 'border-primary bg-primary/15 text-foreground shadow-sm shadow-primary/20'
+                    : 'border-border bg-card/60 text-muted-foreground hover:border-primary/40 hover:text-foreground'
                 }`}
               >
-                <input
-                  type="radio"
-                  name="kind"
-                  value={item.id}
-                  checked={checked}
-                  onChange={() => setKind(item.id)}
-                  className="sr-only"
-                />
-                <span className={`h-2 w-2 rounded-full ${checked ? 'bg-primary animate-pulse' : 'bg-white/20'}`} />
-                <span>{t(KIND_KEYS[item.id as keyof typeof KIND_KEYS])}</span>
-              </label>
+                <div className={`p-1.5 rounded-lg ${checked ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold truncate">
+                  {t(KIND_KEYS[item.id as keyof typeof KIND_KEYS])}
+                </span>
+              </div>
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
-      {/* URL & Reply Email */}
+      {/* URL & Reply Email Grid */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block space-y-1.5">
-          <span className="text-xs font-semibold text-muted-foreground">{t('field_url')}</span>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-foreground">{t('field_url')}</span>
+            <button
+              type="button"
+              onClick={fillCurrentUrl}
+              className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <LinkIcon className="w-3 h-3" />
+              <span>{isAr ? 'الصفحة الحالية' : 'Current'}</span>
+            </button>
+          </div>
           <input
             type="text"
             dir="ltr"
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://yalla-sport.com/ar/..."
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs text-white placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="contact-input font-mono text-xs"
           />
-        </label>
+        </div>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-semibold text-muted-foreground">{t('field_reply')}</span>
+        <div className="space-y-1.5">
+          <span className="text-xs font-bold text-foreground block">{t('field_reply')}</span>
           <input
-            type="text"
+            type="email"
             inputMode="email"
             autoComplete="email"
             spellCheck={false}
@@ -167,15 +226,20 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
             value={replyEmail}
             onChange={(event) => setReplyEmail(event.target.value)}
             placeholder="name@example.com"
-            className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-xs text-white placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="contact-input text-xs"
             suppressHydrationWarning
           />
-        </label>
+        </div>
       </div>
 
       {/* Message Body */}
-      <label className="block space-y-1.5">
-        <span className="text-xs font-semibold text-muted-foreground">{t('field_body')}</span>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-foreground">{t('field_body')}</span>
+          <span className="text-[11px] text-muted-foreground">
+            {details.length} / 4000 {isAr ? 'حرف' : 'chars'}
+          </span>
+        </div>
         <textarea
           required
           minLength={12}
@@ -184,43 +248,36 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
           value={details}
           onChange={(event) => setDetails(event.target.value)}
           placeholder={t('field_body_ph')}
-          className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3.5 text-xs text-white placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
+          className="contact-input text-xs leading-relaxed resize-y"
         />
-      </label>
+      </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400">
-          {error}
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-400 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Submit button & SLA note */}
+      {/* Submit Button & SLA note */}
       <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
         <button
           type="submit"
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50"
+          disabled={busy || details.trim().length < 12}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
         >
           {busy ? (
-            <>
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="10" strokeWidth="4" strokeDasharray="32" strokeDashoffset="12" />
-              </svg>
-              <span>{t('sending')}</span>
-            </>
+            <span>{t('sending')}</span>
           ) : (
             <>
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
+              <Send className="w-3.5 h-3.5" />
               <span>{t('send')}</span>
             </>
           )}
         </button>
 
         <p className="text-[11px] text-muted-foreground">
-          {t('copy_to')} <span className="text-white font-mono">{CONTACT_EMAIL}</span>
+          {t('copy_to')} <span className="text-foreground font-mono font-semibold">{CONTACT_EMAIL}</span>
         </p>
       </div>
     </form>

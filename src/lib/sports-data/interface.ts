@@ -1,8 +1,8 @@
 // src/lib/sports-data/interface.ts
-import { 
-  NormalizedMatch, 
-  NormalizedMatchDetail, 
-  NormalizedTeam, 
+import {
+  NormalizedMatch,
+  NormalizedMatchDetail,
+  NormalizedTeam,
   NormalizedStanding,
   NormalizedLeagueSeason,
   NormalizedScorer,
@@ -17,4 +17,6 @@ export interface SportsDataProvider {
   getH2H(team1Id: string, team2Id: string): Promise<NormalizedMatch[]>;
   getMatchesByDate(date: string): Promise<NormalizedMatch[]>;
   getLeagueArchive(leagueId: string): Promise<NormalizedLeagueSeason[]>;
+  /** Provider JSON only — never call the vendor URL from a page or the browser. */
+  getRaw<T = unknown>(path: string): Promise<T | null>;
 }

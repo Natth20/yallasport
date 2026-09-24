@@ -1,4 +1,4 @@
-﻿import { Inbox } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { getLocale } from 'next-intl/server';

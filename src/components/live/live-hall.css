@@ -1,0 +1,107 @@
+/* ══════════════════════════════════════════════════════════════════════
+   YALLA SPORT — LIVE HALL
+   Ultra-Minimalist Luxury Design
+   ══════════════════════════════════════════════════════════════════════ */
+
+.live-hall {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+/* Very subtle red ambient glow for live */
+.live-hall::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1200px;
+  height: 50vh;
+  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--ys-red, #ef4444) 8%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.lh-card {
+  position: relative;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+  overflow: hidden;
+}
+
+html.dark .lh-card {
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
+}
+
+.lh-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--ys-red, #ef4444) 30%, var(--border));
+}
+
+.lh-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lh-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-red, #ef4444) 15%, transparent);
+  color: var(--ys-red, #ef4444);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.lh-live-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: lh-pulse 2s infinite;
+}
+
+@keyframes lh-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.lh-card-body {
+  padding: 1.5rem;
+}
+
+.lh-score {
+  font-size: 3rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--foreground);
+}
+
+.lh-meter {
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.lh-meter-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: inherit;
+}

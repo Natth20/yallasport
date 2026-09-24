@@ -8,9 +8,9 @@ const YOUTH_OR_REGIONAL =
   /\bu1[89]\b|\bu2[0-3]\b|youth|reserves|girone|paulista|federal a|liga revela|premier league cup|copa santa|torneo federal/i;
 
 export function leagueTier(league: WeightedLeague): number {
-  const country = (league.country || '').toLowerCase();
-  const name = league.name.toLowerCase();
-  const slug = (league.slug || '').toLowerCase();
+  const country = String(league.country || '').toLowerCase();
+  const name = String(league.name ?? '').toLowerCase();
+  const slug = String(league.slug || '').toLowerCase();
   const blob = `${name} ${slug} ${country}`;
 
   if (YOUTH_OR_REGIONAL.test(blob)) return 0;
@@ -19,13 +19,13 @@ export function leagueTier(league: WeightedLeague): number {
     return 6;
   }
 
-  if (/الدوري الإسباني/.test(league.name) || ((country === 'spain' || country === '') && /^(la liga|laliga)$/.test(name))) {
+  if (/الليغا|الدوري الإسباني/.test(league.name) || ((country === 'spain' || country === '') && /^(la liga|laliga)$/.test(name))) {
     return 5;
   }
 
   const topDomestic =
     (country === 'england' && name === 'premier league') ||
-    (country === 'spain' && (/la liga|laliga|primera|الدوري الإسباني/.test(name))) ||
+    (country === 'spain' && (/la liga|laliga|primera|الليغا|الدوري الإسباني/.test(name))) ||
     (country === 'italy' && name === 'serie a') ||
     (country === 'germany' && /bundesliga/.test(name) && !/2\.|ii|3\./.test(name)) ||
     (country === 'france' && name === 'ligue 1') ||

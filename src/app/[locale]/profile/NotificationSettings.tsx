@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Bell, Goal, PlayCircle, StopCircle, Zap } from 'lucide-react';

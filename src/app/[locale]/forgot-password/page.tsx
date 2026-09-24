@@ -1,4 +1,6 @@
-﻿import { getLocale, getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { Link } from '@/i18n/navigation';
 import { AuthGate } from '@/components/auth/AuthGate';
 import type { Metadata } from 'next';
@@ -16,7 +18,15 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function ForgotPasswordPage() {
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <ForgotPasswordPageBody />
+    </Suspense>
+  );
+}
+
+async function ForgotPasswordPageBody() {
   const t = await getTranslations('auth');
   return (
     <AuthGate

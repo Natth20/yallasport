@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { getLocale } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { pick } from '@/i18n/pick';
 import { ReportDesk } from '@/components/legal/ReportDesk';
 import type { Metadata } from 'next';
@@ -18,7 +20,15 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function ReportPage() {
+export default function ReportPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <ReportPageBody />
+    </Suspense>
+  );
+}
+
+async function ReportPageBody() {
   const locale = await getLocale();
   return <ReportDesk locale={locale} />;
 }

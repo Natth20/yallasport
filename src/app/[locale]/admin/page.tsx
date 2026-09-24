@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {Link} from '@/i18n/navigation';
 import { prisma } from '@/lib/prisma';
 import { ClientTime } from '@/components/datetime/ClientTime';

@@ -1,0 +1,158 @@
+.entity-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: calc(100dvh - 4.65rem);
+}
+
+.entity-aura,
+.entity-grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.entity-grain {
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+.entity-player .entity-aura {
+  background:
+    radial-gradient(ellipse 50% 40% at 12% 8%, rgba(249, 115, 22, 0.22), transparent 58%),
+    radial-gradient(ellipse 40% 30% at 90% 20%, rgba(20, 83, 45, 0.12), transparent 55%);
+}
+
+.entity-club .entity-aura {
+  background:
+    radial-gradient(ellipse 55% 42% at 88% 0%, rgba(20, 83, 45, 0.28), transparent 56%),
+    radial-gradient(ellipse 40% 35% at 10% 30%, rgba(249, 115, 22, 0.12), transparent 58%);
+}
+
+.entity-nation .entity-aura {
+  background:
+    linear-gradient(90deg, rgba(20, 83, 45, 0.35), transparent 42%),
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(249, 115, 22, 0.16), transparent 55%);
+}
+
+.entity-coach .entity-aura {
+  background:
+    radial-gradient(ellipse 48% 38% at 80% 8%, rgba(194, 106, 58, 0.22), transparent 58%),
+    radial-gradient(ellipse 35% 30% at 8% 70%, rgba(249, 115, 22, 0.1), transparent 55%);
+}
+
+.entity-match .entity-aura {
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(249, 115, 22, 0.18), transparent 55%);
+}
+
+.entity-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.entity-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+}
+
+.entity-brand span {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.entity-player .psheet-photo {
+  border-radius: 1.6rem;
+  box-shadow: 0 24px 50px color-mix(in srgb, var(--ys-ink) 18%, transparent);
+}
+
+.entity-player .psheet-photo img,
+.entity-player .psheet-photo span {
+  border-radius: 1.6rem;
+}
+
+.entity-coach .psheet-photo {
+  border-radius: 0.85rem;
+  outline: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+  outline-offset: 6px;
+}
+
+.entity-coach .psheet-photo img,
+.entity-coach .psheet-photo span {
+  border-radius: 0.85rem;
+  filter: grayscale(0.15) contrast(1.05);
+}
+
+.entity-club .tsheet-medallion,
+.entity-nation .tsheet-medallion {
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--ys-ink) 16%, transparent);
+}
+
+.entity-nation .psheet-hero {
+  border-inline-start: 4px solid var(--secondary);
+  padding-inline-start: 1.1rem;
+}
+
+.entity-coach .psheet-list li {
+  position: relative;
+  padding-inline-start: 1rem;
+}
+
+.entity-coach .psheet-list li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: 2px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+.entity-coach .bench-wire {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.entity-coach .bench-wire a,
+.entity-coach .bench-wire > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.22s ease, border-color 0.2s ease;
+}
+
+.entity-coach .bench-wire a:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+
+.entity-match .match-edition-bar {
+  align-items: center;
+}
+
+.entity-player .psheet-bars b,
+.entity-club .psheet-bars b {
+  animation: ys-bar-grow 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: inline-start center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entity-player .psheet-bars b,
+  .entity-club .psheet-bars b {
+    animation: none;
+  }
+}

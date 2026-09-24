@@ -1,4 +1,5 @@
 'use client';
+import { reportCaughtError, swallow } from '@/lib/ops/caught';
 
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
@@ -78,22 +79,25 @@ export function LicensedPlayer({
             hls.loadSource(manifestUrl);
             hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
-              video.play().catch(() => {
+              video.play().catch((error) => {
+                reportCaughtError('licensed-player:autoplay', error, { persist: false });
                 video.muted = true;
-                video.play().catch(() => null);
+                video.play().catch((retryError) => {
+                  reportCaughtError('licensed-player:muted-autoplay', retryError, { persist: false });
+                });
               });
             });
             hls.on(Hls.Events.ERROR, (_, data) => {
               if (data.fatal) {
                 hls.destroy();
                 video.src = manifestUrl;
-                video.play().catch(() => null);
+                video.play().catch(swallow("src/components/streaming/LicensedPlayer.tsx:90", null, { persist: false }));
               }
             });
             return;
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = manifestUrl;
-            video.play().catch(() => null);
+            video.play().catch(swallow("src/components/streaming/LicensedPlayer.tsx:96", null, { persist: false }));
             return;
           }
         }
@@ -152,16 +156,16 @@ export function LicensedPlayer({
         // Native Safari/HLS fallback
         if (video.canPlayType('application/vnd.apple.mpegurl') || manifestUrl.includes('.m3u8')) {
           video.src = manifestUrl;
-          video.play().catch(() => null);
+          video.play().catch(swallow("src/components/streaming/LicensedPlayer.tsx:155", null, { persist: false }));
           return;
         }
 
         if (!destroyed) setError(t('unsupported'));
-      } catch {
-        // Direct native video fallback on error
+      } catch (error) {
+        reportCaughtError('licensed-player:start', error, { persist: false });
         if (video) {
           video.src = manifestUrl;
-          video.play().catch(() => null);
+          video.play().catch(swallow("src/components/streaming/LicensedPlayer.tsx:164", null, { persist: false }));
         }
       }
     };

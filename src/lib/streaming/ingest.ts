@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import 'server-only';
 
 import { prisma } from '@/lib/prisma';
@@ -108,21 +109,21 @@ export async function ingestLicensedCatalog(
     });
     const channel = existing
       ? await prisma.channel.update({
-          where: { id: existing.id },
-          data: {
-            logoUrl: row.logoUrl ?? undefined,
-            country: row.country ?? undefined,
-            kind: asChannelKind(row.kind),
-          },
-        })
+        where: { id: existing.id },
+        data: {
+          logoUrl: row.logoUrl ?? undefined,
+          country: row.country ?? undefined,
+          kind: asChannelKind(row.kind),
+        },
+      })
       : await prisma.channel.create({
-          data: {
-            name: row.name,
-            logoUrl: row.logoUrl ?? null,
-            country: row.country ?? null,
-            kind: asChannelKind(row.kind),
-          },
-        });
+        data: {
+          name: row.name,
+          logoUrl: row.logoUrl ?? null,
+          country: row.country ?? null,
+          kind: asChannelKind(row.kind),
+        },
+      });
     channelByExternal.set(row.externalId, channel.id);
   }
 
@@ -164,27 +165,27 @@ export async function ingestLicensedCatalog(
       });
       const episode = found
         ? await prisma.episode.update({
-            where: { id: found.id },
-            data: {
-              title: ep.title ?? undefined,
-              description: ep.description ?? undefined,
-              duration: ep.duration ?? undefined,
-              isFree: ep.isFree ?? true,
-              streamUrl: null,
-            },
-          })
+          where: { id: found.id },
+          data: {
+            title: ep.title ?? undefined,
+            description: ep.description ?? undefined,
+            duration: ep.duration ?? undefined,
+            isFree: ep.isFree ?? true,
+            streamUrl: null,
+          },
+        })
         : await prisma.episode.create({
-            data: {
-              showId: show.id,
-              seasonNumber: ep.seasonNumber ?? null,
-              episodeNumber: ep.episodeNumber ?? null,
-              title: ep.title ?? null,
-              description: ep.description ?? null,
-              duration: ep.duration ?? null,
-              isFree: ep.isFree ?? true,
-              streamUrl: null,
-            },
-          });
+          data: {
+            showId: show.id,
+            seasonNumber: ep.seasonNumber ?? null,
+            episodeNumber: ep.episodeNumber ?? null,
+            title: ep.title ?? null,
+            description: ep.description ?? null,
+            duration: ep.duration ?? null,
+            isFree: ep.isFree ?? true,
+            streamUrl: null,
+          },
+        });
       episodeByExternal.set(ep.externalId, episode.id);
     }
   }
@@ -267,13 +268,13 @@ export async function syncLicensedCatalogFromEnv() {
       Accept: 'application/json',
     },
     cache: 'no-store',
-  }).catch(() => null);
+  }).catch(swallow("src/lib/streaming/ingest.ts:270", null));
 
   if (!response?.ok) {
     return { ok: false as const, reason: 'fetch_failed' as const, status: response?.status ?? 0 };
   }
 
-  const payload = (await response.json().catch(() => null)) as LicensedCatalogPayload | null;
+  const payload = ((await response.json().catch(swallow("src/lib/streaming/ingest.ts:276", null, { persist: false }))) as LicensedCatalogPayload | null) || null;
   if (!payload) {
     return { ok: false as const, reason: 'invalid_json' as const };
   }

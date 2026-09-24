@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { getLocale } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { pick } from '@/i18n/pick';
 import { CopyrightMark } from '@/components/legal/CopyrightMark';
 import type { Metadata } from 'next';
@@ -18,7 +20,15 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function CopyrightPage() {
+export default function CopyrightPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <CopyrightPageBody />
+    </Suspense>
+  );
+}
+
+async function CopyrightPageBody() {
   const locale = await getLocale();
   return <CopyrightMark locale={locale} />;
 }

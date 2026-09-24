@@ -1,0 +1,705 @@
+.ed {
+  position: relative;
+  isolation: isolate;
+  padding: 0 0 2.2rem;
+  color: var(--foreground);
+}
+
+.ed-aura,
+.ed-grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.ed-aura {
+  background:
+    radial-gradient(ellipse 50% 28% at 50% -4%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 58%);
+}
+
+.ed-grain {
+  opacity: 0.13;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 0.55px, transparent 0.7px);
+  background-size: 3px 3px;
+}
+
+.ed-wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: 1.05rem 0.85rem 0;
+}
+
+@media (min-width: 720px) {
+  .ed-wrap {
+    padding: 1.05rem 1.15rem 0;
+  }
+}
+
+.ed-board {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+  margin-top: 0.15rem;
+}
+
+@media (min-width: 1024px) {
+  .ed-board {
+    grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr) minmax(15rem, 18rem);
+    gap: 1.05rem;
+  }
+
+  .ed-rail {
+    position: sticky;
+    top: 5.4rem;
+    display: grid;
+    gap: 0.85rem;
+  }
+}
+
+.ed-spine {
+  min-width: 0;
+}
+
+.ed-rail-panel {
+  padding: 0.85rem 0.9rem 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+}
+
+.ed-rail-head p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.ed-rail-head h2 {
+  margin: 0.2rem 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.ed-rail-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ed-rail-item {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  gap: 0.65rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ed-rail-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 0.7rem;
+  background: #070b12;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+}
+
+.ed-rail-media img,
+.ed-rail-media .cover-image,
+.ed-rail-media>span:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ed-rail-item strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  word-spacing: 0.06em;
+  unicode-bidi: isolate;
+}
+
+.ed-rail-item strong[dir='ltr'] {
+  font-family: "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.ed-rail-item small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+
+.ed-rail-more {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.ed-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin-bottom: 1rem;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ed-nav a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.ed-nav i {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--primary) 55%, var(--border));
+}
+
+.ed-nav span {
+  color: var(--muted-foreground);
+}
+
+.ed-nav b {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b91c1c;
+}
+
+html.dark .ed-nav b,
+.dark .ed-nav b {
+  color: #fecaca;
+}
+
+.ed-mast {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1.15rem 1.15rem 1.2rem;
+  margin-bottom: 1.05rem;
+  border-radius: 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--primary) 10%, transparent), transparent 52%),
+    color-mix(in srgb, var(--card) 80%, transparent);
+}
+
+.ed-kicker {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.ed-mast h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.8vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  word-spacing: 0.12em;
+  line-height: 1.32;
+  unicode-bidi: isolate;
+  color: var(--foreground);
+}
+
+.ed-mast h1[dir='ltr'],
+.ed-stand[dir='ltr'] {
+  font-family: "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  word-spacing: 0.08em;
+}
+
+.ed-stand {
+  margin: 0;
+  max-width: 38rem;
+  padding-inline-start: 0.95rem;
+  border-inline-start: 2px solid color-mix(in srgb, var(--ys-orange) 70%, transparent);
+  font-size: 1.05rem;
+  font-style: italic;
+  line-height: 1.75;
+  color: var(--muted-foreground);
+}
+
+.ed-by {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  word-spacing: 0.08em;
+}
+
+.ed-by li {
+  unicode-bidi: isolate;
+}
+
+.ed-by li:not(:last-child)::after {
+  content: '·';
+  margin: 0 0.55rem;
+  color: color-mix(in srgb, var(--primary) 55%, var(--muted-foreground));
+}
+
+.ed-cover {
+  margin: 0 0 1.25rem;
+}
+
+.ed-cover-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 1.2rem 1.2rem 0 0;
+  background: #070b12;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  border-bottom: 0;
+}
+
+.ed-cover-media img,
+.ed-cover-media .cover-image,
+.ed-cover-media>span:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+}
+
+.ed-bracket {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1.5px solid color-mix(in srgb, var(--primary) 72%, #fff);
+  opacity: 0.72;
+}
+
+.ed-bracket.is-tl {
+  top: 0.7rem;
+  inset-inline-start: 0.7rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.ed-bracket.is-tr {
+  top: 0.7rem;
+  inset-inline-end: 0.7rem;
+  border-inline-start: 0;
+  border-bottom: 0;
+}
+
+.ed-bracket.is-bl {
+  bottom: 0.7rem;
+  inset-inline-start: 0.7rem;
+  border-inline-end: 0;
+  border-top: 0;
+}
+
+.ed-bracket.is-br {
+  bottom: 0.7rem;
+  inset-inline-end: 0.7rem;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+.ed-cover figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+  border-radius: 0 0 1.05rem 1.05rem;
+  background: color-mix(in srgb, var(--card) 84%, var(--background));
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ed-cover figcaption em {
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.ed-sheet {
+  position: relative;
+  padding: 1.15rem 1.1rem 1.35rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--background) 40%, var(--card)));
+}
+
+.ed-prose {
+  color: var(--foreground);
+  font-size: 1.06rem;
+  line-height: 1.95;
+  letter-spacing: 0;
+  word-spacing: 0.06em;
+  unicode-bidi: isolate;
+}
+
+.ed-prose.is-latin {
+  direction: ltr;
+  text-align: start;
+  font-family: "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  word-spacing: 0.05em;
+}
+
+.ed-prose :where(p, ul, ol, blockquote, figure) {
+  margin: 0 0 1.2rem;
+}
+
+.ed-prose :where(p) {
+  text-indent: 0;
+}
+
+.ed-prose :where(p:first-of-type)::first-letter {
+  float: inline-start;
+  padding-inline-end: 0.12em;
+  font-size: 3.1em;
+  font-weight: 800;
+  line-height: 0.85;
+  color: var(--ys-orange);
+}
+
+.ed-prose :where(img) {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.4rem 0 1.1rem;
+  border-radius: 0.85rem;
+}
+
+.ed-prose :where(a) {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ed-prose :where(h2, h3) {
+  margin: 1.6rem 0 0.65rem;
+  font-size: 1.12rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.ed-prose :where(blockquote) {
+  border-inline-start: 2px solid color-mix(in srgb, var(--primary) 50%, var(--border));
+  padding-inline-start: 0.95rem;
+  color: var(--muted-foreground);
+}
+
+.ed-prose.is-gated {
+  max-height: 16rem;
+  overflow: hidden;
+  mask-image: linear-gradient(180deg, #000 42%, transparent);
+}
+
+.ed-end {
+  margin: 0.2rem 0 0;
+  text-align: center;
+  color: color-mix(in srgb, var(--primary) 70%, var(--muted-foreground));
+  letter-spacing: 0.28em;
+}
+
+.ed-gate {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+  margin: 1rem 0;
+  padding: 1rem 1.05rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: color-mix(in srgb, var(--card) 86%, var(--background));
+}
+
+.ed-gate p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+}
+
+.ed-gate a {
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ed-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-top: 1.35rem;
+  padding: 0.95rem 1.05rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  background: color-mix(in srgb, var(--background) 42%, var(--card));
+  text-decoration: none;
+  color: inherit;
+}
+
+.ed-source span {
+  flex: 1 1 14rem;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+}
+
+.ed-source em {
+  font-style: normal;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.ed-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.ed .my-6 {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.ed-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1.15rem;
+}
+
+.ed-chips a,
+.ed-chips span {
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: color-mix(in srgb, var(--card) 75%, transparent);
+  color: var(--foreground);
+  font-size: 0.74rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.ed-talk {
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+}
+
+.ed-floor {
+  margin-top: 1.6rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+}
+
+.ed-floor-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .ed-floor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .ed-floor-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.ed-more {
+  margin-top: 2.2rem;
+}
+
+.ed-more-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.95rem;
+}
+
+.ed-more-head p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.ed-more-head h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+
+.ed-more-head a {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.ed-more-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) {
+  .ed-more-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ed-card {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.2rem 0.2rem 0.55rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.ed-card-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.95rem;
+  background: #070b12;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+}
+
+.ed-card-media img,
+.ed-card-media .cover-image,
+.ed-card-media>span:first-child {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ed-card strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  word-spacing: 0.06em;
+  line-height: 1.4;
+  unicode-bidi: plaintext;
+}
+
+.ed-card small {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.ed .mt-16 {
+  margin-top: 1.8rem;
+}
+
+/* ===== Interaction layer (hover / focus / motion) ===== */
+.ed-rail-media img,
+.ed-rail-media .cover-image,
+.ed-card-media img,
+.ed-card-media .cover-image {
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ed-rail-item:hover .ed-rail-media img,
+.ed-rail-item:hover .ed-rail-media .cover-image,
+.ed-card:hover .ed-card-media img,
+.ed-card:hover .ed-card-media .cover-image {
+  transform: scale(1.06);
+}
+
+.ed-rail-item strong,
+.ed-card strong {
+  transition: color 180ms ease;
+}
+
+.ed-rail-item:hover strong,
+.ed-card:hover strong {
+  color: var(--primary);
+}
+
+.ed-rail-media,
+.ed-card-media {
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.ed-rail-item:hover .ed-rail-media,
+.ed-card:hover .ed-card-media {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  box-shadow: 0 16px 34px -22px color-mix(in srgb, var(--ys-ink, #0b1220) 60%, transparent);
+}
+
+.ed-chips a {
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.ed-chips a:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
+}
+
+.ed-rail-item:focus-visible,
+.ed-card:focus-visible,
+.ed-chips a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 0.6rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .ed-rail-media img,
+  .ed-card-media img,
+  .ed-rail-item:hover .ed-rail-media img,
+  .ed-card:hover .ed-card-media img {
+    transition: none;
+    transform: none;
+  }
+}

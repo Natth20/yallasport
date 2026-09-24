@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import { swallow } from '@/lib/ops/caught';
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
@@ -20,11 +21,17 @@ export function TranslationReview({ items }: { items: Item[] }) {
 
   const act = async (id: string, action: 'approve' | 'reject' | 'retranslate' | 'backfill') => {
     setBusy(id + action);
-    await fetch('/api/admin/translations', {
+    const res = await fetch('/api/admin/translations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action === 'backfill' ? { action } : { id, action })
     });
+    const data = await res.json().catch(swallow("src/app/[locale]/admin/translations/TranslationReview.tsx:28", null, { persist: false })) as { error?: string } | null;
+    if (!res.ok) {
+      setBusy(null);
+      window.alert(data?.error === 'provider_unconfigured' ? t('provider_off') : t('action_failed'));
+      return;
+    }
     if (action !== 'backfill') {
       setRows((current) => current.filter((row) => row.id !== id || action === 'retranslate'));
     }

@@ -149,6 +149,7 @@ export function mapStoredMatchToDetail(stored: {
   league: DbLeagueRef;
   venue: { id: string; name: string; city: string | null; capacity: number | null } | null;
   referee: { id: string; name: string } | null;
+  attendance?: number | null;
   channels: Array<{ channel: { id: string; name: string; logoUrl: string | null; country: string | null } }>;
   commentators: Array<{ name: string; role: string; language: string | null }>;
   lineups: Array<{
@@ -192,9 +193,7 @@ export function mapStoredMatchToDetail(stored: {
     language: commentator.language ?? undefined,
   }));
 
-  const preferredLineups = (stored.lineups ?? []).some((lineup) => !lineup.isPredicted)
-    ? (stored.lineups ?? []).filter((lineup) => !lineup.isPredicted)
-    : (stored.lineups ?? []);
+  const preferredLineups = (stored.lineups ?? []).filter((lineup) => !lineup.isPredicted);
 
   const lineups: NormalizedLineup[] = preferredLineups.map((lineup) => {
     const payload = (lineup.playersJson ?? {}) as StoredLineupPayload;
@@ -243,23 +242,16 @@ export function mapStoredMatchToDetail(stored: {
         }
       : undefined,
     referee: stored.referee ? { id: stored.referee.id, name: stored.referee.name } : undefined,
+    attendance: typeof stored.attendance === 'number' ? stored.attendance : undefined,
     channels,
     commentators,
     lineups,
     events,
     statistics,
-    lineupStatus: lineups.some((lineup) => lineup.status === 'CONFIRMED')
-      ? 'CONFIRMED'
-      : lineups.length > 0
-        ? 'PREDICTED'
-        : 'PENDING',
+    lineupStatus: lineups.length > 0 ? 'CONFIRMED' : 'PENDING',
     availability: {
       events: events.length ? 'AVAILABLE' : 'PENDING',
-      lineups: lineups.some((lineup) => lineup.status === 'CONFIRMED')
-        ? 'CONFIRMED'
-        : lineups.length
-          ? 'PREDICTED'
-          : 'PENDING',
+      lineups: lineups.length > 0 ? 'CONFIRMED' : 'PENDING',
       statistics: statistics.length ? 'AVAILABLE' : 'PENDING',
       broadcast: channels.length || commentators.length ? 'AVAILABLE' : 'PENDING',
     },

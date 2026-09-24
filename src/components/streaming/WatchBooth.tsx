@@ -2,7 +2,6 @@ import { BrandMark } from '@/components/brand/BrandMark';
 import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
 import { MatchStreamPlayer } from '@/components/streaming/MatchStreamPlayer';
 import { ClientTime } from '@/components/datetime/ClientTime';
-import { LiveFanReactions } from '@/components/sports/LiveFanReactions';
 import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 
@@ -164,10 +163,6 @@ export async function WatchBooth({
                   </Link>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-6">
-              <LiveFanReactions locale={locale} />
             </div>
 
             {asset?.match?.statistics?.length ? (

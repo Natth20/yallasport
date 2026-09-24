@@ -14,7 +14,7 @@ export function MostReadRail({ articles, locale }: { articles: Brief[]; locale: 
         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-orange-400">
           {pick(locale, 'التداول', 'Circulation')}
         </p>
-        <h2 className="mt-1 text-base font-bold text-white">{pick(locale, 'الأكثر قراءة', 'Most read')}</h2>
+        <h2 className="mt-1 text-base font-bold text-foreground">{pick(locale, 'الأكثر قراءة', 'Most read')}</h2>
       </div>
       {articles.length > 0 ? (
         <ol className="divide-y divide-white/5">
@@ -25,8 +25,8 @@ export function MostReadRail({ articles, locale }: { articles: Brief[]; locale: 
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <span className="min-w-0">
-                  <strong className="block text-[13px] font-bold leading-6 text-white/90">{article.title}</strong>
-                  <span className="mt-0.5 block text-[10px] font-semibold text-white/35">
+                  <strong className="block text-[13px] font-bold leading-6 text-foreground">{article.title}</strong>
+                  <span className="mt-0.5 block text-[10px] font-semibold text-muted-foreground">
                     {deskLabel(article.category, locale)}
                     {article.views > 0 && ` · ${article.views} ${pick(locale, 'مشاهدة', 'views')}`}
                   </span>
@@ -39,11 +39,11 @@ export function MostReadRail({ articles, locale }: { articles: Brief[]; locale: 
         <div className="news-ghost-line px-5 py-5">
           {['01', '02', '03', '04', '05'].map((folio) => (
             <div key={folio} className="flex items-center gap-3 py-2.5">
-              <span className="w-6 text-sm text-white/20">{folio}</span>
-              <span className="h-px flex-1 bg-white/10" />
+              <span className="w-6 text-sm text-muted-foreground">{folio}</span>
+              <span className="h-px flex-1 bg-border" />
             </div>
           ))}
-          <p className="pt-2 text-[11px] text-white/35">
+          <p className="pt-2 text-[11px] text-muted-foreground">
             {pick(locale, 'بانتظار التداول — لا تقارير معتمدة بعد.', 'Awaiting circulation — no approved reports yet.')}
           </p>
         </div>

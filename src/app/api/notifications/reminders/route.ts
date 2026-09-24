@@ -53,7 +53,7 @@ export async function GET(request: Request) {
         body: `${match.homeTeam.name} ضد ${match.awayTeam.name}`,
         url: `/match/${match.id}`,
         tag: `match-start-${match.id}`,
-        icon: '/images/logo.jpg',
+        icon: '/images/logo.png',
       };
 
       let delivered = false;

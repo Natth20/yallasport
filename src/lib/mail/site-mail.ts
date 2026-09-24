@@ -1,8 +1,9 @@
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 import { CONTACT_EMAIL, siteInboxEmail } from '@/lib/seo/site';
 
 export type MailSendResult =
   | { sent: true }
-  | { sent: false; reason: 'not_configured' | 'failed' };
+  | { sent: false; reason: string };
 
 function fromAddress() {
   return process.env.MAIL_FROM?.trim() || `Yalla Sport <${CONTACT_EMAIL}>`;
@@ -15,7 +16,7 @@ async function sendWithResend(opts: {
   text: string;
   replyTo?: string;
   apiKey: string;
-}): Promise<boolean> {
+}): Promise<{ ok: boolean; detail?: string }> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -30,7 +31,10 @@ async function sendWithResend(opts: {
       ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
     }),
   });
-  return res.ok;
+  if (res.ok) return { ok: true };
+  const body = await res.json().catch(swallow("src/lib/mail/site-mail.ts:34", null, { persist: false })) as { name?: string; message?: string } | null;
+  const name = body?.name || 'resend';
+  return { ok: false, detail: `${name}:${res.status}` };
 }
 
 async function sendWithSendgrid(opts: {
@@ -73,11 +77,14 @@ export async function sendSiteMail(opts: {
   }
 
   try {
-    const ok = resendKey
-      ? await sendWithResend({ ...opts, from, to, apiKey: resendKey })
-      : await sendWithSendgrid({ ...opts, from, to, apiKey: sendgridKey! });
+    if (resendKey) {
+      const result = await sendWithResend({ ...opts, from, to, apiKey: resendKey });
+      return result.ok ? { sent: true } : { sent: false, reason: result.detail || 'failed' };
+    }
+    const ok = await sendWithSendgrid({ ...opts, from, to, apiKey: sendgridKey! });
     return ok ? { sent: true } : { sent: false, reason: 'failed' };
-  } catch {
+  } catch (error) {
+    reportCaughtError('mail.send', error);
     return { sent: false, reason: 'failed' };
   }
 }

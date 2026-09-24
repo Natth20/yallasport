@@ -1,5 +1,6 @@
-﻿import {Link} from '@/i18n/navigation';
+import {Link} from '@/i18n/navigation';
 import {getTranslations} from 'next-intl/server';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 
 const labelKeys: Record<string, 'goal' | 'own_goal' | 'penalty' | 'yellow_card' | 'red_card' | 'substitution' | 'var'> = {
   GOAL: 'goal', OWN_GOAL: 'own_goal', PENALTY: 'penalty', YELLOW_CARD: 'yellow_card',
@@ -52,7 +53,7 @@ export async function DayWire({ events }: { events: WireEvent[] }) {
               >
                 {labelKeys[event.type] ? t(labelKeys[event.type]) : event.type}
               </span>
-              <img src={event.teamLogo || '/placeholder-team.png'} alt="" className="h-6 w-6 object-contain" />
+              <LeagueCrest name={event.teamName} logoUrl={event.teamLogo} className="h-6 w-6" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{event.player}</p>
                 <p className="truncate text-[9px] font-medium text-muted-foreground">

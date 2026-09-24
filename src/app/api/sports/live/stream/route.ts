@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import { redis } from '@/lib/redis';
 import type { LiveMatchesPayload } from '@/lib/sports-data/types';
 
@@ -27,7 +28,8 @@ export async function GET(request: Request) {
         clearTimer();
         try {
           controller.close();
-        } catch {
+        } catch (error) {
+          reportCaughtError("src/app/api/sports/live/stream/route.ts:30", error);
           // already closed by the runtime / client disconnect
         }
       };
@@ -37,7 +39,8 @@ export async function GET(request: Request) {
         try {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
           return true;
-        } catch {
+        } catch (error) {
+          reportCaughtError("src/app/api/sports/live/stream/route.ts:40", error);
           closed = true;
           clearTimer();
           return false;
@@ -75,7 +78,8 @@ export async function GET(request: Request) {
             ) {
               break;
             }
-          } catch {
+          } catch (error) {
+            reportCaughtError("src/app/api/sports/live/stream/route.ts:78", error);
             if (closed || request.signal.aborted) break;
             if (!send('error', { message: 'Live data temporarily unavailable' })) break;
             await wait(15000);
@@ -83,7 +87,8 @@ export async function GET(request: Request) {
           }
           await wait(10000);
         }
-      } catch {
+      } catch (error) {
+        reportCaughtError("src/app/api/sports/live/stream/route.ts:86", error);
         // Client disconnected mid-stream — do not rethrow (avoids "destination stream closed early")
       } finally {
         request.signal.removeEventListener('abort', onAbort);

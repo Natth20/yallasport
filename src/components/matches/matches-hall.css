@@ -1,0 +1,53 @@
+/* Quiet luxury restyle for the matches board — data markup unchanged. */
+.matchday-board {
+  --ys-elev-1: 0 10px 28px -20px color-mix(in srgb, var(--ys-ink, #0f172a) 42%, transparent);
+}
+
+.floodlight-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 50% at 90% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 58%),
+    var(--background);
+}
+
+.flood-beam {
+  opacity: 0.55;
+}
+
+.matchday-wordmark {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: -0.035em;
+}
+
+.matchday-section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.matchday-spotlight {
+  box-shadow: var(--ys-elev-2, 0 18px 40px -24px rgba(0, 0, 0, 0.45));
+}
+
+.matchday-spotlight-name {
+  font-size: 1.05rem;
+}
+
+.jumbotron.matchday-spotlight {
+  border: 1px solid color-mix(in srgb, #fff 10%, transparent);
+}
+
+.matchday-board .text-\[8px\],
+.matchday-board .text-\[9px\] {
+  font-size: 0.72rem;
+}
+
+.matchday-main > * {
+  border-radius: 1.2rem;
+}
+
+.matchday-desk,
+.fixture-card {
+  box-shadow: var(--ys-elev-1, 0 8px 24px -18px rgba(11, 18, 32, 0.4));
+}

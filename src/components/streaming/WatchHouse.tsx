@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { BrandMark } from '@/components/brand/BrandMark';
@@ -12,8 +13,8 @@ import {
 } from '@/lib/streaming/catalog';
 import { countryFromHeaders, isGeoAllowed } from '@/lib/streaming/entitlement';
 import { ClientTime } from '@/components/datetime/ClientTime';
-import { Tv, Radio, PlayCircle, Film, Sparkles, Flame, Clock, Shield, ArrowRight, ArrowLeft } from 'lucide-react';
-import { LiveSportsPlayer } from '@/components/streaming/LiveSportsPlayer';
+import { Tv, Radio, PlayCircle, Film, Sparkles, Flame, Clock, Shield, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
+import { MatchStreamPlayer } from '@/components/streaming/MatchStreamPlayer';
 
 function typeLabel(
   type: string,
@@ -25,17 +26,24 @@ function typeLabel(
   return type;
 }
 
-export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
+export async function WatchHouse({
+  locale = 'ar',
+  mode = 'live',
+}: {
+  locale?: string;
+  mode?: 'live' | 'library';
+} = {}) {
   const t = await getTranslations('watch');
   const country = countryFromHeaders(await headers());
   const editionYear = new Date().getFullYear();
 
+  const isLibrary = mode === 'library';
   const [sports, linear, shows, upcomingRaw] = await Promise.all([
-    STREAMING_ENABLED ? listLiveCatalog({ country }).catch(() => []) : Promise.resolve([]),
-    STREAMING_ENABLED ? listLinearCatalog({ country }).catch(() => []) : Promise.resolve([]),
-    STREAMING_ENABLED ? listPublishedLibrary({ take: 24 }).catch(() => []) : Promise.resolve([]),
-    STREAMING_ENABLED
-      ? upcomingLicensedWindows(6).catch(() => [])
+    !isLibrary && STREAMING_ENABLED ? listLiveCatalog({ country }).catch(swallow("src/components/streaming/WatchHouse.tsx:41", [])) : Promise.resolve([]),
+    !isLibrary && STREAMING_ENABLED ? listLinearCatalog({ country }).catch(swallow("src/components/streaming/WatchHouse.tsx:42", [])) : Promise.resolve([]),
+    isLibrary && STREAMING_ENABLED ? listPublishedLibrary({ take: 24 }).catch(swallow("src/components/streaming/WatchHouse.tsx:43", [])) : Promise.resolve([]),
+    !isLibrary && STREAMING_ENABLED
+      ? upcomingLicensedWindows(6).catch(swallow("src/components/streaming/WatchHouse.tsx:45", []))
       : Promise.resolve([]),
   ]);
 
@@ -61,17 +69,26 @@ export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
                 <div className="flex items-center gap-2">
                   <span className="flex items-center gap-1 rounded-md bg-primary/20 border border-primary/30 px-2 py-0.5 text-[10px] font-black uppercase text-primary">
                     <Sparkles className="h-3 w-3" />
-                    {t('kicker')}
+                    {t(isLibrary ? 'library_kicker' : 'kicker')}
                   </span>
-                  <span className="text-xs text-muted-foreground font-mono">YS-LIVE-{editionYear}</span>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {isLibrary ? `YS-VOD-${editionYear}` : `YS-LIVE-${editionYear}`}
+                  </span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black text-foreground mt-1 tracking-tight">
-                  {t('title')}
+                  {t(isLibrary ? 'library_title' : 'title')}
                 </h1>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
+              <Link
+                href={isLibrary ? '/watch' : '/vod'}
+                className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2.5 text-xs font-bold text-foreground hover:bg-white/10 hover:border-primary/40 transition-all"
+              >
+                {isLibrary ? <Radio className="h-4 w-4 text-primary" /> : <Film className="h-4 w-4 text-primary" />}
+                <span>{t(isLibrary ? 'go_live' : 'go_library')}</span>
+              </Link>
               <Link
                 href="/live"
                 className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2.5 text-xs font-bold text-foreground hover:bg-white/10 hover:border-primary/40 transition-all"
@@ -112,22 +129,30 @@ export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
           {/* Main Broadcast Arena (Left Column) */}
           <div className="space-y-8 xl:col-span-8">
             {/* Live Sports Player Screen */}
+            {!isLibrary ? (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-black text-foreground flex items-center gap-2">
                   <Flame className="h-4 w-4 text-primary" />
                   <span>{t('booth')} • {locale === 'ar' ? 'البث المباشر الفوري' : 'Live Stream'}</span>
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 rounded-full bg-red-600/20 border border-red-500/30 px-3 py-1 text-[10px] font-black text-red-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
-                    LIVE HLS 1080p
+                {live ? (
+                  <span className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-600/20 px-3 py-1 text-[10px] font-black text-red-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                    {t('on_air')}
                   </span>
-                </div>
+                ) : null}
               </div>
 
-              {/* Direct Live Interactive Player */}
-              <LiveSportsPlayer locale={locale} />
+              {featured ? (
+                <MatchStreamPlayer assetId={featured.id} />
+              ) : (
+                <div className="flex aspect-video w-full flex-col items-center justify-center rounded-3xl border border-white/10 bg-black/80 px-6 text-center">
+                  <Lock className="mb-3 h-8 w-8 text-white/40" />
+                  <p className="text-sm font-black text-white">{t('house_empty')}</p>
+                  <p className="mt-2 max-w-md text-xs text-muted-foreground">{t('house_empty_copy')}</p>
+                </div>
+              )}
 
               {/* Featured Match Card if active */}
               {featured?.match && (
@@ -165,20 +190,21 @@ export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
                 </div>
               )}
             </section>
+            ) : null}
 
             {/* Live & Linear Channels Grid */}
-            {linear.length > 0 && (
+            {!isLibrary && linear.length > 0 && (
               <section className="space-y-4">
                 <h2 className="text-base font-black text-foreground flex items-center gap-2">
                   <Tv className="h-4 w-4 text-primary" />
-                  <span>{t('linear_title')}</span>
+                  <span>{t('kind_tv')}</span>
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {linear.map((item) => (
                     <Link
                       key={item.id}
                       href={`/watch/${item.id}`}
-                      className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur-xl transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:scale-102 hover:shadow-xl hover:shadow-primary/5"
+                      className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-card/60 p-4 transition-colors hover:border-primary/40 hover:bg-card/90"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -199,7 +225,7 @@ export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
             )}
 
             {/* VOD Library Shows */}
-            {shows.length > 0 && (
+            {isLibrary && (
               <section className="space-y-4">
                 <h2 className="text-base font-black text-foreground flex items-center gap-2">
                   <Film className="h-4 w-4 text-primary" />
@@ -244,7 +270,7 @@ export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
             )}
           </div>
 
-          {/* Right Rail: Upcoming Schedule (4 Cols) */}
+          {!isLibrary ? (
           <aside className="space-y-6 xl:col-span-4">
             <div className="rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl shadow-xl space-y-4">
               <h3 className="text-sm font-black text-foreground flex items-center gap-2">
@@ -277,6 +303,7 @@ export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
               )}
             </div>
           </aside>
+          ) : null}
         </div>
       </div>
     </div>

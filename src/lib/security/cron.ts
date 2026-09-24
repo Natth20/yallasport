@@ -10,14 +10,6 @@ function safeEqual(left: string, right: string) {
 export function isAuthorizedCron(req: Request) {
   const secret = process.env.CRON_SECRET?.trim() || '';
   const header = req.headers.get('authorization') || '';
-  const expected = secret ? `Bearer ${secret}` : '';
-  const isProd = process.env.NODE_ENV === 'production';
-
-  if (isProd) {
-    if (secret.length < 16) return false;
-    return safeEqual(header, expected);
-  }
-
-  if (secret) return safeEqual(header, expected);
-  return true;
+  if (secret.length < 16) return false;
+  return safeEqual(header, `Bearer ${secret}`);
 }

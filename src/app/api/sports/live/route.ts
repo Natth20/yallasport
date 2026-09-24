@@ -1,8 +1,10 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { safeRedisGet } from '@/lib/redis';
 import { sportsData } from '@/lib/sports-data';
 import { MATCH_LIST_INCLUDE, toNormalizedMatch } from '@/lib/sports-data/from-db';
+import { isLiveStatus, liveKickoffFloor } from '@/lib/sports-data/match-window';
 import type { LiveMatchesPayload } from '@/lib/sports-data/types';
 
 export const dynamic = 'force-dynamic';
@@ -20,18 +22,26 @@ let memoryCache: { at: number; payload: LiveMatchesPayload } | null = null;
 let inflight: Promise<LiveMatchesPayload> | null = null;
 
 async function loadLiveMatches(): Promise<LiveMatchesPayload> {
+  const floor = liveKickoffFloor().getTime();
+  const keepLive = (payload: LiveMatchesPayload): LiveMatchesPayload => ({
+    ...payload,
+    matches: payload.matches.filter(
+      (match) => isLiveStatus(match.status) && new Date(match.kickoffAt).getTime() >= floor,
+    ),
+  });
+
   const cached = await safeRedisGet<LiveMatchesPayload>('sports:live:all');
-  if (cached) return cached;
+  if (cached) return keepLive(cached);
 
   try {
     const dbMatches = await prisma.match.findMany({
-      where: { status: { in: ['LIVE', 'HALFTIME'] } },
+      where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
       orderBy: { kickoffAt: 'asc' },
       take: 40,
       include: MATCH_LIST_INCLUDE,
     });
     const matches = dbMatches.map(toNormalizedMatch);
-    void sportsData.getLiveMatches().catch(() => undefined);
+    void sportsData.getLiveMatches().catch(swallow("src/app/api/sports/live/route.ts:43", undefined));
     return {
       matches,
       freshness: {

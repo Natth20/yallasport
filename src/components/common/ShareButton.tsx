@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Share2, Check, Copy } from 'lucide-react';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { copyText } from '@/lib/clipboard';
 
 interface ShareButtonProps {
   title: string;
@@ -35,19 +36,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ title, text, url }) =>
         console.error('Error sharing:', err);
       }
     } else {
-      // Fallback: Copy to clipboard
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        console.error('Failed to copy:', err);
-      }
+      const ok = await copyText(shareUrl);
+      if (!ok) return;
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
   return (
-    <button 
+    <button
       onClick={handleShare}
       className="bg-white/10 hover:bg-white/20 px-8 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-3 backdrop-blur-md border border-white/10"
     >

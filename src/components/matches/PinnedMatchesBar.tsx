@@ -1,4 +1,6 @@
 'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import React, { useState, useEffect } from 'react';
 import { Star, Flame, ChevronRight, X } from 'lucide-react';
@@ -23,7 +25,8 @@ export function getPinnedMatchIds(): string[] {
   try {
     const raw = localStorage.getItem(PINNED_STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/components/matches/PinnedMatchesBar.tsx:26", error, { persist: false });
     return [];
   }
 }
@@ -37,7 +40,8 @@ export function togglePinMatch(id: string): boolean {
     localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('ys_pins_changed', { detail: updated }));
     return !exists;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/components/matches/PinnedMatchesBar.tsx:40", error, { persist: false });
     return false;
   }
 }

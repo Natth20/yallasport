@@ -1,4 +1,5 @@
-export { STREAMING_ENABLED, getStreamingProvider } from './factory';
+export { STREAMING_ENABLED } from './flag';
+export { getStreamingProvider } from './factory';
 export type { StreamingProvider, PlaybackSession } from './interface';
 export {
   listLiveCatalog,

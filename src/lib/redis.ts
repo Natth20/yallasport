@@ -1,4 +1,5 @@
 // src/lib/redis.ts
+import { reportCaughtError } from '@/lib/ops/caught';
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
@@ -19,9 +20,22 @@ export async function safeRedisGet<T>(key: string, ms = 1200): Promise<T | null>
         setTimeout(() => resolve(null), ms);
       }),
     ]);
-  } catch {
+  } catch (error) {
+    reportCaughtError('redis.get', error);
     return null;
   }
+}
+
+export async function cachedJson<T>(
+  key: string,
+  ttlSeconds: number,
+  load: () => Promise<T>,
+): Promise<T> {
+  const hit = await safeRedisGet<T>(key);
+  if (hit !== null && hit !== undefined) return hit;
+  const fresh = await load();
+  await safeRedisSet(key, fresh, { ex: ttlSeconds });
+  return fresh;
 }
 
 export async function safeRedisSet(key: string, value: unknown, options?: { ex: number }) {
@@ -32,8 +46,8 @@ export async function safeRedisSet(key: string, value: unknown, options?: { ex: 
         setTimeout(() => resolve(), 1200);
       }),
     ]);
-  } catch {
-    // Cache writes must never block page rendering.
+  } catch (error) {
+    reportCaughtError('redis.set', error);
   }
 }
 
@@ -50,4 +64,18 @@ export const writeRatelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(8, "1 m"),
   analytics: true,
   prefix: "@upstash/ratelimit/write",
+});
+
+export const searchRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(40, "1 m"),
+  analytics: true,
+  prefix: "@upstash/ratelimit/search",
+});
+
+export const authRatelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(12, "1 m"),
+  analytics: true,
+  prefix: "@upstash/ratelimit/auth",
 });

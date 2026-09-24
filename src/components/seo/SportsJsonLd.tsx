@@ -1,4 +1,5 @@
 import React from 'react';
+import { LOGO_PATH, SITE_URL } from '@/lib/seo/site';
 
 interface MatchSchemaProps {
   id: string;
@@ -34,10 +35,10 @@ export function MatchJsonLd({
       status === 'FINISHED'
         ? 'https://schema.org/EventCompleted'
         : status === 'POSTPONED'
-        ? 'https://schema.org/EventPostponed'
-        : status === 'CANCELLED'
-        ? 'https://schema.org/EventCancelled'
-        : 'https://schema.org/EventScheduled',
+          ? 'https://schema.org/EventPostponed'
+          : status === 'CANCELLED'
+            ? 'https://schema.org/EventCancelled'
+            : 'https://schema.org/EventScheduled',
     homeTeam: {
       '@type': 'SportsTeam',
       name: homeTeamName,
@@ -48,10 +49,10 @@ export function MatchJsonLd({
     },
     location: venueName
       ? {
-          '@type': 'Place',
-          name: venueName,
-          address: location || 'Stadium',
-        }
+        '@type': 'Place',
+        name: venueName,
+        address: location || 'Stadium',
+      }
       : undefined,
   };
 
@@ -82,7 +83,7 @@ export function ArticleJsonLd({
   dateModified,
   authorName = 'YallaSport Editorial Desk',
   publisherName = 'YallaSport',
-  publisherLogo = 'https://yallasport.com/brand/logo.png',
+  publisherLogo = `${SITE_URL}${LOGO_PATH}`,
 }: ArticleSchemaProps) {
   const schema = {
     '@context': 'https://schema.org',

@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { SearchHouse } from '@/components/search/SearchHouse';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { getLocale } from 'next-intl/server';
@@ -25,7 +27,19 @@ export async function generateMetadata({
   });
 }
 
-export default async function SearchPage({
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; kind?: string }>;
+}) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <SearchPageBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function SearchPageBody({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; kind?: string }>;

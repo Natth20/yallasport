@@ -4,8 +4,9 @@ import { listLiveCatalog } from '@/lib/streaming/catalog';
 import { countryFromHeaders } from '@/lib/streaming/entitlement';
 
 export async function GET(req: Request) {
+  const headers = { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' };
   if (!STREAMING_ENABLED) {
-    return NextResponse.json({ enabled: false, items: [] });
+    return NextResponse.json({ enabled: false, items: [] }, { headers });
   }
   const url = new URL(req.url);
   const items = await listLiveCatalog({
@@ -29,5 +30,5 @@ export async function GET(req: Request) {
           }
         : null
     }))
-  });
+  }, { headers });
 }

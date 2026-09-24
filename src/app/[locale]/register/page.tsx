@@ -1,4 +1,6 @@
-﻿import { getLocale, getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { Link } from '@/i18n/navigation';
 import { AuthGate } from '@/components/auth/AuthGate';
 import { AuthGoogleButton } from '@/components/auth/AuthGoogleButton';
@@ -17,7 +19,15 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function RegisterPage() {
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <RegisterPageBody />
+    </Suspense>
+  );
+}
+
+async function RegisterPageBody() {
   const t = await getTranslations('auth');
   return (
     <AuthGate

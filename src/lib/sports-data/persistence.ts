@@ -1,6 +1,28 @@
+import { swallow } from '@/lib/ops/caught';
 import type { NormalizedMatch, NormalizedMatchDetail } from './types';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma';
+import { randomUUID } from 'crypto';
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+
+export async function rememberArabicDisplay(entityType: 'TEAM' | 'LEAGUE' | 'PLAYER', entityId: string, official: string) {
+  const arabic = localizePlainName('ar', official);
+  if (!arabic || arabic === official) return;
+  await prisma.entityTranslation
+    .upsert({
+      where: { entityType_entityId_locale: { entityType, entityId, locale: 'ar' } },
+      update: { name: arabic, status: 'APPROVED' },
+      create: {
+        entityType,
+        entityId,
+        locale: 'ar',
+        name: arabic,
+        status: 'APPROVED',
+        source: 'MACHINE',
+      },
+    })
+    .catch(swallow(`src/lib/sports-data/persistence.ts:${entityType}`, null));
+}
 
 const stableSlug = (slug: string, externalId: string) =>
   `${slug || 'entity'}-${externalId}`.toLowerCase();
@@ -34,7 +56,7 @@ async function upsertTeam(input: {
   };
 
   try {
-    return await prisma.team.upsert({
+    const row = await prisma.team.upsert({
       where: { externalId },
       update: data,
       create: {
@@ -44,12 +66,18 @@ async function upsertTeam(input: {
         logoUrl: input.logoUrl ?? null,
       },
     });
+    await prisma.$executeRaw`UPDATE "Team" SET "officialName" = ${input.name} WHERE id = ${row.id}`.catch(swallow("src/lib/sports-data/persistence.ts:48", null));
+    await rememberArabicDisplay('TEAM', row.id, input.name);
+    return row;
   } catch (error) {
     if (!isUniqueConflict(error)) throw error;
-    return prisma.team.update({
+    const row = await prisma.team.update({
       where: { externalId },
       data,
     });
+    await prisma.$executeRaw`UPDATE "Team" SET "officialName" = ${input.name} WHERE id = ${row.id}`.catch(swallow("src/lib/sports-data/persistence.ts:56", null));
+    await rememberArabicDisplay('TEAM', row.id, input.name);
+    return row;
   }
 }
 
@@ -68,7 +96,7 @@ async function upsertLeague(input: {
   };
 
   try {
-    return await prisma.league.upsert({
+    const row = await prisma.league.upsert({
       where: { externalId },
       update,
       create: {
@@ -79,12 +107,26 @@ async function upsertLeague(input: {
         country: input.country,
       },
     });
+    await prisma.$executeRaw`
+      UPDATE "League"
+      SET "officialName" = ${input.name}, "sportId" = 'sport_football'
+      WHERE id = ${row.id}
+    `.catch(swallow("src/lib/sports-data/persistence.ts:91", null));
+    await rememberArabicDisplay('LEAGUE', row.id, input.name);
+    return row;
   } catch (error) {
     if (!isUniqueConflict(error)) throw error;
-    return prisma.league.update({
+    const row = await prisma.league.update({
       where: { externalId },
       data: update,
     });
+    await prisma.$executeRaw`
+      UPDATE "League"
+      SET "officialName" = ${input.name}, "sportId" = 'sport_football'
+      WHERE id = ${row.id}
+    `.catch(swallow("src/lib/sports-data/persistence.ts:103", null));
+    await rememberArabicDisplay('LEAGUE', row.id, input.name);
+    return row;
   }
 }
 
@@ -152,8 +194,23 @@ export async function persistNormalizedMatch(match: NormalizedMatch) {
   }
 
   if (match.round) {
-    await prisma.$executeRaw`UPDATE "Match" SET "round" = ${match.round} WHERE id = ${saved.id}`.catch(() => undefined);
+    await prisma.$executeRaw`UPDATE "Match" SET "round" = ${match.round} WHERE id = ${saved.id}`.catch(swallow("src/lib/sports-data/persistence.ts:172", undefined));
   }
+
+  const seasonYear = new Date(saved.kickoffAt).getUTCFullYear();
+  await prisma.$executeRaw`UPDATE "Match" SET "sportId" = 'sport_football' WHERE id = ${saved.id}`.catch(swallow("src/lib/sports-data/persistence.ts:176", undefined));
+  await prisma.$executeRaw`
+    INSERT INTO "CompetitionSeason" (id, "leagueId", year, "isCurrent")
+    VALUES (${randomUUID()}, ${saved.leagueId}, ${seasonYear}, true)
+    ON CONFLICT ("leagueId", year) DO NOTHING
+  `.catch(swallow("src/lib/sports-data/persistence.ts:181", undefined));
+  await prisma.$executeRaw`
+    INSERT INTO "SportEvent" (id, "sportId", "competitionId", "seasonYear", "matchId", "kickoffAt", status)
+    VALUES (${randomUUID()}, 'sport_football', ${saved.leagueId}, ${seasonYear}, ${saved.id}, ${saved.kickoffAt}, ${saved.status})
+    ON CONFLICT ("matchId") DO UPDATE SET
+      "kickoffAt" = EXCLUDED."kickoffAt",
+      status = EXCLUDED.status
+  `.catch(swallow("src/lib/sports-data/persistence.ts:188", undefined));
 
   return saved;
 }
@@ -169,6 +226,10 @@ export async function resolveDatabaseMatchId(publicId: string) {
 
 export async function persistMatchDetail(detail: NormalizedMatchDetail) {
   const dbMatch = await persistNormalizedMatch(detail);
+
+  if (typeof detail.attendance === 'number') {
+    await prisma.$executeRaw`UPDATE "Match" SET "attendance" = ${detail.attendance} WHERE id = ${dbMatch.id}`.catch(swallow("src/lib/sports-data/persistence.ts:206", null));
+  }
 
   await prisma.$transaction([
     ...detail.events.map((event) =>

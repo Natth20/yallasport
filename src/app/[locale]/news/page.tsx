@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { cookies } from 'next/headers';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
@@ -7,26 +7,28 @@ import { Newspaper, Radio, Trophy } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/i18n/pick';
 import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
+import { BreakingStrip, EditionWire } from '@/components/news/desk/DeskChrome';
 import {
-  BreakingStrip,
-  DeskTools,
-  EditionMast,
-  EditionWire,
-} from '@/components/news/desk/DeskChrome';
-import { NewsCover, NewsSubLead, NewsTile } from '@/components/news/desk/DeskStories';
+  NewsInkCard,
+  NewsInkDesks,
+  NewsInkFresh,
+  NewsInkLead,
+  NewsInkLedger,
+  NewsInkMast,
+  NewsInkPulse,
+  NewsInkTools,
+} from '@/components/news/NewsInk';
 import {
   MostReadRail,
-  PitchPanel,
   SameDeskRail,
   SourceLedger,
   TeamsInNewsRail,
 } from '@/components/news/desk/DeskRails';
-import { ArchiveStrip, BandHead, BroadcastBand, GoalsBand, TablesBand } from '@/components/news/desk/DeskBands';
-import { TransferRumorsHub } from '@/components/news/TransferRumorsHub';
-import { linkedEntitiesForNews } from '@/lib/news/entity-suggest';
-import { loadNewsDesk } from '@/lib/news/load-desk';
+import { BandHead, BroadcastBand, GoalsBand, TablesBand } from '@/components/news/desk/DeskBands';
+import { loadNewsDesk, loadNewsSidecars } from '@/lib/news/load-desk';
 import { normalizeTimezone } from '@/lib/datetime/format';
 import { pageMetadata } from '@/lib/seo/site';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 
 export const revalidate = 60;
 
@@ -44,10 +46,22 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function NewsPage({
+export default function NewsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; desk?: string; category?: string; source?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; desk?: string; category?: string; source?: string; page?: string; day?: string }>;
+}) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <NewsPageBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function NewsPageBody({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; desk?: string; category?: string; source?: string; page?: string; day?: string }>;
 }) {
   const locale = await getLocale();
   const params = await searchParams;
@@ -56,84 +70,84 @@ export default async function NewsPage({
   const desk = (params.desk ?? params.category)?.trim() || 'all';
   const source = params.source?.trim() || 'all';
   const page = Math.max(1, Number(params.page) || 1);
-  const now = new Date();
+  const day = params.day?.trim() || '';
   const timezone = normalizeTimezone((await cookies()).get('yalla-tz')?.value);
 
-  const data = await loadNewsDesk({ locale, timezone, query, desk, source, page });
-  const entityMap = await linkedEntitiesForNews(
-    [data.lead, ...data.subLeads, ...data.rest].filter(Boolean).map((story) => story!.id),
-    locale
-  );
+  const data = await loadNewsDesk({ locale, timezone, query, desk, source, page, day: day || undefined });
 
-  const hrefFor = (next: { q?: string; desk?: string; source?: string; page?: number }) => {
+  const hrefFor = (next: { q?: string; desk?: string; source?: string; page?: number; day?: string | null }) => {
     const search = new URLSearchParams();
     const nextQuery = next.q ?? query;
     const nextDesk = next.desk ?? desk;
     const nextSource = next.source ?? source;
     const nextPage = next.page ?? 1;
+    const nextDay = next.day === null ? '' : (next.day ?? day);
     if (nextQuery) search.set('q', nextQuery);
     if (nextDesk !== 'all') search.set('desk', nextDesk);
     if (nextSource !== 'all') search.set('source', nextSource);
+    if (nextDay) search.set('day', nextDay);
     if (nextPage > 1) search.set('page', String(nextPage));
     const value = search.toString();
     return value ? `/news?${value}` : '/news';
   };
 
   return (
-    <div className="news-edition min-h-screen pb-28">
-      <div className="news-flood" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
+    <div className="nk-hall">
+      <span className="nk-aura" aria-hidden />
+      <span className="nk-grain" aria-hidden />
 
-      {data.pitch.length > 0 && <EditionWire matches={data.pitch} locale={locale} />}
+      <Suspense fallback={<FrontSkeleton kind="pulse" />}>
+        <NewsWire timezone={timezone} locale={locale} />
+      </Suspense>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 pt-5 sm:px-6 lg:px-8">
-        <EditionMast locale={locale} year={now.getFullYear()} now={now} stats={data.stats} />
+      <div className="nk-inner">
+        <NewsInkMast locale={locale} stats={data.stats} />
 
-        {data.lead ? (
-          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-12 items-stretch">
-            <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
-              <NewsCover story={data.lead} locale={locale} entities={entityMap.get(data.lead.id) ?? []} />
-            </div>
-            {data.subLeads.length > 0 && (
-              <div className="flex flex-col gap-4 lg:col-span-5 xl:col-span-4 justify-between">
-                {data.subLeads.slice(0, 3).map((story, index) => (
-                  <NewsSubLead key={story.id} story={story} locale={locale} index={index + 2} />
-                ))}
+        <div className="nk-board">
+          <div className="min-w-0">
+            {data.lead ? (
+              <div className="nk-stage">
+                <NewsInkLead story={data.lead} locale={locale} />
+                {data.subLeads.length > 0 ? (
+                  <div className="nk-side">
+                    {data.subLeads.slice(0, 3).map((story) => (
+                      <NewsInkCard key={story.id} story={story} locale={locale} />
+                    ))}
+                  </div>
+                ) : null}
               </div>
+            ) : (
+              <EmptyDesk locale={locale} filtered={data.filtered} />
             )}
-          </div>
-        ) : (
-          <EmptyDesk locale={locale} filtered={data.filtered} />
-        )}
 
-        {(data.breaking || data.freshest[0]) && (
-          <BreakingStrip
-            slug={(data.breaking || data.freshest[0])!.slug}
-            title={(data.breaking || data.freshest[0])!.title}
-            publishedAt={(data.breaking || data.freshest[0])!.publishedAt}
-            locale={locale}
-          />
-        )}
+            <NewsInkFresh
+              stories={data.freshest.filter((story) => story.id !== data.lead?.id).slice(0, 3)}
+              locale={locale}
+            />
 
-        <DeskTools
-          locale={locale}
-          query={query}
-          selectedDesk={desk}
-          selectedSource={source}
-          deskChips={data.deskChips}
-          sources={data.sources}
-          hrefFor={hrefFor}
-        />
-      </div>
+            {data.breaking ? (
+              <div className="mt-4">
+                <BreakingStrip
+                  slug={data.breaking.slug}
+                  title={data.breaking.title}
+                  publishedAt={data.breaking.publishedAt}
+                  locale={locale}
+                />
+              </div>
+            ) : null}
 
-      <main className="relative z-10 mx-auto mt-10 max-w-7xl px-5 sm:px-6 lg:px-8">
-        <section className="grid items-start gap-8 lg:grid-cols-12">
-          <div className="space-y-8 lg:col-span-8">
+            <NewsInkTools
+              locale={locale}
+              query={query}
+              selectedDesk={desk}
+              selectedSource={source}
+              desks={data.deskChips}
+              sources={data.sources}
+              hrefFor={hrefFor}
+            />
+
             {data.rest.length > 0 ? (
-              <div>
+              <div className="nk-folio">
                 <BandHead
                   locale={locale}
                   kicker={pick(locale, 'السجل', 'The log')}
@@ -151,15 +165,9 @@ export default async function NewsPage({
                   )}
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {data.rest.map((story, index) => (
-                    <NewsTile
-                      key={story.id}
-                      story={story}
-                      locale={locale}
-                      index={index + (data.page - 1) * 12 + (data.lead ? 4 : 1)}
-                      entities={entityMap.get(story.id) ?? []}
-                    />
+                <div className="nk-log">
+                  {data.rest.map((story) => (
+                    <NewsInkCard key={story.id} story={story} locale={locale} />
                   ))}
                 </div>
 
@@ -188,70 +196,97 @@ export default async function NewsPage({
                 )}
               </div>
             ) : (
-              <EditionChapters locale={locale} liveCount={data.liveCount} pitchCount={data.pitch.length} />
+              <div className="mt-6">
+                <EditionChapters locale={locale} liveCount={data.liveCount} pitchCount={data.pitch.length} />
+              </div>
             )}
           </div>
 
-          <aside className="space-y-5 lg:col-span-4">
+          <aside className="nk-rail">
             <MostReadRail articles={data.mostRead} locale={locale} />
-            <PitchPanel matches={data.pitch} locale={locale} />
             <SourceLedger sources={data.sources} locale={locale} selected={source} hrefFor={hrefFor} />
-            <TeamsInNewsRail teams={data.teamsInNews} locale={locale} />
             {data.lead && (
               <SameDeskRail articles={data.sameDesk} category={data.lead.category} locale={locale} />
             )}
+            <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+              <NewsTeamsRail timezone={timezone} locale={locale} />
+            </Suspense>
           </aside>
-        </section>
+        </div>
 
-        <TablesBand tables={data.tables} locale={locale} />
-        <GoalsBand goals={data.goals} locale={locale} />
-        <BroadcastBand broadcasts={data.broadcasts} locale={locale} />
-        <TransferRumorsHub locale={locale} />
-        <ArchiveStrip archive={data.archive} locale={locale} hrefFor={hrefFor} />
+        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+          <NewsSportBands timezone={timezone} locale={locale} />
+        </Suspense>
+
+        <div className="nk-close">
+          <NewsInkPulse archive={data.archive} locale={locale} hrefFor={hrefFor} />
+          <div className="nk-atlas">
+            <NewsInkDesks desks={data.deskChips} locale={locale} selected={desk} hrefFor={hrefFor} />
+            <NewsInkLedger sources={data.sources} locale={locale} />
+          </div>
+        </div>
 
         <p aria-hidden="true" className="news-colophon-mark">
           DESK
         </p>
-      </main>
+      </div>
     </div>
+  );
+}
+
+async function NewsWire({ timezone, locale }: { timezone: string; locale: string }) {
+  const side = await loadNewsSidecars({ locale, timezone });
+  if (side.pitch.length === 0) return null;
+  return <EditionWire matches={side.pitch} locale={locale} />;
+}
+
+async function NewsTeamsRail({ timezone, locale }: { timezone: string; locale: string }) {
+  const side = await loadNewsSidecars({ locale, timezone });
+  return <TeamsInNewsRail teams={side.teamsInNews} locale={locale} />;
+}
+
+async function NewsSportBands({ timezone, locale }: { timezone: string; locale: string }) {
+  const side = await loadNewsSidecars({ locale, timezone });
+  return (
+    <>
+      <TablesBand tables={side.tables} locale={locale} />
+      <GoalsBand goals={side.goals} locale={locale} />
+      <BroadcastBand broadcasts={side.broadcasts} locale={locale} />
+    </>
   );
 }
 
 function EmptyDesk({ locale, filtered }: { locale: string; filtered: boolean }) {
   return (
     <div className="news-empty-desk">
-      <span className="news-cover-folio" aria-hidden="true">
-        YS
-      </span>
-      <PitchWatermark className="pointer-events-none absolute inset-0 m-auto h-[70%] w-[70%] text-white/[0.07]" />
+      <PitchWatermark className="pointer-events-none absolute inset-0 m-auto h-[70%] w-[70%] text-foreground/10" />
       <div className="relative flex min-h-[inherit] flex-col justify-between gap-8 px-6 py-8 sm:px-10 sm:py-10">
-        <p className="news-cover-kicker">
-          <span className="h-px w-5 bg-orange-400/80" />
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-primary">
           {pick(locale, 'غلاف المساء', 'Evening cover')}
         </p>
         <div className="max-w-xl">
-          <h1 className="news-cover-title">
+          <h1 className="text-[clamp(1.25rem,2.4vw,1.7rem)] font-black tracking-tight text-foreground">
             {filtered
               ? pick(locale, 'لا تقرير مطابق في الغرفة.', 'No matching report in the desk.')
-              : pick(locale, 'بانتظار أول تقرير معتمد.', 'Awaiting the first approved report.')}
+              : pick(locale, 'لا توجد أخبار حديثة متاحة حالياً.', 'No recent news is available right now.')}
           </h1>
-          <p className="news-cover-excerpt mt-4">
+          <p className="mt-4 text-[0.92rem] leading-7 text-muted-foreground">
             {filtered
               ? pick(
                 locale,
-                'غيّر البحث أو الباب — لا نعرض إلا ما مرّ على التحرير واعتمد للنشر.',
-                'Change the search or desk — only desk-approved copy reaches this page.'
+                'غيّر البحث أو الباب أو يوم الأرشيف — لا نعرض إلا ما مرّ على التحرير واعتمد للنشر.',
+                'Change the search, desk, or archive day — only desk-approved copy reaches this page.'
               )
               : pick(
                 locale,
-                'الأخبار تصل من مصادر خارجية، تُراجع في الداشبورد، ثم تُنشر هنا بعد الاعتماد فقط.',
-                'Stories arrive from external sources, are reviewed in the dashboard, then appear here only after approval.'
+                'عاجل وحديث يُعرضان فقط إن نُشر الخبر خلال 48 ساعة. الأقدم في شريط الأرشيف أسفل الصفحة.',
+                'Breaking and latest only include stories published in the last 48 hours. Older filings sit in the archive strip below.'
               )}
           </p>
         </div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-3">
-            <TicketBarcode className="text-white/30" />
+            <TicketBarcode className="text-muted-foreground/50" />
             <div className="flex flex-wrap gap-2">
               {[
                 pick(locale, 'من المصدر', 'From source'),
@@ -260,7 +295,7 @@ function EmptyDesk({ locale, filtered }: { locale: string; filtered: boolean }) 
               ].map((stamp) => (
                 <span
                   key={stamp}
-                  className="rounded-full border border-white/10 bg-card/[0.04] px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/55"
+                  className="rounded-full border border-border bg-card/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
                 >
                   {stamp}
                 </span>
@@ -270,15 +305,15 @@ function EmptyDesk({ locale, filtered }: { locale: string; filtered: boolean }) 
           <div className="flex gap-2">
             <Link
               href="/matches"
-              className="rounded-full bg-orange-500 px-4 py-2 text-[10px] font-bold text-primary-foreground hover:bg-orange-400"
+              className="rounded-full bg-primary px-4 py-2 text-[10px] font-bold text-primary-foreground"
             >
               {pick(locale, 'جدول المباريات', 'Match table')}
             </Link>
             <Link
               href="/live"
-              className="rounded-full border border-white/15 px-4 py-2 text-[10px] font-bold text-white/80 hover:border-orange-400 hover:text-orange-300"
+              className="rounded-full border border-border px-4 py-2 text-[10px] font-bold text-foreground"
             >
-              {pick(locale, 'البثوث', 'Broadcasts')}
+              {pick(locale, 'يلا سبورت مباشر', 'Yalla Sport Live')}
             </Link>
           </div>
         </div>
@@ -318,7 +353,7 @@ function EditionChapters({
       href: '/live',
       icon: Radio,
       kicker: pick(locale, 'البث', 'Broadcast'),
-      title: pick(locale, 'المباشر', 'Live'),
+      title: pick(locale, 'يلا سبورت مباشر', 'Yalla Sport Live'),
       meta: liveCount > 0 ? `${liveCount} ${pick(locale, 'الآن', 'now')}` : pick(locale, 'غرفة البث', 'The booth'),
     },
   ];
@@ -329,7 +364,7 @@ function EditionChapters({
         <Link
           key={chapter.href}
           href={chapter.href}
-          className="group rounded-2xl border border-border/80 bg-card/80 px-4 py-5 transition-all hover:-translate-y-0.5 hover:border-orange-300 dark:bg-card/[0.03]"
+          className="group rounded-2xl border border-border/80 bg-card/80 px-4 py-5 transition-colors hover:border-orange-300 dark:bg-card/[0.03]"
         >
           <chapter.icon className="h-4 w-4 text-orange-500" />
           <span className="mt-4 block text-[8px] font-bold uppercase tracking-[0.22em] text-muted-foreground">

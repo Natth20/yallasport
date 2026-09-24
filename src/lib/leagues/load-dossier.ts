@@ -1,4 +1,6 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 import type { NormalizedMatch, NormalizedStanding } from '@/lib/sports-data/types';
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { sportsData } from '@/lib/sports-data';
@@ -6,7 +8,8 @@ import { sportsData } from '@/lib/sports-data';
 async function soft<T>(run: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await run();
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/leagues/load-dossier.ts:10", error);
     return fallback;
   }
 }
@@ -15,41 +18,6 @@ export function footballSeason(now = new Date()) {
   const year = now.getFullYear();
   const month = now.getMonth();
   return month >= 6 ? year : year - 1;
-}
-
-function apiTransport(): { baseUrl: string; headers: Record<string, string> } | null {
-  const apiKey = process.env.SPORTS_API_KEY;
-  if (!apiKey || !isLiveSportsApi()) return null;
-  const isRapidAPI = !process.env.SPORTS_API_PROVIDER || process.env.SPORTS_API_PROVIDER === 'rapidapi';
-  if (isRapidAPI) {
-    return {
-      baseUrl: 'https://api-football-v1.p.rapidapi.com/v3',
-      headers: {
-        'x-rapidapi-key': apiKey,
-        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-      },
-    };
-  }
-  return {
-    baseUrl: 'https://v3.football.api-sports.io',
-    headers: { 'x-apisports-key': apiKey },
-  };
-}
-
-async function apiGet<T>(endpoint: string): Promise<T | null> {
-  const transport = apiTransport();
-  if (!transport) return null;
-  try {
-    const response = await fetch(`${transport.baseUrl}${endpoint}`, {
-      headers: transport.headers,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  }
 }
 
 function slugifyName(name: string) {
@@ -301,17 +269,22 @@ async function upsertTeamRow(input: {
   const externalId = String(input.externalId);
   const slug = `${slugifyName(input.slug || input.name)}-${externalId}`;
   try {
-    return await prisma.team.upsert({
+    const row = await prisma.team.upsert({
       where: { externalId },
-      update: { name: input.name, logoUrl: input.logoUrl ?? null },
+      update: { name: input.name, officialName: input.name, logoUrl: input.logoUrl ?? null },
       create: {
         externalId,
         name: input.name,
+        officialName: input.name,
         slug,
         logoUrl: input.logoUrl ?? null,
       },
     });
-  } catch {
+    const { rememberArabicDisplay } = await import('@/lib/sports-data/persistence');
+    await rememberArabicDisplay('TEAM', row.id, input.name);
+    return row;
+  } catch (error) {
+    reportCaughtError("src/lib/leagues/load-dossier.ts:280", error);
     return prisma.team.findUnique({ where: { externalId } });
   }
 }
@@ -324,20 +297,26 @@ async function upsertPlayerRow(input: {
   const externalId = String(input.externalId);
   const slug = `${slugifyName(input.name)}-${externalId}`;
   try {
-    return await prisma.player.upsert({
+    const row = await prisma.player.upsert({
       where: { externalId },
       update: {
         name: input.name,
+        officialName: input.name,
         ...(input.photoUrl ? { photoUrl: input.photoUrl } : {}),
       },
       create: {
         externalId,
         name: input.name,
+        officialName: input.name,
         slug,
         photoUrl: input.photoUrl ?? null,
       },
     });
-  } catch {
+    const { rememberArabicDisplay } = await import('@/lib/sports-data/persistence');
+    await rememberArabicDisplay('PLAYER', row.id, input.name);
+    return row;
+  } catch (error) {
+    reportCaughtError("src/lib/leagues/load-dossier.ts:306", error);
     return prisma.player.findUnique({ where: { externalId } });
   }
 }
@@ -401,10 +380,10 @@ async function hydrateLeagueFixtures(leagueExternalId: string, season: string) {
   let rows: ApiFixtureRow[] = [];
   for (const year of seasonsToTry) {
     const [lastData, nextData] = await Promise.all([
-      apiGet<{ response?: ApiFixtureRow[] }>(
+      sportsData.getRaw<{ response?: ApiFixtureRow[] }>(
         `/fixtures?league=${encodeURIComponent(leagueExternalId)}&season=${encodeURIComponent(year)}&last=20`
       ),
-      apiGet<{ response?: ApiFixtureRow[] }>(
+      sportsData.getRaw<{ response?: ApiFixtureRow[] }>(
         `/fixtures?league=${encodeURIComponent(leagueExternalId)}&season=${encodeURIComponent(year)}&next=15`
       ),
     ]);
@@ -418,7 +397,8 @@ async function hydrateLeagueFixtures(leagueExternalId: string, season: string) {
     try {
       await persistNormalizedMatch(mapApiFixture(row));
       saved += 1;
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/lib/leagues/load-dossier.ts:387", error);
       // keep going
     }
   }
@@ -434,7 +414,7 @@ type ApiTopScorerRow = {
 };
 
 async function fetchApiTopScorers(leagueExternalId: string, season: string) {
-  const data = await apiGet<{ response?: ApiTopScorerRow[] }>(
+  const data = await sportsData.getRaw<{ response?: ApiTopScorerRow[] }>(
     `/players/topscorers?league=${encodeURIComponent(leagueExternalId)}&season=${encodeURIComponent(season)}`
   );
   const response = data?.response || [];
@@ -521,7 +501,7 @@ function mapMatchCard(match: {
   };
 }
 
-export async function loadLeagueDossier(
+export const loadLeagueDossier = cache(async function loadLeagueDossier(
   slug: string,
   options?: { season?: string }
 ): Promise<LeagueDossierData | null> {
@@ -993,4 +973,4 @@ export async function loadLeagueDossier(
     news,
     archiveSeasons,
   };
-}
+});

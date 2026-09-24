@@ -43,7 +43,7 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
   const [tab, setTab] = useState<Tab>('events');
   const [lineupView, setLineupView] = useState<'pitch' | 'list'>('pitch');
   const [events, setEvents] = useState(props.initialEvents);
-  const [lineups, setLineups] = useState(props.initialLineups);
+  const [lineups, setLineups] = useState(props.initialLineups.filter((lineup) => lineup.status === 'CONFIRMED'));
   const [statistics, setStatistics] = useState(props.initialStatistics);
   const [updating, setUpdating] = useState(false);
 
@@ -56,7 +56,7 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
         if (!response.ok) return;
         const match: NormalizedMatchDetail = await response.json();
         setEvents(match.events);
-        setLineups(match.lineups);
+        setLineups((match.lineups ?? []).filter((lineup) => lineup.status === 'CONFIRMED'));
         setStatistics(match.statistics);
       } finally {
         setUpdating(false);
@@ -82,7 +82,7 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
     [t('corners'), homeStats?.corners, awayStats?.corners, ''],
     [t('offsides'), homeStats?.offsides, awayStats?.offsides, ''],
     [t('fouls'), homeStats?.fouls, awayStats?.fouls, ''],
-  ].filter((row) => row[1] !== undefined || row[2] !== undefined);
+  ].filter((row) => typeof row[1] === 'number' && typeof row[2] === 'number');
 
   return (
     <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_25px_70px_-45px_rgba(15,23,42,0.3)] dark:border-border dark:bg-card/[0.04]">
@@ -227,8 +227,8 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
                 <span>{props.awayTeamName}</span>
               </div>
               {statisticRows.map(([label, homeValue, awayValue, suffix]) => {
-                const home = Number(homeValue ?? 0);
-                const away = Number(awayValue ?? 0);
+                const home = Number(homeValue);
+                const away = Number(awayValue);
                 const total = Math.max(home + away, 1);
                 return (
                   <div key={String(label)}>

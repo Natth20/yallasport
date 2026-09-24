@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { format, differenceInDays } from 'date-fns';
-import { ShieldCheck, AlertCircle, Clock, Plus } from 'lucide-react';
-import {Link} from '@/i18n/navigation';
-import {getLocale} from 'next-intl/server';
-import {pick} from '@/i18n/pick';
+import { ShieldCheck, AlertCircle, Clock } from 'lucide-react';
+import { getLocale } from 'next-intl/server';
+import { pick } from '@/i18n/pick';
+import { createLicense, setLicenseStatus } from './actions';
 
 /**
  * LicensesAdminPage - Management interface for legal licenses.
@@ -18,16 +18,27 @@ export default async function LicensesAdminPage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-foreground dark:text-foreground">{pick(locale, 'إدارة التراخيص', 'Manage licenses')}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{pick(locale, 'عرض ومتابعة عقود التراخيص الرسمية للمحتوى والبث.', 'View and track official content and broadcast license agreements.')}</p>
-        </div>
-        <button className="bg-orange-500 hover:bg-orange-600 text-primary-foreground px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all">
-          <Plus className="w-5 h-5" />
-          {pick(locale, 'إضافة ترخيص جديد', 'Add license')}
-        </button>
+      <div>
+        <h1 className="text-3xl font-black text-foreground dark:text-foreground">{pick(locale, 'إدارة التراخيص', 'Manage licenses')}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{pick(locale, 'سجّل عقداً برقم مرجعي. لا تُخزَّن مفاتيح المزوّد هنا.', 'Store a contract with a reference number. Vendor keys stay in env.')}</p>
       </div>
+
+      <form action={createLicense} className="grid gap-3 rounded-[2rem] border border-border bg-card p-6 dark:border-border sm:grid-cols-2 lg:grid-cols-3">
+        <select name="type" className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-bold" defaultValue="DATA">
+          <option value="DATA">DATA</option>
+          <option value="CONTENT">CONTENT</option>
+          <option value="STREAMING">STREAMING</option>
+        </select>
+        <input name="provider" placeholder={pick(locale, 'الجهة', 'Provider')} className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+        <input name="scope" required placeholder={pick(locale, 'النطاق (دوري/موسم)', 'Scope')} className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+        <input name="contractReference" placeholder={pick(locale, 'رقم العقد', 'Contract ref')} className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+        <input name="apiCredentialsRef" placeholder={pick(locale, 'اسم متغير البيئة فقط', 'Env var name only')} className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+        <input type="date" name="startDate" required className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+        <input type="date" name="endDate" className="rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+        <button type="submit" className="rounded-xl bg-foreground px-4 py-2 text-sm font-black text-white sm:col-span-2 lg:col-span-3">
+          {pick(locale, 'إضافة ترخيص', 'Add license')}
+        </button>
+      </form>
 
       <div className="grid grid-cols-1 gap-6">
         {licenses.length > 0 ? (
@@ -41,7 +52,7 @@ export default async function LicensesAdminPage() {
                 <div className="flex flex-col lg:flex-row justify-between gap-8">
                   <div className="flex gap-6">
                     <div className={`p-4 rounded-3xl shrink-0 h-fit ${isExpired ? 'bg-red-50 dark:bg-red-950/20 text-red-500' : 'bg-brand-green/10 text-brand-green'}`}>
-                       <ShieldCheck className="w-8 h-8" />
+                      <ShieldCheck className="w-8 h-8" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
@@ -51,6 +62,12 @@ export default async function LicensesAdminPage() {
                         </span>
                       </div>
                       <p className="text-muted-foreground text-sm font-bold uppercase tracking-tight">{license.type} - {license.scope}</p>
+                      {license.contractReference ? (
+                        <p className="text-xs text-muted-foreground">{pick(locale, 'مرجع:', 'Ref:')} {license.contractReference}</p>
+                      ) : null}
+                      {license.apiCredentialsRef ? (
+                        <p className="text-xs text-muted-foreground">{pick(locale, 'مفتاح البيئة:', 'Env key:')} {license.apiCredentialsRef}</p>
+                      ) : null}
                       <div className="flex flex-wrap gap-4 pt-2">
                         <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted dark:bg-muted px-3 py-1.5 rounded-xl">
                           <Clock className="w-3.5 h-3.5" />
@@ -70,10 +87,20 @@ export default async function LicensesAdminPage() {
                         )}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 lg:self-start">
-                    <button className="px-6 py-3 bg-muted dark:bg-muted hover:bg-muted rounded-xl text-xs font-black transition-colors">{pick(locale, 'تعديل البيانات', 'Edit details')}</button>
-                    <button className="px-6 py-3 bg-red-50 dark:bg-red-950/20 text-red-600 hover:bg-red-100 rounded-xl text-xs font-black transition-colors">{pick(locale, 'إلغاء الترخيص', 'Cancel license')}</button>
+                    <div className="flex flex-wrap gap-2">
+                      {(['PENDING', 'ACTIVE', 'EXPIRED', 'REVOKED'] as const).map((status) => (
+                        <form action={setLicenseStatus} key={status}>
+                          <input type="hidden" name="id" value={license.id} />
+                          <input type="hidden" name="status" value={status} />
+                          <button
+                            type="submit"
+                            className="rounded-lg border border-border px-3 py-1 text-[10px] font-black hover:bg-muted"
+                          >
+                            {status}
+                          </button>
+                        </form>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -83,7 +110,7 @@ export default async function LicensesAdminPage() {
           <div className="bg-card dark:bg-background p-20 rounded-[3rem] text-center border-2 border-dashed border-border dark:border-border">
             <ShieldCheck className="w-16 h-16 text-gray-200 mx-auto mb-6" />
             <h3 className="text-xl font-black text-muted-foreground">{pick(locale, 'لا توجد تراخيص مسجلة حالياً', 'No licenses registered')}</h3>
-            <p className="text-muted-foreground text-sm mt-2">{pick(locale, 'قم بإضافة التراخيص الرسمية لتفعيل المحتوى المرتبط بها.', 'Add official licenses to activate their related content.')}</p>
+            <p className="text-muted-foreground text-sm mt-2">{pick(locale, 'استخدم النموذج أعلاه لتسجيل عقد حقيقي.', 'Use the form above to register a real contract.')}</p>
           </div>
         )}
       </div>

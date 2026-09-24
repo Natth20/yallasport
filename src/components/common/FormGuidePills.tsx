@@ -36,7 +36,7 @@ export function FormGuidePills({ form = [], size = 'md', locale = 'ar' }: FormGu
           <span
             key={index}
             title={getLabel(r)}
-            className={`flex items-center justify-center rounded-full font-black select-none transition-transform hover:scale-110 ${dimClass} ${getClasses(r)}`}
+            className={`flex items-center justify-center rounded-full font-black select-none ${dimClass} ${getClasses(r)}`}
           >
             {isAr ? (r === 'W' ? 'ف' : r === 'D' ? 'ت' : 'خ') : r}
           </span>

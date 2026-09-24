@@ -1,5 +1,6 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
-import { isLiveSportsApi } from '@/lib/sports-data/config';
+import { sportsData } from '@/lib/sports-data';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
   let lastError: unknown;
@@ -25,45 +26,8 @@ async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise
 async function wave<T extends readonly unknown[]>(
   tasks: [...{ [K in keyof T]: () => Promise<T[K]> }]
 ): Promise<{ [K in keyof T]: T[K] }> {
-  const out: unknown[] = [];
-  for (const task of tasks) {
-    out.push(await task());
-  }
+  const out = await Promise.all(tasks.map((task) => task()));
   return out as { [K in keyof T]: T[K] };
-}
-
-function apiTransport() {
-  const apiKey = process.env.SPORTS_API_KEY?.trim();
-  if (!apiKey || !isLiveSportsApi()) return null;
-  const provider = (process.env.SPORTS_API_PROVIDER || 'apisports').toLowerCase();
-  const baseUrl =
-    provider === 'rapidapi'
-      ? 'https://api-football-v1.p.rapidapi.com/v3'
-      : 'https://v3.football.api-sports.io';
-  const headers: Record<string, string> =
-    provider === 'rapidapi'
-      ? {
-          'x-rapidapi-key': apiKey,
-          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-        }
-      : { 'x-apisports-key': apiKey };
-  return { baseUrl, headers };
-}
-
-async function apiGet<T>(endpoint: string): Promise<T | null> {
-  const transport = apiTransport();
-  if (!transport) return null;
-  try {
-    const response = await fetch(`${transport.baseUrl}${endpoint}`, {
-      headers: transport.headers,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(4500),
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  }
 }
 
 function footballSeason(now = new Date()) {
@@ -198,6 +162,7 @@ export type PlayerDossierData = {
   seasonLabel: number | null;
   seasonTotals: PlayerSeasonTotals | null;
   prevSeasonTotals: PlayerSeasonTotals | null;
+  olderSeasonTotals: PlayerSeasonTotals | null;
   rates: PlayerRates | null;
   profileBars: PlayerProfileBar[];
   trophies: Array<{ league: string; country: string | null; season: string; place: string | null }>;
@@ -579,7 +544,7 @@ function buildProfileBars(totals: PlayerSeasonTotals): PlayerProfileBar[] {
   return candidates.filter((row) => row.value > 0);
 }
 
-export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData | null> {
+export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: string): Promise<PlayerDossierData | null> {
   const playerRow = await soft(
     () =>
       prisma.player.findUnique({
@@ -610,6 +575,7 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
     newsRows,
     apiPlayer,
     apiPlayerPrev,
+    apiPlayerOlder,
     apiTransfers,
     apiTrophies,
     apiTeams,
@@ -639,7 +605,7 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
               type: { in: ['GOAL', 'PENALTY', 'OWN_GOAL', 'YELLOW_CARD', 'RED_CARD', 'SUBSTITUTION'] },
             },
             orderBy: [{ match: { kickoffAt: 'desc' } }, { minute: 'desc' }],
-            take: 30,
+            take: 48,
             select: {
               id: true,
               type: true,
@@ -668,7 +634,7 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
           prisma.transfer.findMany({
             where: { playerId: playerRow.id },
             orderBy: { date: 'desc' },
-            take: 12,
+            take: 24,
             select: { id: true, date: true, fee: true, fromTeam: true, toTeam: true },
           }),
         []
@@ -691,7 +657,7 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
               ],
             },
             orderBy: { publishedAt: 'desc' },
-            take: 8,
+            take: 12,
             select: {
               id: true,
               slug: true,
@@ -707,12 +673,13 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
           }),
         []
       ),
-    () => soft(() => apiGet<ApiPlayerPayload>(`/players?id=${ext}&season=${season}`), null),
-    () => soft(() => apiGet<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 1}`), null),
-    () => soft(() => apiGet<ApiTransferPayload>(`/transfers?player=${ext}`), null),
-    () => soft(() => apiGet<ApiTrophyPayload>(`/trophies?player=${ext}`), null),
-    () => soft(() => apiGet<ApiTeamsPayload>(`/players/teams?player=${ext}`), null),
-    () => soft(() => apiGet<ApiSidelinedPayload>(`/sidelined?player=${ext}`), null),
+    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season}`), null),
+    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 1}`), null),
+    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 2}`), null),
+    () => soft(() => sportsData.getRaw<ApiTransferPayload>(`/transfers?player=${ext}`), null),
+    () => soft(() => sportsData.getRaw<ApiTrophyPayload>(`/trophies?player=${ext}`), null),
+    () => soft(() => sportsData.getRaw<ApiTeamsPayload>(`/players/teams?player=${ext}`), null),
+    () => soft(() => sportsData.getRaw<ApiSidelinedPayload>(`/sidelined?player=${ext}`), null),
   ]);
 
   const currentBlocks = (apiPlayer?.response?.[0]?.statistics || [])
@@ -721,12 +688,19 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
   const prevBlocks = (apiPlayerPrev?.response?.[0]?.statistics || [])
     .map((row) => mapSeasonBlock(row))
     .filter(Boolean) as PlayerSeasonBlock[];
+  const olderBlocks = (apiPlayerOlder?.response?.[0]?.statistics || [])
+    .map((row) => mapSeasonBlock(row))
+    .filter(Boolean) as PlayerSeasonBlock[];
 
   // Prefer current season for profile, but keep previous competition cards when current is thin.
   const seasonBlocks = (
     currentBlocks.length > 0
-      ? [...currentBlocks, ...prevBlocks.filter((b) => b.league.season !== season)]
-      : prevBlocks
+      ? [
+          ...currentBlocks,
+          ...prevBlocks.filter((b) => b.league.season !== season),
+          ...olderBlocks.filter((b) => b.league.season !== season && b.league.season !== season - 1),
+        ]
+      : [...prevBlocks, ...olderBlocks]
   ).sort((a, b) => {
     const seasonDiff = (b.league.season || 0) - (a.league.season || 0);
     if (seasonDiff !== 0) return seasonDiff;
@@ -813,7 +787,11 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
   const prevSeasonTotals =
     currentBlocks.length > 0 && prevBlocks.length > 0
       ? sumSeason(prevBlocks, season - 1)
-      : null;
+      : currentBlocks.length === 0 && prevBlocks.length > 0 && olderBlocks.length > 0
+        ? sumSeason(olderBlocks, season - 2)
+        : null;
+  const olderSeasonTotals =
+    currentBlocks.length > 0 && olderBlocks.length > 0 ? sumSeason(olderBlocks, season - 2) : null;
   const rates = seasonTotals ? buildRates(seasonTotals) : null;
 
   const assists = seasonTotals?.assists || 0;
@@ -839,7 +817,7 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
         };
       })
       .filter(Boolean)
-      .slice(0, 24) || [];
+      .slice(0, 40) || [];
 
   const sidelined =
     apiSidelined?.response
@@ -864,10 +842,27 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
       toTeam: row.teams?.in?.name || null,
     })) || [];
 
-  const transfers =
-    transfersDb.length > 0
-      ? transfersDb.map((row) => ({ ...row, type: row.fee || null }))
-      : apiTransferRows.filter((row) => !Number.isNaN(row.date.getTime()) && row.date.getTime() > 0);
+  const feeByKey = new Map(
+    transfersDb.map((row) => [
+      `${row.date.toISOString().slice(0, 10)}|${row.fromTeam || ''}|${row.toTeam || ''}`,
+      row.fee,
+    ]),
+  );
+  const transfers = (
+    apiTransferRows.length > 0
+      ? apiTransferRows.map((row) => {
+          const key = `${row.date.toISOString().slice(0, 10)}|${row.fromTeam || ''}|${row.toTeam || ''}`;
+          return { ...row, fee: row.fee || feeByKey.get(key) || null };
+        })
+      : transfersDb.map((row) => ({
+          id: row.id,
+          date: row.date,
+          fee: row.fee,
+          type: null as string | null,
+          fromTeam: row.fromTeam,
+          toTeam: row.toTeam,
+        }))
+  ).filter((row) => !Number.isNaN(row.date.getTime()) && row.date.getTime() > 0);
 
   const news = newsRows
     .filter((row): row is typeof row & { publishedAt: Date } => Boolean(row.publishedAt))
@@ -905,12 +900,12 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
     },
     currentClub: current
       ? {
-          id: current.team.id,
-          name: current.team.name,
-          slug: current.team.slug,
-          logoUrl: current.team.logoUrl,
-          shirtNumber: current.shirtNumber ?? shirtFromApi,
-        }
+        id: current.team.id,
+        name: current.team.name,
+        slug: current.team.slug,
+        logoUrl: current.team.logoUrl,
+        shirtNumber: current.shirtNumber ?? shirtFromApi,
+      }
       : null,
     clubHistory,
     apiClubs: apiClubs as PlayerDossierData['apiClubs'],
@@ -926,6 +921,7 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
     seasonLabel: focusSeason,
     seasonTotals,
     prevSeasonTotals,
+    olderSeasonTotals,
     rates,
     profileBars,
     trophies: trophies as PlayerDossierData['trophies'],
@@ -942,4 +938,166 @@ export async function loadPlayerDossier(slug: string): Promise<PlayerDossierData
     transfers,
     news,
   };
+});
+
+export type PlayerCompareCard = {
+  id: string;
+  slug: string;
+  name: string;
+  photoUrl: string | null;
+  position: string | null;
+  nationality: string | null;
+  age: number | null;
+  club: { id: string; name: string; slug: string; logoUrl: string | null } | null;
+  season: number | null;
+  totals: PlayerSeasonTotals | null;
+  rates: PlayerRates | null;
+  competitions: string[];
+};
+
+/** Season stats from the football API — not sparse local match-event counts. */
+export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
+  slug: string,
+  seasonYear?: number,
+): Promise<PlayerCompareCard | null> {
+  const playerRow = await soft(
+    () =>
+      prisma.player.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          externalId: true,
+          name: true,
+          slug: true,
+          photoUrl: true,
+          position: true,
+          nationality: true,
+          birthDate: true,
+        },
+      }),
+    null,
+  );
+  if (!playerRow) return null;
+
+  const season = seasonYear ?? footballSeason();
+  const pinnedSeason = seasonYear != null;
+  const ext = encodeURIComponent(playerRow.externalId);
+
+  const [clubRows, apiPlayer, apiPlayerPrev] = await wave([
+    () =>
+      soft(
+        () =>
+          prisma.playerTeam.findMany({
+            where: { playerId: playerRow.id, to: null },
+            take: 1,
+            select: {
+              team: { select: { id: true, name: true, slug: true, logoUrl: true } },
+            },
+          }),
+        [],
+      ),
+    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season}`), null),
+    () =>
+      pinnedSeason
+        ? Promise.resolve(null)
+        : soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 1}`), null),
+  ]);
+
+  const currentBlocks = (apiPlayer?.response?.[0]?.statistics || [])
+    .map((row) => mapSeasonBlock(row))
+    .filter(Boolean) as PlayerSeasonBlock[];
+  const prevBlocks = (apiPlayerPrev?.response?.[0]?.statistics || [])
+    .map((row) => mapSeasonBlock(row))
+    .filter(Boolean) as PlayerSeasonBlock[];
+  const blocks = currentBlocks.length > 0 ? currentBlocks : prevBlocks;
+  const totals = sumSeason(blocks, currentBlocks.length > 0 ? season : season - 1);
+  const apiProfile = apiPlayer?.response?.[0]?.player || apiPlayerPrev?.response?.[0]?.player;
+  const birthDate =
+    playerRow.birthDate || (apiProfile?.birth?.date ? new Date(apiProfile.birth.date) : null);
+  const age =
+    typeof apiProfile?.age === 'number'
+      ? apiProfile.age
+      : birthDate
+        ? Math.max(15, new Date().getFullYear() - birthDate.getFullYear())
+        : null;
+  const clubFromApi = blocks[0]?.team;
+  const clubFromLedger = clubRows[0]?.team ?? null;
+  let club = clubFromLedger;
+  if (!club && clubFromApi?.id) {
+    const mapped = await soft(
+      () =>
+        prisma.team.findFirst({
+          where: { externalId: clubFromApi.id },
+          select: { id: true, name: true, slug: true, logoUrl: true },
+        }),
+      null,
+    );
+    club = mapped
+      ? mapped
+      : { id: clubFromApi.id, name: clubFromApi.name, slug: '', logoUrl: clubFromApi.logoUrl };
+  }
+
+  return {
+    id: playerRow.id,
+    slug: playerRow.slug,
+    name: playerRow.name,
+    photoUrl: playerRow.photoUrl || apiProfile?.photo || null,
+    position: playerRow.position || blocks[0]?.games.position || null,
+    nationality: playerRow.nationality || apiProfile?.nationality || null,
+    age,
+    club,
+    season: totals?.season ?? (blocks.length ? blocks[0]?.league.season ?? null : null),
+    totals,
+    rates: totals ? buildRates(totals) : null,
+    competitions: [...new Set(blocks.map((block) => block.league.name).filter(Boolean))],
+  };
+});
+
+const COMPARE_FACE_NEEDLES = [
+  'Mohamed Salah',
+  'Riyad Mahrez',
+  'Erling Haaland',
+  'Kylian Mbappe',
+  'Vinicius',
+  'Jude Bellingham',
+  'Lamine Yamal',
+  'Harry Kane',
+  'Lionel Messi',
+  'Cristiano Ronaldo',
+  'Robert Lewandowski',
+];
+
+export async function listCompareFaces() {
+  const rows = await soft(
+    () =>
+      prisma.player.findMany({
+        where: {
+          OR: COMPARE_FACE_NEEDLES.map((name) => ({
+            name: {
+              contains: name === 'Kylian Mbappe' ? 'Mbapp' : name,
+              mode: 'insensitive' as const,
+            },
+          })),
+        },
+        take: 40,
+        select: {
+          name: true,
+          slug: true,
+          photoUrl: true,
+          position: true,
+        },
+      }),
+    [],
+  );
+
+  const ranked: typeof rows = [];
+  for (const needle of COMPARE_FACE_NEEDLES) {
+    const hit = rows.find(
+      (row) =>
+        row.name.toLowerCase().includes(needle.toLowerCase()) ||
+        (needle === 'Kylian Mbappe' && /mbapp/i.test(row.name)),
+    );
+    if (hit && !ranked.some((row) => row.slug === hit.slug)) ranked.push(hit);
+  }
+  return ranked.slice(0, 8);
 }

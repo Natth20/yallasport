@@ -1,3 +1,4 @@
+import { reportCaughtError } from '@/lib/ops/caught';
 function isDataSaverOn(): boolean {
   if (typeof document !== 'undefined' && document.documentElement.dataset.dataSaver === 'on') {
     return true;
@@ -5,7 +6,8 @@ function isDataSaverOn(): boolean {
   if (typeof localStorage === 'undefined') return false;
   try {
     return JSON.parse(localStorage.getItem('yalla-data-saver') || 'false') === true;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/streaming/network-cap.ts:8", error);
     return false;
   }
 }

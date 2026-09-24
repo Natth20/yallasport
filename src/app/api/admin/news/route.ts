@@ -1,7 +1,11 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth';
+import { enqueueNewsTranslation } from '@/lib/i18n/backfill';
 import { resolveNewsImage } from '@/lib/news/enrich-source';
-import { resolveFullArticleBody, wordCount } from '@/lib/news/fetch-article';
+import { isProtectedFullTextSource } from '@/lib/news/import-copy';
+import { pushProvenance } from '@/lib/news/provenance';
+import { readingTimeMinutes } from '@/lib/news/reading-time';
 import { isEditorialNewsItem, isTrustedNewsUrl } from '@/lib/news/trusted-sources';
 import { prisma } from '@/lib/prisma';
 
@@ -15,11 +19,10 @@ function asBool(value: unknown) {
   return value === true || value === 'true';
 }
 
-function pushProvenance(
-  current: unknown,
-  entry: Record<string, unknown>
-) {
-  return [...(((current as unknown[]) || []) as object[]), entry];
+function asDate(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export const POST = auth(async function POST(req) {
@@ -27,7 +30,7 @@ export const POST = auth(async function POST(req) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/admin/news/route.ts:32", null, { persist: false }));
   const id = asString(body?.id);
   const action = asString(body?.action);
   const userId = (req.auth.user as { id?: string }).id;
@@ -69,10 +72,10 @@ export const POST = auth(async function POST(req) {
           featuredImage: image,
           ogImage: image,
           provenance: pushProvenance(row.provenance, {
-            timestamp: new Date().toISOString(),
             userId,
             action: 'NEWS_ENRICH_IMAGE',
             image,
+            aiAssisted: false,
           }),
         },
       });
@@ -100,9 +103,9 @@ export const POST = auth(async function POST(req) {
       data: {
         status: 'ARCHIVED',
         provenance: pushProvenance(news.provenance, {
-          timestamp: new Date().toISOString(),
           userId,
           action: 'NEWS_REJECT',
+          aiAssisted: false,
         }),
       },
     });
@@ -117,46 +120,45 @@ export const POST = auth(async function POST(req) {
       );
     }
 
-    const fuller = await resolveFullArticleBody({
-      content: news.content,
-      sourceUrl: news.sourceUrl,
-    });
     const image =
       news.featuredImage ||
       news.ogImage ||
-      fuller.image ||
       (await resolveNewsImage({
-        content: fuller.html,
+        content: news.excerpt || news.content,
         sourceUrl: news.sourceUrl,
       }));
 
-    const plain = fuller.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const now = new Date();
+    const schedule = asDate(body?.publishAt) || news.publishAt;
+    const goLiveAt = schedule && schedule.getTime() > now.getTime() ? schedule : news.publishedAt || now;
 
     const updated = await prisma.news.update({
       where: { id },
       data: {
         status: 'PUBLISHED',
-        publishedAt: news.publishedAt || new Date(),
+        publishedAt: goLiveAt,
+        publishAt: schedule,
         editorId: userId || news.editorId,
-        content: fuller.html,
-        excerpt: news.excerpt || plain.slice(0, 220) || null,
         featuredImage: image || news.featuredImage,
         ogImage: image || news.ogImage,
-        readingTime: Math.max(1, Math.ceil(wordCount(fuller.html) / 200)),
+        readingTime: readingTimeMinutes(`${news.excerpt || ''} ${news.content}`),
         provenance: pushProvenance(news.provenance, {
-          timestamp: new Date().toISOString(),
           userId,
           action: 'NEWS_APPROVE',
           image: image || null,
-          enrichedBody: fuller.enriched,
+          scheduled: Boolean(schedule && schedule.getTime() > now.getTime()),
+          publishAt: schedule?.toISOString() || null,
+          aiAssisted: false,
+          fullTextCopied: false,
         }),
       },
     });
+    await enqueueNewsTranslation(updated.id);
     return NextResponse.json({
       success: true,
       status: updated.status,
       image: image || null,
-      enrichedBody: fuller.enriched,
+      publishedAt: updated.publishedAt,
     });
   }
 
@@ -189,8 +191,15 @@ export const POST = auth(async function POST(req) {
       image = await resolveNewsImage({ content, sourceUrl });
     }
 
-    const plain = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    const readingTime = Math.max(1, Math.ceil(plain.split(/\s+/).length / 200));
+    const now = new Date();
+    const schedule = asDate(body?.publishAt) || news.publishAt;
+    const readingTime = readingTimeMinutes(`${excerpt} ${content}`);
+    const publishedAt =
+      nextStatus === 'PUBLISHED'
+        ? schedule && schedule.getTime() > now.getTime()
+          ? schedule
+          : news.publishedAt || now
+        : news.publishedAt;
 
     const updated = await prisma.news.update({
       where: { id },
@@ -208,20 +217,22 @@ export const POST = auth(async function POST(req) {
         breaking: asBool(body?.breaking),
         isPremium: asBool(body?.isPremium),
         status: nextStatus as typeof news.status,
-        publishedAt:
-          nextStatus === 'PUBLISHED'
-            ? news.publishedAt || new Date()
-            : news.publishedAt,
+        publishedAt,
+        publishAt: schedule,
         editorId: userId || news.editorId,
         readingTime,
         provenance: pushProvenance(news.provenance, {
-          timestamp: new Date().toISOString(),
           userId,
           action: 'NEWS_SAVE',
           status: nextStatus,
+          aiAssisted: false,
+          publishAt: schedule?.toISOString() || null,
         }),
       },
     });
+    if (nextStatus === 'PUBLISHED') {
+      await enqueueNewsTranslation(updated.id);
+    }
 
     return NextResponse.json({
       success: true,
@@ -247,10 +258,10 @@ export const POST = auth(async function POST(req) {
         featuredImage: image,
         ogImage: image,
         provenance: pushProvenance(news.provenance, {
-          timestamp: new Date().toISOString(),
           userId,
           action: 'NEWS_ENRICH_IMAGE',
           image,
+          aiAssisted: false,
         }),
       },
     });
@@ -258,41 +269,14 @@ export const POST = auth(async function POST(req) {
   }
 
   if (action === 'enrich-body') {
-    const fuller = await resolveFullArticleBody({
-      content: news.content,
-      sourceUrl: news.sourceUrl,
-      force: true,
-    });
-    if (!fuller.enriched && fuller.words <= wordCount(news.content)) {
-      return NextResponse.json(
-        { error: 'Could not extract a richer article body from the source' },
-        { status: 404 }
-      );
-    }
-    const plain = fuller.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    const updated = await prisma.news.update({
-      where: { id },
-      data: {
-        content: fuller.html,
-        excerpt: news.excerpt || plain.slice(0, 220) || null,
-        featuredImage: news.featuredImage || fuller.image,
-        ogImage: news.ogImage || fuller.image,
-        readingTime: Math.max(1, Math.ceil(fuller.words / 200)),
-        tags: news.tags.includes('full-source') ? news.tags : [...news.tags, 'full-source'],
-        provenance: pushProvenance(news.provenance, {
-          timestamp: new Date().toISOString(),
-          userId,
-          action: 'NEWS_ENRICH_BODY',
-          words: fuller.words,
-        }),
+    return NextResponse.json(
+      {
+        error: isProtectedFullTextSource(news.sourceUrl)
+          ? 'Full text from BBC, Sky Sports, and Reuters is not stored. Keep title, excerpt, and the source link.'
+          : 'Full-source scrapes are disabled. Write original desk copy or keep the excerpt and source link.',
       },
-    });
-    return NextResponse.json({
-      success: true,
-      words: fuller.words,
-      content: updated.content,
-      featuredImage: updated.featuredImage,
-    });
+      { status: 403 }
+    );
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

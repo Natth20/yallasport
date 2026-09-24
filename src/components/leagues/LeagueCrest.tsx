@@ -13,7 +13,7 @@ export function LeagueCrest({
   }
   const mark = name.trim().charAt(0) || '•';
   return (
-    <span className={`flex items-center justify-center font-serif font-semibold text-orange-500 ${className}`}>
+    <span className={`ys-portrait inline-flex ${className}`}>
       {mark}
     </span>
   );

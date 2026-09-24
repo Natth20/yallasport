@@ -1,9 +1,11 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
 import { CHAT_MAX_LENGTH, CHAT_MIN_LENGTH, filterContent } from '@/lib/utils/word-filter';
 import { ratelimit, redis, writeRatelimit } from '@/lib/redis';
 import { clientIp, isEntityId } from '@/lib/security/http';
+import { visibleCommentsWhere } from '@/lib/comments/visibility';
 
 const commentSelect = {
   id: true,
@@ -48,11 +50,11 @@ export async function GET(req: Request) {
 
   try {
     const comments = await prisma.comment.findMany({
-      where: {
+      where: await visibleCommentsWhere({
         matchId: matchId || undefined,
         newsId: newsId || undefined,
         ...(afterTime ? { createdAt: { gt: afterTime } } : {}),
-      },
+      }),
       select: commentSelect,
       orderBy: { createdAt: 'asc' },
       take: afterTime ? 40 : 50,
@@ -70,17 +72,17 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 });
   }
 
   const ip = clientIp(req);
-  const { success } = await writeRatelimit.limit(`comment_${session.user.email}_${ip}`);
+  const { success } = await writeRatelimit.limit(`comment_${session.user.id}_${ip}`);
   if (!success) {
     return NextResponse.json({ success: false, error: 'rate_limited' }, { status: 429 });
   }
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(swallow("src/app/api/sports/comments/route.ts:84", null, { persist: false }));
   const content = typeof body?.content === 'string' ? body.content.trim() : '';
   const matchId = isEntityId(body?.matchId) ? body.matchId : undefined;
   const newsId = isEntityId(body?.newsId) ? body.newsId : undefined;
@@ -101,13 +103,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (!user) {
       return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 });
     }
 
     const duplicateKey = `comment_dup_${user.id}_${matchId || newsId}`;
-    const lastText = await redis.get<string>(duplicateKey).catch(() => null);
+    const lastText = await redis.get<string>(duplicateKey).catch(swallow("src/app/api/sports/comments/route.ts:111", null));
     if (lastText && lastText === filtered.cleanText) {
       return NextResponse.json({ success: false, error: 'duplicate' }, { status: 400 });
     }
@@ -131,7 +133,7 @@ export async function POST(req: Request) {
       select: commentSelect,
     });
 
-    await redis.set(duplicateKey, filtered.cleanText, { ex: 90 }).catch(() => undefined);
+    await redis.set(duplicateKey, filtered.cleanText, { ex: 90 }).catch(swallow("src/app/api/sports/comments/route.ts:135", undefined));
 
     return NextResponse.json({ success: true, comment: serializeComment(comment) });
   } catch (error) {

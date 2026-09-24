@@ -1,4 +1,6 @@
-﻿'use client';
+'use client';
+import { reportCaughtError } from '@/lib/ops/caught';
+
 
 import { useState } from 'react';
 import { Bell, BellOff, CalendarPlus, Check, Loader2 } from 'lucide-react';
@@ -95,7 +97,8 @@ export function MatchQuickActions({
 
       if (response.ok) setReminderActive((current) => !current);
       else throw new Error('Could not save reminder');
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/components/sports/MatchQuickActions.tsx:98", error, { persist: false });
       setReminderError(true);
     } finally {
       setReminderLoading(false);

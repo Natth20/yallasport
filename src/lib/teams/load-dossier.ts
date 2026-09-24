@@ -1,5 +1,9 @@
+import { reportCaughtError } from '@/lib/ops/caught';
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
+import { slugifyCoachName } from '@/lib/coaches/slug';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
+import { sportsData } from '@/lib/sports-data';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
@@ -26,10 +30,7 @@ async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise
 async function wave<T extends readonly unknown[]>(
   tasks: [...{ [K in keyof T]: () => Promise<T[K]> }]
 ): Promise<{ [K in keyof T]: T[K] }> {
-  const out: unknown[] = [];
-  for (const task of tasks) {
-    out.push(await task());
-  }
+  const out = await Promise.all(tasks.map((task) => task()));
   return out as { [K in keyof T]: T[K] };
 }
 
@@ -140,6 +141,8 @@ export type TeamDossierData = {
       address: string | null;
     } | null;
     coach: {
+      id: string;
+      slug: string | null;
       name: string;
       photoUrl: string | null;
       nationality: string | null;
@@ -313,40 +316,6 @@ type ApiFixtureRow = {
   goals: { home: number | null; away: number | null };
 };
 
-function apiTransport() {
-  const apiKey = process.env.SPORTS_API_KEY?.trim();
-  if (!apiKey || !isLiveSportsApi()) return null;
-  const provider = (process.env.SPORTS_API_PROVIDER || 'apisports').toLowerCase();
-  const baseUrl =
-    provider === 'rapidapi'
-      ? 'https://api-football-v1.p.rapidapi.com/v3'
-      : 'https://v3.football.api-sports.io';
-  const headers: Record<string, string> =
-    provider === 'rapidapi'
-      ? {
-          'x-rapidapi-key': apiKey,
-          'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
-        }
-      : { 'x-apisports-key': apiKey };
-  return { baseUrl, headers };
-}
-
-async function apiGet<T>(endpoint: string): Promise<T | null> {
-  const transport = apiTransport();
-  if (!transport) return null;
-  try {
-    const response = await fetch(`${transport.baseUrl}${endpoint}`, {
-      headers: transport.headers,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
-  }
-}
-
 function footballSeason(now = new Date()) {
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -381,7 +350,7 @@ async function hydrateSquadNationalities(
   const byExternal = new Map<string, string>();
 
   for (let page = 1; page <= 3; page += 1) {
-    const data = await apiGet<{
+    const data = await sportsData.getRaw<{
       paging?: { current?: number; total?: number };
       response?: Array<{
         player?: { id?: number; nationality?: string };
@@ -443,60 +412,49 @@ async function isUsableVenueImage(url: string | undefined): Promise<string | nul
       if (width <= 160 && height <= 160) return null;
     }
     return url;
-  } catch {
+  } catch (error) {
+    reportCaughtError("src/lib/teams/load-dossier.ts:414", error);
     return null;
   }
 }
 
 async function fetchTeamProfileFromApi(externalId: string): Promise<ApiTeamProfile | null> {
-  const transport = apiTransport();
-  if (!transport) return null;
-  try {
-    const response = await fetch(`${transport.baseUrl}/teams?id=${encodeURIComponent(externalId)}`, {
-      headers: transport.headers,
-      cache: 'no-store',
-      signal: AbortSignal.timeout(9000),
-    });
-    if (!response.ok) return null;
-    const data = (await response.json()) as {
-      response?: Array<{
-        team?: { logo?: string; founded?: number; country?: string; code?: string };
-        venue?: {
-          id?: number;
-          name?: string;
-          city?: string;
-          capacity?: number;
-          surface?: string;
-          image?: string;
-          address?: string;
-        };
-      }>;
-    };
-    const row = data?.response?.[0];
-    if (!row?.team) return null;
-    const rawImage =
-      row.venue?.image ||
-      (row.venue?.id ? `https://media.api-sports.io/football/venues/${row.venue.id}.png` : undefined);
-    const venueImage = await isUsableVenueImage(rawImage);
-    return {
-      logoUrl: row.team.logo,
-      founded: row.team.founded,
-      country: row.team.country,
-      code: row.team.code,
-      venue: row.venue?.name
-        ? {
-            name: row.venue.name,
-            city: row.venue.city,
-            capacity: row.venue.capacity,
-            surface: row.venue.surface,
-            image: venueImage || undefined,
-            address: row.venue.address,
-          }
-        : undefined,
-    };
-  } catch {
-    return null;
-  }
+  const data = await sportsData.getRaw<{
+    response?: Array<{
+      team?: { logo?: string; founded?: number; country?: string; code?: string };
+      venue?: {
+        id?: number;
+        name?: string;
+        city?: string;
+        capacity?: number;
+        surface?: string;
+        image?: string;
+        address?: string;
+      };
+    }>;
+  }>(`/teams?id=${encodeURIComponent(externalId)}`);
+  const row = data?.response?.[0];
+  if (!row?.team) return null;
+  const rawImage =
+    row.venue?.image ||
+    (row.venue?.id ? `https://media.api-sports.io/football/venues/${row.venue.id}.png` : undefined);
+  const venueImage = await isUsableVenueImage(rawImage);
+  return {
+    logoUrl: row.team.logo,
+    founded: row.team.founded,
+    country: row.team.country,
+    code: row.team.code,
+    venue: row.venue?.name
+      ? {
+        name: row.venue.name,
+        city: row.venue.city,
+        capacity: row.venue.capacity,
+        surface: row.venue.surface,
+        image: venueImage || undefined,
+        address: row.venue.address,
+      }
+      : undefined,
+  };
 }
 
 function mapApiStatus(short: string): NormalizedMatch['status'] {
@@ -567,8 +525,8 @@ function mapApiFixture(row: ApiFixtureRow): NormalizedMatch {
 
 async function hydrateTeamFixtures(externalId: string) {
   const [lastData, nextData] = await Promise.all([
-    apiGet<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&last=8`),
-    apiGet<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&next=5`),
+    sportsData.getRaw<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&last=8`),
+    sportsData.getRaw<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&next=5`),
   ]);
   const rows = [...(lastData?.response || []), ...(nextData?.response || [])];
   if (rows.length === 0) return;
@@ -576,7 +534,8 @@ async function hydrateTeamFixtures(externalId: string) {
   for (const row of rows.slice(0, 10)) {
     try {
       await persistNormalizedMatch(mapApiFixture(row));
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/lib/teams/load-dossier.ts:535", error);
       // one fixture must not break the dossier
     }
   }
@@ -607,16 +566,16 @@ function parseCareer(raw: unknown): Array<{
       };
     })
     .filter(Boolean) as Array<{
-    club: string;
-    role?: string;
-    from?: string;
-    to?: string;
-    matches?: number;
-    winRate?: number;
-  }>;
+      club: string;
+      role?: string;
+      from?: string;
+      to?: string;
+      matches?: number;
+      winRate?: number;
+    }>;
 }
 
-export async function loadTeamDossier(slug: string): Promise<TeamDossierData | null> {
+export const loadTeamDossier = cache(async function loadTeamDossier(slug: string): Promise<TeamDossierData | null> {
   const teamRow = await soft(
     () =>
       prisma.team.findUnique({
@@ -632,6 +591,7 @@ export async function loadTeamDossier(slug: string): Promise<TeamDossierData | n
           venue: { select: { name: true, city: true, capacity: true } },
           coach: {
             select: {
+              id: true,
               name: true,
               photoUrl: true,
               nationality: true,
@@ -920,10 +880,10 @@ export async function loadTeamDossier(slug: string): Promise<TeamDossierData | n
   const squadAges =
     ages.length > 0
       ? {
-          min: Math.min(...ages),
-          max: Math.max(...ages),
-          avg: Math.round(ages.reduce((a, b) => a + b, 0) / ages.length),
-        }
+        min: Math.min(...ages),
+        max: Math.max(...ages),
+        avg: Math.round(ages.reduce((a, b) => a + b, 0) / ages.length),
+      }
       : null;
 
   const squadComposition = (['GK', 'DF', 'MF', 'FW', 'OTHER'] as SquadGroupKey[])
@@ -1092,13 +1052,13 @@ export async function loadTeamDossier(slug: string): Promise<TeamDossierData | n
   const venueName = teamRow.venue?.name || apiProfile?.venue?.name;
   const venue = venueName
     ? {
-        name: venueName,
-        city: teamRow.venue?.city || apiProfile?.venue?.city || null,
-        capacity: teamRow.venue?.capacity || apiProfile?.venue?.capacity || null,
-        surface: apiProfile?.venue?.surface || null,
-        imageUrl: apiProfile?.venue?.image || null,
-        address: apiProfile?.venue?.address || null,
-      }
+      name: venueName,
+      city: teamRow.venue?.city || apiProfile?.venue?.city || null,
+      capacity: teamRow.venue?.capacity || apiProfile?.venue?.capacity || null,
+      surface: apiProfile?.venue?.surface || null,
+      imageUrl: apiProfile?.venue?.image || null,
+      address: apiProfile?.venue?.address || null,
+    }
     : null;
 
   const team = {
@@ -1114,14 +1074,16 @@ export async function loadTeamDossier(slug: string): Promise<TeamDossierData | n
     venue,
     coach: teamRow.coach
       ? {
-          name: teamRow.coach.name,
-          photoUrl: teamRow.coach.photoUrl,
-          nationality: teamRow.coach.nationality,
-          bio: teamRow.coach.bio,
-          birthDate: teamRow.coach.birthDate,
-          trophies: teamRow.coach.trophies,
-          career: parseCareer(teamRow.coach.careerHistory).slice(0, 6),
-        }
+        id: teamRow.coach.id,
+        slug: slugifyCoachName(teamRow.coach.name, teamRow.coach.id),
+        name: teamRow.coach.name,
+        photoUrl: teamRow.coach.photoUrl,
+        nationality: teamRow.coach.nationality,
+        bio: teamRow.coach.bio,
+        birthDate: teamRow.coach.birthDate,
+        trophies: teamRow.coach.trophies,
+        career: parseCareer(teamRow.coach.careerHistory).slice(0, 6),
+      }
       : null,
   };
 
@@ -1160,4 +1122,4 @@ export async function loadTeamDossier(slug: string): Promise<TeamDossierData | n
     transfers,
     news,
   };
-}
+});

@@ -1,3 +1,4 @@
+import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
 import { importFromRSS } from '@/lib/news/rss-service';
 import { TRUSTED_RSS_FEEDS } from '@/lib/news/trusted-sources';
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
   try {
     let imported = 0;
     for (const feed of TRUSTED_RSS_FEEDS) {
-      const result = await importFromRSS(feed.url).catch(() => ({ imported: 0 }));
+      const result = await importFromRSS(feed.url).catch(swallow("src/app/api/news/cron/route.ts:20", ({ imported: 0 })));
       imported += result.imported;
     }
 
@@ -61,6 +62,7 @@ export async function GET(req: Request) {
       imported,
       pendingCount,
       breakingPending: breakingPending.length,
+      autoPublished: 0,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'News cron failed';

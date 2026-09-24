@@ -1,8 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import { prisma } from '@/lib/prisma';
-import { Shield, MapPin, MoreVertical, Plus } from 'lucide-react';
-import {getLocale} from 'next-intl/server';
-import {pick} from '@/i18n/pick';
+import { MapPin } from 'lucide-react';
+import { getLocale } from 'next-intl/server';
+import { pick } from '@/i18n/pick';
 
 /**
  * TeamsAdminPage - Management of football clubs and national teams.
@@ -17,12 +17,11 @@ export default async function TeamsAdminPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div>
         <h1 className="text-3xl font-black">{pick(locale, 'إدارة الأندية', 'Manage teams')}</h1>
-        <button className="bg-orange-500 text-primary-foreground px-6 py-3 rounded-2xl font-black text-sm shadow-lg shadow-orange-500/20 flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          {pick(locale, 'إضافة فريق', 'Add team')}
-        </button>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {pick(locale, 'عرض من القاعدة. لا إضافة يدوية من هنا.', 'Database list only. Teams are not created from this screen.')}
+        </p>
       </div>
 
       <div className="bg-card dark:bg-background rounded-[2.5rem] shadow-xl border border-gray-50 dark:border-border overflow-hidden">
@@ -32,7 +31,6 @@ export default async function TeamsAdminPage() {
               <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground">{pick(locale, 'النادي', 'Team')}</th>
               <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground">{pick(locale, 'الملعب', 'Venue')}</th>
               <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground">{pick(locale, 'التأسيس', 'Founded')}</th>
-              <th className="px-8 py-5 text-xs font-black uppercase text-muted-foreground text-left">{pick(locale, 'الإجراءات', 'Actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -45,18 +43,13 @@ export default async function TeamsAdminPage() {
                   </div>
                 </td>
                 <td className="px-8 py-6">
-                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {team.venue?.name || pick(locale, 'غير محدد', 'Not specified')}
-                   </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {team.venue?.name || pick(locale, 'غير محدد', 'Not specified')}
+                  </div>
                 </td>
                 <td className="px-8 py-6">
-                   <span className="text-sm text-muted-foreground font-bold">{team.founded || '---'}</span>
-                </td>
-                <td className="px-8 py-6 text-left">
-                   <button className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded-lg transition-colors">
-                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                   </button>
+                  <span className="text-sm text-muted-foreground font-bold">{team.founded || '---'}</span>
                 </td>
               </tr>
             ))}

@@ -26,28 +26,28 @@ export const NEWS_DESKS: NewsDesk[] = [
   },
   {
     key: 'Premier League',
-    ar: 'الدوري الإنجليزي',
+    ar: 'الدوري الإنجليزي الممتاز',
     en: 'Premier League',
     match:
       /premier\sleague|\bepl\b|arsenal|liverpool|manchester\s(united|city)|chelsea|tottenham|newcastle\sunited|الدوري\sالإنجليزي|البريميرليغ|ليفربول|أرسنال|مانشستر|تشيلسي|توتنهام/i,
   },
   {
     key: 'La Liga',
-    ar: 'الدوري الإسباني',
+    ar: 'الليغا',
     en: 'La Liga',
     match:
       /la\s?liga|real\smadrid|barcelona|atletico\smadrid|الدوري\sالإسباني|الليغا|ريال\sمدريد|برشلونة|أتلتيكو/i,
   },
   {
     key: 'Saudi League',
-    ar: 'دوري روشن السعودي',
+    ar: 'دوري روشن',
     en: 'Saudi Pro League',
     match:
       /saudi\spro\sleague|roshn|al\s?hilal|al\s?nassr|al\s?ittihad|al\s?ahli\s?saudi|دوري\sروشن|الدوري\sالسعودي|الهلال|النصر|الاتحاد\sالسعودي|الأهلي\sالسعودي/i,
   },
   {
     key: 'Transfers',
-    ar: 'سوق الانتقالات (الميركاتو)',
+    ar: 'الانتقالات',
     en: 'Transfers & Mercato',
     match:
       /\btransfer(s|red|\swindow)?\b|\bsign(s|ed|ing)\b|\bdeal\sfor\b|\bbid\sfor\b|\bmove\sto\b|\bloan\b|انتقال|انتقالات|صفقة|صفقات|يوقّع|وقّع\sعقد|إعارة|الميركاتو/i,
@@ -75,7 +75,7 @@ export const NEWS_DESKS: NewsDesk[] = [
   },
   {
     key: 'Bundesliga',
-    ar: 'الدوري الألماني',
+    ar: 'البوندسليغا',
     en: 'Bundesliga',
     match:
       /bundesliga|bayern\smunich|borussia\sdortmund|leverkusen|الدوري\sالألماني|بايرن|دورتموند|ليفركوزن/i,

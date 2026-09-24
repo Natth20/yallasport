@@ -1,10 +1,16 @@
 'use client';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Lock, AlertCircle, Play, Tv, RefreshCw, Radio } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Lock, AlertCircle, RefreshCw, Radio } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { LicensedPlayer } from './LicensedPlayer';
 import { Link } from '@/i18n/navigation';
+
+const LicensedPlayer = dynamic(
+  () => import('./LicensedPlayer').then((mod) => mod.LicensedPlayer),
+  { ssr: false }
+);
 
 interface PlaybackPayload {
   manifestUrl: string;
@@ -35,43 +41,32 @@ export function MatchStreamPlayer({ assetId }: { assetId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     setErrorKey(null);
+    setPlayback(null);
     try {
-      // 1. Try authenticated /api/stream/playback first
       const response = await fetch('/api/stream/playback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assetId }),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(swallow("src/components/streaming/MatchStreamPlayer.tsx:51", ({}), { persist: false }));
 
-      if (response.ok && data.manifestUrl) {
-        setPlayback(data);
-        return;
-      }
-
-      // 2. Fallback to public live streaming API /api/stream/live for seamless playback
-      const liveRes = await fetch('/api/stream/live');
-      const liveData = await liveRes.json().catch(() => ({}));
-
-      if (liveData.ok && liveData.defaultStream?.liveHlsUrl) {
+      if (response.ok && typeof data.manifestUrl === 'string' && data.manifestUrl.length > 0) {
         setPlayback({
-          manifestUrl: liveData.defaultStream.liveHlsUrl,
-          protocol: 'HLS',
-          drmType: 'NONE',
-          channelName: liveData.defaultStream.name,
+          manifestUrl: data.manifestUrl,
+          protocol: data.protocol === 'DASH' ? 'DASH' : 'HLS',
+          drmType: data.drmType || 'NONE',
+          licenseUrl: data.licenseUrl,
+          expiresAt: data.expiresAt,
+          channelName: data.channelName,
         });
         return;
       }
 
       setErrorKey(ERROR_MAP[data.error] || 'unavailable');
-    } catch {
-      // Direct live fallback
-      setPlayback({
-        manifestUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-        protocol: 'HLS',
-        drmType: 'NONE',
-      });
+    } catch (error) {
+      reportCaughtError("src/components/streaming/MatchStreamPlayer.tsx:67", error, { persist: false });
+      setErrorKey('unavailable');
     } finally {
       setLoading(false);
     }
@@ -86,7 +81,7 @@ export function MatchStreamPlayer({ assetId }: { assetId: string }) {
       <div className="relative flex aspect-video w-full flex-col items-center justify-center bg-black/90 p-6 text-center">
         <div className="relative flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/20 p-2">
           <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary/30 border-t-primary" />
-          <Radio className="absolute h-4 w-4 text-primary animate-pulse" />
+          <Radio className="absolute h-4 w-4 animate-pulse text-primary" />
         </div>
         <p className="mt-4 text-xs font-bold text-muted-foreground">{t('loading')}...</p>
       </div>
@@ -129,7 +124,7 @@ export function MatchStreamPlayer({ assetId }: { assetId: string }) {
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-2xl border border-white/10">
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
       <LicensedPlayer
         manifestUrl={playback.manifestUrl}
         protocol={playback.protocol}

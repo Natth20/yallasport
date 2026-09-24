@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Share2, Check, Copy, MessageCircle, Send } from 'lucide-react';
+import { copyText } from '@/lib/clipboard';
 
 interface StoryShareCardProps {
   title: string;
@@ -16,11 +17,11 @@ export function StoryShareCard({ title, url, locale = 'ar' }: StoryShareCardProp
   const shareUrl = typeof window !== 'undefined' ? url || window.location.href : '';
 
   const handleCopy = () => {
-    if (typeof navigator !== 'undefined') {
-      navigator.clipboard.writeText(shareUrl);
+    void copyText(shareUrl).then((ok) => {
+      if (!ok) return;
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }
+    });
   };
 
   const shareWhatsApp = () => {

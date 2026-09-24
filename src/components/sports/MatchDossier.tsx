@@ -1,10 +1,15 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
 import { RefreshCw } from 'lucide-react';
+import { LiveScoreDigits } from '@/components/sports/LiveScoreDigits';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { DeskRule } from '@/components/news/NewsOrnaments';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
+import { BrandMark } from '@/components/brand/BrandMark';
+import { EntityFrame, EntityHero } from '@/components/entity/EntityFrame';
+import { Reveal } from '@/components/motion/PageMotion';
 import type {
   NormalizedLineup,
   NormalizedLineupPlayer,
@@ -59,6 +64,7 @@ type DossierMatch = Pick<
   | 'venueDetail'
   | 'venue'
   | 'round'
+  | 'attendance'
 >;
 
 function belongsToTeam(teamId: string, team: { id: string; externalId: string }) {
@@ -181,8 +187,9 @@ export function MatchDossier({
           homeScore: next.homeScore,
           awayScore: next.awayScore,
           events: next.events ?? current.events,
-          lineups: next.lineups ?? current.lineups,
+          lineups: (next.lineups ?? current.lineups).filter((lineup) => lineup.status === 'CONFIRMED'),
           statistics: next.statistics ?? current.statistics,
+          attendance: next.attendance ?? current.attendance,
         }));
       } finally {
         setUpdating(false);
@@ -207,7 +214,7 @@ export function MatchDossier({
     [t('passes'), homeStats?.passes, awayStats?.passes, ''],
     [t('pass_accuracy'), homeStats?.passAccuracy, awayStats?.passAccuracy, '%'],
     [t('expected_goals'), homeStats?.expectedGoals, awayStats?.expectedGoals, ''],
-  ].filter((row) => row[1] !== undefined || row[2] !== undefined);
+  ].filter((row) => typeof row[1] === 'number' && typeof row[2] === 'number');
 
   const scorers = useMemo(
     () =>
@@ -220,8 +227,9 @@ export function MatchDossier({
     [match.events, match.homeTeam.id]
   );
 
-  const homeLineup = match.lineups.find((lineup) => belongsToTeam(lineup.teamId, match.homeTeam));
-  const awayLineup = match.lineups.find((lineup) => belongsToTeam(lineup.teamId, match.awayTeam));
+  const officialLineups = match.lineups.filter((lineup) => lineup.status === 'CONFIRMED');
+  const homeLineup = officialLineups.find((lineup) => belongsToTeam(lineup.teamId, match.homeTeam));
+  const awayLineup = officialLineups.find((lineup) => belongsToTeam(lineup.teamId, match.awayTeam));
   const venueName = match.venueDetail?.name || (typeof match.venue === 'string' ? match.venue : undefined);
   const orderedEvents = live ? match.events.slice().reverse() : match.events;
   const clockProgress = Math.min(100, Math.max(4, ((match.minute ?? 0) / 90) * 100));
@@ -231,24 +239,29 @@ export function MatchDossier({
     venueName,
     match.venueDetail?.city,
     match.referee?.name ? t('referee', { name: match.referee.name }) : null,
+    typeof match.attendance === 'number'
+      ? t('seats', { count: match.attendance.toLocaleString(locale) })
+      : null,
   ].filter(Boolean) as string[];
 
   const signature = statisticRows.slice(0, 3).map(([label, homeValue, awayValue, suffix]) => ({
     label: String(label),
-    value: `${Number(homeValue ?? 0)}${suffix} — ${Number(awayValue ?? 0)}${suffix}`,
+    value: `${Number(homeValue)}${suffix} — ${Number(awayValue)}${suffix}`,
   }));
 
   const folioNav = [
     statisticRows.length > 0 ? { href: '#folio-numbers', label: t('statistics'), folio: '01' } : null,
-    match.events.length > 0 ? { href: '#folio-events', label: t('events'), folio: '02' } : null,
-    match.lineups.length > 0 ? { href: '#folio-lineups', label: t('lineups'), folio: '03' } : null,
+    { href: '#folio-events', label: t('events'), folio: '02' },
+    { href: '#folio-lineups', label: t('lineups'), folio: '03' },
     h2hMatches.length > 0 ? { href: '#folio-history', label: t('previous_meetings'), folio: '04' } : null,
   ].filter(Boolean) as Array<{ href: string; label: string; folio: string }>;
 
   const ghostMark = live ? 'LIVE' : finished ? 'FT' : 'VS';
 
   return (
+    <EntityFrame tone="match">
     <div className="match-dossier ys-dossier-stack">
+      <EntityHero>
       <section className="match-hero">
         <div className="match-hero-grid" aria-hidden />
         <span className="match-hero-foil" aria-hidden />
@@ -266,8 +279,9 @@ export function MatchDossier({
             <Link href="/matches" className="match-back-link">
               {t('back_to_matches')}
             </Link>
-            <span className="match-edition-mark" aria-hidden>
-              YS · MATCH FOLIO
+            <span className="match-edition-mark inline-flex items-center gap-2" aria-hidden>
+              <BrandMark size={28} />
+              YS · MATCH
             </span>
             {headerActions ? <div className="match-hero-actions">{headerActions}</div> : null}
           </div>
@@ -317,11 +331,7 @@ export function MatchDossier({
 
               <div className="match-score-center">
                 <div className="match-score-ring">
-                  <strong className="match-score-digits" dir="ltr">
-                    <span>{typeof match.homeScore === 'number' ? match.homeScore : '—'}</span>
-                    <em>:</em>
-                    <span>{typeof match.awayScore === 'number' ? match.awayScore : '—'}</span>
-                  </strong>
+                  <LiveScoreDigits home={match.homeScore} away={match.awayScore} />
                   {live ? (
                     <div className="match-clock-track">
                       <div className="match-clock-fill" style={{ width: `${clockProgress}%` }} />
@@ -374,6 +384,7 @@ export function MatchDossier({
           ) : null}
         </div>
       </section>
+      </EntityHero>
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12">
         {folioNav.length > 0 ? (
@@ -388,7 +399,7 @@ export function MatchDossier({
         ) : null}
 
         <div className="match-body-grid">
-          <div className="match-main-column space-y-10">
+          <Reveal className="match-main-column space-y-10">
             {statisticRows.length > 0 ? (
               <section id="folio-numbers" className="match-plate match-plate-accent scroll-mt-28 club-rise">
                 <SectionHead folio="01" kicker={t('statistics')} title={t('numbers_duet')} />
@@ -400,10 +411,10 @@ export function MatchDossier({
                     >
                       <span>{label}</span>
                       <strong>
-                        {Number(homeValue ?? 0)}
+                        {Number(homeValue)}
                         {suffix}
                         <em>—</em>
-                        {Number(awayValue ?? 0)}
+                        {Number(awayValue)}
                         {suffix}
                       </strong>
                     </div>
@@ -411,28 +422,18 @@ export function MatchDossier({
                 </div>
                 <div className="mb-5 flex items-center justify-between gap-3 text-[11px] font-bold text-foreground dark:text-foreground">
                   <span className="flex min-w-0 items-center gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={match.homeTeam.logoUrl || '/placeholder-team.png'}
-                      alt=""
-                      className="h-6 w-6 object-contain"
-                    />
+                    <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6" />
                     <span className="truncate">{match.homeTeam.name}</span>
                   </span>
                   <span className="flex min-w-0 items-center gap-2">
                     <span className="truncate">{match.awayTeam.name}</span>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={match.awayTeam.logoUrl || '/placeholder-team.png'}
-                      alt=""
-                      className="h-6 w-6 object-contain"
-                    />
+                    <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6" />
                   </span>
                 </div>
                 <div className="space-y-4">
                   {statisticRows.map(([label, homeValue, awayValue, suffix], index) => {
-                    const home = Number(homeValue ?? 0);
-                    const away = Number(awayValue ?? 0);
+                    const home = Number(homeValue);
+                    const away = Number(awayValue);
                     const total = Math.max(home + away, 1);
                     return (
                       <div
@@ -465,9 +466,15 @@ export function MatchDossier({
               </section>
             ) : null}
 
-            {match.events.length > 0 ? (
-              <section id="folio-events" className="match-plate scroll-mt-28 club-rise">
-                <SectionHead folio="02" kicker={t('events')} title={t('event_sheet')} />
+            <section id="folio-events" className="match-plate scroll-mt-28 club-rise">
+                <SectionHead
+                  folio="02"
+                  kicker={t('events')}
+                  title={t('event_sheet')}
+                  note={t('events_provider_note')}
+                />
+                {match.events.length > 0 ? (
+                  <>
                 <div className="mb-4 hidden grid-cols-[1fr_3.25rem_1fr] text-[9px] font-bold text-muted-foreground sm:grid">
                   <span className="text-right">{match.homeTeam.name}</span>
                   <span className="text-center">{t('minute_short')}</span>
@@ -501,14 +508,19 @@ export function MatchDossier({
                     );
                   })}
                 </ol>
+                  </>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                    {t('no_events')}
+                  </p>
+                )}
               </section>
-            ) : null}
 
-            {match.lineups.length > 0 ? (
               <section id="folio-lineups" className="match-plate scroll-mt-28 club-rise">
                 <SectionHead folio="03" kicker={t('lineups')} title={t('pitch_lineups')} />
+                {officialLineups.length > 0 ? (
                 <div className="grid gap-5 lg:grid-cols-2">
-                  {match.lineups.map((lineup) => (
+                  {officialLineups.map((lineup) => (
                     <LineupColumn
                       key={`${lineup.teamId}-${lineup.status}`}
                       lineup={lineup}
@@ -525,8 +537,12 @@ export function MatchDossier({
                     />
                   ))}
                 </div>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+                    {t('no_lineups')}
+                  </p>
+                )}
               </section>
-            ) : null}
 
             {h2hMatches.length > 0 ? (
               <section id="folio-history" className="match-plate scroll-mt-28 club-rise">
@@ -562,12 +578,17 @@ export function MatchDossier({
                 </div>
               </section>
             ) : null}
-          </div>
+          </Reveal>
 
-          {children ? <aside className="match-aside-column space-y-5 xl:sticky xl:top-28">{children}</aside> : null}
+          {children ? (
+            <Reveal>
+              <aside className="match-aside-column space-y-5 xl:sticky xl:top-28">{children}</aside>
+            </Reveal>
+          ) : null}
         </div>
       </div>
     </div>
+    </EntityFrame>
   );
 }
 
@@ -616,8 +637,7 @@ function TeamCrestColumn({
         <div className="match-crest-stage">
           <span className="match-crest-glow" aria-hidden />
           <div className="match-crest">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={team.logoUrl || '/placeholder-team.png'} alt="" />
+            <LeagueCrest name={team.name} logoUrl={team.logoUrl} className="h-full w-full" />
           </div>
         </div>
         <strong className="match-crest-name">{team.name}</strong>
@@ -690,8 +710,7 @@ function LineupColumn({
     <div className="match-lineup-card">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl || '/placeholder-team.png'} alt="" className="h-7 w-7 object-contain" />
+          <LeagueCrest name={teamName} logoUrl={logoUrl} className="h-7 w-7" />
           <div className="min-w-0">
             <strong className="block truncate text-sm text-foreground dark:text-foreground">{teamName}</strong>
             {(lineup.formation || lineup.coach?.name) && (

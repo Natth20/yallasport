@@ -1,8 +1,11 @@
+import { Suspense } from 'react';
 import { getLocale } from 'next-intl/server';
+import { FrontSkeleton } from '@/components/front/FrontMark';
 import { pick } from '@/i18n/pick';
 import { PrivacyVault } from '@/components/legal/PrivacyVault';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
+import { gaMeasurementId } from '@/lib/analytics/config';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -18,7 +21,15 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function PrivacyPage() {
+export default function PrivacyPage() {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <PrivacyPageBody />
+    </Suspense>
+  );
+}
+
+async function PrivacyPageBody() {
   const locale = await getLocale();
-  return <PrivacyVault locale={locale} />;
+  return <PrivacyVault locale={locale} analyticsId={gaMeasurementId()} />;
 }

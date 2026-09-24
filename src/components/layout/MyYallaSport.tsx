@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
 import { Star, Bell, ArrowLeft } from 'lucide-react';
@@ -52,7 +52,7 @@ export default async function MyYallaSport() {
                 </h2>
                 <p className="text-orange-100 font-bold opacity-80 uppercase tracking-widest text-[10px]">{t('welcome_user', {name: user.name || ''})}</p>
              </div>
-             <Link href="/profile" className="bg-card text-orange-500 px-8 py-3 rounded-2xl font-black text-xs shadow-xl transition-all hover:scale-105 flex items-center gap-3">
+             <Link href="/profile" className="bg-card text-orange-500 px-8 py-3 rounded-2xl font-black text-xs flex items-center gap-3">
                {t('manage_preferences')}
                <ArrowLeft className="w-4 h-4" />
              </Link>

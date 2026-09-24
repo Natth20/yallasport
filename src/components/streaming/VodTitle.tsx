@@ -1,4 +1,4 @@
-﻿import { BrandMark } from '@/components/brand/BrandMark';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
 import { DeskRule, EditionPlate, PhotoCorners } from '@/components/news/NewsOrnaments';
 import { Link } from '@/i18n/navigation';
@@ -97,11 +97,11 @@ export function VodTitle({ locale, show }: { locale: string; show: ShowBit }) {
 
           <div className="min-w-0 flex-1">
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <Link href="/watch" className="watch-chip-link is-ghost">
+              <Link href="/vod" className="watch-chip-link is-ghost">
                 {pick(locale, 'المكتبة', 'Library')}
               </Link>
               <Link href="/live" className="watch-chip-link is-ghost">
-                {pick(locale, 'البثوث', 'Broadcasts')}
+                {pick(locale, 'يلا سبورت مباشر', 'Yalla Sport Live')}
               </Link>
             </div>
 

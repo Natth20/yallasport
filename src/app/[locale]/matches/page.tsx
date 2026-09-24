@@ -1,11 +1,10 @@
-import React from 'react';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
+import React, { Suspense } from 'react';
 import { MatchCard } from '@/components/sports/MatchCard';
 import { MatchQuickActions } from '@/components/sports/MatchQuickActions';
 import { KickoffTimeline, type KickoffSlot } from '@/components/matches/KickoffTimeline';
 import { LiveNowBoard } from '@/components/matches/LiveNowBoard';
 import { MatchdayLenses } from '@/components/matches/MatchdayLenses';
-import { PinnedMatchesBar, type PinnedMatchData } from '@/components/matches/PinnedMatchesBar';
-import { WinProbabilityBar } from '@/components/matches/WinProbabilityBar';
 import { MatchdayDesk } from '@/components/matches/MatchdayDesk';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
@@ -19,6 +18,7 @@ import {
 } from '@/lib/datetime/format';
 import { toNormalizedMatch } from '@/lib/sports-data/from-db';
 import { sportsData } from '@/lib/sports-data';
+import { belongsOnTodayBoard, todayOrLiveWhere } from '@/lib/sports-data/match-window';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LiveDataStatus } from '@/components/sports/LiveDataStatus';
 import { TimezoneSelector } from '@/components/layout/TimezoneSelector';
@@ -39,15 +39,18 @@ import {
 import { addDays, format, isValid, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
-import {Link} from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
 import type { Metadata } from 'next';
-import {getLocale, getTranslations} from 'next-intl/server';
-import {pick} from '@/i18n/pick';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { pick } from '@/i18n/pick';
 import { localizeEntityMap } from '@/lib/i18n/localized-content';
 import { STREAMING_ENABLED } from '@/lib/streaming';
 import { isMajorLeague, leagueTier, matchdayWeight } from '@/lib/sports-data/matchday-weight';
 import { pageMetadata } from '@/lib/seo/site';
+import { FrontSkeleton } from '@/components/front/FrontMark';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
+import '@/components/matches/matches-hall.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -150,7 +153,7 @@ function StatMeter({
         <span className="text-orange-300">{asPercent ? `${away}%` : away}</span>
       </div>
       <div className="flex h-1.5 overflow-hidden rounded-full bg-black/40">
-        <span className="bg-emerald-400" style={{ width: `${Math.max(0, Math.min(100, homeShare))}%` }} />
+        <span className="ys-grow-x bg-emerald-400" style={{ width: `${Math.max(0, Math.min(100, homeShare))}%` }} />
         <span className="flex-1 bg-orange-400" />
       </div>
     </div>
@@ -178,13 +181,12 @@ function FormPips({ letters }: { letters: FormLetter[] }) {
       {letters.map((letter, index) => (
         <span
           key={`${letter}-${index}`}
-          className={`flex h-4 w-4 items-center justify-center rounded-[4px] text-[8px] font-black ${
-            letter === 'W'
+          className={`flex h-4 w-4 items-center justify-center rounded-[4px] text-[8px] font-black ${letter === 'W'
               ? 'bg-emerald-500 text-white'
               : letter === 'L'
                 ? 'bg-red-500 text-white'
                 : 'bg-slate-400 text-white'
-          }`}
+            }`}
         >
           {letter}
         </span>
@@ -231,7 +233,7 @@ function CompactFixture({
         <div className="fixture-teams !gap-1">
           <div className="fixture-team">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={match.homeTeam.logoUrl || '/placeholder-team.png'} alt="" />
+            <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-7 w-7" />
             <div className="min-w-0">
               <strong>{match.homeTeam.name}</strong>
             </div>
@@ -239,7 +241,7 @@ function CompactFixture({
           </div>
           <div className="fixture-team">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={match.awayTeam.logoUrl || '/placeholder-team.png'} alt="" />
+            <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-7 w-7" />
             <div className="min-w-0">
               <strong>{match.awayTeam.name}</strong>
             </div>
@@ -256,7 +258,15 @@ function CompactFixture({
   );
 }
 
-export default async function MatchesPage({ searchParams }: MatchesPageProps) {
+export default function MatchesPage({ searchParams }: MatchesPageProps) {
+  return (
+    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+      <MatchesPageBody searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   const locale = await getLocale();
   const t = await getTranslations('sports');
   const eventLabel = (type: string) => {
@@ -295,14 +305,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   let weekKickoffs: Array<{ kickoffAt: Date; status: string }> = [];
   try {
     matchRows = await prisma.match.findMany({
-      where: isToday
-        ? {
-            OR: [
-              { kickoffAt: { gte: start, lt: end } },
-              { status: { in: ['LIVE', 'HALFTIME'] } },
-            ],
-          }
-        : { kickoffAt: { gte: start, lt: end } },
+      where: isToday ? todayOrLiveWhere(start, end) : { kickoffAt: { gte: start, lt: end } },
       orderBy: { kickoffAt: 'asc' },
       select: {
         id: true,
@@ -347,7 +350,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       where: {
         OR: [
           { kickoffAt: { gte: weekStart, lt: weekEnd } },
-          { status: { in: ['LIVE', 'HALFTIME'] } },
+          { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: new Date(Date.now() - 12 * 60 * 60 * 1000) } },
         ],
       },
       select: { kickoffAt: true, status: true },
@@ -391,7 +394,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       for (const row of roundRows) {
         if (row.round) roundById.set(row.id, row.round);
       }
-    } catch {
+    } catch (error) {
+      reportCaughtError("src/app/[locale]/matches/page.tsx:388", error);
       // Older Prisma query engines reject `round` until generate succeeds.
     }
   }
@@ -399,7 +403,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   // If DB is empty (no matches from Supabase), fetch from live API
   const apiMatches =
     matchRows.length === 0
-      ? await sportsData.getMatchesByDate(selectedDateStr).catch(() => [])
+      ? await sportsData.getMatchesByDate(selectedDateStr).catch(swallow("src/app/[locale]/matches/page.tsx:395", []))
       : [];
 
   // Merge: API matches come first, DB matches supplement
@@ -495,7 +499,12 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       } as DayMatch;
     }),
   ];
-  const allMatches = rawAllMatches;
+  const allMatches = (isToday
+    ? rawAllMatches.filter((match) => belongsOnTodayBoard(match, start, end))
+    : rawAllMatches.filter((match) => {
+      const kickoff = new Date(match.kickoffAt).getTime();
+      return kickoff >= start.getTime() && kickoff < end.getTime();
+    }));
 
   const nameLabels = await localizeEntityMap(
     allMatches.flatMap((match) => [
@@ -524,22 +533,22 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const playingTeamIds = [...new Set(allMatches.flatMap((match) => [match.homeTeam.id, match.awayTeam.id]))];
   const standingRows = playingTeamIds.length
     ? await prisma.standing.findMany({
-        where: { teamId: { in: playingTeamIds } },
-        orderBy: [{ seasonId: 'desc' }, { rank: 'asc' }],
-        select: {
-          teamId: true,
-          leagueId: true,
-          rank: true,
-          points: true,
-          played: true,
-          won: true,
-          drawn: true,
-          lost: true,
-          goalsFor: true,
-          goalsAgainst: true,
-          seasonId: true,
-        },
-      }).catch(() => [])
+      where: { teamId: { in: playingTeamIds } },
+      orderBy: [{ seasonId: 'desc' }, { rank: 'asc' }],
+      select: {
+        teamId: true,
+        leagueId: true,
+        rank: true,
+        points: true,
+        played: true,
+        won: true,
+        drawn: true,
+        lost: true,
+        goalsFor: true,
+        goalsAgainst: true,
+        seasonId: true,
+      },
+    }).catch(swallow("src/app/[locale]/matches/page.tsx:540", []))
     : [];
   const standingByTeam = new Map<string, (typeof standingRows)[number]>();
   const standingFor = (leagueId: string, teamId: string) => standingByTeam.get(tableKey(leagueId, teamId));
@@ -567,7 +576,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         homeScore: true,
         awayScore: true,
       },
-    }).catch(() => []);
+    }).catch(swallow("src/app/[locale]/matches/page.tsx:568", []));
 
     for (const id of playingTeamIds) formByTeam.set(id, []);
     for (const row of formRows) {
@@ -611,7 +620,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         homeTeam: { select: { name: true } },
         awayTeam: { select: { name: true } },
       },
-    }).catch(() => []);
+    }).catch(swallow("src/app/[locale]/matches/page.tsx:612", []));
 
     for (const row of h2hRows) {
       const key = pairKey(row.homeTeamId, row.awayTeamId);
@@ -652,27 +661,27 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
   const favoriteEntities = session?.user?.id
     ? await prisma.userFavorite.findMany({
-        where: { userId: session.user.id },
-        select: { entityId: true, entityType: true },
-      }).catch(() => [])
+      where: { userId: session.user.id },
+      select: { entityId: true, entityType: true },
+    }).catch(swallow("src/app/[locale]/matches/page.tsx:655", []))
     : [];
   const teamFavoriteIds = favoriteEntities.filter((favorite) => favorite.entityType === 'TEAM').map((favorite) => favorite.entityId);
   const leagueFavoriteIds = favoriteEntities.filter((favorite) => favorite.entityType === 'LEAGUE').map((favorite) => favorite.entityId);
   const matchFavoriteIds = favoriteEntities.filter((favorite) => favorite.entityType === 'MATCH').map((favorite) => favorite.entityId);
   const favoriteTeams = teamFavoriteIds.length
-    ? await prisma.team.findMany({ where: { id: { in: teamFavoriteIds } }, select: { externalId: true } }).catch(() => [])
+    ? await prisma.team.findMany({ where: { id: { in: teamFavoriteIds } }, select: { externalId: true } }).catch(swallow("src/app/[locale]/matches/page.tsx:661", []))
     : [];
   const favoriteLeagues = leagueFavoriteIds.length
-    ? await prisma.league.findMany({ where: { id: { in: leagueFavoriteIds } }, select: { externalId: true } }).catch(() => [])
+    ? await prisma.league.findMany({ where: { id: { in: leagueFavoriteIds } }, select: { externalId: true } }).catch(swallow("src/app/[locale]/matches/page.tsx:664", []))
     : [];
   const favoriteMatches = matchFavoriteIds.length
-    ? await prisma.match.findMany({ where: { id: { in: matchFavoriteIds } }, select: { externalId: true } }).catch(() => [])
+    ? await prisma.match.findMany({ where: { id: { in: matchFavoriteIds } }, select: { externalId: true } }).catch(swallow("src/app/[locale]/matches/page.tsx:667", []))
     : [];
   const reminderRows = session?.user?.id && allMatches.length
     ? await prisma.matchReminder.findMany({
-        where: { userId: session.user.id, matchId: { in: allMatches.map((match) => match.id) } },
-        select: { matchId: true },
-      }).catch(() => [])
+      where: { userId: session.user.id, matchId: { in: allMatches.map((match) => match.id) } },
+      select: { matchId: true },
+    }).catch(swallow("src/app/[locale]/matches/page.tsx:673", []))
     : [];
   const reminderIds = new Set(reminderRows.map((row) => row.matchId));
   const favoriteTeamExternalIds = new Set(favoriteTeams.map((team) => team.externalId));
@@ -769,25 +778,25 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
   const spotlightH2h = spotlightMatch
     ? await prisma.match.findMany({
-        where: {
-          status: 'FINISHED',
-          id: { not: spotlightMatch.id },
-          OR: [
-            { homeTeamId: spotlightMatch.homeTeam.id, awayTeamId: spotlightMatch.awayTeam.id },
-            { homeTeamId: spotlightMatch.awayTeam.id, awayTeamId: spotlightMatch.homeTeam.id },
-          ],
-        },
-        orderBy: { kickoffAt: 'desc' },
-        take: 5,
-        select: {
-          id: true,
-          kickoffAt: true,
-          homeScore: true,
-          awayScore: true,
-          homeTeam: { select: { id: true, name: true } },
-          awayTeam: { select: { id: true, name: true } },
-        },
-      }).catch(() => [])
+      where: {
+        status: 'FINISHED',
+        id: { not: spotlightMatch.id },
+        OR: [
+          { homeTeamId: spotlightMatch.homeTeam.id, awayTeamId: spotlightMatch.awayTeam.id },
+          { homeTeamId: spotlightMatch.awayTeam.id, awayTeamId: spotlightMatch.homeTeam.id },
+        ],
+      },
+      orderBy: { kickoffAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        kickoffAt: true,
+        homeScore: true,
+        awayScore: true,
+        homeTeam: { select: { id: true, name: true } },
+        awayTeam: { select: { id: true, name: true } },
+      },
+    }).catch(swallow("src/app/[locale]/matches/page.tsx:788", []))
     : [];
 
   const spotlightH2hRecord = spotlightH2h.reduce(
@@ -963,9 +972,9 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
   const spotlightGoals = spotlightMatch
     ? (eventsByMatch.get(spotlightMatch.id) ?? [])
-        .filter((event) => event.type === 'GOAL' || event.type === 'OWN_GOAL' || event.type === 'PENALTY')
-        .slice()
-        .reverse()
+      .filter((event) => event.type === 'GOAL' || event.type === 'OWN_GOAL' || event.type === 'PENALTY')
+      .slice()
+      .reverse()
     : [];
   const spotlightTimeline = spotlightMatch
     ? (eventsByMatch.get(spotlightMatch.id) ?? []).slice().reverse().slice(-8)
@@ -1010,13 +1019,13 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const nowMs = Date.now();
   const soonMatches = isToday
     ? queryMatches
-        .filter((match) => {
-          if (match.status !== 'NOT_STARTED') return false;
-          const kickoff = new Date(match.kickoffAt).getTime();
-          return kickoff >= nowMs && kickoff <= nowMs + 2 * 60 * 60 * 1000;
-        })
-        .slice(0, 6)
-        .map(toDeskMatch)
+      .filter((match) => {
+        if (match.status !== 'NOT_STARTED') return false;
+        const kickoff = new Date(match.kickoffAt).getTime();
+        return kickoff >= nowMs && kickoff <= nowMs + 2 * 60 * 60 * 1000;
+      })
+      .slice(0, 6)
+      .map(toDeskMatch)
     : [];
 
   const reminderMatches = queryMatches
@@ -1184,8 +1193,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   group.country,
                   group.rounds[0]
                     ? t('round_label', {
-                        round: group.rounds.length === 1 ? group.rounds[0] : group.rounds.join(' · '),
-                      })
+                      round: group.rounds.length === 1 ? group.rounds[0] : group.rounds.join(' · '),
+                    })
                     : '',
                   `${group.matches.length} ${pick(locale, group.matches.length === 1 ? 'مباراة' : 'مباريات', group.matches.length === 1 ? 'match' : 'matches')}`,
                 ]
@@ -1208,8 +1217,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         <div className={`space-y-1 p-2.5 ${liveInLeague > 0 ? 'bg-red-50/40 dark:bg-red-500/[0.06]' : ''}`}>
           {compact
             ? group.matches.map((match) => (
-                <CompactFixture key={match.id} match={match} followed={isFollowedMatch(match)} />
-              ))
+              <CompactFixture key={match.id} match={match} followed={isFollowedMatch(match)} />
+            ))
             : group.matches.map((match) => matchCardFor(match))}
         </div>
       </section>
@@ -1222,18 +1231,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     ...(eventCount('RED_CARD') > 0 ? [{ value: eventCount('RED_CARD'), label: t('red_card') }] : []),
     ...(broadcasts.length > 0 ? [{ value: broadcasts.length, label: pick(locale, 'قناة', 'Channels') }] : []),
   ];
-
-  const pinnedMatchDataList: PinnedMatchData[] = allMatches.map((m) => ({
-    id: m.id,
-    homeTeam: { name: m.homeTeam.name, logoUrl: m.homeTeam.logoUrl ?? null },
-    awayTeam: { name: m.awayTeam.name, logoUrl: m.awayTeam.logoUrl ?? null },
-    homeScore: m.homeScore,
-    awayScore: m.awayScore,
-    status: m.status,
-    minute: m.minute,
-    kickoffTime: format(new Date(m.kickoffAt), 'HH:mm'),
-    leagueName: m.league.name,
-  }));
 
   return (
     <div className="matchday-board pb-32">
@@ -1303,7 +1300,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       </section>
 
       <main className="matchday-main mx-auto max-w-7xl space-y-6 px-5 pb-8 pt-5 sm:px-6 lg:px-8">
-        <PinnedMatchesBar allMatches={pinnedMatchDataList} locale={locale} />
         <MatchdayLenses
           leagues={leagueLenses}
           channels={channelLenses}
@@ -1327,293 +1323,284 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         <LiveNowBoard seed={liveBoard} dayIds={dayIds} lastEvents={lastEvents} />
 
         {spotlightMatch ? (
-            <article
-              className={`jumbotron matchday-spotlight relative overflow-hidden rounded-[1.85rem] text-white ${
-                isLiveStatus(spotlightMatch.status)
-                  ? 'jumbotron-live'
-                  : spotlightMatch.status === 'FINISHED'
-                    ? 'jumbotron-ft'
-                    : ''
+          <article
+            className={`jumbotron matchday-spotlight relative overflow-hidden rounded-[1.85rem] text-white ${isLiveStatus(spotlightMatch.status)
+                ? 'jumbotron-live'
+                : spotlightMatch.status === 'FINISHED'
+                  ? 'jumbotron-ft'
+                  : ''
               }`}
-            >
-              <div className="matchday-spotlight-glow" aria-hidden />
-              <div className="relative p-5 sm:p-8">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2 text-[10px] font-medium text-white/65">
-                    <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-orange-200">
-                      {pick(locale, 'المباراة المختارة', 'Selected match')}
+          >
+            <div className="matchday-spotlight-glow" aria-hidden />
+            <div className="relative p-5 sm:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 text-[10px] font-medium text-white/65">
+                  <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-orange-200">
+                    {pick(locale, 'المباراة المختارة', 'Selected match')}
+                  </span>
+                  <Link href={`/league/${spotlightMatch.league.slug}`} className="hover:text-orange-300">
+                    {spotlightMatch.league.name}
+                  </Link>
+                  {spotlightMatch.leagueCountry ? (
+                    <span className="text-white/35">· {spotlightMatch.leagueCountry}</span>
+                  ) : null}
+                  {spotlightMatch.round ? (
+                    <span className="text-orange-200/80">
+                      · {t('round_label', { round: spotlightMatch.round })}
                     </span>
-                    <Link href={`/league/${spotlightMatch.league.slug}`} className="hover:text-orange-300">
-                      {spotlightMatch.league.name}
-                    </Link>
-                    {spotlightMatch.leagueCountry ? (
-                      <span className="text-white/35">· {spotlightMatch.leagueCountry}</span>
-                    ) : null}
-                    {spotlightMatch.round ? (
-                      <span className="text-orange-200/80">
-                        · {t('round_label', { round: spotlightMatch.round })}
-                      </span>
-                    ) : null}
-                    {spotlightMatch.hasLicensedStream && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-400/15 px-2 py-0.5 text-[8px] font-bold text-orange-200">
-                        <Radio className="h-3 w-3" />
-                        {t('licensed_feed')}
-                      </span>
-                    )}
+                  ) : null}
+                  {spotlightMatch.hasLicensedStream && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-400/15 px-2 py-0.5 text-[8px] font-bold text-orange-200">
+                      <Radio className="h-3 w-3" />
+                      {t('licensed_feed')}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {isLiveStatus(spotlightMatch.status) ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 px-2.5 py-1 text-[8px] font-bold text-red-200">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
+                      {spotlightMatch.status === 'HALFTIME'
+                        ? t('halftime')
+                        : spotlightMatch.minute
+                          ? `${t('live')} ${spotlightMatch.minute}'`
+                          : t('live')}
+                    </span>
+                  ) : (
+                    <ClientTime
+                      value={spotlightMatch.kickoffAt}
+                      className="text-[11px] font-bold text-orange-300"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="matchday-spotlight-grid relative mt-7">
+                <div className="matchday-spotlight-side is-home">
+                  <div className="matchday-crest-stage">
+                    <span className="matchday-crest-glow" aria-hidden />
+                    <div className="matchday-crest">
+                      <LeagueCrest name={spotlightMatch.homeTeam.name} logoUrl={spotlightMatch.homeTeam.logoUrl} className="h-full w-full" />
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {isLiveStatus(spotlightMatch.status) ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 px-2.5 py-1 text-[8px] font-bold text-red-200">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-                        {spotlightMatch.status === 'HALFTIME'
-                          ? t('halftime')
-                          : spotlightMatch.minute
-                            ? `${t('live')} ${spotlightMatch.minute}'`
-                            : t('live')}
-                      </span>
-                    ) : (
-                      <ClientTime
-                        value={spotlightMatch.kickoffAt}
-                        className="text-[11px] font-bold text-orange-300"
-                      />
+                  <strong className="matchday-spotlight-name">{spotlightMatch.homeTeam.name}</strong>
+                  <div className="matchday-spotlight-meta">
+                    {(formByTeam.get(spotlightMatch.homeTeam.id)?.length ?? 0) > 0 && (
+                      <FormPips letters={formByTeam.get(spotlightMatch.homeTeam.id) ?? []} />
                     )}
+                    {spotlightMatch.homeFormation ? (
+                      <span className="text-orange-300">{spotlightMatch.homeFormation}</span>
+                    ) : null}
                   </div>
+                  {spotlightMatch.homeCoach ? (
+                    <span className="text-[9px] font-medium text-white/40">
+                      {pick(locale, 'المدرب', 'Coach')} · {spotlightMatch.homeCoach}
+                    </span>
+                  ) : null}
+                  {spotlightGoals.filter((event) =>
+                    belongsToTeam(event.teamId, spotlightMatch.homeTeam)
+                  ).length > 0 ? (
+                    <p className="matchday-spotlight-scorers">
+                      {spotlightGoals
+                        .filter((event) => belongsToTeam(event.teamId, spotlightMatch.homeTeam))
+                        .map(
+                          (event) =>
+                            `${namedActor(event.playerName) ? `${namedActor(event.playerName)} ` : ''}${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}'`
+                        )
+                        .join('  ·  ')}
+                    </p>
+                  ) : null}
                 </div>
 
-                <div className="matchday-spotlight-grid relative mt-7">
-                  <div className="matchday-spotlight-side is-home">
-                    <div className="matchday-crest-stage">
-                      <span className="matchday-crest-glow" aria-hidden />
-                      <div className="matchday-crest">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={spotlightMatch.homeTeam.logoUrl || '/placeholder-team.png'}
-                          alt=""
-                        />
+                <div className="matchday-spotlight-score">
+                  {spotlightMatch.status === 'NOT_STARTED' ? (
+                    <div className="space-y-3">
+                      <div className="led-stat text-3xl font-black tabular-nums sm:text-5xl">
+                        <ClientTime value={spotlightMatch.kickoffAt} />
                       </div>
+                      <MatchCountdown kickoffAt={new Date(spotlightMatch.kickoffAt)} tone="dark" />
                     </div>
-                    <strong className="matchday-spotlight-name">{spotlightMatch.homeTeam.name}</strong>
-                    <div className="matchday-spotlight-meta">
-                      {(formByTeam.get(spotlightMatch.homeTeam.id)?.length ?? 0) > 0 && (
-                        <FormPips letters={formByTeam.get(spotlightMatch.homeTeam.id) ?? []} />
-                      )}
-                      {spotlightMatch.homeFormation ? (
-                        <span className="text-orange-300">{spotlightMatch.homeFormation}</span>
-                      ) : null}
-                    </div>
-                    {spotlightMatch.homeCoach ? (
-                      <span className="text-[9px] font-medium text-white/40">
-                        {pick(locale, 'المدرب', 'Coach')} · {spotlightMatch.homeCoach}
-                      </span>
-                    ) : null}
-                    {spotlightGoals.filter((event) =>
-                      belongsToTeam(event.teamId, spotlightMatch.homeTeam)
-                    ).length > 0 ? (
-                      <p className="matchday-spotlight-scorers">
-                        {spotlightGoals
-                          .filter((event) => belongsToTeam(event.teamId, spotlightMatch.homeTeam))
-                          .map(
-                            (event) =>
-                              `${namedActor(event.playerName) ? `${namedActor(event.playerName)} ` : ''}${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}'`
-                          )
-                          .join('  ·  ')}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="matchday-spotlight-score">
-                    {spotlightMatch.status === 'NOT_STARTED' ? (
-                      <div className="space-y-3">
-                        <div className="led-stat text-3xl font-black tabular-nums sm:text-5xl">
-                          <ClientTime value={spotlightMatch.kickoffAt} />
-                        </div>
-                        <MatchCountdown kickoffAt={new Date(spotlightMatch.kickoffAt)} tone="dark" />
-                      </div>
-                    ) : (
-                      <div
-                        className={`matchday-score-ring${isLiveStatus(spotlightMatch.status) ? ' is-live' : ''}`}
-                        dir="ltr"
-                      >
-                        <strong className="led-stat text-5xl font-black tabular-nums sm:text-6xl">
-                          {typeof spotlightMatch.homeScore === 'number' &&
+                  ) : (
+                    <div
+                      className={`matchday-score-ring${isLiveStatus(spotlightMatch.status) ? ' is-live' : ''}`}
+                      dir="ltr"
+                    >
+                      <strong className="led-stat text-5xl font-black tabular-nums sm:text-6xl">
+                        {typeof spotlightMatch.homeScore === 'number' &&
                           typeof spotlightMatch.awayScore === 'number' ? (
-                            <>
-                              {spotlightMatch.homeScore}
-                              <span className="mx-2 text-orange-400/70">:</span>
-                              {spotlightMatch.awayScore}
-                            </>
-                          ) : (
-                            '–'
-                          )}
-                        </strong>
-                      </div>
-                    )}
-                    <span className="mt-3 block text-[9px] font-bold uppercase tracking-[0.2em] text-orange-300/80">
-                      {spotlightMatch.status === 'FINISHED'
-                        ? t('finished')
-                        : spotlightMatch.status === 'NOT_STARTED'
-                          ? pick(locale, 'تبدأ الساعة', 'Starts at')
-                          : t('score_now')}
-                    </span>
-                  </div>
-
-                  <div className="matchday-spotlight-side is-away">
-                    <div className="matchday-crest-stage">
-                      <span className="matchday-crest-glow" aria-hidden />
-                      <div className="matchday-crest">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={spotlightMatch.awayTeam.logoUrl || '/placeholder-team.png'}
-                          alt=""
-                        />
-                      </div>
+                          <>
+                            {spotlightMatch.homeScore}
+                            <span className="mx-2 text-orange-400/70">:</span>
+                            {spotlightMatch.awayScore}
+                          </>
+                        ) : (
+                          '–'
+                        )}
+                      </strong>
                     </div>
-                    <strong className="matchday-spotlight-name">{spotlightMatch.awayTeam.name}</strong>
-                    <div className="matchday-spotlight-meta">
-                      {(formByTeam.get(spotlightMatch.awayTeam.id)?.length ?? 0) > 0 && (
-                        <FormPips letters={formByTeam.get(spotlightMatch.awayTeam.id) ?? []} />
-                      )}
-                      {spotlightMatch.awayFormation ? (
-                        <span className="text-orange-300">{spotlightMatch.awayFormation}</span>
-                      ) : null}
-                    </div>
-                    {spotlightMatch.awayCoach ? (
-                      <span className="text-[9px] font-medium text-white/40">
-                        {pick(locale, 'المدرب', 'Coach')} · {spotlightMatch.awayCoach}
-                      </span>
-                    ) : null}
-                    {spotlightGoals.filter((event) =>
-                      belongsToTeam(event.teamId, spotlightMatch.awayTeam)
-                    ).length > 0 ? (
-                      <p className="matchday-spotlight-scorers">
-                        {spotlightGoals
-                          .filter((event) => belongsToTeam(event.teamId, spotlightMatch.awayTeam))
-                          .map(
-                            (event) =>
-                              `${namedActor(event.playerName) ? `${namedActor(event.playerName)} ` : ''}${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}'`
-                          )
-                          .join('  ·  ')}
-                      </p>
-                    ) : null}
-                  </div>
+                  )}
+                  <span className="mt-3 block text-[9px] font-bold uppercase tracking-[0.2em] text-orange-300/80">
+                    {spotlightMatch.status === 'FINISHED'
+                      ? t('finished')
+                      : spotlightMatch.status === 'NOT_STARTED'
+                        ? pick(locale, 'تبدأ الساعة', 'Starts at')
+                        : t('score_now')}
+                  </span>
                 </div>
 
-                {(spotlightMatch.homePossession != null && spotlightMatch.awayPossession != null) ||
+                <div className="matchday-spotlight-side is-away">
+                  <div className="matchday-crest-stage">
+                    <span className="matchday-crest-glow" aria-hidden />
+                    <div className="matchday-crest">
+                      <LeagueCrest name={spotlightMatch.awayTeam.name} logoUrl={spotlightMatch.awayTeam.logoUrl} className="h-full w-full" />
+                    </div>
+                  </div>
+                  <strong className="matchday-spotlight-name">{spotlightMatch.awayTeam.name}</strong>
+                  <div className="matchday-spotlight-meta">
+                    {(formByTeam.get(spotlightMatch.awayTeam.id)?.length ?? 0) > 0 && (
+                      <FormPips letters={formByTeam.get(spotlightMatch.awayTeam.id) ?? []} />
+                    )}
+                    {spotlightMatch.awayFormation ? (
+                      <span className="text-orange-300">{spotlightMatch.awayFormation}</span>
+                    ) : null}
+                  </div>
+                  {spotlightMatch.awayCoach ? (
+                    <span className="text-[9px] font-medium text-white/40">
+                      {pick(locale, 'المدرب', 'Coach')} · {spotlightMatch.awayCoach}
+                    </span>
+                  ) : null}
+                  {spotlightGoals.filter((event) =>
+                    belongsToTeam(event.teamId, spotlightMatch.awayTeam)
+                  ).length > 0 ? (
+                    <p className="matchday-spotlight-scorers">
+                      {spotlightGoals
+                        .filter((event) => belongsToTeam(event.teamId, spotlightMatch.awayTeam))
+                        .map(
+                          (event) =>
+                            `${namedActor(event.playerName) ? `${namedActor(event.playerName)} ` : ''}${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}'`
+                        )
+                        .join('  ·  ')}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              {(spotlightMatch.homePossession != null && spotlightMatch.awayPossession != null) ||
                 (spotlightMatch.homeShotsOn != null && spotlightMatch.awayShotsOn != null) ||
                 (spotlightMatch.homeShotsOff != null && spotlightMatch.awayShotsOff != null) ||
                 (spotlightMatch.homeCorners != null && spotlightMatch.awayCorners != null) ||
                 (spotlightMatch.homeFouls != null && spotlightMatch.awayFouls != null) ||
                 (spotlightMatch.homeOffsides != null && spotlightMatch.awayOffsides != null) ? (
-                  <div className="relative mt-4 flex flex-wrap justify-center gap-x-5 gap-y-4 rounded-2xl bg-black/25 px-4 py-4">
-                    {spotlightMatch.homePossession != null && spotlightMatch.awayPossession != null && (
-                      <StatMeter home={spotlightMatch.homePossession} away={spotlightMatch.awayPossession} label={t('possession')} asPercent />
-                    )}
-                    {spotlightMatch.homeShotsOn != null && spotlightMatch.awayShotsOn != null && (
-                      <StatMeter home={spotlightMatch.homeShotsOn} away={spotlightMatch.awayShotsOn} label={t('shots_on_target')} />
-                    )}
-                    {spotlightMatch.homeShotsOff != null && spotlightMatch.awayShotsOff != null && (
-                      <StatMeter home={spotlightMatch.homeShotsOff} away={spotlightMatch.awayShotsOff} label={t('shots_off_target')} />
-                    )}
-                    {spotlightMatch.homeCorners != null && spotlightMatch.awayCorners != null && (
-                      <StatMeter home={spotlightMatch.homeCorners} away={spotlightMatch.awayCorners} label={t('corners')} />
-                    )}
-                    {spotlightMatch.homeFouls != null && spotlightMatch.awayFouls != null && (
-                      <StatMeter home={spotlightMatch.homeFouls} away={spotlightMatch.awayFouls} label={t('fouls')} />
-                    )}
-                    {spotlightMatch.homeOffsides != null && spotlightMatch.awayOffsides != null && (
-                      <StatMeter home={spotlightMatch.homeOffsides} away={spotlightMatch.awayOffsides} label={t('offsides')} />
-                    )}
-                  </div>
-                ) : null}
+                <div className="relative mt-4 flex flex-wrap justify-center gap-x-5 gap-y-4 rounded-2xl bg-black/25 px-4 py-4">
+                  {spotlightMatch.homePossession != null && spotlightMatch.awayPossession != null && (
+                    <StatMeter home={spotlightMatch.homePossession} away={spotlightMatch.awayPossession} label={t('possession')} asPercent />
+                  )}
+                  {spotlightMatch.homeShotsOn != null && spotlightMatch.awayShotsOn != null && (
+                    <StatMeter home={spotlightMatch.homeShotsOn} away={spotlightMatch.awayShotsOn} label={t('shots_on_target')} />
+                  )}
+                  {spotlightMatch.homeShotsOff != null && spotlightMatch.awayShotsOff != null && (
+                    <StatMeter home={spotlightMatch.homeShotsOff} away={spotlightMatch.awayShotsOff} label={t('shots_off_target')} />
+                  )}
+                  {spotlightMatch.homeCorners != null && spotlightMatch.awayCorners != null && (
+                    <StatMeter home={spotlightMatch.homeCorners} away={spotlightMatch.awayCorners} label={t('corners')} />
+                  )}
+                  {spotlightMatch.homeFouls != null && spotlightMatch.awayFouls != null && (
+                    <StatMeter home={spotlightMatch.homeFouls} away={spotlightMatch.awayFouls} label={t('fouls')} />
+                  )}
+                  {spotlightMatch.homeOffsides != null && spotlightMatch.awayOffsides != null && (
+                    <StatMeter home={spotlightMatch.homeOffsides} away={spotlightMatch.awayOffsides} label={t('offsides')} />
+                  )}
+                </div>
+              ) : null}
 
-                {(spotlightYellow > 0 || spotlightRed > 0) && (
-                  <div className="relative mt-3 flex justify-center gap-4 text-[10px] font-bold">
-                    {spotlightYellow > 0 && (
-                      <span className="rounded-full bg-amber-400/15 px-3 py-1 text-amber-200">{t('yellow_cards', {count: spotlightYellow})}</span>
-                    )}
-                    {spotlightRed > 0 && (
-                      <span className="rounded-full bg-red-500/15 px-3 py-1 text-red-300">{t('red_cards', {count: spotlightRed})}</span>
-                    )}
-                  </div>
-                )}
+              {(spotlightYellow > 0 || spotlightRed > 0) && (
+                <div className="relative mt-3 flex justify-center gap-4 text-[10px] font-bold">
+                  {spotlightYellow > 0 && (
+                    <span className="rounded-full bg-amber-400/15 px-3 py-1 text-amber-200">{t('yellow_cards', { count: spotlightYellow })}</span>
+                  )}
+                  {spotlightRed > 0 && (
+                    <span className="rounded-full bg-red-500/15 px-3 py-1 text-red-300">{t('red_cards', { count: spotlightRed })}</span>
+                  )}
+                </div>
+              )}
 
-                {(spotlightMatch.homeStarters?.length || spotlightMatch.awayStarters?.length) ? (
-                  <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
-                    {spotlightMatch.homeStarters?.length ? (
-                      <div className="rounded-2xl bg-black/20 px-3 py-3">
-                        <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-orange-200">
-                          {t('starting_xi')}
-                        </span>
-                        <p className="mt-2 text-[10px] font-medium leading-5 text-white/75">
-                          {spotlightMatch.homeStarters.map((player) =>
-                            player.number != null ? `${player.number} ${player.name}` : player.name
-                          ).join(' · ')}
-                        </p>
-                      </div>
-                    ) : null}
-                    {spotlightMatch.awayStarters?.length ? (
-                      <div className="rounded-2xl bg-black/20 px-3 py-3">
-                        <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-orange-300">
-                          {t('starting_xi')}
-                        </span>
-                        <p className="mt-2 text-[10px] font-medium leading-5 text-white/75">
-                          {spotlightMatch.awayStarters.map((player) =>
-                            player.number != null ? `${player.number} ${player.name}` : player.name
-                          ).join(' · ')}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                {spotlightTimeline.length > 0 && (
-                  <ol className="relative mt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                    {spotlightTimeline.map((event) => (
-                      <li
-                        key={event.id}
-                        className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[9px] font-semibold text-emerald-50"
-                      >
-                        <span className="text-orange-300">
-                          {event.minute}{event.extraMinute ? `+${event.extraMinute}` : ''}&prime;
-                        </span>
-                        {' '}
-                        {eventLabel(event.type)}
-                        {event.playerName ? ` · ${event.playerName}` : ''}
-                      </li>
-                    ))}
-                  </ol>
-                )}
-
-                {(spotlightHomeStanding || spotlightAwayStanding) && (
-                  <div className="relative mt-3 flex justify-between gap-4 text-[9px] font-semibold text-emerald-100/50">
-                    <span>
-                      {spotlightHomeStanding
-                        ? pick(locale, `المركز ${spotlightHomeStanding.rank} · ${spotlightHomeStanding.played} لعب · ${spotlightHomeStanding.won}ف ${spotlightHomeStanding.drawn}ت ${spotlightHomeStanding.lost}خ · ${spotlightHomeStanding.goalsFor}:${spotlightHomeStanding.goalsAgainst} · ${spotlightHomeStanding.points} نقطة`, `Rank ${spotlightHomeStanding.rank} · ${spotlightHomeStanding.played} played · ${spotlightHomeStanding.won}W ${spotlightHomeStanding.drawn}D ${spotlightHomeStanding.lost}L · ${spotlightHomeStanding.goalsFor}:${spotlightHomeStanding.goalsAgainst} · ${spotlightHomeStanding.points} points`)
-                        : ''}
-                    </span>
-                    <span className="text-left">
-                      {spotlightAwayStanding
-                        ? pick(locale, `المركز ${spotlightAwayStanding.rank} · ${spotlightAwayStanding.played} لعب · ${spotlightAwayStanding.won}ف ${spotlightAwayStanding.drawn}ت ${spotlightAwayStanding.lost}خ · ${spotlightAwayStanding.goalsFor}:${spotlightAwayStanding.goalsAgainst} · ${spotlightAwayStanding.points} نقطة`, `Rank ${spotlightAwayStanding.rank} · ${spotlightAwayStanding.played} played · ${spotlightAwayStanding.won}W ${spotlightAwayStanding.drawn}D ${spotlightAwayStanding.lost}L · ${spotlightAwayStanding.goalsFor}:${spotlightAwayStanding.goalsAgainst} · ${spotlightAwayStanding.points} points`)
-                        : ''}
-                    </span>
-                  </div>
-                )}
-
-                {spotlightH2h.length > 0 && (
-                  <div className="relative mt-4 rounded-2xl bg-black/20 px-3 py-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-[8px] font-bold uppercase tracking-[0.18em] text-orange-300">{t('previous_meetings')}</span>
-                      <span className="text-[10px] font-black tabular-nums text-emerald-50">
-                        <span className="text-emerald-300">{spotlightH2hRecord.homeWins}{t('win_short')}</span>
-                        <span className="mx-1.5 text-muted-foreground">{spotlightH2hRecord.draws}{t('draw_short')}</span>
-                        <span className="text-orange-300">{spotlightH2hRecord.awayWins}{t('win_short')}</span>
+              {(spotlightMatch.homeStarters?.length || spotlightMatch.awayStarters?.length) ? (
+                <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
+                  {spotlightMatch.homeStarters?.length ? (
+                    <div className="rounded-2xl bg-black/20 px-3 py-3">
+                      <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-orange-200">
+                        {t('starting_xi')}
                       </span>
+                      <p className="mt-2 text-[10px] font-medium leading-5 text-white/75">
+                        {spotlightMatch.homeStarters.map((player) =>
+                          player.number != null ? `${player.number} ${player.name}` : player.name
+                        ).join(' · ')}
+                      </p>
                     </div>
-                    <div className="mt-2 flex gap-2 overflow-x-auto no-scrollbar">
-                      {spotlightH2h.map((meeting) => {
-                        const homeWonMeeting = meeting.homeScore != null && meeting.awayScore != null && meeting.homeScore > meeting.awayScore;
-                        const awayWonMeeting = meeting.homeScore != null && meeting.awayScore != null && meeting.awayScore > meeting.homeScore;
-                        return (
+                  ) : null}
+                  {spotlightMatch.awayStarters?.length ? (
+                    <div className="rounded-2xl bg-black/20 px-3 py-3">
+                      <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-orange-300">
+                        {t('starting_xi')}
+                      </span>
+                      <p className="mt-2 text-[10px] font-medium leading-5 text-white/75">
+                        {spotlightMatch.awayStarters.map((player) =>
+                          player.number != null ? `${player.number} ${player.name}` : player.name
+                        ).join(' · ')}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {spotlightTimeline.length > 0 && (
+                <ol className="relative mt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  {spotlightTimeline.map((event) => (
+                    <li
+                      key={event.id}
+                      className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[9px] font-semibold text-emerald-50"
+                    >
+                      <span className="text-orange-300">
+                        {event.minute}{event.extraMinute ? `+${event.extraMinute}` : ''}&prime;
+                      </span>
+                      {' '}
+                      {eventLabel(event.type)}
+                      {event.playerName ? ` · ${event.playerName}` : ''}
+                    </li>
+                  ))}
+                </ol>
+              )}
+
+              {(spotlightHomeStanding || spotlightAwayStanding) && (
+                <div className="relative mt-3 flex justify-between gap-4 text-[9px] font-semibold text-emerald-100/50">
+                  <span>
+                    {spotlightHomeStanding
+                      ? pick(locale, `المركز ${spotlightHomeStanding.rank} · ${spotlightHomeStanding.played} لعب · ${spotlightHomeStanding.won}ف ${spotlightHomeStanding.drawn}ت ${spotlightHomeStanding.lost}خ · ${spotlightHomeStanding.goalsFor}:${spotlightHomeStanding.goalsAgainst} · ${spotlightHomeStanding.points} نقطة`, `Rank ${spotlightHomeStanding.rank} · ${spotlightHomeStanding.played} played · ${spotlightHomeStanding.won}W ${spotlightHomeStanding.drawn}D ${spotlightHomeStanding.lost}L · ${spotlightHomeStanding.goalsFor}:${spotlightHomeStanding.goalsAgainst} · ${spotlightHomeStanding.points} points`)
+                      : ''}
+                  </span>
+                  <span className="text-left">
+                    {spotlightAwayStanding
+                      ? pick(locale, `المركز ${spotlightAwayStanding.rank} · ${spotlightAwayStanding.played} لعب · ${spotlightAwayStanding.won}ف ${spotlightAwayStanding.drawn}ت ${spotlightAwayStanding.lost}خ · ${spotlightAwayStanding.goalsFor}:${spotlightAwayStanding.goalsAgainst} · ${spotlightAwayStanding.points} نقطة`, `Rank ${spotlightAwayStanding.rank} · ${spotlightAwayStanding.played} played · ${spotlightAwayStanding.won}W ${spotlightAwayStanding.drawn}D ${spotlightAwayStanding.lost}L · ${spotlightAwayStanding.goalsFor}:${spotlightAwayStanding.goalsAgainst} · ${spotlightAwayStanding.points} points`)
+                      : ''}
+                  </span>
+                </div>
+              )}
+
+              {spotlightH2h.length > 0 && (
+                <div className="relative mt-4 rounded-2xl bg-black/20 px-3 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[8px] font-bold uppercase tracking-[0.18em] text-orange-300">{t('previous_meetings')}</span>
+                    <span className="text-[10px] font-black tabular-nums text-emerald-50">
+                      <span className="text-emerald-300">{spotlightH2hRecord.homeWins}{t('win_short')}</span>
+                      <span className="mx-1.5 text-muted-foreground">{spotlightH2hRecord.draws}{t('draw_short')}</span>
+                      <span className="text-orange-300">{spotlightH2hRecord.awayWins}{t('win_short')}</span>
+                    </span>
+                  </div>
+                  <div className="mt-2 flex gap-2 overflow-x-auto no-scrollbar">
+                    {spotlightH2h.map((meeting) => {
+                      const homeWonMeeting = meeting.homeScore != null && meeting.awayScore != null && meeting.homeScore > meeting.awayScore;
+                      const awayWonMeeting = meeting.homeScore != null && meeting.awayScore != null && meeting.awayScore > meeting.homeScore;
+                      return (
                         <Link
                           key={meeting.id}
                           href={`/match/${meeting.id}`}
@@ -1630,76 +1617,76 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                             </span>
                           </span>
                         </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className="relative mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-medium text-emerald-100/60">
-                    {spotlightMatch.venue && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-orange-500" />
-                        {spotlightMatch.venue}
-                        {spotlightMatch.venueCity ? ` · ${spotlightMatch.venueCity}` : ''}
-                        {spotlightMatch.venueCapacity ? ` · ${t('seats', {count: spotlightMatch.venueCapacity.toLocaleString(locale)})}` : ''}
-                      </span>
-                    )}
-                    {spotlightMatch.channels[0] && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Tv className="h-3.5 w-3.5 text-orange-500" />
-                        {spotlightMatch.channels.map((channel) => channel.name).join(' · ')}
-                      </span>
-                    )}
-                    {spotlightMatch.refereeName && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Shield className="h-3.5 w-3.5 text-orange-500" />
-                        {t('referee', {name: spotlightMatch.refereeName})}
-                      </span>
-                    )}
-                    {spotlightMatch.commentators.length > 0 && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-orange-500" />
-                        {spotlightMatch.commentators.map((commentator) =>
-                          [commentator.name, commentator.language].filter(Boolean).join(' · ')
-                        ).join(' · ')}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {showProgrammeSplit && programmeScope === 'major' && restScoped.length > 0 ? (
-                      <Link
-                        href="#rest"
-                        className="inline-flex h-11 items-center rounded-xl border border-white/15 bg-black/20 px-4 text-[10px] font-bold text-emerald-100/80 transition-colors hover:border-orange-400/40 hover:text-white"
-                      >
-                        {pick(
-                          locale,
-                          `عرض ${restScoped.length} مباراة أخرى`,
-                          `Show ${restScoped.length} more matches`
-                        )}
-                      </Link>
-                    ) : null}
-                    <MatchQuickActions
-                      matchId={spotlightMatch.id}
-                      title={t('versus', {home: spotlightMatch.homeTeam.name, away: spotlightMatch.awayTeam.name})}
-                      kickoffAt={new Date(spotlightMatch.kickoffAt).toISOString()}
-                      venue={spotlightMatch.venue}
-                      isLoggedIn={Boolean(session?.user)}
-                      initialReminder={Boolean(spotlightReminder)}
-                    />
-                    <Link
-                      href={`/match/${spotlightMatch.id}`}
-                      className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-[10px] font-black text-primary-foreground transition-colors hover:bg-orange-400"
-                    >
-                      {pick(locale, 'فتح مركز المباراة', 'Open match center')}
-                      <ChevronLeft className="h-3.5 w-3.5" />
-                    </Link>
+                      );
+                    })}
                   </div>
                 </div>
+              )}
+
+              <div className="relative mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-medium text-emerald-100/60">
+                  {spotlightMatch.venue && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-orange-500" />
+                      {spotlightMatch.venue}
+                      {spotlightMatch.venueCity ? ` · ${spotlightMatch.venueCity}` : ''}
+                      {spotlightMatch.venueCapacity ? ` · ${t('seats', { count: spotlightMatch.venueCapacity.toLocaleString(locale) })}` : ''}
+                    </span>
+                  )}
+                  {spotlightMatch.channels[0] && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Tv className="h-3.5 w-3.5 text-orange-500" />
+                      {spotlightMatch.channels.map((channel) => channel.name).join(' · ')}
+                    </span>
+                  )}
+                  {spotlightMatch.refereeName && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Shield className="h-3.5 w-3.5 text-orange-500" />
+                      {t('referee', { name: spotlightMatch.refereeName })}
+                    </span>
+                  )}
+                  {spotlightMatch.commentators.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-orange-500" />
+                      {spotlightMatch.commentators.map((commentator) =>
+                        [commentator.name, commentator.language].filter(Boolean).join(' · ')
+                      ).join(' · ')}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {showProgrammeSplit && programmeScope === 'major' && restScoped.length > 0 ? (
+                    <Link
+                      href="#rest"
+                      className="inline-flex h-11 items-center rounded-xl border border-white/15 bg-black/20 px-4 text-[10px] font-bold text-emerald-100/80 transition-colors hover:border-orange-400/40 hover:text-white"
+                    >
+                      {pick(
+                        locale,
+                        `عرض ${restScoped.length} مباراة أخرى`,
+                        `Show ${restScoped.length} more matches`
+                      )}
+                    </Link>
+                  ) : null}
+                  <MatchQuickActions
+                    matchId={spotlightMatch.id}
+                    title={t('versus', { home: spotlightMatch.homeTeam.name, away: spotlightMatch.awayTeam.name })}
+                    kickoffAt={new Date(spotlightMatch.kickoffAt).toISOString()}
+                    venue={spotlightMatch.venue}
+                    isLoggedIn={Boolean(session?.user)}
+                    initialReminder={Boolean(spotlightReminder)}
+                  />
+                  <Link
+                    href={`/match/${spotlightMatch.id}`}
+                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-[10px] font-black text-primary-foreground transition-colors hover:bg-orange-400"
+                  >
+                    {pick(locale, 'فتح مركز المباراة', 'Open match center')}
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
-            </article>
-          ) : null}
+            </div>
+          </article>
+        ) : null}
 
         <div className="matchday-dock space-y-3 p-3 sm:p-4">
           <div className="flex items-stretch gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -1752,25 +1739,23 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   <Link
                     key={filter.value}
                     href={pageHref({ status: filter.value })}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${
-                      active
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${active
                         ? filter.value === 'live'
                           ? 'bg-red-600 text-white shadow-sm'
                           : 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
                         : filter.value === 'live' && filter.count > 0
                           ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground'
-                    }`}
+                      }`}
                   >
                     {filter.value === 'live' && filter.count > 0 ? (
                       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
                     ) : null}
                     {filter.label}
-                    <span className={`text-[9px] tabular-nums ${
-                      active
+                    <span className={`text-[9px] tabular-nums ${active
                         ? filter.value === 'live' ? 'text-red-100' : 'text-orange-400'
                         : filter.value === 'live' && filter.count > 0 ? 'text-red-400' : 'text-muted-foreground dark:text-foreground'
-                    }`}>
+                      }`}>
                       {filter.count}
                     </span>
                   </Link>
@@ -1779,11 +1764,10 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
               <span className="mx-1 h-5 w-px bg-[rgba(15,23,42,0.08)] dark:bg-muted/10" />
               <Link
                 href={favoritesHref}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${
-                  favoritesOnly
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${favoritesOnly
                     ? 'bg-orange-500 text-primary-foreground shadow-sm'
                     : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10'
-                }`}
+                  }`}
               >
                 <Heart className={`h-3.5 w-3.5 ${favoritesOnly ? 'fill-current' : ''}`} />
                 {pick(locale, 'فرقي', 'My teams')}
@@ -1793,22 +1777,20 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   <span className="mx-1 h-5 w-px bg-[rgba(15,23,42,0.08)] dark:bg-muted/10" />
                   <Link
                     href={pageHref({ scope: undefined })}
-                    className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${
-                      programmeScope === 'major'
+                    className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${programmeScope === 'major'
                         ? 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
                         : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-muted'
-                    }`}
+                      }`}
                   >
                     {pick(locale, 'كبرى', 'Majors')}
                     <span className="ms-1.5 text-[9px] tabular-nums opacity-80">{majorScoped.length}</span>
                   </Link>
                   <Link
                     href={pageHref({ scope: 'all' })}
-                    className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${
-                      programmeScope === 'all'
+                    className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${programmeScope === 'all'
                         ? 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
                         : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-muted'
-                    }`}
+                      }`}
                   >
                     {pick(locale, 'البرنامج كامل', 'Full programme')}
                     <span className="ms-1.5 text-[9px] tabular-nums opacity-80">{scopedMatches.length}</span>
@@ -1909,19 +1891,19 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   {lensesActive
                     ? pick(locale, 'لا مباريات تحت هذه العدسة', 'No matches under this lens')
                     : statusFilter === 'live'
-                    ? pick(locale, 'لا توجد مباريات مباشرة الآن', 'No live matches right now')
-                    : statusFilter === 'upcoming'
-                      ? pick(locale, 'لا مواعيد قادمة في هذا اليوم', 'No upcoming fixtures on this day')
-                      : statusFilter === 'finished'
-                        ? pick(locale, 'لا نتائج منتهية في هذا اليوم', 'No finished results on this day')
-                        : pick(locale, 'لا توجد مباريات في هذا اليوم', 'No matches on this day')}
+                      ? pick(locale, 'لا توجد مباريات مباشرة الآن', 'No live matches right now')
+                      : statusFilter === 'upcoming'
+                        ? pick(locale, 'لا مواعيد قادمة في هذا اليوم', 'No upcoming fixtures on this day')
+                        : statusFilter === 'finished'
+                          ? pick(locale, 'لا نتائج منتهية في هذا اليوم', 'No finished results on this day')
+                          : pick(locale, 'لا توجد مباريات في هذا اليوم', 'No matches on this day')}
                 </h3>
                 <p className="mt-2 text-sm font-medium text-muted-foreground">
                   {lensesActive
                     ? pick(locale, 'امسح البطولة أو القناة أو الساعة لعرض برنامج اليوم كاملاً.', 'Clear the competition, channel or hour to show the full day.')
                     : statusFilter === 'all'
-                    ? pick(locale, 'جرّب يوماً آخر أو امسح عبارة البحث لعرض جميع المباريات.', 'Try another day or clear the search to show all matches.')
-                    : pick(locale, 'غيّر الفلتر أو اختر يوماً آخر من شريط التواريخ.', 'Change the filter or choose another day.')}
+                      ? pick(locale, 'جرّب يوماً آخر أو امسح عبارة البحث لعرض جميع المباريات.', 'Try another day or clear the search to show all matches.')
+                      : pick(locale, 'غيّر الفلتر أو اختر يوماً آخر من شريط التواريخ.', 'Change the filter or choose another day.')}
                 </p>
                 <Link
                   href={lensesActive ? pageHref({ league: undefined, channel: undefined, hour: undefined }) : '/matches'}
@@ -2013,30 +1995,30 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             </section>
 
             {scorers.length > 0 ? (
-            <section className="matchday-plate">
-              <div className="matchday-section-kicker">
-                <span className="matchday-folio-mark" aria-hidden>
-                  06
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                  {pick(locale, 'سجل الأهداف', 'Scoresheet')}
-                </span>
-              </div>
-              <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                {pick(locale, 'سجل أهداف اليوم', "Today's goals")}
-              </h2>
-              <ul className="mt-4 space-y-3">
+              <section className="matchday-plate">
+                <div className="matchday-section-kicker">
+                  <span className="matchday-folio-mark" aria-hidden>
+                    06
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
+                    {pick(locale, 'سجل الأهداف', 'Scoresheet')}
+                  </span>
+                </div>
+                <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
+                  {pick(locale, 'سجل أهداف اليوم', "Today's goals")}
+                </h2>
+                <ul className="mt-4 space-y-3">
                   {scorers.map((scorer) => (
                     <li key={scorer.id}>
                       <Link href={`/match/${scorer.matchId}`} className="flex items-center gap-3">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={scorer.teamLogo || '/placeholder-team.png'} alt="" className="h-7 w-7 object-contain" />
+                        <LeagueCrest name={scorer.teamName} logoUrl={scorer.teamLogo} className="h-7 w-7" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{scorer.player}</p>
                           <p className="truncate text-[9px] font-medium text-muted-foreground">
                             {scorer.teamName} · {scorer.leagueName}
                             {scorer.type === 'PENALTY' ? ` · ${t('penalty')}` : scorer.type === 'OWN_GOAL' ? ` · ${t('own_goal')}` : ''}
-                            {scorer.assist ? t('assist_by', {player: scorer.assist}) : ''}
+                            {scorer.assist ? t('assist_by', { player: scorer.assist }) : ''}
                           </p>
                         </div>
                         <span className="text-[11px] font-bold tabular-nums text-orange-500">{scorer.minute}&prime;</span>
@@ -2044,28 +2026,28 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     </li>
                   ))}
                 </ul>
-            </section>
+              </section>
             ) : null}
 
             {discipline.length > 0 ? (
-            <section className="matchday-plate">
-              <div className="matchday-section-kicker">
-                <span className="matchday-folio-mark" aria-hidden>
-                  07
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                  {pick(locale, 'الانضباط', 'Discipline')}
-                </span>
-              </div>
-              <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                {pick(locale, 'بطاقات اليوم', "Today's cards")}
-              </h2>
-              <ul className="mt-4 space-y-3">
+              <section className="matchday-plate">
+                <div className="matchday-section-kicker">
+                  <span className="matchday-folio-mark" aria-hidden>
+                    07
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
+                    {pick(locale, 'الانضباط', 'Discipline')}
+                  </span>
+                </div>
+                <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
+                  {pick(locale, 'بطاقات اليوم', "Today's cards")}
+                </h2>
+                <ul className="mt-4 space-y-3">
                   {discipline.map((card) => (
                     <li key={card.id}>
                       <Link href={`/match/${card.matchId}`} className="flex items-center gap-3">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={card.teamLogo || '/placeholder-team.png'} alt="" className="h-7 w-7 object-contain" />
+                        <LeagueCrest name={card.teamName} logoUrl={card.teamLogo} className="h-7 w-7" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{card.player}</p>
                           <p className="truncate text-[9px] font-medium text-muted-foreground">
@@ -2079,7 +2061,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     </li>
                   ))}
                 </ul>
-            </section>
+              </section>
             ) : null}
 
             <div className="matchday-plate">

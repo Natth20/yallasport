@@ -1,0 +1,159 @@
+/* ══════════════════════════════════════════════════════════════════════
+   YALLA SPORT — PREDICTIONS HOUSE
+   Ultra-Minimalist Luxury Design
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ys-predict-house {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+/* Subtle background glow */
+.ys-predict-house::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1000px;
+  height: 50vh;
+  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--primary) 5%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ys-predict-podium {
+  position: relative;
+  border-radius: 2rem;
+  background: color-mix(in srgb, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 3rem 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1rem;
+}
+
+html.dark .ys-predict-podium {
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+}
+
+.ys-podium-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ys-podium-step:hover {
+  transform: translateY(-8px);
+}
+
+.ys-podium-step .ys-podium-avatar {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  border: 3px solid var(--background);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: -1rem;
+  z-index: 2;
+  background: var(--card);
+}
+
+.ys-podium-step.is-gold .ys-podium-avatar {
+  width: 6.5rem;
+  height: 6.5rem;
+  border-color: #fbbf24; /* Gold */
+}
+
+.ys-podium-step.is-silver .ys-podium-avatar {
+  border-color: #94a3b8; /* Silver */
+}
+
+.ys-podium-step.is-bronze .ys-podium-avatar {
+  border-color: #b45309; /* Bronze */
+}
+
+.ys-podium-base {
+  width: 7rem;
+  border-radius: 1rem 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 2rem;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
+}
+
+.ys-podium-step.is-gold .ys-podium-base {
+  height: 12rem;
+  background: linear-gradient(180deg, color-mix(in srgb, #fbbf24 20%, transparent), transparent);
+  border: 1px solid color-mix(in srgb, #fbbf24 30%, transparent);
+  border-bottom: 0;
+}
+
+.ys-podium-step.is-silver .ys-podium-base {
+  height: 9rem;
+  background: linear-gradient(180deg, color-mix(in srgb, #94a3b8 20%, transparent), transparent);
+  border: 1px solid color-mix(in srgb, #94a3b8 30%, transparent);
+  border-bottom: 0;
+}
+
+.ys-podium-step.is-bronze .ys-podium-base {
+  height: 7.5rem;
+  background: linear-gradient(180deg, color-mix(in srgb, #b45309 20%, transparent), transparent);
+  border: 1px solid color-mix(in srgb, #b45309 30%, transparent);
+  border-bottom: 0;
+}
+
+.ys-podium-rank {
+  font-size: 2.5rem;
+  font-weight: 900;
+  opacity: 0.3;
+  font-family: var(--font-mono, monospace);
+}
+
+.ys-podium-step.is-gold .ys-podium-rank { color: #fbbf24; }
+.ys-podium-step.is-silver .ys-podium-rank { color: #94a3b8; }
+.ys-podium-step.is-bronze .ys-podium-rank { color: #b45309; }
+
+.ys-predict-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ys-predict-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--card) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  backdrop-filter: blur(12px);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.ys-predict-row:hover {
+  transform: translateX(4px);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 20%, var(--border));
+}
+
+.ys-predict-row-rank {
+  font-family: var(--font-mono, monospace);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+  width: 2rem;
+  text-align: center;
+}

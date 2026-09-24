@@ -1,16 +1,20 @@
-﻿import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { auth } from '@/lib/auth/auth';
 import { getLocale } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { STREAMING_ENABLED } from '@/lib/streaming';
+import { requireLicensedStreaming } from '@/lib/streaming/public-door';
 import { canAccessPremiumContent } from '@/lib/auth/premium';
 import { MatchStreamPlayer } from '@/components/streaming/MatchStreamPlayer';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { DeskRule, PhotoCorners } from '@/components/news/NewsOrnaments';
 
+export const dynamic = 'force-dynamic';
+
 export default async function VODPlayerPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireLicensedStreaming();
   const { id } = await params;
   const locale = await getLocale();
   const session = await auth();
@@ -70,7 +74,7 @@ export default async function VODPlayerPage({ params }: { params: Promise<{ id: 
           <Link href={`/vod/${episode.show.slug}`} className="watch-chip-link is-ghost">
             {episode.show.title}
           </Link>
-          <Link href="/watch" className="watch-chip-link is-ghost">
+          <Link href="/vod" className="watch-chip-link is-ghost">
             {pick(locale, 'المكتبة', 'Library')}
           </Link>
         </div>
@@ -83,8 +87,8 @@ export default async function VODPlayerPage({ params }: { params: Promise<{ id: 
                 <h1 className="text-2xl font-black text-white">
                   {pick(locale, 'محتوى للمشتركين', 'Subscribers only')}
                 </h1>
-                <Link href="/subscribe" className="watch-featured-cta">
-                  {pick(locale, 'خطط الاشتراك', 'Subscription plans')}
+                <Link href="/login" className="watch-featured-cta">
+                  {pick(locale, 'تسجيل الدخول', 'Sign in')}
                 </Link>
               </div>
             ) : licensedAsset ? (

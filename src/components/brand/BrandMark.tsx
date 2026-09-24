@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { LOGO_PATH } from '@/lib/seo/site';
 
 type BrandMarkProps = {
   size?: number;
@@ -9,12 +10,11 @@ type BrandMarkProps = {
 export function BrandMark({ size = 40, priority = false, className = '' }: BrandMarkProps) {
   return (
     <Image
-      src="/images/logo.jpg"
+      src={LOGO_PATH}
       alt="Yalla Sport"
       width={size}
       height={size}
-      className={`shrink-0 object-contain ${className}`}
-      style={{ width: 'auto', height: 'auto' }}
+      className={`shrink-0 rounded-lg bg-black object-contain ${className}`}
       priority={priority}
     />
   );

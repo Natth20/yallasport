@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# يلا سبورت
 
-## Getting Started
+منصة كرة قدم عربية (RTL أولاً، `/ar` الافتراضي و`/en` موازٍ). النتائج والجداول والملفات والأخبار تأتي من مصدر حقيقي أو من القاعدة بعد المزامنة. لا تُختلق نتائج ولا عدّادات مشاهدة في العرض. البث المدفوع والدفع **مطفآن في الكود** حتى يوجد عقد ومفتاح.
 
-First, run the development server:
+## تشغيل المشروع من الصفر
+
+المتطلبات: Node.js 20+، pnpm، Postgres.
+
+1. انسخ `.env.example` إلى `.env` واملأ على الأقل `DATABASE_URL` و`AUTH_SECRET`.
+2. ثبّت الاعتماديات وولّد عميل Prisma:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm exec prisma generate
+pnpm exec prisma migrate deploy
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. شغّل التطوير:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. افتح [http://localhost:3000/ar](http://localhost:3000/ar) ثم `/en`.
 
-## Learn More
+أوامر مفيدة:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm test
+pnpm lint
+pnpm build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+بدون `SPORTS_API_KEY` حقيقي تبقى طبقة الرياضة فارغة (لا مباريات وهمية). استيراد RSS يدخل `PENDING_REVIEW`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## هيكل سريع
 
-## Deploy on Vercel
+- التطبيق: `src/app/[locale]/…`
+- المكتبات: `src/lib/`
+- الواجهات: `src/components/`
+- المخطط: `prisma/schema.prisma`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## التوثيق (حزمة التسليم)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [docs/DELIVERY.md](docs/DELIVERY.md) — فهرس التسليم والحسابات
+- [docs/API.md](docs/API.md) — مسارات الواجهة الداخلية
+- [docs/DEPLOY.md](docs/DEPLOY.md) — النشر
+- [docs/BACKUP.md](docs/BACKUP.md) — النسخ والاستعادة
+- [docs/ENV.md](docs/ENV.md) — كل متغيرات البيئة
+- [docs/SCHEMA.md](docs/SCHEMA.md) — شرح الجداول الرئيسية
+- [docs/AUDIT.md](docs/AUDIT.md) — تدقيق البريد والـ DNS
+- [prisma/MIGRATIONS.md](prisma/MIGRATIONS.md) — الترحيل
+
+## مبدأ البيانات والأسماء
+
+كل فريق/لاعب/بطولة صف واحد (`externalId`). الحقل `officialName` للاسم الرسمي، والعرض العربي عبر المعجم + `EntityTranslation` لنفس المعرّف.
+
+الأوقات تُخزَّن UTC وتُعرض حسب `yalla-tz` أو الافتراضي `Asia/Riyadh` (بدون توقيت صيفي).

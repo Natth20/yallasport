@@ -25,6 +25,7 @@ export interface NormalizedMatchDetail extends NormalizedMatch {
   commentators?: NormalizedCommentator[];
   referee?: { id?: string; name: string };
   venueDetail?: { id?: string; name: string; city?: string; capacity?: number };
+  attendance?: number;
   lineupStatus?: 'CONFIRMED' | 'PREDICTED' | 'PENDING' | 'UNAVAILABLE';
   availability?: MatchDataAvailability;
 }

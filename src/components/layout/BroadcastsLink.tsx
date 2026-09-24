@@ -1,4 +1,5 @@
 'use client';
+import { swallow } from '@/lib/ops/caught';
 
 import { useEffect, useState } from 'react';
 import { Radio } from 'lucide-react';
@@ -19,15 +20,21 @@ export function BroadcastsLink({
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/stream/availability')
-      .then((response) => response.json())
-      .then((data) => {
-        if (cancelled) return;
-        setOnAir(Array.isArray(data?.items) && data.items.length > 0);
-      })
-      .catch(() => undefined);
+    const inflight = (globalThis as { __ysOnAir?: Promise<boolean> }).__ysOnAir
+      ?? fetch('/api/stream/availability')
+        .then((response) => response.json())
+        .then((data) => Array.isArray(data?.items) && data.items.length > 0)
+        .catch(swallow("src/components/layout/BroadcastsLink.tsx:26", false));
+    (globalThis as { __ysOnAir?: Promise<boolean> }).__ysOnAir = inflight;
+    inflight.then((value) => {
+      if (!cancelled) setOnAir(value);
+    });
+    const reset = window.setTimeout(() => {
+      delete (globalThis as { __ysOnAir?: Promise<boolean> }).__ysOnAir;
+    }, 30_000);
     return () => {
       cancelled = true;
+      window.clearTimeout(reset);
     };
   }, []);
 

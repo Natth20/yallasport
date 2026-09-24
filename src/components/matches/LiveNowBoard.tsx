@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import {Link} from '@/i18n/navigation';
 import { useLiveStatus } from '@/lib/context/LiveStatusContext';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
 import {useTranslations} from 'next-intl';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 
 function isLive(status: string) {
   return status === 'LIVE' || status === 'HALFTIME';
@@ -87,14 +88,14 @@ export function LiveNowBoard({
               </div>
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2.5">
-                  <img src={match.homeTeam.logoUrl || '/placeholder-team.png'} alt="" className="h-7 w-7 object-contain" />
+                  <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-7 w-7" />
                   <span className="min-w-0 flex-1 truncate text-[12px] font-bold">{match.homeTeam.name}</span>
                   <strong className={`text-xl font-black tabular-nums ${halftime ? 'text-amber-700 dark:text-amber-200' : 'text-red-600 dark:text-red-300'}`}>
                     {typeof match.homeScore === 'number' ? match.homeScore : '–'}
                   </strong>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <img src={match.awayTeam.logoUrl || '/placeholder-team.png'} alt="" className="h-7 w-7 object-contain" />
+                  <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-7 w-7" />
                   <span className="min-w-0 flex-1 truncate text-[12px] font-bold">{match.awayTeam.name}</span>
                   <strong className={`text-xl font-black tabular-nums ${halftime ? 'text-amber-700 dark:text-amber-200' : 'text-red-600 dark:text-red-300'}`}>
                     {typeof match.awayScore === 'number' ? match.awayScore : '–'}

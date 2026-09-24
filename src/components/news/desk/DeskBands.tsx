@@ -170,7 +170,7 @@ export function BroadcastBand({ broadcasts, locale }: { broadcasts: Broadcast[];
         locale={locale}
         kicker={pick(locale, 'الإرسال', 'Transmission')}
         title={pick(locale, 'أين تشاهد اليوم', 'Where to watch today')}
-        action={{ href: '/tv-guide', label: pick(locale, 'دليل القنوات', 'TV guide') }}
+        action={{ href: '/live', label: pick(locale, 'يلا سبورت مباشر', 'Yalla Sport Live') }}
       />
       <div className="news-broadcast-grid">
         {broadcasts.map((row) => {
@@ -228,7 +228,7 @@ export function ArchiveStrip({
 }: {
   archive: ArchiveDay[];
   locale: string;
-  hrefFor: (next: { q?: string; desk?: string; source?: string; page?: number }) => string;
+  hrefFor: (next: { q?: string; desk?: string; source?: string; page?: number; day?: string | null }) => string;
 }) {
   if (archive.length === 0) return null;
   const peak = Math.max(...archive.map((day) => day.count), 1);
@@ -239,15 +239,17 @@ export function ArchiveStrip({
         locale={locale}
         kicker={pick(locale, 'الأرشيف', 'The archive')}
         title={pick(locale, 'إيقاع الأسبوع', 'The week in filings')}
-        action={{ href: hrefFor({ desk: 'all', source: 'all', page: 1 }), label: pick(locale, 'كل التقارير', 'All reports') }}
+        action={{ href: hrefFor({ desk: 'all', source: 'all', page: 1, day: null }), label: pick(locale, 'الأخبار الحديثة', 'Latest news') }}
       />
       <ol className="news-archive">
         {[...archive].reverse().map((day) => (
           <li key={day.key} className="news-archive-day">
-            <span className="news-archive-bar" style={{ height: `${Math.max(12, (day.count / peak) * 100)}%` }}>
-              <b>{day.count}</b>
-            </span>
-            <ClientTime value={day.date} options={{ weekday: 'short', day: 'numeric' }} className="news-archive-label" />
+            <Link href={hrefFor({ day: day.key, page: 1 })} className="news-archive-link">
+              <span className="news-archive-bar" style={{ height: `${Math.max(12, (day.count / peak) * 100)}%` }}>
+                <b>{day.count}</b>
+              </span>
+              <ClientTime value={day.date} options={{ weekday: 'short', day: 'numeric' }} className="news-archive-label" />
+            </Link>
           </li>
         ))}
       </ol>
