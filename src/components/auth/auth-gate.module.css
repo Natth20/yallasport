@@ -1,14 +1,14 @@
 /* Calm reading column for auth tickets. */
-.auth-gate {
+.authGate {
   width: min(920px, calc(100% - 2rem));
   margin-inline: auto;
 }
 
-.auth-paper-title {
+.authPaperTitle {
   letter-spacing: -0.03em;
 }
 
-.auth-paper-lead {
+.authPaperLead {
   max-width: 36rem;
   line-height: 1.7;
 }

@@ -3,7 +3,7 @@ import { BrandMark } from '@/components/brand/BrandMark';
 import { PitchWatermark, TicketBarcode, WaxSeal } from '@/components/decor/CraftMarks';
 import { Link } from '@/i18n/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import './auth-gate.css';
+import styles from './auth-gate.module.css';
 
 export async function AuthGate({
   code,
@@ -25,7 +25,7 @@ export async function AuthGate({
   const arabic = locale === 'ar';
 
   return (
-    <div className="auth-gate">
+    <div className={`${styles.authGate} auth-gate`}>
       <div className="auth-stage">
         <aside className="auth-ribbon" aria-hidden="true">
           <PitchWatermark className="auth-ribbon-mark" />
@@ -52,8 +52,8 @@ export async function AuthGate({
 
           <div className="auth-ticket-copy">
             <p className={`auth-kicker ink lg:hidden ${arabic ? 'is-ar' : ''}`}>{kicker}</p>
-            <h1 className="auth-paper-title">{title}</h1>
-            <p className="auth-paper-lead">{lead}</p>
+            <h1 className={`${styles.authPaperTitle} auth-paper-title`}>{title}</h1>
+            <p className={`${styles.authPaperLead} auth-paper-lead`}>{lead}</p>
           </div>
 
           <div className="auth-paper-body">{children}</div>
