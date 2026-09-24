@@ -50,7 +50,7 @@ import { isMajorLeague, leagueTier, matchdayWeight } from '@/lib/sports-data/mat
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
-import '@/components/matches/matches-hall.css';
+import styles from '@/components/matches/matches-hall.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -1233,8 +1233,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   ];
 
   return (
-    <div className="matchday-board pb-32">
-      <section className="floodlight-hero">
+    <div className={`${styles.matchdayBoard} matchday-board pb-32`}>
+      <section className={`${styles.floodlightHero} floodlight-hero`}>
         <span className="flood-beam pointer-events-none absolute -left-10 -top-16 h-40 w-40 rounded-full bg-orange-400/20 blur-3xl" />
         <span
           className="flood-beam pointer-events-none absolute -right-8 -top-12 h-36 w-36 rounded-full bg-orange-500/14 blur-3xl"
