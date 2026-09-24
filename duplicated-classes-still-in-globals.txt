@@ -1,0 +1,21 @@
+# Duplicated Classes Still In globals.css
+# =========================================
+# This file tracks classes that exist in both a component's CSS Module
+# and in globals.css. Classes listed here should NOT be removed from
+# globals.css until the component's CSS Module conversion is fully
+# tested and confirmed working.
+#
+# Format: [component-file] -> [class-name] (line in globals.css)
+# =========================================
+
+## house.module.css
+# No duplicated classes found in globals.css for house components.
+# All house-* classes (house-stage, house-kicker, house-mark, house-plate, house-account)
+# were only defined in house.css, not in globals.css.
+#
+# The following global selectors were MOVED from house.css to globals.css:
+# - :root variables (--ys-elev-1/2/3, --ys-radius, --ys-radius-sm)
+# - main .text-[8px], main .text-[9px], main .text-[10px], footer .text-[10px]
+# - .masthead-link, .masthead-shell, .masthead-shell.is-scrolled
+# - footer a, footer a:hover
+# - .salon-aura, .entity-aura

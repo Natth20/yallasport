@@ -63,6 +63,14 @@
   --ring: #ea580c;
   --font-sans: "Cairo", system-ui, -apple-system, sans-serif;
   --font-display: "Cairo", system-ui, -apple-system, sans-serif;
+
+  /* — elevation and radius — */
+  --ys-elev-1: 0 8px 24px -18px color-mix(in srgb, var(--ys-ink, #0f172a) 40%, transparent);
+  --ys-elev-2: 0 16px 36px -22px color-mix(in srgb, var(--ys-ink, #0f172a) 48%, transparent);
+  --ys-elev-3: 0 28px 56px -28px color-mix(in srgb, var(--ys-ink, #0f172a) 52%, transparent);
+  --ys-radius: 1.2rem;
+  --ys-radius-sm: 0.9rem;
+
   color-scheme: light;
 }
 
@@ -176,6 +184,52 @@ h6 {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #f97316;
+}
+
+/* ── Global utility selectors (migrated from house.css) ── */
+
+/* Readable labels: lift the 8–10px "admin" scale on the public shell */
+main .text-\[8px\],
+main .text-\[9px\] {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+main .text-\[10px\],
+footer .text-\[10px\] {
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+}
+
+/* Masthead: calmer hover, no extra chrome */
+.masthead-link {
+  font-size: 0.82rem;
+}
+
+.masthead-shell {
+  box-shadow: var(--ys-elev-1);
+}
+
+.masthead-shell.is-scrolled {
+  box-shadow: var(--ys-elev-2);
+}
+
+/* Footer: quieter glow, roomier type */
+footer a {
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+footer a:hover {
+  color: var(--primary);
+}
+
+/* Quiet the loudest salon / entity auras so rooms share the same hush */
+.salon-aura {
+  opacity: 0.72;
+}
+
+.entity-aura {
+  opacity: 0.78;
 }
 
 /* Editorial rooms share brand accents; layouts stay distinct on purpose */

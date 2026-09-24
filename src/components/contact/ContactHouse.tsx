@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth/auth';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ContactLetter } from './ContactLetter';
+import './contact-house.css';
 
 export async function ContactHouse() {
   const t = await getTranslations('post');
@@ -34,65 +35,64 @@ export async function ContactHouse() {
   ];
 
   return (
-    <div className="relative min-h-screen pb-24 overflow-hidden">
-      {/* Background Lighting */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/15 via-cyan-500/10 to-transparent blur-3xl" />
+    <div className="contact-house relative min-h-screen overflow-hidden pb-16">
+      {/* Subtle Background Lighting */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-primary/5 blur-[100px] opacity-50" />
 
       {/* Masthead Hero */}
-      <header className="mx-auto max-w-7xl px-4 pt-8 pb-10 sm:px-6 lg:px-8">
+      <header className="mx-auto max-w-7xl px-4 pt-12 pb-10 sm:px-6 lg:px-8">
         <HeroEnter>
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-card/90 via-card/60 to-card/30 p-6 md:p-10 backdrop-blur-2xl shadow-2xl">
-            <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
+          <div className="contact-hero relative overflow-hidden rounded-3xl p-8 md:p-12">
+            <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
               {/* Left Column */}
-              <div className="space-y-6 lg:col-span-8">
-                <div className="flex flex-wrap items-center gap-3">
-                  <BrandMark size={48} />
+              <div className="space-y-8 lg:col-span-8">
+                <div className="flex flex-wrap items-center gap-4">
+                  <BrandMark size={56} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold tracking-wider text-primary uppercase border border-primary/20">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                      <span className="text-xs font-bold tracking-widest text-primary uppercase">
                         {t('kicker')}
                       </span>
                       <span className="text-xs text-muted-foreground">·</span>
-                      <span className="text-xs font-mono text-emerald-400">
+                      <span className="text-xs font-mono text-muted-foreground">
                         YS-OPS-{year}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
+                <div className="space-y-4">
+                  <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-7xl leading-[1.1]">
                     {t('title')}
                   </h1>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
+                  <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl font-medium">
                     {t('headline')}
                   </p>
                 </div>
 
                 {/* Direct quick jumps */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                <div className="flex flex-wrap items-center gap-3 pt-4 text-xs font-medium">
                   <a
                     href="#letter"
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                    className="rounded-full border border-border bg-card/50 px-5 py-2 text-foreground transition-transform hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card"
                   >
                     {t('toc_letter')}
                   </a>
                   <a
                     href="#path"
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                    className="rounded-full border border-border bg-card/50 px-5 py-2 text-foreground transition-transform hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card"
                   >
                     {t('toc_path')}
                   </a>
                   <a
                     href="#wings"
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                    className="rounded-full border border-border bg-card/50 px-5 py-2 text-foreground transition-transform hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card"
                   >
                     {t('toc_wings')}
                   </a>
                   <a
                     href="#doors"
-                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                    className="rounded-full border border-border bg-card/50 px-5 py-2 text-foreground transition-transform hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card"
                   >
                     {t('toc_doors')}
                   </a>
@@ -101,31 +101,31 @@ export async function ContactHouse() {
 
               {/* Right Column: Operations SLA Badge */}
               <div className="lg:col-span-4">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-md shadow-inner space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                <div className="space-y-5 rounded-3xl border border-border bg-card/50 p-8">
+                  <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                       {t('addr_to')}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary">
+                      <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                       LIVE
                     </span>
                   </div>
 
                   <a
-                    className="block font-mono text-sm font-bold text-primary hover:underline"
+                    className="block font-mono text-base font-bold text-foreground hover:text-primary transition-colors"
                     href={`mailto:${CONTACT_EMAIL}`}
                   >
                     {CONTACT_EMAIL}
                   </a>
 
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                     {t('addr_note')}
                   </p>
 
-                  <div className="rounded-xl border border-white/5 bg-black/25 p-3 text-[11px] text-muted-foreground flex items-center justify-between">
+                  <div className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-4 text-[11px] text-muted-foreground font-medium">
                     <span>{locale === 'en' ? 'Average SLA' : 'متوسط وقت الرد'}</span>
-                    <span className="font-mono font-bold text-emerald-400">&lt; 2h</span>
+                    <span className="font-mono font-bold text-primary">&lt; 2h</span>
                   </div>
                 </div>
               </div>
@@ -135,14 +135,14 @@ export async function ContactHouse() {
       </header>
 
       {/* Main Grid: Letter / Form + Process Side Plate */}
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         {/* Form Stage */}
         <Reveal>
-          <section id="letter" className="scroll-mt-28 rounded-3xl border border-white/10 bg-card/40 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
-            <div className="border-b border-white/10 pb-5 mb-6">
+          <section id="letter" className="scroll-mt-28 rounded-3xl border border-border bg-card/40 p-6 sm:p-10 backdrop-blur-xl">
+            <div className="border-b border-border pb-5 mb-6">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-primary">01</span>
-                <h2 className="text-xl font-extrabold text-white">{t('letter_title')}</h2>
+                <h2 className="text-xl font-extrabold text-foreground">{t('letter_title')}</h2>
               </div>
               <p className="text-xs text-muted-foreground mt-1">{t('letter_note')}</p>
             </div>
@@ -161,22 +161,22 @@ export async function ContactHouse() {
         {/* Process Side Rail */}
         <aside className="space-y-6">
           <Reveal delay={0.08}>
-            <section id="path" className="scroll-mt-28 rounded-3xl border border-white/10 bg-card/40 p-6 backdrop-blur-xl">
-              <div className="border-b border-white/10 pb-4 mb-4">
+            <section id="path" className="scroll-mt-28 rounded-3xl border border-border bg-card/40 p-6 backdrop-blur-xl">
+              <div className="border-b border-border pb-4 mb-4">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-bold text-primary">02</span>
-                  <h2 className="text-base font-bold text-white">{t('path_title')}</h2>
+                  <h2 className="text-base font-bold text-foreground">{t('path_title')}</h2>
                 </div>
               </div>
 
               <ol className="space-y-4">
                 {path.map((step) => (
-                  <li key={step.no} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 transition hover:border-white/15">
+                  <li key={step.no} className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 transition hover:border-primary/30">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/20 font-mono text-xs font-bold text-primary">
                       {step.no}
                     </span>
                     <div>
-                      <strong className="text-xs font-bold text-white block mb-0.5">{step.title}</strong>
+                      <strong className="text-xs font-bold text-foreground block mb-0.5">{step.title}</strong>
                       <p className="text-[11px] text-muted-foreground leading-relaxed">{step.body}</p>
                     </div>
                   </li>
@@ -186,7 +186,7 @@ export async function ContactHouse() {
           </Reveal>
 
           <Reveal delay={0.12}>
-            <section className="rounded-3xl border border-white/10 bg-card/40 p-6 backdrop-blur-xl">
+            <section className="rounded-3xl border border-border bg-card/40 p-6 backdrop-blur-xl">
               <p className="text-[11px] font-bold text-primary uppercase tracking-widest">{t('addr_kicker')}</p>
               <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t('addr_note')}</p>
               <a
@@ -203,10 +203,10 @@ export async function ContactHouse() {
       {/* Wings / Inboxes */}
       <Reveal>
         <section id="wings" className="mx-auto mt-14 max-w-7xl scroll-mt-28 px-4 sm:px-6 lg:px-8">
-          <div className="border-b border-white/10 pb-4 mb-6">
+          <div className="border-b border-border pb-4 mb-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-bold text-primary">03</span>
-              <h2 className="text-xl font-extrabold text-white">{t('wings_title')}</h2>
+              <h2 className="text-xl font-extrabold text-foreground">{t('wings_title')}</h2>
             </div>
             <p className="text-xs text-muted-foreground mt-1">{t('wings_note')}</p>
           </div>
@@ -214,9 +214,9 @@ export async function ContactHouse() {
           <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {wings.map((wing) => (
               <StaggerItem key={wing.no}>
-                <article className="rounded-2xl border border-white/10 bg-card/40 p-5 backdrop-blur-md h-full transition hover:border-primary/40">
+                <article className="rounded-2xl border border-border bg-card/40 p-5 backdrop-blur-md h-full transition hover:border-primary/40">
                   <span className="font-mono text-xs font-bold text-primary">{wing.no}</span>
-                  <h3 className="text-sm font-bold text-white mt-2 mb-1">{wing.title}</h3>
+                  <h3 className="text-sm font-bold text-foreground mt-2 mb-1">{wing.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{wing.body}</p>
                 </article>
               </StaggerItem>
@@ -228,10 +228,10 @@ export async function ContactHouse() {
       {/* Doors / Navigation */}
       <Reveal>
         <section id="doors" className="mx-auto mt-14 max-w-7xl scroll-mt-28 px-4 sm:px-6 lg:px-8">
-          <div className="border-b border-white/10 pb-4 mb-6">
+          <div className="border-b border-border pb-4 mb-6">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-bold text-primary">04</span>
-              <h2 className="text-xl font-extrabold text-white">{t('doors_title')}</h2>
+              <h2 className="text-xl font-extrabold text-foreground">{t('doors_title')}</h2>
             </div>
           </div>
 
@@ -240,7 +240,7 @@ export async function ContactHouse() {
               <StaggerItem key={door.href}>
                 <Link
                   href={door.href}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-card/40 p-4 transition hover:border-primary/40 hover:bg-card/70 text-white group"
+                  className="flex items-center justify-between rounded-2xl border border-border bg-card/40 p-4 transition hover:border-primary/40 hover:bg-card/70 text-foreground group"
                 >
                   <strong className="text-xs font-bold group-hover:text-primary transition-colors">
                     {door.label}

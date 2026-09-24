@@ -15,6 +15,8 @@ import { LiveStatusProvider } from "@/lib/context/LiveStatusContext";
 import { PageShell } from "@/components/motion/PageMotion";
 import { routing } from "@/i18n/routing";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { gaMeasurementId } from "@/lib/analytics/config";
 import {
   CONTACT_EMAIL,
   SITE_NAME,
@@ -26,6 +28,7 @@ import {
   ogLocale,
   siteGraph,
 } from "@/lib/seo/site";
+import { parseTheme, themeClassName } from "@/lib/theme/preference";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -60,10 +63,10 @@ export async function generateMetadata({
     icons: {
       icon: [
         { url: "/icon.png", type: "image/png" },
-        { url: "/images/logo.jpg", type: "image/jpeg" },
+        { url: "/images/logo.png", type: "image/png" },
       ],
       apple: [{ url: "/apple-icon.png", type: "image/png" }],
-      shortcut: "/images/logo.jpg",
+      shortcut: "/images/logo.png",
     },
     manifest: "/manifest.json",
     other: {
@@ -87,7 +90,7 @@ export async function generateMetadata({
       emails: [CONTACT_EMAIL],
       images: [
         {
-          url: "/images/logo.jpg",
+          url: "/images/logo.png",
           width: 1200,
           height: 1200,
           alt: locale === "ar" ? "شعار يلا سبورت" : "Yalla Sport logo",
@@ -98,7 +101,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: ["/images/logo.jpg"],
+      images: ["/images/logo.png"],
     },
     robots: {
       index: true,
@@ -127,11 +130,26 @@ export default async function RootLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  // Theme cookie is applied by the inline script; reading cookies() here delays every page.
+  const theme = parseTheme(undefined);
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className="h-full scroll-smooth dark" data-scroll-behavior="smooth">
+    <html
+      lang={locale}
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      className={themeClassName(theme)}
+      style={{ colorScheme: theme }}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <meta name="theme-color" content={THEME_COLOR} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){try{var m=document.cookie.match(/(?:^|; )yalla-theme=(light|dark)/);var t=m&&m[1]?m[1]:null;if(!t){try{t=localStorage.getItem("yalla-theme");}catch(e){}}t=t==="light"?"light":"dark";var r=document.documentElement;r.classList.remove("light","dark");r.classList.add(t);r.style.colorScheme=t;}catch(e){}})();',
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet" />
@@ -140,7 +158,7 @@ export default async function RootLayout({
         <JsonLd data={siteGraph(locale)} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <LanguageProvider>
-            <ThemeProvider>
+            <ThemeProvider initialTheme={theme}>
               <SettingsProvider>
                 <LiveStatusProvider>
                   <Header />
@@ -148,7 +166,8 @@ export default async function RootLayout({
                     <PageShell>{children}</PageShell>
                   </main>
                   <Footer />
-                  <CookieConsent />
+                  <CookieConsent analyticsEnabled={Boolean(gaMeasurementId())} />
+                  <GoogleAnalytics measurementId={gaMeasurementId()} />
                   <PWAInstallPrompt />
                   <ServiceWorkerRegister />
                 </LiveStatusProvider>
