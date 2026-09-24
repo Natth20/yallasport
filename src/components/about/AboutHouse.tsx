@@ -27,7 +27,7 @@ import {
   Compass,
   Cpu,
 } from 'lucide-react';
-import './about-house.css';
+import styles from './about-house.module.css';
 
 const TALLY_ICONS = {
   live: Radio,
@@ -136,7 +136,7 @@ export async function AboutHouse() {
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
 
   return (
-    <div className="about-house relative min-h-screen overflow-hidden pb-16">
+    <div className={`${styles.aboutHouse} relative min-h-screen overflow-hidden pb-16`}>
       {/* Minimal ambient glow instead of multiple strong gradients */}
       <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-primary/5 blur-[100px] opacity-50" />
 
@@ -145,7 +145,7 @@ export async function AboutHouse() {
         {/* ——— Hero Masthead ——— */}
         <header className="pt-12">
           <AboutHeroMotion>
-            <div className="about-maison-hero rounded-3xl p-8 md:p-12">
+            <div className={`${styles.aboutMaisonHero} rounded-3xl p-8 md:p-12`}>
               <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
                 {/* Brand & Main Title */}
                 <div className="space-y-8 lg:col-span-8">
@@ -218,7 +218,7 @@ export async function AboutHouse() {
 
         {/* ——— Vision & Mission Duo ——— */}
         <AboutReveal className="grid gap-6 sm:grid-cols-2">
-          <div className="about-pillar-card group">
+          <div className={`${styles.aboutPillarCard} group`}>
             <div className="flex items-center justify-between mb-6">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary font-mono text-sm font-bold transition-transform group-hover:scale-110">
                 01
@@ -231,7 +231,7 @@ export async function AboutHouse() {
             <p className="text-base text-muted-foreground leading-relaxed font-medium">{t('vision_text')}</p>
           </div>
 
-          <div className="about-pillar-card group">
+          <div className={`${styles.aboutPillarCard} group`}>
             <div className="flex items-center justify-between mb-6">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground/5 text-foreground font-mono text-sm font-bold transition-transform group-hover:scale-110">
                 02
@@ -272,7 +272,7 @@ export async function AboutHouse() {
                   <AboutItem key={item.href + item.label}>
                     <Link
                       href={item.href}
-                      className={`about-stat-card group flex flex-col justify-between ${
+                      className={`${styles.aboutStatCard} group flex flex-col justify-between ${
                         item.accent
                           ? 'border-primary/30 bg-primary/5 text-foreground shadow-lg shadow-primary/10'
                           : ''
@@ -350,7 +350,7 @@ export async function AboutHouse() {
               const Icon = item.icon;
               return (
                 <AboutItem key={item.no}>
-                  <article className="about-pillar-card flex flex-col justify-between">
+                  <article className={`${styles.aboutPillarCard} flex flex-col justify-between`}>
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <span className="font-mono text-sm font-bold text-primary opacity-60">{item.no}</span>
@@ -442,7 +442,7 @@ export async function AboutHouse() {
                 <AboutItem key={door.href}>
                   <Link
                     href={door.href}
-                    className="about-door-card group"
+                    className={`${styles.aboutDoorCard} group`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="p-2 rounded-xl bg-primary/10 text-primary">

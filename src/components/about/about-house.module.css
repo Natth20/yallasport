@@ -3,14 +3,14 @@
    Ultra-Minimalist Luxury Design
    ══════════════════════════════════════════════════════════════════════ */
 
-.about-house {
+.aboutHouse {
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
 }
 
 /* Very subtle background light, no harsh colors */
-.about-house::before {
+.aboutHouse::before {
   content: '';
   position: absolute;
   top: -10%;
@@ -24,7 +24,7 @@
   z-index: -1;
 }
 
-.about-house .about-maison-hero {
+.aboutMaisonHero {
   position: relative;
   background: color-mix(in srgb, var(--card) 60%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
@@ -33,11 +33,11 @@
   -webkit-backdrop-filter: blur(24px);
 }
 
-html.dark .about-house .about-maison-hero {
+:global(html.dark) .aboutMaisonHero {
   box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
 }
 
-.about-house .about-stat-card {
+.aboutStatCard {
   position: relative;
   overflow: hidden;
   border-radius: 1.5rem;
@@ -48,17 +48,17 @@ html.dark .about-house .about-maison-hero {
   backdrop-filter: blur(12px);
 }
 
-.about-house .about-stat-card:hover {
+.aboutStatCard:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
   box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08);
 }
 
-html.dark .about-house .about-stat-card:hover {
+:global(html.dark) .aboutStatCard:hover {
   box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
 }
 
-.about-house .about-stat-card::after {
+.aboutStatCard::after {
   content: '';
   position: absolute;
   top: 0;
@@ -70,11 +70,11 @@ html.dark .about-house .about-stat-card:hover {
   transition: opacity 0.4s ease;
 }
 
-.about-house .about-stat-card:hover::after {
+.aboutStatCard:hover::after {
   opacity: 1;
 }
 
-.about-house .about-pillar-card {
+.aboutPillarCard {
   position: relative;
   height: 100%;
   border-radius: 1.5rem;
@@ -85,17 +85,17 @@ html.dark .about-house .about-stat-card:hover {
   backdrop-filter: blur(12px);
 }
 
-.about-house .about-pillar-card:hover {
+.aboutPillarCard:hover {
   border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
   transform: translateY(-4px);
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
 }
 
-html.dark .about-house .about-pillar-card:hover {
+:global(html.dark) .aboutPillarCard:hover {
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
 }
 
-.about-house .about-door-card {
+.aboutDoorCard {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -109,13 +109,13 @@ html.dark .about-house .about-pillar-card:hover {
   backdrop-filter: blur(12px);
 }
 
-.about-house .about-door-card:hover {
+.aboutDoorCard:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
   background: color-mix(in srgb, var(--card) 80%, transparent);
   box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05);
 }
 
-html.dark .about-house .about-door-card:hover {
+:global(html.dark) .aboutDoorCard:hover {
   box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
 }

@@ -19,3 +19,9 @@
 # - .masthead-link, .masthead-shell, .masthead-shell.is-scrolled
 # - footer a, footer a:hover
 # - .salon-aura, .entity-aura
+
+## about-house.module.css
+# - .about-house (globals.css line 239, 258, 4935)
+# Note: Old monolithic .about-* rules exist in globals.css (lines 4935-5537) from legacy code.
+# The component now safely uses isolated CSS Module classes (styles.aboutHouse, styles.aboutMaisonHero, etc.).
+
