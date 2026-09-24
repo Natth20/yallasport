@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { loadFrontPulse } from '@/lib/front/load-pulse';
+import styles from './front-hall.module.css';
 
 export async function FrontPulse() {
   const t = await getTranslations('front');
@@ -13,7 +14,7 @@ export async function FrontPulse() {
   ].filter(Boolean) as Array<{ label: string; value: number }>;
   if (items.length === 0) return null;
   return (
-    <section className="fp-pulse" aria-label={t('pulse_note')}>
+    <section className={styles.pulseInline} aria-label={t('pulse_note')}>
       <ul>
         {items.map((item) => (
           <li key={item.label}>

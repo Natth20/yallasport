@@ -10,6 +10,7 @@ import { loadFrontPulse } from '@/lib/front/load-pulse';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { FrontMatchTile } from './FrontMatchTile';
 import type { FrontMatch } from '@/lib/front/types';
+import styles from './front-hall.module.css';
 
 function Spotlight({
   match,
@@ -30,14 +31,14 @@ function Spotlight({
   const finished = match.status === 'FINISHED';
   const showScore = live || finished;
   return (
-    <Link href={`/match/${match.id}`} className={`fp-spot${live ? ' is-live' : ''}`}>
-      <span className="fp-spot-top">
+    <Link href={`/match/${match.id}`} className={`${styles.spot}${live ? ` ${styles.spotLive}` : ''}`}>
+      <span className={styles.spotTop}>
         <LeagueCrest name={match.league.name} logoUrl={match.league.logoUrl} className="h-4 w-4" />
         {match.league.name}
-        <em className="fp-spot-tag">
+        <em className={styles.spotTag}>
           {live ? (
             <>
-              <i className="fp-live-dot" aria-hidden />
+              <i className={styles.liveDot} aria-hidden />
               {liveLabel}
               {match.minute ? ` ${match.minute}′` : ''}
             </>
@@ -48,35 +49,35 @@ function Spotlight({
           )}
         </em>
       </span>
-      <span className="fp-spot-duel">
-        <span className="fp-spot-team">
+      <span className={styles.spotDuel}>
+        <span className={styles.spotTeam}>
           <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-14 w-14" />
           <strong>{match.homeTeam.name}</strong>
         </span>
-        <span className="fp-spot-mid">
+        <span className={styles.spotMid}>
           {showScore ? (
-            <b className="fp-spot-score">
+            <b className={styles.spotScore}>
               {match.homeScore ?? 0}
               <i>–</i>
               {match.awayScore ?? 0}
             </b>
           ) : (
             <>
-              <b className="fp-spot-vs">{vsLabel}</b>
+              <b className={styles.spotVs}>{vsLabel}</b>
               <ClientTime
-                className="fp-spot-time"
+                className={styles.spotTime}
                 value={match.kickoffAt}
                 options={{ hour: '2-digit', minute: '2-digit' }}
               />
             </>
           )}
         </span>
-        <span className="fp-spot-team">
+        <span className={styles.spotTeam}>
           <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-14 w-14" />
           <strong>{match.awayTeam.name}</strong>
         </span>
       </span>
-      <span className="fp-spot-cta">{previewLabel}</span>
+      <span className={styles.spotCta}>{previewLabel}</span>
     </Link>
   );
 }
@@ -106,27 +107,27 @@ export async function FrontStage() {
   const href = lead ? `/news/${lead.slug}` : '/news';
 
   return (
-    <section className="fp-stage">
-      <div className="fp-stage-media" aria-hidden>
+    <section className={styles.stage}>
+      <div className={styles.stageMedia} aria-hidden>
         {lead?.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={lead.image} alt="" referrerPolicy="no-referrer" />
         ) : null}
-        <span className="fp-aurora fp-aurora-a" />
-        <span className="fp-aurora fp-aurora-b" />
-        <span className="fp-pitch" />
+        <span className={styles.auroraA} />
+        <span className={styles.auroraB} />
+        <span className={styles.pitch} />
       </div>
 
-      <div className="fp-stage-shell">
+      <div className={styles.stageShell}>
         {ticker.length > 0 ? (
-          <div className="fp-ticker" aria-label={t('ch01_title')}>
-            <span className="fp-ticker-tag">{t('stage_kicker')}</span>
-            <div className="fp-ticker-rail">
+          <div className={styles.ticker} aria-label={t('ch01_title')}>
+            <span className={styles.tickerTag}>{t('stage_kicker')}</span>
+            <div className={styles.tickerRail}>
               {ticker.map((match) => {
                 const live = isLiveStatus(match.status);
                 const finished = match.status === 'FINISHED';
                 return (
-                  <Link key={match.id} href={`/match/${match.id}`} className={`fp-tick${live ? ' is-live' : ''}`}>
+                  <Link key={match.id} href={`/match/${match.id}`} className={`${styles.tick}${live ? ` ${styles.tickLive}` : ''}`}>
                     <em>{live ? `${match.minute ?? ''}′` : finished ? t('ft_badge') : ''}</em>
                     <b>{match.homeTeam.name}</b>
                     <i>
@@ -142,45 +143,45 @@ export async function FrontStage() {
           </div>
         ) : null}
 
-        <div className="fp-stage-body">
-          <div className="fp-stage-copy">
-            <div className="fp-stage-brand">
+        <div className={styles.stageBody}>
+          <div className={styles.stageCopy}>
+            <div className={styles.stageBrand}>
               <BrandMark size={44} priority />
               <span>{t('stage_kicker')}</span>
             </div>
-            <p className="fp-stage-meta">
+            <p className={styles.stageMeta}>
               {lead ? <em>{deskLabel(lead.category, locale)}</em> : <em>{t('kicker')}</em>}
               {lead?.sourceName ? <b>{lead.sourceName}</b> : <b>{t('source_seal')}</b>}
             </p>
             <h1>
               <Link href={href}>{title}</Link>
             </h1>
-            <p className="fp-stage-lede">{lead?.excerpt || t('standfirst')}</p>
+            <p className={styles.stageLede}>{lead?.excerpt || t('standfirst')}</p>
             {chips.length > 0 ? (
-              <ul className="fp-pulse-chips" aria-label={t('pulse_note')}>
+              <ul className={styles.pulseChips} aria-label={t('pulse_note')}>
                 {chips.map((item) => (
-                  <li key={item.label} className={item.live ? 'is-live' : undefined}>
+                  <li key={item.label} className={item.live ? styles.chipLive : undefined}>
                     <strong>{item.value}</strong>
                     <span>{item.label}</span>
                   </li>
                 ))}
               </ul>
             ) : null}
-            <nav className="fp-hero-cta">
-              <Link href="/matches" className="fp-btn is-solid">
+            <nav className={styles.heroCta}>
+              <Link href="/matches" className={styles.btnSolid}>
                 {t('cta_matches')}
               </Link>
-              <Link href="/live" className="fp-btn">
+              <Link href="/live" className={styles.btn}>
                 {t('cta_live')}
               </Link>
-              <Link href="/news" className="fp-btn">
+              <Link href="/news" className={styles.btn}>
                 {t('cta_news')}
               </Link>
             </nav>
           </div>
 
           {spotlight ? (
-            <aside className="fp-stage-side" aria-label={t('spotlight_label')}>
+            <aside className={styles.stageSide} aria-label={t('spotlight_label')}>
               <Spotlight
                 match={spotlight}
                 label={t('spotlight_label')}
@@ -190,7 +191,7 @@ export async function FrontStage() {
                 previewLabel={t('match_preview')}
               />
               {dock.length > 0 ? (
-                <div className="fp-stage-dock">
+                <div className={styles.stageDock}>
                   {dock.map((match) => (
                     <FrontMatchTile
                       key={match.id}

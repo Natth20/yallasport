@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { loadFrontTransfers } from '@/lib/front/load-transfers';
 import { FrontMark } from '../FrontMark';
 import { ClientTime } from '@/components/datetime/ClientTime';
+import styles from '../front-hall.module.css';
 
 export async function TransfersChapter() {
   const locale = await getLocale();
@@ -10,9 +11,9 @@ export async function TransfersChapter() {
   const rows = await loadFrontTransfers(locale);
   if (rows.length === 0) return null;
   return (
-    <section className="fp-chapter">
+    <section className={styles.chapter}>
       <FrontMark num={t('ch06')} title={t('ch06_title')} note={t('ch06_note')} href="/transfers" cta={t('ch06_cta')} />
-      <ul className="fp-list">
+      <ul className={styles.list}>
         {rows.map((row) => (
           <li key={row.id}>
             <Link href={`/player/${row.playerSlug}`}>

@@ -1,4 +1,10 @@
-.fp {
+/* ==========================================================================
+   FrontPage — CSS Module (front-hall.module.css)
+   Scoped styles for the homepage. Zero !important, clean selectors.
+   ========================================================================== */
+
+/* ---- Root container ---- */
+.root {
   --fp-ink: #060910;
   --fp-line: color-mix(in srgb, var(--foreground) 10%, transparent);
   --fp-card: color-mix(in srgb, var(--card) 97%, transparent);
@@ -11,7 +17,7 @@
   padding-block: 0 6rem;
 }
 
-.fp-inner {
+.inner {
   width: min(1260px, calc(100% - 2rem));
   margin-inline: auto;
   display: grid;
@@ -19,37 +25,40 @@
   margin-top: 3.4rem;
 }
 
-/* ============ Cinematic hero ============ */
-.fp-stage {
+/* ==========================================================================
+   HERO — Cinematic Stage
+   ========================================================================== */
+
+.stage {
   position: relative;
   overflow: hidden;
   background: var(--fp-ink);
   color: #fbfaf7;
 }
 
-.fp-stage-media,
-.fp-stage-media img {
+.stageMedia,
+.stageMedia img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.fp-stage-media img {
+.stageMedia img {
   object-fit: cover;
   opacity: 0.5;
   transform: scale(1.06);
   filter: saturate(1.05);
 }
 
-.fp-stage-media {
+.stageMedia {
   background:
     radial-gradient(60% 55% at 82% 12%, rgba(249, 115, 22, 0.22), transparent 60%),
     radial-gradient(65% 60% at 8% 96%, rgba(22, 101, 52, 0.32), transparent 62%),
     linear-gradient(180deg, #060b16 0%, #04070e 100%);
 }
 
-.fp-stage-media::after {
+.stageMedia::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -59,7 +68,7 @@
     linear-gradient(to top, rgba(4, 7, 14, 0.9) 0%, transparent 42%);
 }
 
-.fp-aurora {
+.aurora {
   position: absolute;
   z-index: 1;
   width: 36rem;
@@ -70,21 +79,23 @@
   pointer-events: none;
 }
 
-.fp-aurora-a {
+.auroraA {
+  composes: aurora;
   top: -14rem;
   inset-inline-end: -10rem;
   background: radial-gradient(circle, var(--fp-glow), transparent 68%);
-  animation: fp-drift-a 18s ease-in-out infinite alternate;
+  animation: driftA 18s ease-in-out infinite alternate;
 }
 
-.fp-aurora-b {
+.auroraB {
+  composes: aurora;
   bottom: -16rem;
   inset-inline-start: -8rem;
   background: radial-gradient(circle, color-mix(in srgb, var(--ys-green) 70%, #2ee06a), transparent 68%);
-  animation: fp-drift-b 22s ease-in-out infinite alternate;
+  animation: driftB 22s ease-in-out infinite alternate;
 }
 
-.fp-pitch {
+.pitch {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -97,27 +108,17 @@
   mask-image: radial-gradient(80% 80% at 30% 40%, #000 20%, transparent 75%);
 }
 
-@keyframes fp-drift-a {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  to {
-    transform: translate3d(-4rem, 3rem, 0) scale(1.12);
-  }
+@keyframes driftA {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-4rem, 3rem, 0) scale(1.12); }
 }
 
-@keyframes fp-drift-b {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  to {
-    transform: translate3d(3rem, -3rem, 0) scale(1.1);
-  }
+@keyframes driftB {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(3rem, -3rem, 0) scale(1.1); }
 }
 
-.fp-stage-shell {
+.stageShell {
   position: relative;
   z-index: 3;
   width: min(1260px, calc(100% - 2rem));
@@ -125,8 +126,8 @@
   padding-block: 1rem 2.4rem;
 }
 
-/* ---- Live ticker ---- */
-.fp-ticker {
+/* ---- Live Ticker ---- */
+.ticker {
   display: flex;
   align-items: stretch;
   gap: 0.75rem;
@@ -138,7 +139,7 @@
   backdrop-filter: blur(14px);
 }
 
-.fp-ticker-tag {
+.tickerTag {
   display: inline-flex;
   align-items: center;
   padding-inline: 0.95rem;
@@ -152,7 +153,7 @@
   white-space: nowrap;
 }
 
-.fp-ticker-rail {
+.tickerRail {
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
@@ -160,11 +161,11 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.fp-ticker-rail::-webkit-scrollbar {
+.tickerRail::-webkit-scrollbar {
   display: none;
 }
 
-.fp-tick {
+.tick {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -177,22 +178,22 @@
   transition: background-color 160ms ease;
 }
 
-.fp-tick:hover {
+.tick:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.fp-tick b {
+.tick b {
   font-weight: 600;
 }
 
-.fp-tick i {
+.tick i {
   font-style: normal;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   color: #fff;
 }
 
-.fp-tick em {
+.tick em {
   font-style: normal;
   font-size: 0.6rem;
   font-weight: 800;
@@ -200,16 +201,16 @@
   color: rgba(255, 253, 248, 0.45);
 }
 
-.fp-tick.is-live i {
+.tickLive i {
   color: #4ade80;
 }
 
-.fp-tick.is-live em {
+.tickLive em {
   color: #4ade80;
 }
 
-/* ---- Hero body ---- */
-.fp-stage-body {
+/* ---- Hero Body ---- */
+.stageBody {
   display: grid;
   gap: 2rem;
   align-items: center;
@@ -217,25 +218,25 @@
 }
 
 @media (min-width: 1024px) {
-  .fp-stage-body {
+  .stageBody {
     grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 24rem);
     gap: 3rem;
   }
 }
 
-.fp-stage-copy {
+.stageCopy {
   display: grid;
   gap: 1.15rem;
   max-width: 44rem;
 }
 
-.fp-stage-brand {
+.stageBrand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.fp-stage-brand span {
+.stageBrand span {
   font-size: 0.66rem;
   font-weight: 900;
   letter-spacing: 0.28em;
@@ -243,7 +244,7 @@
   color: #fdba74;
 }
 
-.fp-stage-meta {
+.stageMeta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -254,7 +255,7 @@
   text-transform: uppercase;
 }
 
-.fp-stage-meta em {
+.stageMeta em {
   font-style: normal;
   font-weight: 800;
   color: #0b1220;
@@ -263,12 +264,12 @@
   border-radius: 999px;
 }
 
-.fp-stage-meta b {
+.stageMeta b {
   font-weight: 700;
   color: rgba(255, 253, 248, 0.6);
 }
 
-.fp-stage-copy h1 {
+.stageCopy h1 {
   position: relative;
   margin: 0;
   padding-top: 0.5rem;
@@ -279,7 +280,7 @@
   color: #fffdf8;
 }
 
-.fp-stage-copy h1::before {
+.stageCopy h1::before {
   content: "";
   position: absolute;
   top: 0;
@@ -290,7 +291,7 @@
   background: linear-gradient(90deg, var(--ys-orange), transparent);
 }
 
-.fp-stage-copy h1 a {
+.stageCopy h1 a {
   color: inherit;
   text-decoration: none;
   background-image: linear-gradient(90deg, var(--ys-orange), var(--ys-orange));
@@ -300,11 +301,11 @@
   transition: background-size 260ms ease;
 }
 
-.fp-stage-copy h1 a:hover {
+.stageCopy h1 a:hover {
   background-size: 100% 2px;
 }
 
-.fp-stage-lede {
+.stageLede {
   margin: 0;
   max-width: 36rem;
   font-size: 1.04rem;
@@ -312,7 +313,8 @@
   color: rgba(255, 253, 248, 0.74);
 }
 
-.fp-pulse-chips {
+/* ---- Pulse Chips ---- */
+.pulseChips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -321,7 +323,7 @@
   padding: 0;
 }
 
-.fp-pulse-chips li {
+.pulseChips li {
   display: grid;
   gap: 0.1rem;
   min-width: 4.8rem;
@@ -332,23 +334,23 @@
   backdrop-filter: blur(10px);
 }
 
-.fp-pulse-chips li.is-live {
+.chipLive {
   border-color: rgba(74, 222, 128, 0.4);
   background: rgba(34, 197, 94, 0.12);
 }
 
-.fp-pulse-chips strong {
+.pulseChips strong {
   font-variant-numeric: tabular-nums;
   font-size: 1.4rem;
   font-weight: 900;
   line-height: 1;
 }
 
-.fp-pulse-chips li.is-live strong {
+.chipLive strong {
   color: #4ade80;
 }
 
-.fp-pulse-chips span {
+.pulseChips span {
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -356,19 +358,20 @@
   color: rgba(255, 253, 248, 0.55);
 }
 
-.fp-hero-cta {
+/* ---- Hero CTA ---- */
+.heroCta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 0.4rem;
 }
 
-.fp-btn {
+.btn {
   display: inline-flex;
   align-items: center;
-  border: 1px solid rgba(255, 253, 248, 0.2);
-  background: rgba(255, 253, 248, 0.07);
-  color: #fffdf8;
+  border: 1px solid var(--fp-line);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  color: var(--foreground);
   padding: 0.68rem 1.15rem;
   border-radius: 999px;
   font-size: 0.84rem;
@@ -377,29 +380,44 @@
   transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.fp-btn:hover {
+.btn:hover {
   transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+.stage .btn {
+  border-color: rgba(255, 253, 248, 0.2);
+  background: rgba(255, 253, 248, 0.07);
+  color: #fffdf8;
+}
+
+.stage .btn:hover {
   background: rgba(255, 253, 248, 0.14);
 }
 
-.fp-btn.is-solid {
+.btnSolid {
+  composes: btn;
   background: linear-gradient(135deg, #ff8a3d, var(--ys-orange));
   border-color: transparent;
   color: #0b1220;
   box-shadow: 0 10px 30px -12px rgba(249, 115, 22, 0.8);
 }
 
-.fp-btn.is-solid:hover {
+.btnSolid:hover {
   box-shadow: 0 16px 36px -12px rgba(249, 115, 22, 0.9);
 }
 
-/* ---- Spotlight card ---- */
-.fp-stage-side {
+/* ==========================================================================
+   SPOTLIGHT — Featured Match Card
+   ========================================================================== */
+
+.stageSide {
   display: grid;
   gap: 0.6rem;
 }
 
-.fp-spot {
+.spot {
   display: grid;
   gap: 1rem;
   padding: 1.25rem;
@@ -413,16 +431,16 @@
   transition: transform 200ms ease, border-color 200ms ease;
 }
 
-.fp-spot:hover {
+.spot:hover {
   transform: translateY(-2px);
   border-color: rgba(253, 186, 116, 0.42);
 }
 
-.fp-spot.is-live {
+.spotLive {
   border-color: rgba(74, 222, 128, 0.35);
 }
 
-.fp-spot-top {
+.spotTop {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -432,7 +450,7 @@
   color: rgba(255, 253, 248, 0.6);
 }
 
-.fp-spot-tag {
+.spotTag {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -445,38 +463,33 @@
   color: #fdba74;
 }
 
-.fp-spot.is-live .fp-spot-tag {
+.spotLive .spotTag {
   background: rgba(34, 197, 94, 0.16);
   color: #4ade80;
 }
 
-.fp-live-dot {
+.liveDot {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
   background: #4ade80;
   box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
-  animation: fp-pulse 1.6s ease-out infinite;
+  animation: pulse 1.6s ease-out infinite;
 }
 
-@keyframes fp-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0.6rem rgba(74, 222, 128, 0);
-  }
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
+  100% { box-shadow: 0 0 0 0.6rem rgba(74, 222, 128, 0); }
 }
 
-.fp-spot-duel {
+.spotDuel {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.5rem;
 }
 
-.fp-spot-team {
+.spotTeam {
   display: grid;
   justify-items: center;
   gap: 0.55rem;
@@ -484,24 +497,24 @@
   min-width: 0;
 }
 
-.fp-spot-team strong {
+.spotTeam strong {
   font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
-.fp-spot-team :is(img, .ys-portrait) {
+.spotTeam :is(img, .ys-portrait) {
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
 }
 
-.fp-spot-mid {
+.spotMid {
   display: grid;
   justify-items: center;
   gap: 0.2rem;
   padding-inline: 0.4rem;
 }
 
-.fp-spot-score {
+.spotScore {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -511,24 +524,24 @@
   line-height: 1;
 }
 
-.fp-spot-score i {
+.spotScore i {
   font-style: normal;
   color: rgba(255, 253, 248, 0.4);
 }
 
-.fp-spot-vs {
+.spotVs {
   font-size: 1.1rem;
   font-weight: 900;
   color: rgba(255, 253, 248, 0.5);
 }
 
-.fp-spot-time {
+.spotTime {
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
   color: #fdba74;
 }
 
-.fp-spot-cta {
+.spotCta {
   justify-self: center;
   padding: 0.55rem 1.4rem;
   border-radius: 999px;
@@ -539,42 +552,42 @@
   transition: background-color 160ms ease;
 }
 
-.fp-spot:hover .fp-spot-cta {
+.spot:hover .spotCta {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.fp-stage-dock {
+.stageDock {
   display: grid;
   gap: 0.5rem;
 }
 
-.fp-stage-dock .fp-match {
+.stageDock .match {
   border-color: rgba(255, 255, 255, 0.1);
   background: rgba(9, 14, 26, 0.6);
   color: #fffdf8;
   backdrop-filter: blur(16px);
 }
 
-.fp-stage-dock .fp-match-comp,
-.fp-stage-dock .fp-match em {
+.stageDock .matchComp,
+.stageDock .match em {
   color: rgba(255, 253, 248, 0.6);
 }
 
-.fp-stage-dock .fp-match-duel i {
+.stageDock .matchDuel i {
   color: #fdba74;
 }
 
-/* ============ Section marks ============ */
-.fp-chapter {
+/* ==========================================================================
+   CHAPTER SECTIONS
+   ========================================================================== */
+
+.chapter {
   display: grid;
   gap: 1.4rem;
 }
 
-.fp-chapter > :not(.house-mark):not(.fp-mark) {
-  box-shadow: var(--ys-elev-1, 0 8px 24px -18px rgba(11, 18, 32, 0.4));
-}
-
-.fp-mark {
+/* ---- Section Mark (header) ---- */
+.mark {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.4rem 1.1rem;
@@ -583,7 +596,7 @@
   border-bottom: 1px solid var(--fp-line);
 }
 
-.fp-mark>span {
+.mark > span {
   grid-row: span 2;
   font-family: var(--font-sans);
   font-size: clamp(1.6rem, 3vw, 2.4rem);
@@ -594,7 +607,7 @@
   -webkit-text-stroke: 1.4px color-mix(in srgb, var(--ys-orange) 75%, transparent);
 }
 
-.fp-mark h2 {
+.mark h2 {
   margin: 0;
   align-self: end;
   font-size: clamp(1.4rem, 2.6vw, 2rem);
@@ -602,7 +615,7 @@
   letter-spacing: -0.03em;
 }
 
-.fp-mark p {
+.mark p {
   margin: 0;
   grid-column: 2;
   align-self: start;
@@ -611,7 +624,7 @@
   color: var(--muted-foreground);
 }
 
-.fp-mark-cta {
+.markCta {
   grid-row: span 2;
   align-self: center;
   display: inline-flex;
@@ -627,52 +640,55 @@
   transition: background-color 160ms ease, border-color 160ms ease;
 }
 
-.fp-mark-cta:hover {
+.markCta:hover {
   border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
   background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
 }
 
-/* ---- shared card hover ---- */
-.fp-match,
-.fp-stories a,
-.fp-table,
-.fp-doors a,
-.fp-scorers a,
-.fp-scorers div,
-.fp-people a,
-.fp-list a,
-.fp-crest-grid a,
-.fp-video,
-.fp-photo {
+/* ---- Shared card hover transition ---- */
+.match,
+.stories a,
+.table,
+.doors a,
+.scorers a,
+.scorers div,
+.people a,
+.list a,
+.crestGrid a,
+.video,
+.photo {
   transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
 }
 
-.fp-match:hover,
-.fp-stories a:hover,
-.fp-table:hover,
-.fp-doors a:hover,
-.fp-scorers a:hover,
-.fp-people a:hover,
-.fp-list a:hover,
-.fp-crest-grid a:hover {
+.match:hover,
+.stories a:hover,
+.table:hover,
+.doors a:hover,
+.scorers a:hover,
+.people a:hover,
+.list a:hover,
+.crestGrid a:hover {
   transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
   box-shadow: 0 18px 34px -22px color-mix(in srgb, var(--foreground) 60%, transparent);
 }
 
-.fp-video:hover img,
-.fp-photo:hover img {
+.video:hover img,
+.photo:hover img {
   transform: scale(1.03);
 }
 
-/* ---- match grid ---- */
-.fp-match-grid {
+/* ==========================================================================
+   MATCH GRID — BoardChapter
+   ========================================================================== */
+
+.matchGrid {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
 }
 
-.fp-match {
+.match {
   display: grid;
   gap: 0.6rem;
   padding: 1rem 1.1rem;
@@ -683,12 +699,12 @@
   color: inherit;
 }
 
-.fp-match.is-live {
+.matchLive {
   border-color: color-mix(in srgb, var(--ys-green) 45%, var(--border));
   box-shadow: inset 3px 0 0 var(--ys-green);
 }
 
-.fp-match-comp {
+.matchComp {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -698,33 +714,33 @@
   color: var(--muted-foreground);
 }
 
-.fp-match-duel {
+.matchDuel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
 }
 
-.fp-match-duel span {
+.matchDuel span {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
 }
 
-.fp-match-duel span:last-of-type {
+.matchDuel span:last-of-type {
   flex-direction: row-reverse;
   text-align: end;
 }
 
-.fp-match-duel strong {
+.matchDuel strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.92rem;
 }
 
-.fp-match-duel i {
+.matchDuel i {
   font-style: normal;
   font-variant-numeric: tabular-nums;
   font-size: 1.15rem;
@@ -732,14 +748,17 @@
   color: var(--primary);
 }
 
-.fp-match em {
+.match em {
   font-style: normal;
   font-size: 0.72rem;
   color: var(--muted-foreground);
 }
 
-/* ---- stories ---- */
-.fp-stories {
+/* ==========================================================================
+   STORIES — StoriesChapter
+   ========================================================================== */
+
+.stories {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
@@ -748,7 +767,7 @@
   padding: 0;
 }
 
-.fp-stories a {
+.stories a {
   display: grid;
   grid-template-rows: auto 1fr;
   height: 100%;
@@ -760,22 +779,22 @@
   color: inherit;
 }
 
-.fp-stories img {
+.stories img {
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
   background: var(--muted);
 }
 
-.fp-stories span {
+.stories span {
   display: grid;
   gap: 0.4rem;
   align-content: start;
   padding: 1rem;
 }
 
-.fp-stories em,
-.fp-stories b {
+.stories em,
+.stories b {
   font-style: normal;
   font-weight: 800;
   font-size: 0.64rem;
@@ -784,18 +803,18 @@
   color: var(--ys-orange);
 }
 
-.fp-stories b {
+.stories b {
   color: var(--muted-foreground);
 }
 
-.fp-stories strong {
+.stories strong {
   font-size: 1.05rem;
   font-weight: 800;
   line-height: 1.35;
   letter-spacing: -0.01em;
 }
 
-.fp-stories p {
+.stories p {
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -806,21 +825,24 @@
   color: var(--muted-foreground);
 }
 
-/* ---- tables ---- */
-.fp-tables {
+/* ==========================================================================
+   TABLES — TablesChapter
+   ========================================================================== */
+
+.tables {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
 }
 
-.fp-table {
+.table {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 1.35rem;
   background: var(--fp-card);
 }
 
-.fp-table-head {
+.tableHead {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -832,7 +854,7 @@
   font-weight: 800;
 }
 
-.fp-table-head em {
+.tableHead em {
   margin-inline-start: auto;
   font-style: normal;
   font-size: 0.66rem;
@@ -840,13 +862,13 @@
   color: var(--muted-foreground);
 }
 
-.fp-table ol {
+.table ol {
   list-style: none;
   margin: 0;
   padding: 0.35rem 0;
 }
 
-.fp-table li a {
+.table li a {
   display: grid;
   grid-template-columns: 1.5rem 1.4rem minmax(0, 1fr) auto;
   gap: 0.5rem;
@@ -857,31 +879,31 @@
   font-size: 0.82rem;
 }
 
-.fp-table li a:hover {
+.table li a:hover {
   background: color-mix(in srgb, var(--ys-orange) 8%, transparent);
 }
 
-.fp-table li a span {
+.table li a span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fp-table li a b {
+.table li a b {
   font-style: normal;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
   color: var(--muted-foreground);
 }
 
-.fp-table li a i {
+.table li a i {
   font-style: normal;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
   color: var(--primary);
 }
 
-.fp-table li em {
+.table li em {
   display: block;
   padding-block: 0 0.5rem;
   padding-inline: 3.9rem 1.1rem;
@@ -890,23 +912,26 @@
   color: var(--muted-foreground);
 }
 
-.fp-table li.is-cl,
-.fp-table li.is-direct {
+.zoneCl,
+.zoneDirect {
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ys-green) 80%, transparent);
 }
 
-.fp-table li.is-el,
-.fp-table li.is-playoff {
+.zoneEl,
+.zonePlayoff {
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ys-orange) 70%, transparent);
 }
 
-.fp-table li.is-rel,
-.fp-table li.is-out {
+.zoneRel,
+.zoneOut {
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--destructive, #b42318) 70%, transparent);
 }
 
-/* ---- scorers / people / lists ---- */
-.fp-chapter h3 {
+/* ==========================================================================
+   SCORERS / PEOPLE / LISTS — ScorersChapter, SquadsChapter, TransfersChapter, BroadcastChapter
+   ========================================================================== */
+
+.chapterH3 {
   margin: 0 0 0.7rem;
   font-size: 0.74rem;
   font-weight: 800;
@@ -915,21 +940,21 @@
   color: var(--muted-foreground);
 }
 
-.fp-split {
+.split {
   display: grid;
   gap: 1.4rem;
 }
 
 @media (min-width: 860px) {
-  .fp-split {
+  .split {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-.fp-scorers,
-.fp-people,
-.fp-list,
-.fp-crest-grid {
+.scorers,
+.people,
+.list,
+.crestGrid {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -937,11 +962,11 @@
   gap: 0.5rem;
 }
 
-.fp-scorers a,
-.fp-scorers div,
-.fp-people a,
-.fp-list a,
-.fp-crest-grid a {
+.scorers a,
+.scorers div,
+.people a,
+.list a,
+.crestGrid a {
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -953,13 +978,13 @@
   color: inherit;
 }
 
-.fp-list a {
+.list a {
   flex-wrap: wrap;
 }
 
-.fp-scorers img,
-.fp-people img,
-.fp-list img {
+.scorers img,
+.people img,
+.list img {
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 999px;
@@ -967,14 +992,14 @@
   background: var(--muted);
 }
 
-.fp-list em {
+.list em {
   flex: 1 1 100%;
   padding-inline-start: 3.4rem;
   font-size: 0.72rem;
   color: var(--muted-foreground);
 }
 
-.fp-scorers em {
+.scorers em {
   font-style: normal;
   font-size: 0.72rem;
   font-weight: 900;
@@ -982,55 +1007,58 @@
   -webkit-text-stroke: 1px color-mix(in srgb, var(--ys-orange) 80%, transparent);
 }
 
-.fp-scorers strong,
-.fp-people strong,
-.fp-list strong {
+.scorers strong,
+.people strong,
+.list strong {
   font-weight: 700;
 }
 
-.fp-scorers b {
+.scorers b {
   margin-inline-start: auto;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
   color: var(--primary);
 }
 
-.fp-crest-row {
+.crestRow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
 
-.fp-crest-grid {
+.crestGrid {
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
 }
 
-.fp-crest-grid span,
-.fp-people strong {
+.crestGrid span,
+.people strong {
   font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ---- video / photos ---- */
-.fp-video-rail,
-.fp-photos {
+/* ==========================================================================
+   VIDEO / PHOTOS — VideoChapter, PhotosChapter
+   ========================================================================== */
+
+.videoRail,
+.photos {
   display: grid;
   gap: 0.85rem;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
 }
 
-.fp-video,
-.fp-photo {
+.video,
+.photo {
   display: grid;
   gap: 0.5rem;
   text-decoration: none;
   color: inherit;
 }
 
-.fp-video img,
-.fp-photo img {
+.video img,
+.photo img {
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
@@ -1038,13 +1066,13 @@
   background: var(--card);
 }
 
-.fp-photo {
+.photo {
   position: relative;
   overflow: hidden;
   border-radius: 1.1rem;
 }
 
-.fp-photo span {
+.photo span {
   position: absolute;
   inset-inline: 0;
   bottom: 0;
@@ -1055,12 +1083,12 @@
   background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
 }
 
-.fp-video span {
+.video span {
   display: grid;
   gap: 0.2rem;
 }
 
-.fp-video strong {
+.video strong {
   font-size: 0.86rem;
   font-weight: 700;
   line-height: 1.3;
@@ -1070,14 +1098,17 @@
   overflow: hidden;
 }
 
-.fp-video em {
+.video em {
   font-style: normal;
   font-size: 0.72rem;
   color: var(--muted-foreground);
 }
 
-/* ---- prediction pulse inline ---- */
-.fp-pulse-inline {
+/* ==========================================================================
+   PREDICTIONS — PredictChapter
+   ========================================================================== */
+
+.pulseInline {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
@@ -1086,7 +1117,7 @@
   padding: 0;
 }
 
-.fp-pulse-inline li {
+.pulseInline li {
   display: grid;
   gap: 0.2rem;
   min-width: 7rem;
@@ -1096,13 +1127,13 @@
   background: var(--fp-card);
 }
 
-.fp-pulse-inline strong {
+.pulseInline strong {
   font-size: 1.7rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
 
-.fp-pulse-inline span {
+.pulseInline span {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -1110,14 +1141,17 @@
   color: var(--muted-foreground);
 }
 
-/* ---- doors ---- */
-.fp-doors {
+/* ==========================================================================
+   DOORS — DoorsChapter
+   ========================================================================== */
+
+.doors {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
   gap: 0.6rem;
 }
 
-.fp-doors a {
+.doors a {
   border: 1px solid var(--border);
   border-radius: 1.1rem;
   background: var(--fp-card);
@@ -1128,53 +1162,146 @@
   font-weight: 800;
 }
 
-/* ---- skeletons ---- */
-.fp-skel {
+/* ==========================================================================
+   SKELETONS
+   ========================================================================== */
+
+.skel {
   background: color-mix(in srgb, var(--muted-foreground) 10%, var(--card));
   border-radius: 1.35rem;
 }
 
-.fp-skel.is-hero {
+.skelHero {
+  composes: skel;
   min-height: 60vh;
 }
 
-.fp-skel.is-pulse {
+.skelPulse {
+  composes: skel;
   min-height: 4.2rem;
 }
 
-.fp-skel.is-chapter {
+.skelChapter {
+  composes: skel;
   min-height: 8rem;
 }
 
+/* ==========================================================================
+   QUIET HERO (FrontHero fallback)
+   ========================================================================== */
+
+.heroQuiet {
+  padding-top: 2rem;
+}
+
+.heroCopy {
+  display: grid;
+  gap: 1rem;
+}
+
+.kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.heroRail {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+
+/* ---- Moment (FrontMoment) ---- */
+.moment {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  text-decoration: none;
+}
+
+.moment img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transition: transform 400ms ease;
+}
+
+.moment:hover img {
+  transform: scale(1.03);
+}
+
+.momentVeil {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: grid;
+  gap: 0.35rem;
+  padding: 3rem 1.2rem 1.2rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  color: #fff;
+}
+
+.momentVeil em {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.momentVeil strong {
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.momentVeil b {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   RESPONSIVE — Mobile
+   ========================================================================== */
+
 @media (max-width: 720px) {
-  .fp-mark {
+  .mark {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .fp-mark-cta {
+  .markCta {
     grid-row: auto;
     grid-column: 1 / -1;
     justify-self: start;
   }
 
-  .fp-inner {
+  .inner {
     margin-top: 3rem;
     gap: 3.4rem;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+/* ==========================================================================
+   ACCESSIBILITY — Reduced Motion
+   ========================================================================== */
 
-  .fp-aurora,
-  .fp-live-dot,
-  .fp-stage-media img {
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .liveDot,
+  .stageMedia img {
     animation: none;
   }
 }
 
-html[data-data-saver='on'] .fp-aurora,
-html[data-reduced-motion='on'] .fp-aurora,
-html[data-data-saver='on'] .fp-live-dot,
-html[data-reduced-motion='on'] .fp-live-dot {
+html[data-data-saver='on'] .aurora,
+html[data-reduced-motion='on'] .aurora,
+html[data-data-saver='on'] .liveDot,
+html[data-reduced-motion='on'] .liveDot {
   animation: none;
 }

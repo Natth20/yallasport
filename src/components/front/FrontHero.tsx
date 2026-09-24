@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { loadFrontStories } from '@/lib/front/load-stories';
 import { loadFrontBoard } from '@/lib/front/load-board';
 import { FrontMatchTile } from './FrontMatchTile';
+import styles from './front-hall.module.css';
 
 export async function FrontHero() {
   const locale = await getLocale();
@@ -11,24 +12,24 @@ export async function FrontHero() {
   const rail = board.slice(0, 3);
 
   return (
-    <div className="fp-inner fp-hero-quiet">
-      <div className="fp-hero-copy">
-        <p className="fp-kicker">{t('kicker')}</p>
+    <div className={`${styles.inner} ${styles.heroQuiet}`}>
+      <div className={styles.heroCopy}>
+        <p className={styles.kicker}>{t('kicker')}</p>
         {!lead?.image ? <h1>{t('headline')}</h1> : null}
-        <nav className="fp-hero-cta">
-          <Link href="/matches" className="fp-btn is-solid">
+        <nav className={styles.heroCta}>
+          <Link href="/matches" className={styles.btnSolid}>
             {t('cta_matches')}
           </Link>
-          <Link href="/live" className="fp-btn">
+          <Link href="/live" className={styles.btn}>
             {t('cta_live')}
           </Link>
-          <Link href="/news" className="fp-btn">
+          <Link href="/news" className={styles.btn}>
             {t('cta_news')}
           </Link>
         </nav>
       </div>
       {rail.length > 0 ? (
-        <div className="fp-hero-rail">
+        <div className={styles.heroRail}>
           {rail.map((match) => (
             <FrontMatchTile
               key={match.id}

@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { FrontMark } from '../FrontMark';
+import styles from '../front-hall.module.css';
 
 export async function DoorsChapter() {
   const t = await getTranslations('front');
@@ -15,9 +16,9 @@ export async function DoorsChapter() {
     { href: '/copyright', label: t('door_copyright') },
   ];
   return (
-    <section className="fp-chapter">
+    <section className={styles.chapter}>
       <FrontMark num={t('ch12')} title={t('ch12_title')} />
-      <nav className="fp-doors">
+      <nav className={styles.doors}>
         {doors.map((door) => (
           <Link key={door.href} href={door.href}>
             {door.label}
@@ -27,3 +28,4 @@ export async function DoorsChapter() {
     </section>
   );
 }
+

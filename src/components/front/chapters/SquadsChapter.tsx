@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { loadFrontSquads } from '@/lib/front/load-squads';
 import { FrontMark } from '../FrontMark';
+import styles from '../front-hall.module.css';
 
 export async function SquadsChapter() {
   const locale = await getLocale();
@@ -10,10 +11,10 @@ export async function SquadsChapter() {
   const { leagues, clubs, players } = await loadFrontSquads(locale);
   if (leagues.length === 0 && clubs.length === 0 && players.length === 0) return null;
   return (
-    <section className="fp-chapter">
+    <section className={styles.chapter}>
       <FrontMark num={t('ch05')} title={t('ch05_title')} note={t('ch05_note')} />
       {leagues.length > 0 ? (
-        <div className="fp-crest-row">
+        <div className={styles.crestRow}>
           {leagues.map((league) => (
             <Link key={league.id} href={`/league/${league.slug}`} title={league.name}>
               <LeagueCrest name={league.name} logoUrl={league.logoUrl} className="h-10 w-10" />
@@ -23,8 +24,8 @@ export async function SquadsChapter() {
       ) : null}
       {clubs.length > 0 ? (
         <div>
-          <h3>{t('ch05_clubs')}</h3>
-          <ul className="fp-crest-grid">
+          <h3 className={styles.chapterH3}>{t('ch05_clubs')}</h3>
+          <ul className={styles.crestGrid}>
             {clubs.map((club) => (
               <li key={club.id}>
                 <Link href={`/team/${club.slug}`}>
@@ -38,8 +39,8 @@ export async function SquadsChapter() {
       ) : null}
       {players.length > 0 ? (
         <div>
-          <h3>{t('ch05_players')}</h3>
-          <ul className="fp-people">
+          <h3 className={styles.chapterH3}>{t('ch05_players')}</h3>
+          <ul className={styles.people}>
             {players.map((player) => (
               <li key={player.id}>
                 <Link href={`/player/${player.slug}`}>
@@ -56,11 +57,11 @@ export async function SquadsChapter() {
           </ul>
         </div>
       ) : null}
-      <div className="fp-hero-cta">
-        <Link href="/compare" className="fp-btn">
+      <div className={styles.heroCta}>
+        <Link href="/compare" className={styles.btn}>
           {t('ch05_compare')}
         </Link>
-        <Link href="/compare-players" className="fp-btn">
+        <Link href="/compare-players" className={styles.btn}>
           {t('ch05_compare_players')}
         </Link>
       </div>

@@ -13,15 +13,15 @@ import { BroadcastChapter } from './chapters/BroadcastChapter';
 import { PredictChapter } from './chapters/PredictChapter';
 import { PersonalBand } from './chapters/PersonalBand';
 import { DoorsChapter } from './chapters/DoorsChapter';
-import './front-hall.css';
+import styles from './front-hall.module.css';
 
 export function FrontPage() {
   return (
-    <div className="fp">
+    <div className={styles.root}>
       <Suspense fallback={<FrontSkeleton kind="hero" />}>
         <FrontStage />
       </Suspense>
-      <div className="fp-inner">
+      <div className={styles.inner}>
         <Suspense fallback={<FrontSkeleton kind="chapter" />}>
           <BoardChapter />
         </Suspense>
