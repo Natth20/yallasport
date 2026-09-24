@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth/auth';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ContactLetter } from './ContactLetter';
-import './contact-house.css';
+import styles from './contact-house.module.css';
 
 export async function ContactHouse() {
   const t = await getTranslations('post');
@@ -35,14 +35,14 @@ export async function ContactHouse() {
   ];
 
   return (
-    <div className="contact-house relative min-h-screen overflow-hidden pb-16">
+    <div className={`${styles.contactHouse} relative min-h-screen overflow-hidden pb-16`}>
       {/* Subtle Background Lighting */}
       <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-primary/5 blur-[100px] opacity-50" />
 
       {/* Masthead Hero */}
       <header className="mx-auto max-w-7xl px-4 pt-12 pb-10 sm:px-6 lg:px-8">
         <HeroEnter>
-          <div className="contact-hero relative overflow-hidden rounded-3xl p-8 md:p-12">
+          <div className={`${styles.contactHero} relative overflow-hidden rounded-3xl p-8 md:p-12`}>
             <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
               {/* Left Column */}
               <div className="space-y-8 lg:col-span-8">

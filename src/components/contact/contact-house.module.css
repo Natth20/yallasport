@@ -3,14 +3,14 @@
    Ultra-Minimalist Luxury Design
    ══════════════════════════════════════════════════════════════════════ */
 
-.contact-house {
+.contactHouse {
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
 }
 
 /* Very subtle background light */
-.contact-house::before {
+.contactHouse::before {
   content: '';
   position: absolute;
   top: 0;
@@ -24,7 +24,7 @@
   z-index: -1;
 }
 
-.contact-house .contact-hero {
+.contactHero {
   position: relative;
   background: color-mix(in srgb, var(--card) 60%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
@@ -33,11 +33,11 @@
   -webkit-backdrop-filter: blur(24px);
 }
 
-html.dark .contact-house .contact-hero {
+:global(html.dark) .contactHero {
   box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
 }
 
-.contact-house .contact-form-card {
+.contactFormCard {
   border-radius: 1.5rem;
   background: color-mix(in srgb, var(--card) 50%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
@@ -47,15 +47,15 @@ html.dark .contact-house .contact-hero {
   transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-html.dark .contact-house .contact-form-card {
+:global(html.dark) .contactFormCard {
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
 }
 
-.contact-house .contact-form-card:focus-within {
+.contactFormCard:focus-within {
   border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
 }
 
-.contact-house .contact-input {
+.contactInput {
   width: 100%;
   padding: 0.85rem 1.25rem;
   border-radius: 1rem;
@@ -67,17 +67,17 @@ html.dark .contact-house .contact-form-card {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.contact-house .contact-input::placeholder {
+.contactInput::placeholder {
   color: var(--muted-foreground);
   opacity: 0.6;
 }
 
-.contact-house .contact-input:hover {
+.contactInput:hover {
   border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
   background: color-mix(in srgb, var(--background) 80%, transparent);
 }
 
-.contact-house .contact-input:focus {
+.contactInput:focus {
   outline: none;
   border-color: var(--primary);
   background: var(--background);
@@ -85,7 +85,7 @@ html.dark .contact-house .contact-form-card {
   transform: translateY(-1px);
 }
 
-.contact-house .contact-receipt {
+.contactReceipt {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -98,6 +98,6 @@ html.dark .contact-house .contact-form-card {
   backdrop-filter: blur(16px);
 }
 
-html.dark .contact-house .contact-receipt {
+:global(html.dark) .contactReceipt {
   box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
 }

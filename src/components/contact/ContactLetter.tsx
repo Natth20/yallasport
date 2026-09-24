@@ -5,6 +5,7 @@ import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { CONTACT_KINDS } from '@/lib/desk/kinds';
 import { useLocale, useTranslations } from 'next-intl';
 import { FormEvent, useState } from 'react';
+import styles from './contact-house.module.css';
 import {
   Send,
   CheckCircle,
@@ -105,7 +106,7 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
 
   if (result) {
     return (
-      <div className="contact-receipt">
+      <div className={styles.contactReceipt}>
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mb-4">
           <CheckCircle className="w-8 h-8" />
         </div>
@@ -211,7 +212,7 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://yalla-sport.com/ar/..."
-            className="contact-input font-mono text-xs"
+            className={`${styles.contactInput} font-mono text-xs`}
           />
         </div>
 
@@ -226,7 +227,7 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
             value={replyEmail}
             onChange={(event) => setReplyEmail(event.target.value)}
             placeholder="name@example.com"
-            className="contact-input text-xs"
+            className={`${styles.contactInput} text-xs`}
             suppressHydrationWarning
           />
         </div>
@@ -248,7 +249,7 @@ export function ContactLetter({ defaultReply = '' }: { defaultReply?: string }) 
           value={details}
           onChange={(event) => setDetails(event.target.value)}
           placeholder={t('field_body_ph')}
-          className="contact-input text-xs leading-relaxed resize-y"
+          className={`${styles.contactInput} text-xs leading-relaxed resize-y`}
         />
       </div>
 
