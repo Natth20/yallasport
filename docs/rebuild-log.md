@@ -57,3 +57,16 @@
   4. `Loader.tsx` (94 سطراً) + `loader.module.css` (189 سطراً): مؤشرات تحميل دائرية، ونقاط متتالية، وكرة يلا سبورت (Football) النابضة والمدورة مع ظل تفاعلي وخيار التحميل بملء الشاشة `fullPage`.
   5. تحديث `src/app/[locale]/demo/ui/page.tsx` (518 سطراً) لعرض جميع المكونات العشرة 10/10.
 - **الفحص**: نجاح تام لـ TypeScript `npx tsc --noEmit` (0 أخطاء).
+
+---
+
+## المرحلة 3: إعادة بناء Header + Footer ونظام الملاحة (Phase 3: Header & Footer)
+- **التاريخ**: 2026-09-24
+- **الحالة**: مكتملة ✅ — بانتظار الموافقة للانتقال إلى المرحلة 4 (الصفحة الرئيسية).
+- **الفرع**: `rebuild/phase-3`
+- **الملفات المنجزة**:
+  - `legacy/Header.legacy.tsx.bak` و `legacy/Footer.legacy.tsx.bak`: حفظ النسخ القديمة كمرجع آمن.
+  - `src/components/layout/Header.tsx` (185 سطراً) + `header.module.css` (215 سطراً): شريط علوي زجاجي لاصق (Sticky) مع قائمة المزيد المنسدلة، والبحث السريع، وشارة البث المباشر.
+  - `src/components/layout/MobileMenu.tsx` (159 سطراً) + `mobile-menu.module.css` (175 سطراً): درج ملاحة جانبي سلس متجاوب مع RTL/LTR وقفل تمرير الصفحة والبحث المدمج.
+  - `src/components/layout/Footer.tsx` (223 سطراً) + `footer.module.css` (267 سطراً): تذييل فخم بأربعة أعمدة روابط، شبكات التواصل، صندوق الاشتراك في النشرة، والروابط القانونية وحقوق النشر.
+- **الفحص**: نجاح تام لـ `npm run build` و TypeScript `npx tsc --noEmit` (0 أخطاء و 0 `!important`).

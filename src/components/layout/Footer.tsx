@@ -1,239 +1,222 @@
+import React from 'react';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { ArrowUpRight, Mail } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
-import { BackToTop } from './BackToTop';
 import { BrandMark } from '@/components/brand/BrandMark';
+import { Button, Input } from '@/components/ui';
+import styles from './footer.module.css';
 
 export async function Footer() {
   const t = await getTranslations();
   const locale = await getLocale();
   const year = new Date().getFullYear();
 
-  const arena = [
-    { name: t('common.matches'), href: '/matches' },
-    { name: t('common.leagues'), href: '/leagues' },
-    { name: t('common.news'), href: '/news' },
-    { name: t('common.broadcasts'), href: '/live' },
+  const majorLeagues = [
+    { name: locale === 'ar' ? 'دوري أبطال أوروبا' : 'UEFA Champions League', href: '/league/uefa-champions-league' },
+    { name: locale === 'ar' ? 'الدوري الإنجليزي الممتاز' : 'Premier League', href: '/league/premier-league' },
+    { name: locale === 'ar' ? 'الدوري الإسباني (LaLiga)' : 'La Liga', href: '/league/la-liga' },
+    { name: locale === 'ar' ? 'دوري روشن السعودي' : 'Saudi Pro League', href: '/league/saudi-pro-league' },
+    { name: locale === 'ar' ? 'الدوري الإيطالي (Serie A)' : 'Serie A', href: '/league/serie-a' },
   ];
 
-  const explore = [
-    { name: t('footer.about'), href: '/about' },
-    { name: t('common.search'), href: '/search' },
-    { name: t('common.favorites'), href: '/favorites' },
-    { name: t('footer.connect'), href: '/contact' },
+  const sportsHub = [
+    { name: t('common.matches') || 'المباريات المباشرة', href: '/matches' },
+    { name: t('common.broadcasts') || 'البث المباشر والقنوات', href: '/live' },
+    { name: t('common.leagues') || 'جميع البطولات', href: '/leagues' },
+    { name: t('common.transfers') || 'سوق الانتقالات', href: '/transfers' },
+    { name: t('common.stats') || 'مركز الإحصائيات', href: '/stats' },
   ];
 
-  const tools = [
-    { name: t('footer.leaderboard'), href: '/leaderboard' },
-    { name: t('common.comparison'), href: '/compare' },
-    { name: t('common.player_compare'), href: '/compare-players' },
-    { name: t('common.transfers'), href: '/transfers' },
-    { name: t('common.stats'), href: '/stats' },
-    { name: t('common.photos'), href: '/photos' },
-    { name: t('common.video'), href: '/videos' },
+  const mediaAndTools = [
+    { name: t('common.news') || 'أخبار كرة القدم', href: '/news' },
+    { name: t('common.video') || 'أرشيف الفيديوهات', href: '/videos' },
+    { name: t('common.photos') || 'ألبوم الصور', href: '/photos' },
+    { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
+    { name: t('footer.leaderboard') || 'لوحة الصدارة والتوقعات', href: '/leaderboard' },
   ];
 
-  const legal = [
-    { name: t('common.privacy'), href: '/privacy' },
-    { name: t('common.cookies'), href: '/cookies' },
-    { name: t('common.terms'), href: '/terms' },
-    { name: t('footer.copyright'), href: '/copyright' },
-    { name: t('common.report'), href: '/report' },
+  const aboutAndSupport = [
+    { name: t('footer.about') || 'عن يلا سبورت', href: '/about' },
+    { name: t('footer.connect') || 'اتصل بنا', href: '/contact' },
+    { name: t('common.report') || 'الإبلاغ عن خطأ', href: '/report' },
+    { name: t('common.privacy') || 'سياسة الخصوصية', href: '/privacy' },
+    { name: t('common.terms') || 'شروط الاستخدام', href: '/terms' },
   ];
 
-  const seals = [
-    t('footer.licensed_only'),
-    t('footer.approved_news'),
-    t('footer.live_scores'),
-  ];
-
-  const gates = [
-    {
-      index: '01',
-      title: t('footer.gate_live'),
-      copy: t('footer.gate_live_copy'),
-      href: '/live',
-    },
-    {
-      index: '02',
-      title: t('footer.gate_news'),
-      copy: t('footer.gate_news_copy'),
-      href: '/news',
-    },
-    {
-      index: '03',
-      title: t('common.matches'),
-      copy: t('footer.gate_watch_copy'),
-      href: '/matches',
-    },
+  const legalLinks = [
+    { name: t('common.privacy') || 'الخصوصية', href: '/privacy' },
+    { name: t('common.terms') || 'الشروط والأحكام', href: '/terms' },
+    { name: t('common.cookies') || 'ملفات تعريف الارتباط', href: '/cookies' },
+    { name: t('footer.copyright') || 'حقوق الملكية الفكرية', href: '/copyright' },
   ];
 
   return (
-    <footer className="relative overflow-hidden border-t border-border/70 bg-card/60 backdrop-blur-2xl">
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-72 w-full max-w-6xl rounded-full bg-gradient-to-b from-primary/6 via-transparent to-transparent blur-3xl" />
+    <footer className={styles.footer}>
+      <div className={styles.topDecor} aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 pt-10 pb-6">
-        {/* Masthead Sub-Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-6">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
-            <span className="text-primary">{t('footer.match_programme')}</span>
-            <span className="hidden h-px w-6 bg-border sm:block" />
-            <span>
-              {t('footer.since')} {year}
-            </span>
-            <span>·</span>
-            <span>{t('footer.edition')}</span>
-          </div>
-          <p className="hidden text-[10px] font-bold tracking-wider text-muted-foreground/70 md:block">
-            {seals.join('  ·  ')}
-          </p>
-        </div>
-
-        {/* Brand & Tonight Quick Gates */}
-        <div className="grid gap-10 border-b border-border/60 py-10 md:grid-cols-12 md:gap-8 lg:py-12">
-          <div className="flex flex-col gap-4 md:col-span-7 xl:col-span-5">
-            <Link href="/" className="group inline-flex items-center gap-3.5 self-start" aria-label="Yalla Sport">
-              <BrandMark size={46} className="" />
-              <span className="flex flex-col">
-                <span className="text-xl font-black leading-none tracking-tight text-foreground">
-                  {locale === 'ar' ? 'يلا سبورت' : 'YALLA SPORT'}
-                </span>
-                <span className="mt-1.5 text-[9px] font-black uppercase tracking-[0.32em] text-primary">
-                  {t('footer.tagline')}
-                </span>
-              </span>
+      <div className={styles.container}>
+        {/* Main Grid */}
+        <div className={styles.mainGrid}>
+          {/* Brand Info */}
+          <div className={styles.brandCol}>
+            <Link href="/" className={styles.brandLink} aria-label="Yalla Sport">
+              <BrandMark size={44} />
+              <div>
+                <div className={styles.brandName}>
+                  {locale === 'ar' ? 'يلا سبورت' : 'Yalla Sport'}
+                </div>
+                <div className={styles.brandTagline}>
+                  {locale === 'ar' ? 'المنصة الرياضية الأولى' : 'Premier Sports Hub'}
+                </div>
+              </div>
             </Link>
-            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{t('footer.description')}</p>
-            <p className="max-w-sm border-s-2 border-primary/50 ps-3.5 text-xs leading-relaxed text-foreground/60">
-              {t('footer.manifesto')}
+
+            <p className={styles.brandDesc}>
+              {locale === 'ar'
+                ? 'يلا سبورت منصة رياضية عربية رائدة تقدم تغطية فورية وشاملة لمباريات كرة القدم، الجداول، النتائج المباشرة، وأحدث الأخبار العالمية والمحلية.'
+                : 'Yalla Sport is a leading sports platform delivering real-time football match coverage, live scores, standings, and global sporting news.'}
             </p>
+
+            {/* Social Media Links */}
+            <div className={styles.socialRow}>
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                aria-label="Twitter / X"
+              >
+                𝕏
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                aria-label="Instagram"
+              >
+                📸
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                aria-label="YouTube"
+              >
+                ▶
+              </a>
+              <a
+                href="https://telegram.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                aria-label="Telegram"
+              >
+                ✈️
+              </a>
+            </div>
           </div>
 
-          <div className="md:col-span-5 xl:col-span-7">
-            <p className="mb-3 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
-              {t('footer.tonight')}
-            </p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {gates.map((gate) => (
-                <Link
-                  key={gate.href}
-                  href={gate.href}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card/80 p-4 transition-all hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="tabular-nums text-[10px] font-black tracking-widest text-muted-foreground/60">
-                      {gate.index}
-                    </span>
-                    <ArrowUpRight className="h-4 w-4 text-primary/70 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary rtl:rotate-[-90deg]" />
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm font-black text-foreground transition-colors group-hover:text-primary">
-                      {gate.title}
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{gate.copy}</p>
-                  </div>
+          {/* Column 1: Major Leagues */}
+          <div className={styles.linkCol}>
+            <h4 className={styles.colTitle}>
+              {locale === 'ar' ? 'البطولات الكبرى' : 'Major Leagues'}
+            </h4>
+            <div className={styles.linksList}>
+              {majorLeagues.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.linkItem}>
+                  <span>›</span>
+                  <span>{link.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 2: Sports Hub */}
+          <div className={styles.linkCol}>
+            <h4 className={styles.colTitle}>
+              {locale === 'ar' ? 'المباريات والنتائج' : 'Live Matches'}
+            </h4>
+            <div className={styles.linksList}>
+              {sportsHub.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.linkItem}>
+                  <span>›</span>
+                  <span>{link.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 3: Media & Tools */}
+          <div className={styles.linkCol}>
+            <h4 className={styles.colTitle}>
+              {locale === 'ar' ? 'الأخبار والوسائط' : 'News & Media'}
+            </h4>
+            <div className={styles.linksList}>
+              {mediaAndTools.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.linkItem}>
+                  <span>›</span>
+                  <span>{link.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 4: About & Support */}
+          <div className={styles.linkCol}>
+            <h4 className={styles.colTitle}>
+              {locale === 'ar' ? 'عن المنصة والدعم' : 'Support & Legal'}
+            </h4>
+            <div className={styles.linksList}>
+              {aboutAndSupport.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.linkItem}>
+                  <span>›</span>
+                  <span>{link.name}</span>
                 </Link>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Navigation Columns & Contact Ticket */}
-        <div className="grid gap-10 py-10 md:grid-cols-12 md:gap-8 lg:py-12">
-          <nav
-            className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:order-last md:col-span-12 xl:order-none xl:col-span-7"
-            aria-label={t('footer.sitemap')}
-          >
-            <FooterColumn index="01" title={t('footer.arena')} links={arena} />
-            <FooterColumn index="02" title={t('footer.explore')} links={explore} />
-            <FooterColumn index="03" title={t('footer.tools')} links={tools} />
-            <FooterColumn index="04" title={t('footer.legal')} links={legal} />
-          </nav>
-
-          <div className="md:col-span-5 xl:col-span-5">
-            <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card/80 to-card p-5 backdrop-blur-md">
-              <div className="flex items-center justify-between gap-3 pb-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">
-                  {t('footer.write_us')}
-                </p>
-                <span className="rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-primary">
-                  {t('footer.gate')} 01
-                </span>
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t('footer.write_us_copy')}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground/70">{t('footer.desk_note')}</p>
-
-              <a
-                href="mailto:contact@yallasport.com"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                <span>{t('footer.email_cta')}</span>
-              </a>
-
-              <div className="mt-3 flex items-center justify-between pt-2 border-t border-border text-[11px] text-muted-foreground">
-                <span>{t('footer.desk')}:</span>
-                <span className="font-mono text-foreground/80">contact@yallasport.com</span>
-              </div>
-            </div>
+        {/* Newsletter Row */}
+        <div className={styles.newsletterSection}>
+          <div className={styles.newsletterText}>
+            <h4 className={styles.newsletterTitle}>
+              {locale === 'ar' ? 'اشترك في النشرة البريدية الرياضية' : 'Subscribe to Sports Digest'}
+            </h4>
+            <p className={styles.newsletterDesc}>
+              {locale === 'ar'
+                ? 'احصل على ملخص يومي بأبرز الأهداف ونتائج المباريات وأحدث الأخبار في بريدك.'
+                : 'Get daily match highlights, major scores, and football news directly to your inbox.'}
+            </p>
           </div>
+          <form className={styles.newsletterForm} onSubmit={undefined}>
+            <Input
+              type="email"
+              placeholder={locale === 'ar' ? 'أدخل بريدك الإلكتروني...' : 'Enter your email...'}
+              inputSize="sm"
+            />
+            <Button variant="accent" size="sm">
+              {locale === 'ar' ? 'اشتراك' : 'Subscribe'}
+            </Button>
+          </form>
         </div>
 
-        {/* Bottom Colophon & Copyright */}
-        <div className="flex flex-col gap-4 border-t border-border/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:gap-3">
-            <p>© {year} Yalla Sport. {t('footer.rights')}</p>
-            <span className="hidden h-1 w-1 rounded-full bg-muted-foreground/40 sm:block" />
-            <p>{t('footer.designed')}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <BackToTop label={t('footer.back_to_top')} />
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-black text-emerald-400">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/80" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              </span>
-              {t('footer.operational')}
-            </span>
+        {/* Bottom Sub-Bar */}
+        <div className={styles.bottomBar}>
+          <p className={styles.copyright}>
+            © {year} {locale === 'ar' ? 'يلا سبورت. جميع الحقوق محفوظة.' : 'Yalla Sport. All rights reserved.'}
+          </p>
+
+          <div className={styles.legalLinks}>
+            {legalLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={styles.legalLink}>
+                {link.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
     </footer>
-  );
-}
-
-function FooterColumn({
-  index,
-  title,
-  links,
-  className = '',
-}: {
-  index: string;
-  title: string;
-  links: { name: string; href: string }[];
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <p className="mb-3.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
-        <span className="tabular-nums text-muted-foreground/60">{index}</span>
-        <span className="h-px w-3 bg-primary/40" />
-        {title}
-      </p>
-      <ul className="space-y-2">
-        {links.map((link) => (
-          <li key={`${link.href}-${link.name}`}>
-            <Link
-              href={link.href}
-              className="group inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-primary"
-            >
-              <span className="h-px w-0 bg-primary transition-all duration-300 group-hover:w-2" />
-              <span>{link.name}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
