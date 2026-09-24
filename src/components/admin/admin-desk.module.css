@@ -1,26 +1,26 @@
 /* Quiet editorial desk for staff pages. */
-.admin-desk {
+.adminDesk {
   background: color-mix(in srgb, var(--background) 96%, var(--muted));
 }
 
-.admin-desk aside {
+.adminDesk aside {
   background: color-mix(in srgb, #14532d 92%, #0b1220);
   box-shadow: inset -1px 0 0 color-mix(in srgb, #fff 8%, transparent);
 }
 
-.admin-desk aside a {
+.adminDesk aside a {
   border-radius: 0.75rem;
   font-size: 0.84rem;
   letter-spacing: 0.01em;
 }
 
-.admin-desk table {
+.adminDesk table {
   font-size: 0.9rem;
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.admin-desk th {
+.adminDesk th {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -28,6 +28,6 @@
   color: var(--muted-foreground);
 }
 
-.admin-desk td {
+.adminDesk td {
   padding-block: 0.7rem;
 }

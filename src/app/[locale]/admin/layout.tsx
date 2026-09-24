@@ -1,12 +1,12 @@
 import React from "react";
-import {Link} from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { auth } from "@/lib/auth/auth";
 import { ADMIN_NAV, isStaffRole } from "@/lib/auth/admin-access";
 import { redirect } from "next/navigation";
-import {getLocale} from "next-intl/server";
-import {pick} from "@/i18n/pick";
+import { getLocale } from "next-intl/server";
 import { SignOutButton } from "@/components/auth/SignOutButton";
-import "@/components/admin/admin-desk.css";
+import styles from "@/components/admin/admin-desk.module.css";
+import { pick } from "@/i18n/pick";
 
 /**
  * AdminLayout - Wraps all admin pages.
@@ -15,7 +15,7 @@ import "@/components/admin/admin-desk.css";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const session = await auth();
-  
+
   if (!session) {
     redirect("/api/auth/signin");
   }
@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }));
 
   return (
-    <div className="admin-desk flex h-screen bg-muted dark:bg-background">
+    <div className={`${styles.adminDesk} flex h-screen bg-muted dark:bg-background`}>
       {/* Sidebar */}
       <aside className="w-64 bg-brand-green text-white shadow-lg overflow-y-auto shrink-0">
         <div className="p-8">
@@ -40,9 +40,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <nav className="mt-4 px-4 space-y-1">
           {filteredLinks.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
+            <Link
+              key={link.href}
+              href={link.href}
               className="block py-3 px-5 rounded-2xl transition-all duration-200 hover:bg-white/10 font-bold text-sm"
             >
               {link.label}
