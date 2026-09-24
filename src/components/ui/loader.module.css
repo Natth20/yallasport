@@ -1,0 +1,188 @@
+.loaderContainer {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-family: var(--font-sans);
+}
+
+.fullPage {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: color-mix(in srgb, var(--background) 90%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ==========================================================================
+   Sizes
+   ========================================================================== */
+
+.sm.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.md.spinner {
+  width: 2rem;
+  height: 2rem;
+}
+
+.lg.spinner {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* ==========================================================================
+   1. Spinner Variant
+   ========================================================================== */
+
+.spinner {
+  color: var(--primary);
+}
+
+.spinnerSvg {
+  width: 100%;
+  height: 100%;
+  animation: rotateSpinner 0.85s linear infinite;
+}
+
+.spinnerTrack {
+  opacity: 0.2;
+}
+
+.spinnerThumb {
+  opacity: 1;
+}
+
+@keyframes rotateSpinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   2. Dots Variant
+   ========================================================================== */
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.dots .dot {
+  display: inline-block;
+  border-radius: 50%;
+  background-color: var(--ys-orange);
+  animation: dotWave 1.4s infinite ease-in-out both;
+}
+
+.sm.dots .dot {
+  width: 0.4rem;
+  height: 0.4rem;
+}
+
+.md.dots .dot {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.lg.dots .dot {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.dots .dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dots .dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes dotWave {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   3. Football Variant (Special for YallaSport)
+   ========================================================================== */
+
+.footballWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.sm .footballBall {
+  font-size: 1.5rem;
+}
+
+.md .footballBall {
+  font-size: 2.25rem;
+}
+
+.lg .footballBall {
+  font-size: 3.5rem;
+}
+
+.footballBall {
+  animation: footballBounce 0.6s cubic-bezier(0.28, 0.84, 0.42, 1) infinite alternate;
+  display: inline-block;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+}
+
+.footballShadow {
+  width: 1.5rem;
+  height: 0.375rem;
+  background-color: color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 50%;
+  animation: shadowScale 0.6s cubic-bezier(0.28, 0.84, 0.42, 1) infinite alternate;
+  margin-top: 0.25rem;
+}
+
+.lg .footballShadow {
+  width: 2.5rem;
+  height: 0.5rem;
+}
+
+@keyframes footballBounce {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-24px) rotate(180deg);
+  }
+}
+
+@keyframes shadowScale {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(0.4);
+    opacity: 0.15;
+  }
+}

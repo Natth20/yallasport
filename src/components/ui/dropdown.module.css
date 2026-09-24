@@ -1,0 +1,157 @@
+.dropdownRoot {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-sans);
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+.menu {
+  position: absolute;
+  z-index: 50;
+  min-width: 14rem;
+  padding: 0.375rem;
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--ys-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  animation: dropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   Placements
+   ========================================================================== */
+
+.bottom-start {
+  top: calc(100% + 0.375rem);
+  inset-inline-start: 0;
+}
+
+.bottom-end {
+  top: calc(100% + 0.375rem);
+  inset-inline-end: 0;
+}
+
+.top-start {
+  bottom: calc(100% + 0.375rem);
+  inset-inline-start: 0;
+}
+
+.top-end {
+  bottom: calc(100% + 0.375rem);
+  inset-inline-end: 0;
+}
+
+/* ==========================================================================
+   Items & Groups
+   ========================================================================== */
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: start;
+  color: var(--foreground);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.12s ease-in-out;
+  outline: none;
+}
+
+.item:hover:not(.disabled) {
+  background-color: var(--secondary);
+  color: var(--accent);
+}
+
+.item.destructive {
+  color: var(--destructive);
+}
+
+.item.destructive:hover:not(.disabled) {
+  background-color: var(--ys-red-soft);
+  color: var(--destructive);
+}
+
+.item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.itemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.itemIcon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.item:hover:not(.disabled) .itemIcon {
+  color: inherit;
+}
+
+.itemLabel {
+  flex: 1 1 auto;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.groupLabel {
+  padding: 0.375rem 0.75rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 0.375rem 0;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

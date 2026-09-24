@@ -21,6 +21,15 @@ import {
   ModalDescription,
   ModalContent,
   ModalFooter,
+  Skeleton,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownGroup,
+  DropdownDivider,
+  Tooltip,
+  Loader,
 } from '@/components/ui';
 import styles from './demo-ui.module.css';
 
@@ -29,6 +38,7 @@ export default function UIDemoPage() {
   const [searchValue, setSearchValue] = useState('ريال مدريد');
   const [emailValue, setEmailValue] = useState('');
   const [passwordValue, setPasswordValue] = useState('yallaSport#2026');
+  const [showFullLoader, setShowFullLoader] = useState(false);
 
   return (
     <div className={styles.pageWrapper}>
@@ -36,17 +46,18 @@ export default function UIDemoPage() {
       <header className={styles.heroHeader}>
         <div className={styles.titleRow}>
           <h1 className={styles.pageTitle}>
-            <span>⚽ مكتبة مكونات YallaSport UI</span>
+            <span>⚽ مكتبة مكونات YallaSport UI الكاملة (10/10)</span>
             <Badge variant="live">LIVE DEMO</Badge>
           </h1>
           <div className={styles.flexRow}>
             <Badge variant="primary">Next.js 16</Badge>
             <Badge variant="accent">Cairo Font</Badge>
             <Badge variant="outline">Tailwind v4 + Modules</Badge>
+            <Badge variant="success">10 Components Ready</Badge>
           </div>
         </div>
         <p className={styles.pageSubtitle}>
-          معاينة بصرية وتفاعلية للمكونات الأساسية (Button, Card, Badge, Input, Tabs, Modal) المبنية بنظام التصميم الموحد بدون أي !important.
+          معاينة بصرية وتفاعلية لكافة مكونات المرحلة 2 الأساسية: (Button, Card, Badge, Input, Tabs, Modal, Skeleton, Dropdown, Tooltip, Loader) بدون أي استخدام لـ !important.
         </p>
       </header>
 
@@ -323,6 +334,143 @@ export default function UIDemoPage() {
         </div>
       </section>
 
+      {/* 7. SKELETON SECTION */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>7. هياكل التحميل الرياضية (Skeletons)</h2>
+          <Badge variant="accent">Shimmer Animation</Badge>
+        </div>
+
+        <div className={styles.gridCards}>
+          <div className={styles.demoBox}>
+            <h3 className={styles.demoBoxTitle}>هيكل بطاقة مباراة (Match Card Skeleton)</h3>
+            <Skeleton variant="match-card" animation="shimmer" />
+          </div>
+
+          <div className={styles.demoBox}>
+            <h3 className={styles.demoBoxTitle}>هيكل بطاقة خبر (News Card Skeleton)</h3>
+            <Skeleton variant="news-card" animation="shimmer" />
+          </div>
+
+          <div className={styles.demoBox} style={{ gridColumn: '1 / -1' }}>
+            <h3 className={styles.demoBoxTitle}>هيكل صف جدول الدوري (Table Row Skeleton)</h3>
+            <Skeleton variant="table-row" animation="shimmer" />
+            <Skeleton variant="table-row" animation="shimmer" />
+            <Skeleton variant="table-row" animation="shimmer" />
+          </div>
+        </div>
+      </section>
+
+      {/* 8. DROPDOWN SECTION */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>8. القوائم المنسدلة (Dropdowns)</h2>
+          <Badge variant="default">Placements & Actions</Badge>
+        </div>
+
+        <div className={styles.gridCards}>
+          <div className={styles.demoBox}>
+            <h3 className={styles.demoBoxTitle}>قائمة تصفية البطولات والمواسم</h3>
+            <div className={styles.flexRow}>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="outline" rightIcon={<span>▼</span>}>
+                    اختر البطولة
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu placement="bottom-start">
+                  <DropdownGroup label="الدوريات الكبرى">
+                    <DropdownItem icon={<span>🏆</span>}>دوري أبطال أوروبا</DropdownItem>
+                    <DropdownItem icon={<span>🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>}>الدوري الإنجليزي الممتاز</DropdownItem>
+                    <DropdownItem icon={<span>🇪🇸</span>}>الدوري الإسباني (LaLiga)</DropdownItem>
+                    <DropdownItem icon={<span>🇸🇦</span>}>دوري روشن السعودي</DropdownItem>
+                  </DropdownGroup>
+                  <DropdownDivider />
+                  <DropdownItem icon={<span>⚙️</span>}>تخصيص البطولات المفضلة</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="secondary" rightIcon={<span>⋮</span>}>
+                    خيارات المباراة
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu placement="bottom-end">
+                  <DropdownItem icon={<span>🔔</span>}>تفعيل تنبيهات الأهداف</DropdownItem>
+                  <DropdownItem icon={<span>⭐</span>}>إضافة إلى المفضلة</DropdownItem>
+                  <DropdownItem icon={<span>📤</span>}>مشاركة رابط البث</DropdownItem>
+                  <DropdownDivider />
+                  <DropdownItem icon={<span>🚫</span>} destructive>إخفاء النتيجة (حرق الأحداث)</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. TOOLTIP SECTION */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>9. التلميحات التوضيحية (Tooltips)</h2>
+          <Badge variant="default">4 Directions & Arrows</Badge>
+        </div>
+
+        <div className={styles.demoBox}>
+          <h3 className={styles.demoBoxTitle}>مرر الماوس فوق الأزرار لمعاينة التلميح</h3>
+          <div className={styles.flexRow}>
+            <Tooltip content="تلميح يظهر في الأعلى" position="top">
+              <Button variant="outline">أعلى (Top)</Button>
+            </Tooltip>
+
+            <Tooltip content="تلميح يظهر في الأسفل" position="bottom">
+              <Button variant="outline">أسفل (Bottom)</Button>
+            </Tooltip>
+
+            <Tooltip content="تلميح يظهر على اليمين" position="right">
+              <Button variant="outline">يمين (Right)</Button>
+            </Tooltip>
+
+            <Tooltip content="تلميح يظهر على اليسار" position="left">
+              <Button variant="outline">يسار (Left)</Button>
+            </Tooltip>
+          </div>
+        </div>
+      </section>
+
+      {/* 10. LOADER SECTION */}
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>10. مؤشرات التحميل الرياضية (Loaders)</h2>
+          <Badge variant="live">Football & Spinner Animations</Badge>
+        </div>
+
+        <div className={styles.gridCards}>
+          <div className={styles.demoBox}>
+            <h3 className={styles.demoBoxTitle}>كرة يلا سبورت المتحركة (Football Loader)</h3>
+            <div className={styles.flexRow} style={{ gap: '2rem', justifyContent: 'center', padding: '1rem 0' }}>
+              <Loader variant="football" size="sm" label="تحميل سريع" />
+              <Loader variant="football" size="md" label="جاري تحديث النتائج المباشرة..." />
+              <Loader variant="football" size="lg" label="جاري مزامنة البث" />
+            </div>
+          </div>
+
+          <div className={styles.demoBox}>
+            <h3 className={styles.demoBoxTitle}>مؤشرات دائرية ونقاط (Spinner & Dots)</h3>
+            <div className={styles.flexRow} style={{ gap: '2rem', justifyContent: 'center', padding: '1rem 0' }}>
+              <Loader variant="spinner" size="md" label="تحميل الإحصائيات" />
+              <Loader variant="dots" size="md" label="جاري الاتصال بالسيرفر" />
+              <Button variant="secondary" onClick={() => {
+                setShowFullLoader(true);
+                setTimeout(() => setShowFullLoader(false), 2000);
+              }}>
+                تجربة تحميل ملء الشاشة (2s)
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Render Active Modal */}
       {activeModal && (
         <Modal
@@ -353,6 +501,16 @@ export default function UIDemoPage() {
             </Button>
           </ModalFooter>
         </Modal>
+      )}
+
+      {/* Full Page Loader Demo */}
+      {showFullLoader && (
+        <Loader
+          variant="football"
+          size="lg"
+          fullPage
+          label="جاري تحميل البث التلفزيوني المباشر بدقة 4K..."
+        />
       )}
     </div>
   );
