@@ -1,16 +1,15 @@
-/* Quiet luxury plates for league dossiers — does not dump into globals.css */
-.league-plate,
-.league-table-plate {
+.leaguePlate,
+.leagueTablePlate {
   border-radius: 1.2rem;
   box-shadow: var(--ys-elev-1, 0 8px 24px -18px color-mix(in srgb, var(--ys-ink, #0f172a) 40%, transparent));
 }
 
-.league-table-row {
+.leagueTableRow {
   position: relative;
   min-height: 2.7rem;
 }
 
-.league-table-row::before {
+.leagueTableRow::before {
   content: "";
   position: absolute;
   inset-block: 0.35rem;
@@ -20,31 +19,31 @@
   background: color-mix(in srgb, var(--foreground) 16%, transparent);
 }
 
-.league-table-row.is-lead::before {
+.leagueTableRow:global(.is-lead)::before {
   background: var(--ys-orange);
 }
 
-.league-table-row.is-direct::before,
-.league-table-row.is-zone::before {
+.leagueTableRow:global(.is-direct)::before,
+.leagueTableRow:global(.is-zone)::before {
   background: var(--ys-green);
 }
 
-.league-table-row.is-playoff::before {
+.leagueTableRow:global(.is-playoff)::before {
   background: #3b82f6;
 }
 
-.league-table-row.is-rel::before {
+.leagueTableRow:global(.is-rel)::before {
   background: #e11d48;
 }
 
-.league-table-rank,
-.league-table-pts {
+.leagueTableRank,
+.leagueTablePts {
   font-size: 0.95rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-.league-table-num {
+.leagueTableNum {
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
 }

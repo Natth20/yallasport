@@ -8,7 +8,7 @@ import { DeskRule, EndMark, StorySpine } from '@/components/news/NewsOrnaments';
 import { pick } from '@/i18n/pick';
 import type { LeagueDossierData, StandingZone } from '@/lib/leagues/load-dossier';
 import { Reveal } from '@/components/motion/PageMotion';
-import './league-house.css';
+import styles from './league-house.module.css';
 
 function gd(row: { goalsFor: number; goalsAgainst: number }) {
   return row.goalsFor - row.goalsAgainst;
@@ -767,7 +767,7 @@ export function LeagueDossier({
           <Reveal>
           <aside className="league-aside league-aside-lux space-y-6">
             {standings.length > 0 ? (
-              <section id="folio-table" className="league-table-plate scroll-mt-28 club-rise">
+              <section id="folio-table" className={`${styles.leagueTablePlate} league-table-plate scroll-mt-28 club-rise`}>
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div>
                     <div className="league-section-kicker-row">
@@ -808,14 +808,14 @@ export function LeagueDossier({
                       <Link
                         key={row.id}
                         href={row.team.slug ? `/team/${row.team.slug}` : `/league/${league.slug}/standings`}
-                        className={`league-table-row${row.rank === 1 ? ' is-lead' : ''}${
+                        className={`${styles.leagueTableRow} league-table-row${row.rank === 1 ? ' is-lead' : ''}${
                           row.zone === 'direct' ? ' is-direct' : ''
                         }${row.zone === 'playoff' ? ' is-playoff' : ''}${row.zone === 'out' ? ' is-out' : ''}${
                           row.zone === 'cl' || row.zone === 'el' ? ' is-zone' : ''
                         }${row.zone === 'rel' ? ' is-rel' : ''}`}
                         title={zoneLabel(locale, row.zone) || undefined}
                       >
-                        <span className="league-table-rank">{row.rank}</span>
+                        <span className={`${styles.leagueTableRank} league-table-rank`}>{row.rank}</span>
                         <div className="league-table-club">
                           <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-7 w-7" />
                           <div className="min-w-0">
@@ -823,13 +823,13 @@ export function LeagueDossier({
                             <FormPips letters={row.form} />
                           </div>
                         </div>
-                        <span className="league-table-num">{row.played}</span>
+                        <span className={`${styles.leagueTableNum} league-table-num`}>{row.played}</span>
                         <span
-                          className={`league-table-num${diff > 0 ? ' is-plus' : diff < 0 ? ' is-minus' : ''}`}
+                          className={`${styles.leagueTableNum} league-table-num${diff > 0 ? ' is-plus' : diff < 0 ? ' is-minus' : ''}`}
                         >
                           {diff > 0 ? `+${diff}` : diff}
                         </span>
-                        <span className="league-table-pts">{row.points}</span>
+                        <span className={`${styles.leagueTablePts} league-table-pts`}>{row.points}</span>
                       </Link>
                     );
                   })}
