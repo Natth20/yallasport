@@ -3,9 +3,17 @@
 import { Children, type ReactNode } from 'react';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { HeroEnter, Stagger, StaggerItem } from '@/components/motion/PageMotion';
-import './entity.css';
+import styles from './entity.module.css';
 
 export type EntityTone = 'player' | 'club' | 'nation' | 'coach' | 'match';
+
+const TONE_CLASSES: Record<EntityTone, string> = {
+  player: styles.entityPlayer,
+  club: styles.entityClub,
+  nation: styles.entityNation,
+  coach: styles.entityCoach,
+  match: styles.entityMatch,
+};
 
 export function EntityFrame({
   tone,
@@ -15,17 +23,17 @@ export function EntityFrame({
   children: ReactNode;
 }) {
   return (
-    <div className={`entity-frame entity-${tone}`}>
-      <span className="entity-aura" aria-hidden />
-      <span className="entity-grain" aria-hidden />
-      <div className="entity-inner">{children}</div>
+    <div className={`${styles.entityFrame} ${TONE_CLASSES[tone] || ''} entity-frame entity-${tone}`}>
+      <span className={`${styles.entityAura} entity-aura`} aria-hidden />
+      <span className={`${styles.entityGrain} entity-grain`} aria-hidden />
+      <div className={`${styles.entityInner} entity-inner`}>{children}</div>
     </div>
   );
 }
 
 export function EntityBrand({ kicker }: { kicker: string }) {
   return (
-    <div className="entity-brand">
+    <div className={`${styles.entityBrand} entity-brand`}>
       <BrandMark size={36} priority />
       <span>{kicker}</span>
     </div>
