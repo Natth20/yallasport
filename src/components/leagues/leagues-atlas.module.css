@@ -1,9 +1,9 @@
-/* Quiet luxury restyle for the leagues atlas — data markup unchanged. */
-.atlas-hero {
+/* Quiet luxury restyle for the leagues atlas */
+.atlasHero {
   position: relative;
 }
 
-.atlas-desk {
+.atlasDesk {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
   border-radius: 1.25rem;
@@ -11,40 +11,40 @@
   box-shadow: var(--ys-elev-1, 0 12px 32px -24px color-mix(in srgb, var(--ys-ink, #0f172a) 45%, transparent));
 }
 
-.atlas-desk.is-live {
+.atlasDesk:global(.is-live) {
   border-color: color-mix(in srgb, #e11d48 26%, var(--border));
   background:
     linear-gradient(180deg, color-mix(in srgb, #e11d48 7%, transparent), transparent 42%),
     color-mix(in srgb, var(--card) 94%, transparent);
 }
 
-.atlas-desk.is-race {
+.atlasDesk:global(.is-race) {
   border-color: color-mix(in srgb, var(--ys-orange) 28%, var(--border));
   box-shadow: var(--ys-elev-2, 0 16px 36px -22px color-mix(in srgb, var(--ys-ink, #0f172a) 48%, transparent));
 }
 
-.atlas-desk.is-upcoming {
+.atlasDesk:global(.is-upcoming) {
   border-color: color-mix(in srgb, var(--foreground) 12%, transparent);
 }
 
-.atlas-desk.is-scorers {
+.atlasDesk:global(.is-scorers) {
   border-color: color-mix(in srgb, var(--ys-green) 22%, var(--border));
 }
 
-.atlas-desk.is-news {
+.atlasDesk:global(.is-news) {
   border-style: dashed;
   border-color: color-mix(in srgb, var(--foreground) 14%, transparent);
 }
 
-.atlas-desk h2 {
+.atlasDesk h2 {
   letter-spacing: -0.02em;
 }
 
-.atlas-results {
+.atlasResults {
   margin-top: 0.4rem;
 }
 
-.atlas-hero-lede {
+.atlasHeroLede {
   max-width: 40rem;
   line-height: 1.65;
 }

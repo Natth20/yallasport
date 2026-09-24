@@ -8,7 +8,7 @@ import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { LeagueDeskCard } from '@/components/leagues/LeagueDeskCard';
 import { DeskRule, EditionPlate, EndMark, PhotoCorners, StorySpine } from '@/components/news/NewsOrnaments';
 import { pick } from '@/i18n/pick';
-import './leagues-atlas.css';
+import styles from './leagues-atlas.module.css';
 
 type Crest = { name: string; logoUrl: string | null };
 type Venue = { name: string; city: string | null } | null;
@@ -230,7 +230,7 @@ export function LeaguesAtlas({
         </div>
       )}
 
-      <section className="atlas-hero">
+      <section className={`${styles.atlasHero} atlas-hero`}>
         <div className="relative mx-auto max-w-7xl px-5 pb-8 pt-4 sm:px-6 lg:px-8">
           <header className="atlas-mast mb-5">
             <div className="flex flex-wrap items-end gap-4">
@@ -267,7 +267,7 @@ export function LeaguesAtlas({
                 </div>
               </div>
             </div>
-            <p className="atlas-hero-lede">
+            <p className={`${styles.atlasHeroLede} atlas-hero-lede`}>
               {pick(
                 locale,
                 'جداول ومباشر ومواعيد من المصدر فقط — بلا تعبئة وبلا أرقام وهمية.',
@@ -565,7 +565,7 @@ export function LeaguesAtlas({
         )}
 
         {liveMatches.length > 0 && (
-          <section className="atlas-desk is-live relative mb-12">
+          <section className={`${styles.atlasDesk} atlas-desk is-live relative mb-12`}>
             <div className="flex items-center justify-between border-b border-border px-6 py-5 dark:border-border">
               <div>
                 <span className="atlas-section-kicker text-rose-500">{pick(locale, 'على الملعب', 'On the pitch')}</span>
@@ -786,7 +786,7 @@ export function LeaguesAtlas({
         {(upcomingMatches.length > 0 || titleRaces.length > 0) && (
           <section className={`mt-8 grid gap-5 ${upcomingMatches.length > 0 && titleRaces.length > 0 ? 'md:grid-cols-2' : ''}`}>
             {upcomingMatches.length > 0 && (
-              <div className="atlas-desk is-upcoming">
+              <div className={`${styles.atlasDesk} atlas-desk is-upcoming`}>
                 <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
                   <h2 className="text-base font-bold text-foreground dark:text-foreground">{pick(locale, 'أقرب المباريات', 'Upcoming matches')}</h2>
                   <Link href="/matches" className="text-[11px] font-semibold text-muted-foreground hover:text-orange-500">
@@ -813,7 +813,7 @@ export function LeaguesAtlas({
             )}
 
             {titleRaces.length > 0 && (
-              <div className="atlas-desk is-race">
+              <div className={`${styles.atlasDesk} atlas-desk is-race`}>
                 <div className="border-b border-border px-5 py-4 dark:border-border">
                   <h2 className="text-base font-bold text-foreground dark:text-foreground">
                     {pick(locale, 'أضيق سباقات الصدارة', 'Closest title races')}
@@ -850,7 +850,7 @@ export function LeaguesAtlas({
         {(recentResults.length > 0 || scorers.length > 0) && (
           <section className="mt-5 space-y-5">
             {recentResults.length > 0 && (
-              <div className="atlas-results">
+              <div className={`${styles.atlasResults} atlas-results`}>
                 <div className="atlas-results-head">
                   <div>
                     <span className="atlas-section-kicker">{pick(locale, 'من المصدر', 'From source')}</span>
