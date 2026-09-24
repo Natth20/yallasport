@@ -4,6 +4,7 @@ import {
   NormalizedMatchDetail,
   NormalizedTeam,
   NormalizedStanding,
+  NormalizedScorer,
   NormalizedLeagueSeason,
 } from '../types';
 
@@ -24,6 +25,10 @@ export class DevelopmentProvider implements SportsDataProvider {
   }
 
   async getStandings(_leagueId: string, _season: string): Promise<NormalizedStanding[]> {
+    return [];
+  }
+
+  async getTopScorers(_leagueId: string, _season: string): Promise<NormalizedScorer[]> {
     return [];
   }
 

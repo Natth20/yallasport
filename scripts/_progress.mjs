@@ -1,0 +1,14 @@
+﻿import { PrismaClient } from '../src/generated/prisma/index.js';
+const p = new PrismaClient();
+const status = await p.news.groupBy({ by: ['status'], _count: { _all: true } });
+const withImage = await p.news.count({ where: { status: 'PUBLISHED', NOT: { featuredImage: null } } });
+const links = await p.newsEntityLink.count();
+const locale = await p.news.groupBy({ by: ['sourceLocale'], where: { status: 'PUBLISHED' }, _count: { _all: true } });
+const desks = await p.news.groupBy({ by: ['category'], where: { status: 'PUBLISHED' }, _count: { _all: true } });
+const sources = await p.news.groupBy({ by: ['sourceName'], where: { status: 'PUBLISHED' }, _count: { _all: true } });
+console.log('status  ', status.map((r) => `${r.status}=${r._count._all}`).join(' '));
+console.log('locale  ', locale.map((r) => `${r.sourceLocale}=${r._count._all}`).join(' '));
+console.log('withImg ', withImage, ' entityLinks', links);
+console.log('desks   ', desks.map((r) => `${r.category}=${r._count._all}`).join(' | '));
+console.log('sources ', sources.map((r) => `${r.sourceName}=${r._count._all}`).join(' | '));
+await p.$disconnect();

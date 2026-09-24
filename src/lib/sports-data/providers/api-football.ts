@@ -5,7 +5,8 @@ import {
   NormalizedTeam, 
   NormalizedStanding,
   NormalizedLineup,
-  MatchStatus
+  MatchStatus,
+  NormalizedScorer
 } from '../types';
 
 interface ApiTeam {
@@ -88,6 +89,22 @@ interface ApiLeagueResponse {
 
 interface ApiEnvelope<T> {
   response: T[];
+}
+
+interface ApiScorer {
+  player: {
+    id: number;
+    name: string;
+    photo: string;
+  };
+  statistics: {
+    team: {
+      name: string;
+    };
+    goals: {
+      total: number;
+    };
+  }[];
 }
 
 /**
@@ -408,6 +425,22 @@ export class ApiFootballProvider implements SportsDataProvider {
       goalsFor: s.all.goals.for,
       goalsAgainst: s.all.goals.against,
       points: s.points
+    }));
+  }
+
+  async getTopScorers(leagueId: string, season: string): Promise<NormalizedScorer[]> {
+    const data = await this.fetch<ApiScorer>(`/players/topscorers?league=${leagueId}&season=${season}`);
+    if (!data.response) return [];
+    
+    return data.response.map((scorer) => ({
+      player: {
+        id: String(scorer.player.id),
+        name: scorer.player.name,
+        slug: scorer.player.name.toLowerCase().replace(/\s+/g, '-'),
+        photoUrl: scorer.player.photo,
+      },
+      teamName: scorer.statistics[0]?.team.name,
+      goals: scorer.statistics[0]?.goals.total || 0,
     }));
   }
 

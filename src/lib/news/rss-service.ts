@@ -7,11 +7,13 @@ import { pickRssBody, pickRssImage } from '@/lib/news/rss-fields';
 import { resolveNewsImage } from '@/lib/news/enrich-source';
 import { resolveFullArticleBody, wordCount } from '@/lib/news/fetch-article';
 import {
+  TRUSTED_RSS_FEEDS,
   displaySourceName,
   isEditorialNewsItem,
   isTrustedNewsUrl,
   isTrustedRssFeedUrl,
 } from '@/lib/news/trusted-sources';
+import { classifyDesk, competitionTags } from '@/lib/news/desks';
 
 const parser = new Parser({
   customFields: {
@@ -57,9 +59,16 @@ export async function fetchRSSFeed(url: string): Promise<RSSItem[]> {
   }
 }
 
+function isNonSportsNoise(title: string, content: string) {
+  const text = `${title} ${content}`.toLowerCase();
+  return /الحوثيون|حوثي|غارة|غارات|قصف|صاروخ|صواريخ|معارك|عسكرية|الحرب في|أسعار الخبز|دعم الخبز|تضخم|انتخابات برلمانية|مجلس النواب|أزمة دبلوماسية|مظاهرات|اغتيال/.test(
+    text
+  );
+}
+
 function isFootballItem(item: RSSItem) {
   const haystack = `${item.title} ${item.content} ${item.source}`.toLowerCase();
-  return /football|soccer|premier league|laliga|serie a|bundesliga|champions|كرة|الدوري|مباراة|هدف|منتخب|لاعب|مدرب/.test(
+  return /football|soccer|premier league|laliga|serie a|bundesliga|champions|uefa|fifa|afc|caf|كرة|كروية|الدوري|مباراة|مباريات|هدف|أهداف|منتخب|منتخبات|لاعب|لاعبين|مدرب|بطولة|كأس|دوري|نادي|أندية|ريال مدريد|برشلونة|ليفربول|مانشستر|الهلال|النصر|الاتحاد|الأهلي|ميسي|رونالدو|صلاح|فينيسيوس|مبابي|هالاند|مرموش|انتقالات|ميركاتو|تسديدة|ركلة/.test(
     haystack
   );
 }
@@ -74,6 +83,7 @@ export async function importFromRSS(url: string) {
   }
 
   const items = await fetchRSSFeed(url);
+  const feed = TRUSTED_RSS_FEEDS.find((entry) => entry.url === url);
 
   let systemUser = await prisma.user.findUnique({
     where: { email: 'system@yallasport.com' },
@@ -100,6 +110,7 @@ export async function importFromRSS(url: string) {
     if (!item.link || !item.title) continue;
     if (!isTrustedNewsUrl(item.link)) continue;
     if (!isEditorialNewsItem(item.title, item.content)) continue;
+    if (isNonSportsNoise(item.title, item.content)) continue;
     if (!isFootballItem(item)) continue;
 
     const existingNews = await prisma.news.findFirst({
@@ -112,7 +123,9 @@ export async function importFromRSS(url: string) {
       .replace(/[^\u0621-\u064A\u0660-\u0669a-zA-Z0-9\s]/g, '')
       .replace(/\s+/g, '-');
     const uniqueSlug = `${slugBase || 'story'}-${Date.now()}`;
-    const sourceName = displaySourceName(item.source, item.link) || item.source;
+    // Prefer our curated outlet name over whatever title the feed ships with,
+    // so the source ledger on /news reads consistently.
+    const sourceName = feed?.name ?? displaySourceName(item.source, item.link) ?? item.source;
 
     let body = item.content || item.title;
     let image = item.image;
@@ -139,6 +152,10 @@ export async function importFromRSS(url: string) {
 
     const plainForMeta = body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     const breaking = looksBreaking(item.title);
+    // Keep the outlet's own publication time. Stamping our import time instead
+    // would collapse a week of reporting onto whatever day the cron last ran.
+    const sourceDate = new Date(item.pubDate);
+    const publishedAt = Number.isNaN(sourceDate.getTime()) ? new Date() : sourceDate;
 
     const created = await prisma.news.create({
       data: {
@@ -150,9 +167,16 @@ export async function importFromRSS(url: string) {
         sourceName,
         sourceUrl: item.link,
         slug: uniqueSlug,
-        category: 'Football',
-        tags: ['football', 'rss', 'trusted', ...(enrichedBody ? ['full-source'] : [])],
-        status: 'PENDING_REVIEW',
+        category: classifyDesk(item.title, plainForMeta),
+        tags: [
+          'football',
+          'rss',
+          'trusted',
+          ...competitionTags(item.title, plainForMeta),
+          ...(enrichedBody ? ['full-source'] : []),
+        ],
+        status: 'PUBLISHED',
+        publishedAt,
         breaking,
         aiAssisted: false,
         authorId: systemUser.id,
@@ -164,6 +188,7 @@ export async function importFromRSS(url: string) {
             userId: systemUser.id,
             action: 'IMPORT_RSS',
             source: sourceName,
+            sourcePublishedAt: publishedAt.toISOString(),
             feed: url,
             enrichedBody,
             breaking,

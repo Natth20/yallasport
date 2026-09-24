@@ -18,6 +18,8 @@ export const TRUSTED_NEWS_HOSTS = [
   'dw.com',
   'arabnews.com',
   'skynewsarabia.com',
+  'rt.com',
+  'arabic.rt.com',
   'yallakora.com',
   'filgoal.com',
   'sport360.com',
@@ -28,37 +30,64 @@ export const TRUSTED_NEWS_HOSTS = [
   'kicker.de',
 ] as const;
 
-/** Public RSS endpoints we allow for import. */
+/**
+ * Public RSS endpoints dedicated to sports and football.
+ * Only pure sports feeds to avoid general/political news contamination.
+ */
 export const TRUSTED_RSS_FEEDS = [
+  {
+    url: 'https://www.skynewsarabia.com/web/rss/sport.xml',
+    name: 'سكاي نيوز عربية - رياضة',
+    host: 'skynewsarabia.com',
+    locale: 'ar',
+  },
+  {
+    url: 'https://www.aljazeera.net/aljazeerarss/73d0e1b4-532f-45ef-b135-bfdff8b8cab9',
+    name: 'الجزيرة رياضة',
+    host: 'aljazeera.net',
+    locale: 'ar',
+  },
+  {
+    url: 'https://feeds.bbci.co.uk/arabic/sport/rss.xml',
+    name: 'بي بي سي عربي - رياضة',
+    host: 'bbc.co.uk',
+    locale: 'ar',
+  },
+  {
+    url: 'https://rss.dw.com/rdf/rss-ar-sports',
+    name: 'DW عربية - رياضة',
+    host: 'dw.com',
+    locale: 'ar',
+  },
+  {
+    url: 'https://www.france24.com/ar/%D8%B1%D9%8A%D8%A7%D8%B6%D8%A9/rss',
+    name: 'فرانس 24 - رياضة',
+    host: 'france24.com',
+    locale: 'ar',
+  },
+  {
+    url: 'https://arabic.rt.com/rss/sport/',
+    name: 'آر تي - رياضة',
+    host: 'arabic.rt.com',
+    locale: 'ar',
+  },
   {
     url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
     name: 'BBC Sport Football',
     host: 'bbc.co.uk',
-  },
-  {
-    url: 'https://www.bbc.com/sport/football/rss.xml',
-    name: 'BBC Sport Football',
-    host: 'bbc.com',
-  },
-  {
-    url: 'https://www.aljazeera.net/xml/rss/all.xml',
-    name: 'Al Jazeera',
-    host: 'aljazeera.net',
-  },
-  {
-    url: 'https://www.goal.com/feeds/en/news',
-    name: 'Goal',
-    host: 'goal.com',
+    locale: 'en',
   },
   {
     url: 'https://www.skysports.com/rss/12040',
     name: 'Sky Sports Football',
     host: 'skysports.com',
+    locale: 'en',
   },
   {
     url: 'https://www.theguardian.com/football/rss',
     name: 'The Guardian Football',
     host: 'theguardian.com',
+    locale: 'en',
   },
 ] as const;
 

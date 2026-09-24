@@ -6,6 +6,7 @@ import {
   NormalizedMatchDetail, 
   NormalizedTeam, 
   NormalizedStanding,
+  NormalizedScorer,
   LiveMatchesPayload,
   NormalizedLeagueSeason,
 } from './types';
@@ -95,6 +96,18 @@ export class CachedSportsDataProvider implements SportsDataProvider {
     if (cached) return cached;
 
     const fresh = await withBudget(this.baseProvider.getStandings(leagueId, season), []);
+    if (fresh.length > 0) {
+      await safeRedisSet(cacheKey, fresh, { ex: this.LONG_CACHE_TTL });
+    }
+    return fresh;
+  }
+
+  async getTopScorers(leagueId: string, season: string): Promise<NormalizedScorer[]> {
+    const cacheKey = `topscorers_${leagueId}_${season}`;
+    const cached = await safeRedisGet<NormalizedScorer[]>(cacheKey);
+    if (cached) return cached;
+
+    const fresh = await withBudget(this.baseProvider.getTopScorers(leagueId, season), []);
     if (fresh.length > 0) {
       await safeRedisSet(cacheKey, fresh, { ex: this.LONG_CACHE_TTL });
     }

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { Activity, History, PlayCircle, RefreshCw, Users } from 'lucide-react';
@@ -10,6 +10,8 @@ import type {
   NormalizedStatistic,
 } from '@/lib/sports-data/types';
 import {useTranslations} from 'next-intl';
+
+import { TacticalPitch } from '@/components/sports/TacticalPitch';
 
 interface MatchDetailTabsProps {
   matchId: string;
@@ -39,6 +41,7 @@ const eventLabelKeys = {
 export function MatchDetailTabs(props: MatchDetailTabsProps) {
   const t = useTranslations('sports');
   const [tab, setTab] = useState<Tab>('events');
+  const [lineupView, setLineupView] = useState<'pitch' | 'list'>('pitch');
   const [events, setEvents] = useState(props.initialEvents);
   const [lineups, setLineups] = useState(props.initialLineups);
   const [statistics, setStatistics] = useState(props.initialStatistics);
@@ -143,40 +146,75 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
 
         {tab === 'lineups' && (
           lineups.length > 0 ? (
-            <div className="grid gap-5 md:grid-cols-2">
-              {lineups.map((lineup) => (
-                <div key={`${lineup.teamId}-${lineup.status}`} className="rounded-2xl border border-border p-5 dark:border-border">
-                  <div className="mb-5 flex items-center justify-between">
-                    <div>
-                      <strong className="text-sm text-foreground dark:text-foreground">
-                        {lineup.teamId === props.homeTeamId ? props.homeTeamName : props.awayTeamName}
-                      </strong>
-                      <span className="mt-1 block text-[9px] font-medium text-muted-foreground">{t('formation', {formation: lineup.formation || t('unannounced')})}</span>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-[8px] font-bold ${
-                      lineup.status === 'CONFIRMED'
-                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10'
-                        : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10'
-                    }`}>
-                      {lineup.status === 'CONFIRMED' ? t('confirmed') : t('predicted')}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {lineup.players.map((player, index) => (
-                      <div key={player.id || `${player.name}-${index}`} className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 dark:bg-card/[0.04]">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-card text-[9px] font-bold text-orange-500 shadow-sm dark:bg-muted/10">
-                          {player.number ?? index + 1}
-                        </span>
-                        <span className="flex-1 truncate text-[11px] font-semibold text-foreground dark:text-muted-foreground">{player.name}</span>
-                        <span className="text-[8px] font-medium text-muted-foreground">{player.position}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {lineup.status === 'PREDICTED' && (
-                    <p className="mt-4 text-[9px] leading-5 text-amber-600">{t('prediction_disclaimer')}</p>
-                  )}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-muted-foreground">عرض التشكيلة</span>
+                <div className="flex rounded-xl bg-foreground/5 p-1 text-[11px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setLineupView('pitch')}
+                    className={`rounded-lg px-3 py-1.5 transition-all ${
+                      lineupView === 'pitch' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground'
+                    }`}
+                  >
+                    الملعب التكتيكي ⚽
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLineupView('list')}
+                    className={`rounded-lg px-3 py-1.5 transition-all ${
+                      lineupView === 'list' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground'
+                    }`}
+                  >
+                    القائمة التفصيلية 📋
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              {lineupView === 'pitch' ? (
+                <TacticalPitch
+                  homeTeamName={props.homeTeamName}
+                  awayTeamName={props.awayTeamName}
+                  homeLineup={lineups.find((l) => l.teamId === props.homeTeamId)}
+                  awayLineup={lineups.find((l) => l.teamId === props.awayTeamId)}
+                />
+              ) : (
+                <div className="grid gap-5 md:grid-cols-2">
+                  {lineups.map((lineup) => (
+                    <div key={`${lineup.teamId}-${lineup.status}`} className="rounded-2xl border border-border p-5 dark:border-border">
+                      <div className="mb-5 flex items-center justify-between">
+                        <div>
+                          <strong className="text-sm text-foreground dark:text-foreground">
+                            {lineup.teamId === props.homeTeamId ? props.homeTeamName : props.awayTeamName}
+                          </strong>
+                          <span className="mt-1 block text-[9px] font-medium text-muted-foreground">{t('formation', {formation: lineup.formation || t('unannounced')})}</span>
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-[8px] font-bold ${
+                          lineup.status === 'CONFIRMED'
+                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10'
+                            : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10'
+                        }`}>
+                          {lineup.status === 'CONFIRMED' ? t('confirmed') : t('predicted')}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {lineup.players.map((player, index) => (
+                          <div key={player.id || `${player.name}-${index}`} className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 dark:bg-card/[0.04]">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-card text-[9px] font-bold text-orange-500 shadow-sm dark:bg-muted/10">
+                              {player.number ?? index + 1}
+                            </span>
+                            <span className="flex-1 truncate text-[11px] font-semibold text-foreground dark:text-muted-foreground">{player.name}</span>
+                            <span className="text-[8px] font-medium text-muted-foreground">{player.position}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {lineup.status === 'PREDICTED' && (
+                        <p className="mt-4 text-[9px] leading-5 text-amber-600">{t('prediction_disclaimer')}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : <EmptyState text={t('no_lineups')} />
         )}

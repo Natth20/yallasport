@@ -126,7 +126,7 @@ export function NewsDeskEditor({
             className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm dark:border-border dark:bg-background"
           >
             <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-              <div className="h-20 w-full shrink-0 overflow-hidden rounded-xl bg-foreground sm:h-16 sm:w-28">
+              <div className="h-20 w-full shrink-0 overflow-hidden rounded-xl bg-muted sm:h-16 sm:w-28">
                 {cover ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cover} alt="" className="h-full w-full object-cover" />
@@ -195,7 +195,7 @@ export function NewsDeskEditor({
                     <input
                       value={item.title}
                       onChange={(e) => patchDraft(item.id, { title: e.target.value })}
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground">
@@ -203,7 +203,7 @@ export function NewsDeskEditor({
                     <input
                       value={item.category}
                       onChange={(e) => patchDraft(item.id, { category: e.target.value })}
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground md:col-span-2">
@@ -212,7 +212,7 @@ export function NewsDeskEditor({
                       value={item.excerpt || ''}
                       onChange={(e) => patchDraft(item.id, { excerpt: e.target.value })}
                       rows={2}
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground md:col-span-2">
@@ -221,7 +221,7 @@ export function NewsDeskEditor({
                       value={item.content}
                       onChange={(e) => patchDraft(item.id, { content: e.target.value })}
                       rows={8}
-                      className="rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs leading-6 dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs leading-6 dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground">
@@ -229,7 +229,7 @@ export function NewsDeskEditor({
                     <input
                       value={item.sourceName || ''}
                       onChange={(e) => patchDraft(item.id, { sourceName: e.target.value })}
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground">
@@ -237,7 +237,7 @@ export function NewsDeskEditor({
                     <input
                       value={item.sourceUrl || ''}
                       onChange={(e) => patchDraft(item.id, { sourceUrl: e.target.value })}
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground md:col-span-2">
@@ -251,7 +251,7 @@ export function NewsDeskEditor({
                         })
                       }
                       placeholder="https://..."
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                   <label className="grid gap-1 text-[11px] font-bold text-muted-foreground md:col-span-2">
@@ -266,7 +266,7 @@ export function NewsDeskEditor({
                             .filter(Boolean),
                         })
                       }
-                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-foreground dark:text-foreground"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm dark:border-border dark:bg-background dark:text-foreground"
                     />
                   </label>
                 </div>

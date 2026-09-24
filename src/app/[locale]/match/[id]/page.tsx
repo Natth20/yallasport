@@ -1,4 +1,4 @@
-﻿import React, { type ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { MapPin, Radio, Shield, Users } from 'lucide-react';
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
@@ -11,6 +11,11 @@ import { MatchChat } from '@/components/sports/MatchChat';
 import { ShareButton } from '@/components/common/ShareButton';
 import { FollowButton } from '@/components/common/FollowButton';
 import { MatchAIAnalyst } from '@/components/sports/MatchAIAnalyst';
+import { MatchJsonLd } from '@/components/seo/SportsJsonLd';
+import { WinProbabilityBar } from '@/components/matches/WinProbabilityBar';
+import { LiveMatchReactions } from '@/components/matches/LiveMatchReactions';
+import { MatchAlertBell } from '@/components/matches/MatchAlertBell';
+import { FloatingStreamDock } from '@/components/streaming/FloatingStreamDock';
 import { notFound } from 'next/navigation';
 import { getResolvedMatchDetail } from '@/lib/sports-data/match-resolver';
 import { MatchDossier, type FormLetter } from '@/components/sports/MatchDossier';
@@ -291,66 +296,101 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
       : undefined;
 
   return (
-    <MatchDossier
-      initial={match}
-      h2hMatches={h2hMatches}
-      homeStanding={standingChip(homeStanding)}
-      awayStanding={standingChip(awayStanding)}
-      homeForm={homeForm}
-      awayForm={awayForm}
-      h2hTally={h2hMatches.length > 0 ? h2hTally : undefined}
-      leagueCountry={match.league.country ?? undefined}
-      headerActions={
-        <>
-          <FollowButton
-            entityId={match.id}
-            entityType="MATCH"
-            isLoggedIn={!!session}
-            initialIsFollowing={!!userFollow}
+    <>
+      <MatchJsonLd
+        id={match.id}
+        name={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+        startDate={new Date(match.kickoffAt).toISOString()}
+        homeTeamName={match.homeTeam.name}
+        awayTeamName={match.awayTeam.name}
+        homeScore={match.homeScore}
+        awayScore={match.awayScore}
+        status={match.status}
+        venueName={typeof venueName === 'string' ? venueName : undefined}
+      />
+      <MatchDossier
+        initial={match}
+        h2hMatches={h2hMatches}
+        homeStanding={standingChip(homeStanding)}
+        awayStanding={standingChip(awayStanding)}
+        homeForm={homeForm}
+        awayForm={awayForm}
+        h2hTally={h2hMatches.length > 0 ? h2hTally : undefined}
+        leagueCountry={match.league.country ?? undefined}
+        headerActions={
+          <>
+            <MatchAlertBell
+              matchId={match.id}
+              matchTitle={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+              locale={locale}
+            />
+            <FollowButton
+              entityId={match.id}
+              entityType="MATCH"
+              isLoggedIn={!!session}
+              initialIsFollowing={!!userFollow}
+            />
+            <MatchQuickActions
+              matchId={match.id}
+              title={`${match.homeTeam.name} ${pick(locale, 'ضد', 'vs')} ${match.awayTeam.name}`}
+              kickoffAt={new Date(match.kickoffAt).toISOString()}
+              venue={typeof venueName === 'string' ? venueName : undefined}
+              isLoggedIn={Boolean(session?.user)}
+              initialReminder={Boolean(userReminder)}
+            />
+            <ShareButton
+              title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+              text={pick(locale, 'تابع المباراة مباشرة على يلا سبورت', 'Follow the match live on Yalla Sport')}
+            />
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <WinProbabilityBar
+            homeTeamName={match.homeTeam.name}
+            awayTeamName={match.awayTeam.name}
+            homeRank={homeStanding?.rank}
+            awayRank={awayStanding?.rank}
+            locale={locale}
           />
-          <MatchQuickActions
-            matchId={match.id}
-            title={`${match.homeTeam.name} ${pick(locale, 'ضد', 'vs')} ${match.awayTeam.name}`}
-            kickoffAt={new Date(match.kickoffAt).toISOString()}
-            venue={typeof venueName === 'string' ? venueName : undefined}
-            isLoggedIn={Boolean(session?.user)}
-            initialReminder={Boolean(userReminder)}
-          />
-          <ShareButton
-            title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
-            text={pick(locale, 'تابع المباراة مباشرة على يلا سبورت', 'Follow the match live on Yalla Sport')}
-          />
-        </>
-      }
-    >
-      {hasBrief ? (
-        <FolioPanel
-          folio="05"
-          kicker={pick(locale, 'ملخص', 'Brief')}
-          title={pick(locale, 'قراءة من الأرقام', 'Reading the numbers')}
-        >
-          <MatchAIAnalyst
-            homeName={match.homeTeam.name}
-            awayName={match.awayTeam.name}
-            homeStats={homeStats}
-            awayStats={awayStats}
-            events={match.events}
-          />
-        </FolioPanel>
-      ) : null}
+          <LiveMatchReactions matchId={match.id} locale={locale} />
+        </div>
 
-      {STREAMING_ENABLED && licensedAsset ? (
-        <FolioPanel
-          folio="06"
-          kicker={pick(locale, 'النقل', 'Broadcast')}
-          title={pick(locale, 'البث', 'Stream')}
-        >
-          <MatchStreamPlayer assetId={licensedAsset.id} />
-          <Link href={`/watch/${licensedAsset.id}`} className="mt-3 inline-block text-xs font-black text-orange-500">
-            {pick(locale, 'فتح صفحة المشاهدة', 'Open watch page')}
-          </Link>
-        </FolioPanel>
-      ) : null}
+        {hasBrief ? (
+          <FolioPanel
+            folio="05"
+            kicker={pick(locale, 'ملخص', 'Brief')}
+            title={pick(locale, 'قراءة من الأرقام', 'Reading the numbers')}
+          >
+            <MatchAIAnalyst
+              homeName={match.homeTeam.name}
+              awayName={match.awayTeam.name}
+              homeStats={homeStats}
+              awayStats={awayStats}
+              events={match.events}
+            />
+          </FolioPanel>
+        ) : null}
+
+        {STREAMING_ENABLED && licensedAsset ? (
+          <FolioPanel
+            folio="06"
+            kicker={pick(locale, 'النقل', 'Broadcast')}
+            title={pick(locale, 'البث', 'Stream')}
+          >
+            <div id="match-stream-anchor">
+              <MatchStreamPlayer assetId={licensedAsset.id} />
+            </div>
+            <FloatingStreamDock
+              title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+              targetAnchorId="match-stream-anchor"
+              locale={locale}
+            />
+            <Link href={`/watch/${licensedAsset.id}`} className="mt-3 inline-block text-xs font-black text-orange-500">
+              {pick(locale, 'فتح صفحة المشاهدة', 'Open watch page')}
+            </Link>
+          </FolioPanel>
+        ) : null}
 
       {(homeStanding || awayStanding) && (
         <FolioPanel
@@ -549,6 +589,7 @@ export default async function MatchCenterPage({ params }: { params: Promise<{ id
         />
       </div>
     </MatchDossier>
+    </>
   );
 }
 

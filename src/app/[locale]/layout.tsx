@@ -10,6 +10,7 @@ import { CookieConsent } from "@/components/layout/CookieConsent";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { SettingsProvider } from "@/lib/context/SettingsContext";
 import { PWAInstallPrompt } from "@/components/layout/PWAInstallPrompt";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { LiveStatusProvider } from "@/lib/context/LiveStatusContext";
 import { PageShell } from "@/components/motion/PageMotion";
 import { routing } from "@/i18n/routing";
@@ -149,6 +150,7 @@ export default async function RootLayout({
                   <Footer />
                   <CookieConsent />
                   <PWAInstallPrompt />
+                  <ServiceWorkerRegister />
                 </LiveStatusProvider>
               </SettingsProvider>
             </ThemeProvider>

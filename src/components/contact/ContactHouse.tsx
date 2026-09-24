@@ -1,6 +1,4 @@
-﻿import { BrandMark } from '@/components/brand/BrandMark';
-import { TicketBarcode, WaxSeal } from '@/components/decor/CraftMarks';
-import { DeskRule, EditionPlate, PhotoCorners } from '@/components/news/NewsOrnaments';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { HeroEnter, Reveal, Stagger, StaggerItem } from '@/components/motion/PageMotion';
 import { Link } from '@/i18n/navigation';
 import { auth } from '@/lib/auth/auth';
@@ -36,110 +34,150 @@ export async function ContactHouse() {
   ];
 
   return (
-    <div className="contact-folio watch-booth relative min-h-screen pb-20">
-      <span className="watch-drape" />
-      <span className="watch-foil" aria-hidden />
-      <span className="watch-ambient" aria-hidden />
-      <span className="watch-corner is-tl" aria-hidden />
-      <span className="watch-corner is-tr" aria-hidden />
-      <span className="watch-corner is-bl" aria-hidden />
-      <span className="watch-corner is-br" aria-hidden />
+    <div className="relative min-h-screen pb-24 overflow-hidden">
+      {/* Background Lighting */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/15 via-cyan-500/10 to-transparent blur-3xl" />
 
-      <header className="booth-first-band relative z-10 mx-auto max-w-7xl px-4 pb-8 sm:px-6">
+      {/* Masthead Hero */}
+      <header className="mx-auto max-w-7xl px-4 pt-8 pb-10 sm:px-6 lg:px-8">
         <HeroEnter>
-          <div className="contact-hero">
-            <PhotoCorners className="contact-hero-corners" />
-            <div className="flex flex-wrap items-start justify-between gap-6">
-              <div className="flex min-w-0 items-start gap-4">
-                <BrandMark size={48} />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">
-                      {t('kicker')}
-                    </p>
-                    <EditionPlate year={year} label={t('folio')} className="watch-edition" />
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-card/90 via-card/60 to-card/30 p-6 md:p-10 backdrop-blur-2xl shadow-2xl">
+            <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
+              {/* Left Column */}
+              <div className="space-y-6 lg:col-span-8">
+                <div className="flex flex-wrap items-center gap-3">
+                  <BrandMark size={48} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold tracking-wider text-primary uppercase border border-primary/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                        {t('kicker')}
+                      </span>
+                      <span className="text-xs text-muted-foreground">·</span>
+                      <span className="text-xs font-mono text-emerald-400">
+                        YS-OPS-{year}
+                      </span>
+                    </div>
                   </div>
-                  <h1 className="contact-wordmark">{t('title')}</h1>
-                  <p className="contact-standfirst">{t('headline')}</p>
-                  <DeskRule className="mt-5 max-w-sm opacity-50" />
+                </div>
+
+                <div className="space-y-3">
+                  <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
+                    {t('title')}
+                  </h1>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
+                    {t('headline')}
+                  </p>
+                </div>
+
+                {/* Direct quick jumps */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <a
+                    href="#letter"
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                  >
+                    {t('toc_letter')}
+                  </a>
+                  <a
+                    href="#path"
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                  >
+                    {t('toc_path')}
+                  </a>
+                  <a
+                    href="#wings"
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                  >
+                    {t('toc_wings')}
+                  </a>
+                  <a
+                    href="#doors"
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-foreground/80 transition hover:border-primary/40 hover:text-white"
+                  >
+                    {t('toc_doors')}
+                  </a>
                 </div>
               </div>
 
-              <div className="contact-address">
-                <WaxSeal label={t('seal')} className="contact-seal" />
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
-                    {t('addr_to')}
-                  </p>
-                  <a className="contact-mail" href={`mailto:${CONTACT_EMAIL}`}>
+              {/* Right Column: Operations SLA Badge */}
+              <div className="lg:col-span-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-md shadow-inner space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      {t('addr_to')}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      LIVE
+                    </span>
+                  </div>
+
+                  <a
+                    className="block font-mono text-sm font-bold text-primary hover:underline"
+                    href={`mailto:${CONTACT_EMAIL}`}
+                  >
                     {CONTACT_EMAIL}
                   </a>
-                  <TicketBarcode className="mt-3 text-primary/55" />
+
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {t('addr_note')}
+                  </p>
+
+                  <div className="rounded-xl border border-white/5 bg-black/25 p-3 text-[11px] text-muted-foreground flex items-center justify-between">
+                    <span>{locale === 'en' ? 'Average SLA' : 'متوسط وقت الرد'}</span>
+                    <span className="font-mono font-bold text-emerald-400">&lt; 2h</span>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <nav className="contact-folio-nav" aria-label={t('toc_kicker')}>
-              <a href="#letter">{t('toc_letter')}</a>
-              <a href="#path">{t('toc_path')}</a>
-              <a href="#wings">{t('toc_wings')}</a>
-              <a href="#doors">{t('toc_doors')}</a>
-            </nav>
           </div>
         </HeroEnter>
       </header>
 
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
+      {/* Main Grid: Letter / Form + Process Side Plate */}
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        {/* Form Stage */}
         <Reveal>
-          <section id="letter" className="contact-letter-stage scroll-mt-28">
-            <div className="watch-section-mark mb-5">
-              <div className="watch-section-mark-row">
-                <span aria-hidden>01</span>
-                <h2>{t('letter_title')}</h2>
+          <section id="letter" className="scroll-mt-28 rounded-3xl border border-white/10 bg-card/40 p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+            <div className="border-b border-white/10 pb-5 mb-6">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-primary">01</span>
+                <h2 className="text-xl font-extrabold text-white">{t('letter_title')}</h2>
               </div>
-              <p className="watch-section-lead">{t('letter_note')}</p>
-              <DeskRule className="mt-3 max-w-xs opacity-45" />
+              <p className="text-xs text-muted-foreground mt-1">{t('letter_note')}</p>
             </div>
 
-            <div className="contact-blotter">
-              <span className="contact-blotter-grain" aria-hidden />
-              <span className="contact-blotter-glow" aria-hidden />
-              <div className="contact-blotter-head">
-                <div>
-                  <p className="contact-blotter-kicker">{t('blotter_head')}</p>
-                  <p className="contact-blotter-to">{t('addr_to')}</p>
-                </div>
-                <div className="contact-blotter-meta">
-                  <WaxSeal label={t('stamp_paid')} className="contact-blotter-seal" />
-                  <TicketBarcode className="text-primary/50" />
-                </div>
+            {session?.user?.email && (
+              <div className="mb-6 rounded-xl border border-primary/20 bg-primary/[0.05] p-3 text-xs text-foreground/80 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span>{t('signed_note')}</span>
               </div>
-              {session?.user?.email ? <p className="contact-blotter-note">{t('signed_note')}</p> : null}
-              <div className="contact-sheet">
-                <span className="contact-sheet-rule" aria-hidden />
-                <ContactLetter defaultReply={session?.user?.email || ''} />
-              </div>
-            </div>
+            )}
+
+            <ContactLetter defaultReply={session?.user?.email || ''} />
           </section>
         </Reveal>
 
-        <aside className="watch-aside space-y-5">
+        {/* Process Side Rail */}
+        <aside className="space-y-6">
           <Reveal delay={0.08}>
-            <section id="path" className="contact-side-plate scroll-mt-28">
-              <div className="watch-section-mark">
-                <div className="watch-section-mark-row">
-                  <span aria-hidden>02</span>
-                  <h2>{t('path_title')}</h2>
+            <section id="path" className="scroll-mt-28 rounded-3xl border border-white/10 bg-card/40 p-6 backdrop-blur-xl">
+              <div className="border-b border-white/10 pb-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold text-primary">02</span>
+                  <h2 className="text-base font-bold text-white">{t('path_title')}</h2>
                 </div>
-                <DeskRule className="mt-3 max-w-xs opacity-45" />
               </div>
-              <ol className="contact-path mt-5">
+
+              <ol className="space-y-4">
                 {path.map((step) => (
-                  <li key={step.no}>
-                    <em>{step.no}</em>
+                  <li key={step.no} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 transition hover:border-white/15">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/20 font-mono text-xs font-bold text-primary">
+                      {step.no}
+                    </span>
                     <div>
-                      <strong>{step.title}</strong>
-                      <p>{step.body}</p>
+                      <strong className="text-xs font-bold text-white block mb-0.5">{step.title}</strong>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{step.body}</p>
                     </div>
                   </li>
                 ))}
@@ -148,12 +186,13 @@ export async function ContactHouse() {
           </Reveal>
 
           <Reveal delay={0.12}>
-            <section className="contact-side-plate">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
-                {t('addr_kicker')}
-              </p>
-              <p className="mt-3 text-sm leading-7 text-foreground dark:text-foreground/55">{t('addr_note')}</p>
-              <a className="watch-chip-link is-solid mt-4 inline-flex" href={`mailto:${CONTACT_EMAIL}`}>
+            <section className="rounded-3xl border border-white/10 bg-card/40 p-6 backdrop-blur-xl">
+              <p className="text-[11px] font-bold text-primary uppercase tracking-widest">{t('addr_kicker')}</p>
+              <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t('addr_note')}</p>
+              <a
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
+                href={`mailto:${CONTACT_EMAIL}`}
+              >
                 {CONTACT_EMAIL}
               </a>
             </section>
@@ -161,23 +200,24 @@ export async function ContactHouse() {
         </aside>
       </div>
 
+      {/* Wings / Inboxes */}
       <Reveal>
-        <section id="wings" className="relative z-10 mx-auto mt-12 max-w-7xl scroll-mt-28 px-4 sm:px-6">
-          <div className="watch-section-mark mb-5">
-            <div className="watch-section-mark-row">
-              <span aria-hidden>03</span>
-              <h2>{t('wings_title')}</h2>
+        <section id="wings" className="mx-auto mt-14 max-w-7xl scroll-mt-28 px-4 sm:px-6 lg:px-8">
+          <div className="border-b border-white/10 pb-4 mb-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-bold text-primary">03</span>
+              <h2 className="text-xl font-extrabold text-white">{t('wings_title')}</h2>
             </div>
-            <p className="watch-section-lead">{t('wings_note')}</p>
-            <DeskRule className="mt-3 max-w-xs opacity-45" />
+            <p className="text-xs text-muted-foreground mt-1">{t('wings_note')}</p>
           </div>
-          <Stagger className="contact-wings">
+
+          <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {wings.map((wing) => (
               <StaggerItem key={wing.no}>
-                <article className="contact-wing">
-                  <span>{wing.no}</span>
-                  <h3>{wing.title}</h3>
-                  <p>{wing.body}</p>
+                <article className="rounded-2xl border border-white/10 bg-card/40 p-5 backdrop-blur-md h-full transition hover:border-primary/40">
+                  <span className="font-mono text-xs font-bold text-primary">{wing.no}</span>
+                  <h3 className="text-sm font-bold text-white mt-2 mb-1">{wing.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{wing.body}</p>
                 </article>
               </StaggerItem>
             ))}
@@ -185,26 +225,35 @@ export async function ContactHouse() {
         </section>
       </Reveal>
 
+      {/* Doors / Navigation */}
       <Reveal>
-        <section id="doors" className="relative z-10 mx-auto mt-12 max-w-7xl scroll-mt-28 px-4 sm:px-6">
-          <div className="watch-section-mark mb-5">
-            <div className="watch-section-mark-row">
-              <span aria-hidden>04</span>
-              <h2>{t('doors_title')}</h2>
+        <section id="doors" className="mx-auto mt-14 max-w-7xl scroll-mt-28 px-4 sm:px-6 lg:px-8">
+          <div className="border-b border-white/10 pb-4 mb-6">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-bold text-primary">04</span>
+              <h2 className="text-xl font-extrabold text-white">{t('doors_title')}</h2>
             </div>
-            <DeskRule className="mt-3 max-w-xs opacity-45" />
           </div>
-          <Stagger className="contact-doors">
+
+          <Stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {doors.map((door) => (
               <StaggerItem key={door.href}>
-                <Link href={door.href} className="contact-door">
-                  <strong>{door.label}</strong>
-                  <span aria-hidden>→</span>
+                <Link
+                  href={door.href}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-card/40 p-4 transition hover:border-primary/40 hover:bg-card/70 text-white group"
+                >
+                  <strong className="text-xs font-bold group-hover:text-primary transition-colors">
+                    {door.label}
+                  </strong>
+                  <span className="text-xs text-muted-foreground group-hover:translate-x-1 transition-transform">
+                    →
+                  </span>
                 </Link>
               </StaggerItem>
             ))}
           </Stagger>
-          <p className="mt-8 text-[11px] tracking-[0.08em] text-muted-foreground dark:text-foreground/30">
+
+          <p className="mt-8 text-center text-xs text-muted-foreground font-mono">
             {t('house')} · {t('folio')} · {locale.toUpperCase()}
           </p>
         </section>

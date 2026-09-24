@@ -81,8 +81,13 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
   return <LiveStatusContext.Provider value={value}>{children}</LiveStatusContext.Provider>;
 }
 
+const DEFAULT_LIVE_STATUS: LiveStatusContextValue = {
+  connection: 'connected',
+  matches: [],
+  freshness: null,
+};
+
 export function useLiveStatus() {
   const context = useContext(LiveStatusContext);
-  if (!context) throw new Error('useLiveStatus must be used within LiveStatusProvider');
-  return context;
+  return context ?? DEFAULT_LIVE_STATUS;
 }

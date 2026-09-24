@@ -1,0 +1,36 @@
+[18:28:53] import       BBC Sport Football     +0
+[18:29:00] import       BBC Sport Football     +0
+[18:29:05] import       Sky Sports Football    +1
+[18:35:53] import       The Guardian Football  +51
+[18:36:07] import       الجزيرة نت             +4
+[18:36:15] import       BBC عربي               +2
+[18:36:57] import       DW عربية               +13
+[18:37:17] import       فرانس 24               +5
+[18:37:17] import       total new stories: 76
+[18:37:23] reclassify   19 stories refiled
+[18:37:33] publish      20/115
+[18:37:41] publish      40/115
+[18:37:47] publish      60/115
+[18:37:53] publish      80/115
+[18:38:11] publish      100/115
+[18:38:22] publish      115 published, 0 archived as untrusted
+[18:38:23] images       13 stories without an image
+[18:38:35] images       13 images backfilled
+[18:51:27] link         97/128 stories matched an entity, 399 links total
+[18:51:27] confirm      399 entity links confirmed
+
+=== DESK STATE ===
+published: 128   with image: 128
+by locale: ar=24  en=104
+by desk:
+    47  Premier League
+    36  Football
+    11  Champions League
+    10  International
+     5  Ligue 1
+     5  Transfers
+     4  La Liga
+     4  Women's Football
+     2  Serie A
+     2  Arab Football
+     2  Bundesliga

@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
 import { useTranslations } from 'next-intl';
 import { useSettings } from '@/lib/context/SettingsContext';
 import { networkMaxHeight } from '@/lib/streaming/network-cap';
@@ -32,7 +33,6 @@ interface LicensedPlayerProps {
   onEnded?: () => void;
 }
 
-
 function ladder(tracks: VariantTrack[]) {
   const best = new Map<number, VariantTrack>();
   for (const track of tracks) {
@@ -48,12 +48,13 @@ export function LicensedPlayer({
   protocol,
   drmType,
   licenseUrl,
-  onEnded
+  onEnded,
 }: LicensedPlayerProps) {
   const t = useTranslations('watch');
   const { dataSaver } = useSettings();
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<ShakaPlayer | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [levels, setLevels] = useState<Array<[number, VariantTrack]>>([]);
   const [mode, setMode] = useState<'auto' | number>('auto');
@@ -66,48 +67,102 @@ export function LicensedPlayer({
 
     const start = async () => {
       try {
+        // Fast path: for non-DRM HLS streams, use Hls.js for rock-solid playback across all browsers
+        if (drmType === 'NONE' && (protocol === 'HLS' || manifestUrl.includes('.m3u8'))) {
+          if (Hls.isSupported()) {
+            const hls = new Hls({
+              enableWorker: true,
+              lowLatencyMode: true,
+            });
+            hlsRef.current = hls;
+            hls.loadSource(manifestUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              video.play().catch(() => {
+                video.muted = true;
+                video.play().catch(() => null);
+              });
+            });
+            hls.on(Hls.Events.ERROR, (_, data) => {
+              if (data.fatal) {
+                hls.destroy();
+                video.src = manifestUrl;
+                video.play().catch(() => null);
+              }
+            });
+            return;
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = manifestUrl;
+            video.play().catch(() => null);
+            return;
+          }
+        }
+
         const mod = (await import('shaka-player')) as unknown as {
-          default?: { polyfill: { installAll: () => void }; Player: { isBrowserSupported: () => boolean; new (video: HTMLVideoElement): ShakaPlayer } };
+          default?: {
+            polyfill: { installAll: () => void };
+            Player: {
+              isBrowserSupported: () => boolean;
+              new (video: HTMLVideoElement): ShakaPlayer;
+            };
+          };
           polyfill?: { installAll: () => void };
-          Player?: { isBrowserSupported: () => boolean; new (video: HTMLVideoElement): ShakaPlayer };
+          Player?: {
+            isBrowserSupported: () => boolean;
+            new (video: HTMLVideoElement): ShakaPlayer;
+          };
         };
+
         const shaka = mod.default ?? mod;
-        if (!shaka.polyfill || !shaka.Player) {
-          if (!destroyed) setError(t('unsupported'));
+        if (shaka?.polyfill) {
+          shaka.polyfill.installAll();
+        }
+
+        if (shaka?.Player?.isBrowserSupported()) {
+          player = new shaka.Player(video);
+          playerRef.current = player;
+          const cap = networkMaxHeight();
+          player.configure({
+            abr: {
+              enabled: true,
+              restrictions: cap ? { maxHeight: cap } : {},
+            },
+          });
+
+          if (drmType !== 'NONE' && licenseUrl) {
+            const servers: Record<string, string> = {};
+            if (drmType === 'WIDEVINE') servers['com.widevine.alpha'] = licenseUrl;
+            if (drmType === 'PLAYREADY') servers['com.microsoft.playready'] = licenseUrl;
+            if (drmType === 'FAIRPLAY') servers['com.apple.fps'] = licenseUrl;
+            player.configure({ drm: { servers } });
+          }
+
+          const refresh = () => {
+            if (destroyed || !player) return;
+            setLevels(ladder(player.getVariantTracks()));
+          };
+
+          player.addEventListener('ended', () => onEnded?.());
+          player.addEventListener('adaptation', refresh);
+          await player.load(manifestUrl);
+          refresh();
           return;
         }
-        shaka.polyfill.installAll();
-        if (!shaka.Player.isBrowserSupported()) {
-          if (!destroyed) setError(t('unsupported'));
+
+        // Native Safari/HLS fallback
+        if (video.canPlayType('application/vnd.apple.mpegurl') || manifestUrl.includes('.m3u8')) {
+          video.src = manifestUrl;
+          video.play().catch(() => null);
           return;
         }
-        player = new shaka.Player(video);
-        playerRef.current = player;
-        const cap = networkMaxHeight();
-        player.configure({
-          abr: {
-            enabled: true,
-            restrictions: cap ? { maxHeight: cap } : {},
-          },
-        });
-        if (drmType !== 'NONE' && licenseUrl) {
-          const servers: Record<string, string> = {};
-          if (drmType === 'WIDEVINE') servers['com.widevine.alpha'] = licenseUrl;
-          if (drmType === 'PLAYREADY') servers['com.microsoft.playready'] = licenseUrl;
-          if (drmType === 'FAIRPLAY') servers['com.apple.fps'] = licenseUrl;
-          player.configure({ drm: { servers } });
-        }
-        const refresh = () => {
-          if (destroyed || !player) return;
-          setLevels(ladder(player.getVariantTracks()));
-        };
-        player.addEventListener('ended', () => onEnded?.());
-        player.addEventListener('adaptation', refresh);
-        await player.load(manifestUrl);
-        refresh();
-        void protocol;
-      } catch {
+
         if (!destroyed) setError(t('unsupported'));
+      } catch {
+        // Direct native video fallback on error
+        if (video) {
+          video.src = manifestUrl;
+          video.play().catch(() => null);
+        }
       }
     };
 
@@ -115,6 +170,10 @@ export function LicensedPlayer({
     return () => {
       destroyed = true;
       playerRef.current = null;
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
       void player?.destroy();
     };
   }, [manifestUrl, protocol, drmType, licenseUrl, onEnded, t]);
@@ -144,44 +203,58 @@ export function LicensedPlayer({
     setMode('auto');
   };
 
-  const pickHeight = (height: number, track: VariantTrack) => {
+  const pickTrack = (track: VariantTrack) => {
     const player = playerRef.current;
     if (!player) return;
     player.configure({ abr: { enabled: false } });
     player.selectVariantTrack(track, true);
-    setMode(height);
+    setMode(track.height ?? 'auto');
   };
 
-  return (
-    <div className="relative flex h-full w-full flex-col bg-black">
-      <video ref={videoRef} className="h-full w-full flex-1" controls playsInline autoPlay />
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-white/10 bg-black/92 px-3 py-2">
-        <span className="me-1 text-[10px] font-semibold tracking-[0.16em] text-primary">{t('quality')}</span>
-        <button
-          type="button"
-          onClick={pickAuto}
-          className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-            mode === 'auto' ? 'bg-primary text-white' : 'bg-white/10 text-white/70 hover:bg-white/15'
-          }`}
-        >
-          {t('quality_auto')}
-        </button>
-        {levels.map(([height, track]) => (
-          <button
-            key={height}
-            type="button"
-            onClick={() => pickHeight(height, track)}
-            className={`rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${
-              mode === height ? 'bg-card text-foreground' : 'bg-white/10 text-white/70 hover:bg-white/15'
-            }`}
-          >
-            {height}p
-          </button>
-        ))}
+  if (error) {
+    return (
+      <div className="flex aspect-video w-full items-center justify-center bg-black p-6 text-center text-xs text-white">
+        <p>{error}</p>
       </div>
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center text-sm font-bold text-white">
-          {error}
+    );
+  }
+
+  return (
+    <div className="relative aspect-video w-full bg-black group">
+      <video
+        ref={videoRef}
+        className="h-full w-full object-contain"
+        controls
+        playsInline
+        autoPlay
+        muted
+      />
+
+      {levels.length > 0 && (
+        <div className="absolute top-3 end-3 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+          <div className="flex items-center gap-1 rounded-xl bg-black/75 p-1 backdrop-blur-md border border-white/15 text-[10px] font-bold text-white">
+            <button
+              type="button"
+              onClick={pickAuto}
+              className={`rounded-lg px-2 py-0.5 transition-all ${
+                mode === 'auto' ? 'bg-primary text-white' : 'hover:bg-white/10'
+              }`}
+            >
+              {t('quality_auto')}
+            </button>
+            {levels.map(([h, track]) => (
+              <button
+                key={h}
+                type="button"
+                onClick={() => pickTrack(track)}
+                className={`rounded-lg px-2 py-0.5 transition-all ${
+                  mode === h ? 'bg-primary text-white' : 'hover:bg-white/10'
+                }`}
+              >
+                {h}p
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

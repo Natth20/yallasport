@@ -14,6 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function WatchIndexPage() {
-  return <WatchHouse />;
+export default async function WatchIndexPage() {
+  const locale = await getLocale();
+  return <WatchHouse locale={locale} />;
 }

@@ -1,7 +1,5 @@
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { BrandMark } from '@/components/brand/BrandMark';
-import { TicketBarcode } from '@/components/decor/CraftMarks';
-import { EditionPlate, PhotoCorners } from '@/components/news/NewsOrnaments';
 import { HeroEnter, Reveal, Stagger, StaggerItem } from '@/components/motion/PageMotion';
 import { Link } from '@/i18n/navigation';
 import type { Prisma } from '@/generated/prisma';
@@ -219,289 +217,361 @@ export async function SearchHouse({
     { no: '02', title: t('drawer_teams'), body: t('drawer_teams_body'), n: deskTeams, href: '/leagues' },
     { no: '03', title: t('drawer_players'), body: t('drawer_players_body'), n: deskPlayers, href: null as string | null },
     { no: '04', title: t('drawer_leagues'), body: t('drawer_leagues_body'), n: deskLeagues, href: '/leagues' },
-    { no: '05', title: t('drawer_matches'), body: t('drawer_matches_body'), n: deskMatches, extra: t('drawer_live', { n: String(liveMatches) }), href: '/matches' },
+    { no: '05', title: t('drawer_matches'), body: t('drawer_matches_body'), n: deskMatches, href: '/matches' },
   ];
 
-  const rules = [
-    { no: '01', title: t('rule_1_title'), body: t('rule_1_body') },
-    { no: '02', title: t('rule_2_title'), body: t('rule_2_body') },
-    { no: '03', title: t('rule_3_title'), body: t('rule_3_body') },
-    { no: '04', title: t('rule_4_title'), body: t('rule_4_body') },
-  ];
+  const suggestions = ['ريال مدريد', 'برشلونة', 'الدوري الإنجليزي', 'محمد صلاح', 'دوري أبطال أوروبا', 'الهلال'];
 
   return (
-    <div className="search-stage watch-booth relative min-h-screen pb-16">
-      <span className="watch-drape" />
-      <span className="watch-foil" aria-hidden />
-      <span className="watch-ambient" aria-hidden />
-      <span className="watch-corner is-tl" aria-hidden />
-      <span className="watch-corner is-tr" aria-hidden />
-      <span className="watch-corner is-bl" aria-hidden />
-      <span className="watch-corner is-br" aria-hidden />
+    <div className="relative min-h-screen pb-24 overflow-hidden">
+      {/* Background Lights */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/15 via-emerald-500/10 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 -left-40 h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl" />
 
-      <header className="search-stage-hero relative z-10">
-        <HeroEnter className="search-stage-hero-inner">
-          <PhotoCorners className="search-hero-corners" />
-          <div className="search-stage-mast">
-            <div className="search-stage-brand">
-              <BrandMark size={44} priority />
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">
-                    {t('kicker')}
-                  </p>
-                  <EditionPlate year={new Date().getFullYear()} label={t('folio')} className="watch-edition" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 pt-8">
+        {/* ——— Search Command Center Hero ——— */}
+        <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-card/90 via-card/60 to-card/30 p-6 md:p-10 backdrop-blur-2xl shadow-2xl">
+          <HeroEnter className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
+              <div className="flex items-center gap-3">
+                <BrandMark size={44} priority />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold tracking-wider text-primary uppercase border border-primary/20">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                      {t('kicker')}
+                    </span>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs font-mono text-emerald-400">
+                      {liveMatches} {t('tally_live_short')}
+                    </span>
+                  </div>
                 </div>
-                <h1 className="search-stage-title">{t('title')}</h1>
               </div>
+              <span className="text-xs text-muted-foreground font-mono">
+                {t('house')}
+              </span>
             </div>
-            <p className="search-stage-meta">
-              {t('house')} · {liveMatches} {t('tally_live_short')}
-            </p>
-          </div>
 
-          <p className="search-stage-headline">{t('headline')}</p>
-          <p className="search-stage-lead">{t('standfirst')}</p>
-
-          <div id="request" className="search-lens">
-            <SearchTicket initialQuery={query} kind={kind} />
-            {query ? (
-              <p className="search-lens-meta">
-                {t('written')} <strong>{query}</strong>
-                <span>
-                  {t('hits', { n: String(visible) })}
-                  {kind !== 'all' ? ` · ${t('drawer_only')}` : ''}
-                </span>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
+                {t('title')}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
+                {t('standfirst')}
               </p>
-            ) : null}
-            {query ? (
-              <nav className="search-lens-kinds" aria-label={t('kinds_label')}>
-                {kinds.map((item) => (
+            </div>
+
+            {/* Omnibox Search Input */}
+            <div className="mt-4">
+              <SearchTicket initialQuery={query} kind={kind} />
+            </div>
+
+            {/* Quick popular search chips when no query */}
+            {!query && (
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {locale === 'en' ? 'Quick Seek:' : 'أكثر بحثاً:'}
+                </span>
+                {suggestions.map((chip) => (
                   <Link
-                    key={item.id}
-                    href={seekHref(query, item.id)}
-                    className={kind === item.id ? 'is-on' : ''}
+                    key={chip}
+                    href={`/search?q=${encodeURIComponent(chip)}`}
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs text-foreground/85 transition hover:border-primary/50 hover:bg-primary/10 hover:text-white"
                   >
-                    {item.label}
-                    <b>{item.n}</b>
+                    {chip}
                   </Link>
                 ))}
-              </nav>
-            ) : null}
-          </div>
-        </HeroEnter>
-      </header>
-
-      <div className="search-stage-body relative z-10">
-        {query ? (
-          <Reveal>
-            <section id="catalog" className="search-block-panel">
-              <div className="search-block-head">
-                <span>01</span>
-                <div>
-                  <h2>{t('catalog_title')}</h2>
-                  <p>{t('catalog_note')}</p>
-                </div>
               </div>
+            )}
 
-              {visible === 0 ? (
-                <div className="search-empty-lux">
-                  <p>{t('empty_title')}</p>
-                  <span>{kind === 'all' ? t('empty_body') : t('empty_drawer')}</span>
+            {/* Search Metadata & Category Pills when query is active */}
+            {query && (
+              <div className="space-y-4 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground border-t border-white/10 pt-4">
+                  <p>
+                    {t('written')} <strong className="text-white">"{query}"</strong>
+                  </p>
+                  <span className="font-mono text-emerald-400 font-bold">
+                    {t('hits', { n: String(visible) })}
+                  </span>
                 </div>
-              ) : null}
 
-              {show('leagues') && found.leagues.length > 0 ? (
-                <div className="search-result-group">
-                  <h3>{t('kind_leagues')}</h3>
-                  <Stagger className="search-result-grid">
-                    {found.leagues.map((row) => (
-                      <StaggerItem key={row.id}>
-                        <Link href={`/league/${row.slug}`} className="search-result-card">
-                          {row.logoUrl ? (
-                            <img src={row.logoUrl} alt="" />
-                          ) : (
-                            <em>{nameOf(names, 'LEAGUE', row.id, row.name).charAt(0)}</em>
-                          )}
-                          <strong>{nameOf(names, 'LEAGUE', row.id, row.name)}</strong>
-                          <span>{row.country || t('type_league')}</span>
-                        </Link>
-                      </StaggerItem>
-                    ))}
-                  </Stagger>
+                {/* Filter Tabs */}
+                <nav className="flex flex-wrap gap-2" aria-label={t('kinds_label')}>
+                  {kinds.map((item) => {
+                    const active = kind === item.id;
+                    return (
+                      <Link
+                        key={item.id}
+                        href={seekHref(query, item.id)}
+                        className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                          active
+                            ? 'border-primary bg-primary/20 text-white shadow-sm shadow-primary/20'
+                            : 'border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:text-white'
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <span className={`font-mono text-[11px] rounded px-1.5 py-0.2 ${active ? 'bg-primary/30 text-white' : 'bg-black/30 text-muted-foreground'}`}>
+                          {item.n}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+            )}
+          </HeroEnter>
+        </header>
+
+        {/* ——— Results Stage (when query exists) ——— */}
+        {query && (
+          <Reveal>
+            <div className="space-y-8">
+              {visible === 0 && (
+                <div className="rounded-3xl border border-white/10 bg-card/40 p-12 text-center backdrop-blur-xl">
+                  <h3 className="text-lg font-bold text-white mb-2">{t('empty_title')}</h3>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                    {kind === 'all' ? t('empty_body') : t('empty_drawer')}
+                  </p>
                 </div>
-              ) : null}
+              )}
 
-              {show('teams') && found.teams.length > 0 ? (
-                <div className="search-result-group">
-                  <h3>{t('kind_teams')}</h3>
-                  <Stagger className="search-result-grid">
-                    {found.teams.map((row) => (
-                      <StaggerItem key={row.id}>
-                        <Link href={`/team/${row.slug}`} className="search-result-card">
-                          {row.logoUrl ? (
-                            <img src={row.logoUrl} alt="" />
-                          ) : (
-                            <em>{nameOf(names, 'TEAM', row.id, row.name).charAt(0)}</em>
-                          )}
-                          <strong>{nameOf(names, 'TEAM', row.id, row.name)}</strong>
-                          <span>{t('type_team')}</span>
-                        </Link>
-                      </StaggerItem>
-                    ))}
-                  </Stagger>
-                </div>
-              ) : null}
-
-              {show('players') && found.players.length > 0 ? (
-                <div className="search-result-group">
-                  <h3>{t('kind_players')}</h3>
-                  <Stagger className="search-result-grid">
-                    {found.players.map((row) => (
-                      <StaggerItem key={row.id}>
-                        <Link href={`/player/${row.slug}`} className="search-result-card">
-                          {row.photoUrl ? (
-                            <img src={row.photoUrl} alt="" className="is-face" />
-                          ) : (
-                            <em>{nameOf(names, 'PLAYER', row.id, row.name).charAt(0)}</em>
-                          )}
-                          <strong>{nameOf(names, 'PLAYER', row.id, row.name)}</strong>
-                          <span>{row.position || t('type_player')}</span>
-                        </Link>
-                      </StaggerItem>
-                    ))}
-                  </Stagger>
-                </div>
-              ) : null}
-
-              {show('matches') && found.matches.length > 0 ? (
-                <div className="search-result-group">
-                  <h3>{t('kind_matches')}</h3>
-                  <Stagger className="search-fixture-list">
+              {/* Matches Group */}
+              {show('matches') && found.matches.length > 0 && (
+                <section className="space-y-4">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    {t('kind_matches')} ({found.matches.length})
+                  </h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {found.matches.map((row) => {
-                      const home = nameOf(names, 'TEAM', row.homeTeam.id, row.homeTeam.name);
-                      const away = nameOf(names, 'TEAM', row.awayTeam.id, row.awayTeam.name);
-                      const league = nameOf(names, 'LEAGUE', row.league.id, row.league.name);
-                      const scored = canShowScore(row.status, row.homeScore, row.awayScore);
+                      const isLive = row.status === 'LIVE';
+                      const homeName = nameOf(names, 'TEAM', row.homeTeam.id, row.homeTeam.name);
+                      const awayName = nameOf(names, 'TEAM', row.awayTeam.id, row.awayTeam.name);
+                      const leagueName = nameOf(names, 'LEAGUE', row.league.id, row.league.name);
                       return (
-                        <StaggerItem key={row.id}>
-                          <Link href={`/match/${row.id}`} className="search-fixture-row">
-                            <span>
-                              {league}
-                              {' · '}
-                              {t(matchStatusKey(row.status))}
-                              {row.status === 'LIVE' && row.minute != null ? ` ${row.minute}′` : ''}
-                            </span>
-                            <strong>
-                              {home}
-                              {scored ? ` ${row.homeScore}–${row.awayScore} ` : ' — '}
-                              {away}
-                            </strong>
-                            <ClientTime value={row.kickoffAt} className="search-fixture-time" />
-                          </Link>
-                        </StaggerItem>
-                      );
-                    })}
-                  </Stagger>
-                </div>
-              ) : null}
+                        <Link
+                          key={row.id}
+                          href={`/match/${row.id}`}
+                          className="group rounded-2xl border border-white/10 bg-card/40 p-4 transition-all hover:border-primary/40 hover:bg-card/70"
+                        >
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-3 text-[11px]">
+                            <span className="text-muted-foreground truncate">{leagueName}</span>
+                            {isLive ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-emerald-400">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                {row.minute ? `${row.minute}′` : 'LIVE'}
+                              </span>
+                            ) : (
+                              <ClientTime value={row.kickoffAt} className="font-mono text-muted-foreground" />
+                            )}
+                          </div>
 
-              {show('news') && news.length > 0 ? (
-                <div className="search-result-group">
-                  <h3>{t('kind_news')}</h3>
-                  <Stagger className="search-story-list">
-                    {news.map((row) => (
-                      <StaggerItem key={row.id}>
-                        <Link href={`/news/${row.slug}`} className="search-story-row">
-                          {row.featuredImage ? <img src={row.featuredImage} alt="" /> : <i />}
-                          <div>
-                            <em>{row.category}</em>
-                            <strong>{row.title}</strong>
-                            {row.excerpt ? <p>{row.excerpt}</p> : null}
-                            {row.publishedAt ? <ClientTime value={row.publishedAt} className="search-fixture-time" /> : null}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 truncate">
+                                {row.homeTeam.logoUrl && <img src={row.homeTeam.logoUrl} alt="" className="h-5 w-5 object-contain" />}
+                                <span className="text-xs font-bold text-white truncate">{homeName}</span>
+                              </div>
+                              {canShowScore(row.status, row.homeScore, row.awayScore) && (
+                                <span className="font-mono text-xs font-bold text-white ps-2">{row.homeScore}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 truncate">
+                                {row.awayTeam.logoUrl && <img src={row.awayTeam.logoUrl} alt="" className="h-5 w-5 object-contain" />}
+                                <span className="text-xs font-bold text-white truncate">{awayName}</span>
+                              </div>
+                              {canShowScore(row.status, row.homeScore, row.awayScore) && (
+                                <span className="font-mono text-xs font-bold text-white ps-2">{row.awayScore}</span>
+                              )}
+                            </div>
                           </div>
                         </Link>
-                      </StaggerItem>
-                    ))}
-                  </Stagger>
-                </div>
-              ) : null}
-            </section>
-          </Reveal>
-        ) : (
-          <>
-            <Reveal>
-              <section id="drawers" className="search-block-panel">
-                <div className="search-block-head">
-                  <span>01</span>
-                  <div>
-                    <h2>{t('drawers_title')}</h2>
-                    <p>{t('drawers_note')}</p>
+                      );
+                    })}
                   </div>
-                </div>
-                <Stagger className="search-drawer-grid">
-                  {drawers.map((drawer) => (
-                    <StaggerItem key={drawer.no}>
-                      <article className="search-drawer-card">
-                        <b>{drawer.no}</b>
-                        <strong>{drawer.title}</strong>
-                        <p>{drawer.body}</p>
-                        {'extra' in drawer && drawer.extra ? <em>{drawer.extra}</em> : null}
-                        {drawer.href ? (
-                          <Link href={drawer.href}>{drawer.n}</Link>
-                        ) : (
-                          <span className="search-drawer-count">{drawer.n}</span>
-                        )}
-                      </article>
-                    </StaggerItem>
-                  ))}
-                </Stagger>
-              </section>
-            </Reveal>
+                </section>
+              )}
 
-            <Reveal>
-              <section className="search-block-panel">
-                <div className="search-block-head">
-                  <span>02</span>
-                  <div>
-                    <h2>{t('rules_title')}</h2>
-                    <p>{t('rules_kicker')}</p>
+              {/* Teams Group */}
+              {show('teams') && found.teams.length > 0 && (
+                <section className="space-y-4">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                    {t('kind_teams')} ({found.teams.length})
+                  </h2>
+                  <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+                    {found.teams.map((row) => (
+                      <Link
+                        key={row.id}
+                        href={`/team/${row.slug}`}
+                        className="group flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-card/40 p-4 text-center transition hover:border-cyan-400/40 hover:bg-card/70"
+                      >
+                        <div className="flex h-12 w-12 items-center justify-center mb-2">
+                          {row.logoUrl ? (
+                            <img src={row.logoUrl} alt="" className="h-10 w-10 object-contain" />
+                          ) : (
+                            <span className="font-bold text-sm text-cyan-400">
+                              {nameOf(names, 'TEAM', row.id, row.name).charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <strong className="text-xs font-bold text-white truncate w-full group-hover:text-cyan-400 transition-colors">
+                          {nameOf(names, 'TEAM', row.id, row.name)}
+                        </strong>
+                      </Link>
+                    ))}
                   </div>
-                </div>
-                <Stagger className="search-rule-grid">
-                  {rules.map((rule) => (
-                    <StaggerItem key={rule.no}>
-                      <article className="search-rule-card">
-                        <span>{rule.no}</span>
-                        <strong>{rule.title}</strong>
-                        <p>{rule.body}</p>
-                      </article>
-                    </StaggerItem>
-                  ))}
-                </Stagger>
-              </section>
-            </Reveal>
-          </>
+                </section>
+              )}
+
+              {/* Leagues Group */}
+              {show('leagues') && found.leagues.length > 0 && (
+                <section className="space-y-4">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    {t('kind_leagues')} ({found.leagues.length})
+                  </h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {found.leagues.map((row) => (
+                      <Link
+                        key={row.id}
+                        href={`/league/${row.slug}`}
+                        className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-card/40 p-3.5 transition hover:border-amber-400/40 hover:bg-card/70"
+                      >
+                        {row.logoUrl ? (
+                          <img src={row.logoUrl} alt="" className="h-8 w-8 object-contain" />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400 font-bold text-xs">
+                            {nameOf(names, 'LEAGUE', row.id, row.name).charAt(0)}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <strong className="text-xs font-bold text-white block truncate group-hover:text-amber-400 transition-colors">
+                            {nameOf(names, 'LEAGUE', row.id, row.name)}
+                          </strong>
+                          <span className="text-[11px] text-muted-foreground">{row.country || t('type_league')}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Players Group */}
+              {show('players') && found.players.length > 0 && (
+                <section className="space-y-4">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    {t('kind_players')} ({found.players.length})
+                  </h2>
+                  <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+                    {found.players.map((row) => (
+                      <div
+                        key={row.id}
+                        className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-card/40 p-4 text-center"
+                      >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 mb-2 overflow-hidden">
+                          {row.photoUrl ? (
+                            <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="font-bold text-xs text-white">
+                              {nameOf(names, 'PLAYER', row.id, row.name).charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                        <strong className="text-xs font-bold text-white truncate w-full">
+                          {nameOf(names, 'PLAYER', row.id, row.name)}
+                        </strong>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">{row.position || t('type_player')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* News Group */}
+              {show('news') && news.length > 0 && (
+                <section className="space-y-4">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                    {t('kind_news')} ({news.length})
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {news.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/news/${encodeURIComponent(item.slug)}`}
+                        className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-card/40 transition hover:border-rose-400/40 hover:bg-card/70"
+                      >
+                        {item.featuredImage && (
+                          <div className="h-40 w-full overflow-hidden bg-white/5">
+                            <img
+                              src={item.featuredImage}
+                              alt=""
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          </div>
+                        )}
+                        <div className="p-4 space-y-2">
+                          <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">
+                            {item.category}
+                          </span>
+                          <h3 className="text-sm font-bold text-white leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                            {item.title}
+                          </h3>
+                          {item.excerpt && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                              {item.excerpt}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          </Reveal>
         )}
 
-        <Reveal>
-          <section className="search-doors-row">
-            <Link href="/matches" className="watch-chip-link is-solid">
-              {t('door_matches')}
-            </Link>
-            <Link href="/news" className="watch-chip-link is-ghost">
-              {t('door_news')}
-            </Link>
-            <Link href="/leagues" className="watch-chip-link is-ghost">
-              {t('door_leagues')}
-            </Link>
-            <TicketBarcode className="ms-auto text-primary/40" />
-          </section>
-        </Reveal>
+        {/* ——— Platform Radar Index (When no query or at the bottom) ——— */}
+        <section className="rounded-3xl border border-white/10 bg-card/40 p-6 sm:p-8 backdrop-blur-xl">
+          <div className="border-b border-white/10 pb-4 mb-6">
+            <h2 className="text-lg sm:text-xl font-black text-white">{t('drawers_title')}</h2>
+            <p className="text-xs text-muted-foreground mt-1">{t('drawers_note')}</p>
+          </div>
 
-        <p className="search-colo-line">
-          {t('house')} · {t('folio')} · {t('colo')}
-        </p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {drawers.map((d) => (
+              <div
+                key={d.no}
+                className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 flex flex-col justify-between transition hover:border-primary/40"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-mono text-xs font-bold text-primary">{d.no}</span>
+                    <span className="font-mono text-sm font-black text-white">{d.n}</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-white mb-1">{d.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{d.body}</p>
+                </div>
+
+                {d.href && (
+                  <Link
+                    href={d.href}
+                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <span>{locale === 'en' ? 'Explore' : 'استكشف'}</span>
+                    <span>→</span>
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

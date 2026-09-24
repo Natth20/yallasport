@@ -1,4 +1,4 @@
-﻿import { cookies, headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import {
   CalendarDays,
   Clapperboard,
@@ -18,9 +18,17 @@ import { LiveTicker } from '@/components/sports/LiveTicker';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { HomeStandingsWidget } from '@/components/home/HomeStandingsWidget';
 import { HomeScorersWidget } from '@/components/home/HomeScorersWidget';
+import { HomeStoriesBar } from '@/components/home/HomeStoriesBar';
+import { HomeLeagueTabsWidget } from '@/components/home/HomeLeagueTabsWidget';
+import { HomeScorersPodium } from '@/components/home/HomeScorersPodium';
+import { FeaturedMatchSpotlight } from '@/components/home/FeaturedMatchSpotlight';
+import { HomeFanPoll } from '@/components/home/HomeFanPoll';
+import { TransferRumorsHub } from '@/components/news/TransferRumorsHub';
+import { PushNotificationBanner } from '@/components/notifications/PushNotificationBanner';
 import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
 import { Link } from '@/i18n/navigation';
 import { prisma } from '@/lib/prisma';
+import { sportsData } from '@/lib/sports-data';
 import { dateKeyInTimezone, dayBoundsInTimezone, normalizeTimezone } from '@/lib/datetime/format';
 import { toNormalizedMatch } from '@/lib/sports-data/from-db';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
@@ -169,6 +177,7 @@ export async function HomeHouse() {
     },
   } as const;
 
+  const todayDateStr = new Date().toISOString().slice(0, 10);
   const [
     allTopNews,
     topLeagues,
@@ -182,6 +191,10 @@ export async function HomeHouse() {
     goalCount,
     yellowCount,
     redCount,
+    apiLiveMatches,
+    apiTodayMatches,
+    apiStandings,
+    apiTopScorers,
   ] = await Promise.all([
     prisma.news
       .findMany({
@@ -280,9 +293,13 @@ export async function HomeHouse() {
         },
       })
       .catch(() => 0),
+    sportsData.getLiveMatches().catch(() => []),
+    sportsData.getMatchesByDate(todayDateStr).catch(() => []),
+    sportsData.getStandings('39', '2024').catch(() => []),
+    sportsData.getTopScorers('39', '2024').catch(() => []),
   ]);
 
-  const standings = tableSeed
+  const dbStandings = tableSeed
     ? await prisma.standing
         .findMany({
           where: { leagueId: tableSeed.leagueId, seasonId: tableSeed.seasonId },
@@ -292,6 +309,16 @@ export async function HomeHouse() {
         })
         .catch(() => [])
     : [];
+
+  const standings = apiStandings.length > 0
+    ? apiStandings.slice(0, 6).map((s) => ({
+        id: s.team.id,
+        points: s.points,
+        rank: s.rank,
+        team: { name: s.team.name, logoUrl: s.team.logoUrl || null },
+        league: { name: 'الدوري الإنجليزي الممتاز', slug: 'premier-league' },
+      }))
+    : dbStandings;
 
   const scorerPlayerIds = topScorersRaw
     .map((row) => row.playerId)
@@ -316,7 +343,7 @@ export async function HomeHouse() {
         .catch(() => [])
     : [];
 
-  const scorers = topScorersRaw.flatMap((row) => {
+  const dbScorers = topScorersRaw.flatMap((row) => {
     const player = scorerPlayers.find((entry) => entry.id === row.playerId);
     if (!player?.name) return [];
     return [
@@ -333,12 +360,28 @@ export async function HomeHouse() {
     ];
   });
 
-  const liveMatches = actionRows
-    .map(toNormalizedMatch)
-    .sort((first, second) => {
-      const liveScore = (status: string) => (isLive(status) ? 0 : 1);
-      return liveScore(first.status) - liveScore(second.status);
-    });
+  const scorers = apiTopScorers.length > 0
+    ? apiTopScorers.slice(0, 8).map((s) => ({
+        goals: s.goals,
+        player: {
+          id: s.player.id,
+          name: s.player.name,
+          slug: s.player.slug,
+          photoUrl: s.player.photoUrl || null,
+        },
+        teamName: s.teamName,
+      }))
+    : dbScorers;
+
+  const liveMatches = (apiLiveMatches.length > 0
+    ? apiLiveMatches
+    : apiTodayMatches.length > 0
+    ? apiTodayMatches
+    : actionRows.map(toNormalizedMatch)
+  ).sort((first, second) => {
+    const liveScore = (status: string) => (isLive(status) ? 0 : 1);
+    return liveScore(first.status) - liveScore(second.status);
+  });
 
   const liveNow = liveMatches.filter((match) => isLive(match.status));
   const liveCount = liveNow.length;
@@ -406,46 +449,95 @@ export async function HomeHouse() {
 
       <main className="relative z-10 mx-auto mt-0 max-w-[1400px] space-y-8 px-4 sm:px-6">
         <HeroEnter>
-          <header className="home-brand-band home-brand-band-compact">
-            <div className="home-brand-top">
-              <div className="home-brand-identity">
-                <BrandMark size={44} priority />
-                <div className="min-w-0">
+          <header className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-card/90 via-card/60 to-card/40 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
+            <div className="pointer-events-none absolute -top-24 right-1/4 h-56 w-56 rounded-full bg-primary/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-cyan-500/15 blur-3xl" />
+
+            <div className="relative flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div className="flex items-center gap-4">
+                <BrandMark size={48} priority className="drop-shadow-[0_8px_16px_rgba(249,115,22,0.3)]" />
+                <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className={`home-brand-kicker ${en ? 'is-en' : ''}`}>{t('kicker')}</p>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                      {t('kicker')}
+                    </span>
                     <EditionPlate year={year} label={t('folio')} className="watch-edition" />
                   </div>
-                  <h1 className="home-brand-wordmark">YALLA SPORT</h1>
+                  <h1 className="mt-1 text-2xl md:text-3xl font-black tracking-tight text-foreground">
+                    YALLA SPORT
+                  </h1>
                 </div>
               </div>
-              <span className={`home-live-tally ${liveCount > 0 ? 'is-hot' : ''}`}>
-                <i />
-                <strong className="tabular-nums">{liveCount}</strong>
-                <span className={en ? 'uppercase tracking-[0.16em]' : ''}>{t('live_label')}</span>
-              </span>
+
+              {/* Live Count & Primary CTAs */}
+              <div className="flex flex-wrap items-center gap-3">
+                <span className={`inline-flex items-center gap-2 rounded-2xl border px-3.5 py-2 text-xs font-black transition-all ${
+                  liveCount > 0
+                    ? 'border-red-500/40 bg-red-500/15 text-red-400 shadow-lg shadow-red-500/10'
+                    : 'border-white/10 bg-white/5 text-foreground/70'
+                }`}>
+                  <span className={`h-2 w-2 rounded-full ${liveCount > 0 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
+                  <strong className="tabular-nums text-sm">{liveCount}</strong>
+                  <span>{t('live_label')}</span>
+                </span>
+
+                <Link
+                  href="/matches"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground shadow-md shadow-primary/25 transition-all hover:scale-105 active:scale-95"
+                >
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>{t('cta_matches')}</span>
+                </Link>
+
+                <Link
+                  href={secondaryCta.href}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-black text-foreground hover:bg-white/10 hover:text-primary transition-all"
+                >
+                  <Radio className="h-3.5 w-3.5" />
+                  <span>{secondaryCta.label}</span>
+                </Link>
+              </div>
             </div>
-            <p className="home-brand-headline">{t('headline')}</p>
-            <div className="home-brand-cta">
-              <Link href="/matches" className="watch-chip-link is-solid">
-                {t('cta_matches')}
-              </Link>
-              <Link href={secondaryCta.href} className="watch-chip-link is-ghost">
-                {secondaryCta.label}
-              </Link>
+
+            {/* Quick Navigation Portal Strip */}
+            <div className="relative mt-5 flex flex-wrap items-center gap-2">
+              {quickLinks.map((ql) => (
+                <Link
+                  key={ql.href}
+                  href={ql.href}
+                  className="group flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-foreground/80 backdrop-blur-md transition-all hover:border-primary/50 hover:bg-primary/10 hover:text-primary"
+                >
+                  <ql.icon className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
+                  <span>{ql.label}</span>
+                </Link>
+              ))}
             </div>
           </header>
         </HeroEnter>
 
-        {/* Hero news + top list */}
+        {/* Live Stories Strip (Match Highlights, Reels, Inside Training) */}
+        <Reveal>
+          <HomeStoriesBar locale={locale} />
+        </Reveal>
+
+        {/* Live Goal & Match Push Alerts Banner */}
+        <Reveal>
+          <PushNotificationBanner locale={locale} />
+        </Reveal>
+
+        {/* Hero News & Top Stories Desk */}
         <Reveal>
           <section className="home-hero-desk grid grid-cols-1 gap-5 xl:grid-cols-12">
             <div className="xl:col-span-8">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <p className={`home-section-kicker ${en ? 'is-en' : ''}`}>
-                  <Flame className="me-1 inline h-3.5 w-3.5" />
-                  {t('news_top')}
-                </p>
-                <Link href="/news" className="text-[11px] font-semibold text-primary hover:underline">
+                <div className="flex items-center gap-1.5">
+                  <Flame className="h-4 w-4 text-primary animate-bounce" />
+                  <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
+                    {t('news_top')}
+                  </h3>
+                </div>
+                <Link href="/news" className="text-xs font-bold text-primary hover:underline">
                   {t('news_cta')}
                 </Link>
               </div>
@@ -459,11 +551,14 @@ export async function HomeHouse() {
             </div>
             <aside className="space-y-3 xl:col-span-4">
               <div className="mb-1 flex items-center justify-between">
-                <h2 className={`text-[12px] font-bold tracking-[0.14em] text-primary ${en ? 'uppercase' : ''}`}>
-                  {t('news_top')}
-                </h2>
+                <h3 className="text-xs font-black uppercase tracking-wider text-primary">
+                  {en ? 'Latest Desk Updates' : 'آخر تقارير الغرفة'}
+                </h3>
+                <Link href="/news" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground">
+                  {en ? 'View All' : 'عرض الكل'}
+                </Link>
               </div>
-              <div className="salon-sheet home-top-news rounded-2xl p-2">
+              <div className="salon-sheet home-top-news rounded-2xl p-2.5 space-y-1">
                 {topNews.length > 0 ? (
                   topNews.map((news) => (
                     <NewsCard key={news.id} news={news as any} variant="slim" />
@@ -474,6 +569,11 @@ export async function HomeHouse() {
               </div>
             </aside>
           </section>
+        </Reveal>
+
+        {/* Featured Match of the Day Spotlight */}
+        <Reveal>
+          <FeaturedMatchSpotlight locale={locale} />
         </Reveal>
 
         {/* Match rail */}
@@ -526,6 +626,15 @@ export async function HomeHouse() {
               );
             })}
           </nav>
+        </Reveal>
+
+        {/* Multi-League Standings Explorer & Golden Boot Podium */}
+        <Reveal>
+          <HomeLeagueTabsWidget locale={locale} />
+        </Reveal>
+
+        <Reveal>
+          <HomeScorersPodium locale={locale} />
         </Reveal>
 
         {/* Leagues */}
@@ -586,6 +695,11 @@ export async function HomeHouse() {
                   <p className="text-sm text-muted-foreground">{t('news_empty_more')}</p>
                 )}
               </section>
+            </Reveal>
+
+            {/* Transfer Market Radar & Rumors */}
+            <Reveal>
+              <TransferRumorsHub locale={locale} />
             </Reveal>
 
             <Reveal>
@@ -731,6 +845,11 @@ export async function HomeHouse() {
 
           {/* Sidebar */}
           <aside className="space-y-6 xl:col-span-4">
+            {/* Fan Matchday Poll */}
+            <Reveal>
+              <HomeFanPoll locale={locale} />
+            </Reveal>
+
             <Reveal>
               <div className="overflow-hidden rounded-2xl border border-border dark:border-border">
                 <AdSlot placement="sidebar" width={300} height={250} />

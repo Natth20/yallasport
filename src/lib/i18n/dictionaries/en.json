@@ -640,8 +640,8 @@
     "dark_house": "",
     "geo_copy": "This stream is not available in your region.",
     "no_next": "Nothing coming up right now.",
-    "show_reel": "episode",
     "house_empty": "Nothing to watch right now.",
+    "house_empty_copy": "Check the broadcast schedule and upcoming fixtures below.",
     "library": "Library",
     "published_reel": "",
     "no_published": "No titles in the library yet.",
@@ -652,7 +652,11 @@
     "kind_tv": "Channels",
     "type_movie": "Film",
     "type_series": "Series",
-    "type_doc": "Documentary"
+    "type_doc": "Documentary",
+    "upcoming": "Upcoming Schedule",
+    "no_upcoming": "No upcoming broadcasts scheduled.",
+    "episodes": "episodes",
+    "watch_now": "Watch Now"
   },
   "auth": {
     "gate": "Pitch gate",

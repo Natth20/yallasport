@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { Activity, ShieldAlert } from 'lucide-react';
@@ -67,13 +67,13 @@ export function MatchAIAnalyst({
       {notes.map((note) => (
         <div key={note.label} className="flex gap-3 rounded-2xl bg-muted px-4 py-3 dark:bg-card/[0.04]">
           {note.kind === 'discipline' ? (
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           ) : (
-            <Activity className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+            <Activity className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           )}
           <div>
-            <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-orange-500">{note.label}</span>
-            <p className="mt-1 text-[13px] font-medium leading-6 text-foreground dark:text-foreground">{note.text}</p>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-primary">{note.label}</span>
+            <p className="mt-1 text-[13px] font-medium leading-6 text-foreground">{note.text}</p>
           </div>
         </div>
       ))}

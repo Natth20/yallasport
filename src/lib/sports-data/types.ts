@@ -140,3 +140,14 @@ export interface NormalizedStanding {
   goalsAgainst: number;
   points: number;
 }
+
+export interface NormalizedScorer {
+  player: {
+    id: string;
+    name: string;
+    slug: string;
+    photoUrl?: string;
+  };
+  teamName?: string;
+  goals: number;
+}

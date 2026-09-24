@@ -1,8 +1,6 @@
-﻿import { headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { BrandMark } from '@/components/brand/BrandMark';
-import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
-import { DeskRule, EditionPlate, PhotoCorners } from '@/components/news/NewsOrnaments';
 import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
 import { Link } from '@/i18n/navigation';
 import { STREAMING_ENABLED } from '@/lib/streaming';
@@ -14,6 +12,8 @@ import {
 } from '@/lib/streaming/catalog';
 import { countryFromHeaders, isGeoAllowed } from '@/lib/streaming/entitlement';
 import { ClientTime } from '@/components/datetime/ClientTime';
+import { Tv, Radio, PlayCircle, Film, Sparkles, Flame, Clock, Shield, ArrowRight, ArrowLeft } from 'lucide-react';
+import { LiveSportsPlayer } from '@/components/streaming/LiveSportsPlayer';
 
 function typeLabel(
   type: string,
@@ -25,40 +25,7 @@ function typeLabel(
   return type;
 }
 
-function channelKindLabel(
-  kind: string | undefined,
-  t: Awaited<ReturnType<typeof getTranslations>>
-) {
-  switch ((kind || '').toUpperCase()) {
-    case 'NEWS':
-      return t('kind_news');
-    case 'MOVIE':
-      return t('type_movie');
-    case 'SERIES':
-      return t('type_series');
-    case 'DOCUMENTARY':
-      return t('type_doc');
-    case 'SPORTS':
-      return t('kind_sports');
-    default:
-      return t('kind_tv');
-  }
-}
-
-function SectionMark({ folio, title, lead }: { folio: string; title: string; lead?: string }) {
-  return (
-    <div className="watch-section-mark">
-      <div className="watch-section-mark-row">
-        <span aria-hidden>{folio}</span>
-        <h2>{title}</h2>
-      </div>
-      {lead ? <p className="watch-section-lead">{lead}</p> : null}
-      <DeskRule className="mt-3 max-w-xs opacity-45" />
-    </div>
-  );
-}
-
-export async function WatchHouse() {
+export async function WatchHouse({ locale = 'ar' }: { locale?: string } = {}) {
   const t = await getTranslations('watch');
   const country = countryFromHeaders(await headers());
   const editionYear = new Date().getFullYear();
@@ -77,263 +44,239 @@ export async function WatchHouse() {
   const featuredLinear = !featuredSports ? linear[0] : null;
   const featured = featuredSports || featuredLinear;
   const live = featured?.status === 'LIVE';
-  const liveRail = featuredSports ? sports.slice(0, 8) : linear.slice(0, 8);
 
   return (
-    <div className="watch-booth watch-house relative min-h-screen pb-20">
-      <span className="watch-drape" />
-      <span className="watch-foil" aria-hidden />
-      <span className="watch-ambient" aria-hidden />
-      <span className="watch-corner is-tl" aria-hidden />
-      <span className="watch-corner is-tr" aria-hidden />
-      <span className="watch-corner is-bl" aria-hidden />
-      <span className="watch-corner is-br" aria-hidden />
+    <div className="relative min-h-screen pb-24 overflow-hidden">
+      {/* Dynamic Background Glows */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/20 via-emerald-500/10 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 -right-40 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
 
-      <div className="booth-first-band relative mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 pt-6">
+        {/* ——— Top Marquee Header ——— */}
         <HeroEnter>
-          <header className="watch-marquee watch-marquee-lux">
-            <div className="flex min-w-0 items-start gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/10 bg-card/60 p-6 backdrop-blur-xl shadow-2xl">
+            <div className="flex items-center gap-4">
               <BrandMark size={44} />
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-primary">{t('kicker')}</p>
-                  <EditionPlate year={editionYear} label={t('title')} className="watch-edition" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 rounded-md bg-primary/20 border border-primary/30 px-2 py-0.5 text-[10px] font-black uppercase text-primary">
+                    <Sparkles className="h-3 w-3" />
+                    {t('kicker')}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-mono">YS-LIVE-{editionYear}</span>
                 </div>
-                <h1 className="mt-2 text-3xl font-black tracking-[-0.045em] text-foreground dark:text-foreground sm:text-5xl">{t('title')}</h1>
-                <DeskRule className="mt-4 max-w-sm opacity-50" />
+                <h1 className="text-2xl sm:text-3xl font-black text-foreground mt-1 tracking-tight">
+                  {t('title')}
+                </h1>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link href="/live" className="watch-chip-link">
-                {t('back_live')}
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/live"
+                className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2.5 text-xs font-bold text-foreground hover:bg-white/10 hover:border-primary/40 transition-all"
+              >
+                <Radio className="h-4 w-4 text-primary" />
+                <span>{t('back_live')}</span>
               </Link>
-              {live ? (
-                <span className="watch-live-pill">
-                  <i />
-                  {t('on_air')}
+              {live && (
+                <span className="flex items-center gap-2 rounded-2xl bg-red-500/20 border border-red-500/40 px-4 py-2.5 text-xs font-black text-red-400 shadow-lg shadow-red-500/20 animate-pulse">
+                  <span className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
+                  <span>{t('on_air')}</span>
                 </span>
-              ) : null}
+              )}
             </div>
-          </header>
+          </div>
         </HeroEnter>
 
+        {/* ——— Stats Strip ——— */}
         <Reveal>
-          <div className="watch-signature mt-6">
-          <div className={sports.length > 0 ? 'is-lead' : ''}>
-            <strong>{sports.length}</strong>
-            <span>{t('kind_sports')}</span>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-2xl border border-white/10 bg-card/40 p-4 backdrop-blur-xl text-center">
+              <span className="text-xl sm:text-2xl font-black text-primary tabular-nums">{sports.length}</span>
+              <p className="text-[11px] font-bold text-muted-foreground mt-1">{t('kind_sports')}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-card/40 p-4 backdrop-blur-xl text-center">
+              <span className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums">{linear.length}</span>
+              <p className="text-[11px] font-bold text-muted-foreground mt-1">{t('kind_tv')}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-card/40 p-4 backdrop-blur-xl text-center">
+              <span className="text-xl sm:text-2xl font-black text-foreground tabular-nums">{shows.length}</span>
+              <p className="text-[11px] font-bold text-muted-foreground mt-1">{t('library')}</p>
+            </div>
           </div>
-          <div className={linear.length > 0 && sports.length === 0 ? 'is-lead' : ''}>
-            <strong>{linear.length}</strong>
-            <span>{t('kind_tv')}</span>
-          </div>
-          <div>
-            <strong>{shows.length}</strong>
-            <span>{t('library')}</span>
-          </div>
-        </div>
         </Reveal>
 
-        <div className="mt-10 grid gap-10 xl:grid-cols-[minmax(0,1fr)_21rem]">
-          <div className="space-y-12">
-            <section>
-              <SectionMark
-                folio="01"
-                title={featuredSports ? t('booth') : featuredLinear ? t('kind_tv') : t('booth')}
-              />
-              <div className="watch-gate watch-gate-lux mt-5">
-                <div className="watch-gate-screen">
-                  {featured ? (
-                    <div className="watch-featured-stage">
-                      <span className="broadcast-snow" />
-                      <PhotoCorners className="watch-stage-corners" />
-                      <div className="watch-featured-meta">
-                        <em>
-                          {featured.channel?.name ||
-                            (featured.episode?.show.title ?? t('booth'))}
-                          {featured.match?.league.name ? ` · ${featured.match.league.name}` : ''}
-                          {!featured.match && featured.channel?.kind
-                            ? ` · ${channelKindLabel(featured.channel.kind, t)}`
-                            : ''}
-                        </em>
-                        {live ? (
-                          <span className="watch-live-pill is-compact">
-                            <i />
-                            {t('on_air')}
-                          </span>
-                        ) : (
-                          <span className="watch-ready-pill is-compact">{t('ready_status')}</span>
-                        )}
-                      </div>
-
-                      {featured.match ? (
-                        <div className="watch-featured-duel">
-                          <div className="watch-featured-side">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={featured.match.homeTeam.logoUrl || '/placeholder-team.png'}
-                              alt=""
-                              className="watch-featured-crest"
-                            />
-                            <strong>{featured.match.homeTeam.name}</strong>
-                          </div>
-                          <span className="watch-featured-vs" aria-hidden>
-                            VS
-                          </span>
-                          <div className="watch-featured-side is-away">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={featured.match.awayTeam.logoUrl || '/placeholder-team.png'}
-                              alt=""
-                              className="watch-featured-crest"
-                            />
-                            <strong>{featured.match.awayTeam.name}</strong>
-                          </div>
-                        </div>
-                      ) : (
-                        <h2 className="watch-featured-title">
-                          {featured.channel?.name ||
-                            featured.episode?.show.title ||
-                            t('booth')}
-                        </h2>
-                      )}
-
-                      <div className="watch-featured-actions">
-                        <Link href={`/watch/${featured.id}`} className="watch-featured-cta">
-                          {t('watch_asset')}
-                        </Link>
-                        {featured.match ? (
-                          <Link href={`/match/${featured.match.id}`} className="watch-chip-link is-ghost">
-                            {t('match_center')}
-                          </Link>
-                        ) : null}
-                        {featured.episode?.show.slug ? (
-                          <Link
-                            href={`/vod/${featured.episode.show.slug}`}
-                            className="watch-chip-link is-ghost"
-                          >
-                            {t('open_title')}
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="watch-empty-stage">
-                      <span className="broadcast-snow" />
-                      <PitchWatermark className="pointer-events-none absolute h-44 w-auto text-white/10" />
-                      <PhotoCorners className="watch-stage-corners" />
-                      <span className="watch-empty-seal" aria-hidden>
-                        YS
-                      </span>
-                      <p>{t('house_empty')}</p>
-                      <Link href="/live" className="watch-chip-link mt-4">
-                        {t('back_live')}
-                      </Link>
-                    </div>
-                  )}
+        {/* ——— Main Layout Grid ——— */}
+        <div className="grid gap-8 xl:grid-cols-12 items-start">
+          {/* Main Broadcast Arena (Left Column) */}
+          <div className="space-y-8 xl:col-span-8">
+            {/* Live Sports Player Screen */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-black text-foreground flex items-center gap-2">
+                  <Flame className="h-4 w-4 text-primary" />
+                  <span>{t('booth')} • {locale === 'ar' ? 'البث المباشر الفوري' : 'Live Stream'}</span>
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 rounded-full bg-red-600/20 border border-red-500/30 px-3 py-1 text-[10px] font-black text-red-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" />
+                    LIVE HLS 1080p
+                  </span>
                 </div>
               </div>
 
-              {liveRail.length > 1 ? (
-                <div className="watch-live-rail mt-5">
-                  {liveRail.slice(1).map((item, index) => (
-                    <Link key={item.id} href={`/watch/${item.id}`} className="watch-live-chip">
-                      <span>{String(index + 2).padStart(2, '0')}</span>
-                      <strong>
-                        {item.match
-                          ? `${item.match.homeTeam.name} × ${item.match.awayTeam.name}`
-                          : item.channel?.name || item.episode?.show.title || t('booth')}
-                      </strong>
-                      <em>{item.status === 'LIVE' ? t('on_air') : t('ready_status')}</em>
+              {/* Direct Live Interactive Player */}
+              <LiveSportsPlayer locale={locale} />
+
+              {/* Featured Match Card if active */}
+              {featured?.match && (
+                <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl transition-all hover:border-primary/40">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={featured.match.homeTeam.logoUrl || '/placeholder-team.png'}
+                          alt=""
+                          className="h-10 w-10 object-contain"
+                        />
+                        <strong className="text-sm font-black text-foreground">{featured.match.homeTeam.name}</strong>
+                      </div>
+                      <span className="font-mono text-xs font-black text-primary">VS</span>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm font-black text-foreground">{featured.match.awayTeam.name}</strong>
+                        <img
+                          src={featured.match.awayTeam.logoUrl || '/placeholder-team.png'}
+                          alt=""
+                          className="h-10 w-10 object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/match/${featured.match.id}`}
+                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-foreground hover:bg-white/10 transition-all"
+                      >
+                        {t('match_center')}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Live & Linear Channels Grid */}
+            {linear.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-base font-black text-foreground flex items-center gap-2">
+                  <Tv className="h-4 w-4 text-primary" />
+                  <span>{t('linear_title')}</span>
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {linear.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/watch/${item.id}`}
+                      className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur-xl transition-all duration-300 hover:border-primary/40 hover:bg-card/90 hover:scale-102 hover:shadow-xl hover:shadow-primary/5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Tv className="h-4 w-4" />
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-400 font-mono">24/7 LIVE</span>
+                      </div>
+                      <h4 className="text-sm font-black text-foreground group-hover:text-primary transition-colors mt-3">
+                        {item.channel?.name || t('title')}
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                        {item.channel?.country || 'Sports Network'}
+                      </p>
                     </Link>
                   ))}
                 </div>
-              ) : null}
-            </section>
-
-            {shows.length > 0 ? (
-              <section>
-                <SectionMark folio="02" title={t('library')} />
-                <div className="vod-library mt-5">
-                  {shows.map((show, index) => {
-                    const firstEpisode = show.episodes[0];
-                    const playHref = firstEpisode
-                      ? `/vod/player/${firstEpisode.id}`
-                      : `/vod/${show.slug}`;
-                    return (
-                      <article
-                        key={show.id}
-                        className={`vod-shelf-card${index === 0 ? ' is-lead' : ''}`}
-                      >
-                        <Link href={`/vod/${show.slug}`} className="vod-shelf-media">
-                          <span className="watch-poster-folio" aria-hidden>
-                            {String(index + 1).padStart(2, '0')}
-                          </span>
-                          {show.posterUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={show.posterUrl} alt="" />
-                          ) : (
-                            <div className="vod-shelf-empty">{show.title}</div>
-                          )}
-                        </Link>
-                        <div className="vod-shelf-copy">
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-primary">
-                            {typeLabel(show.type, t)}
-                            {show.releaseYear ? ` · ${show.releaseYear}` : ''}
-                          </p>
-                          <h3>
-                            <Link href={`/vod/${show.slug}`}>{show.title}</Link>
-                          </h3>
-                          <p className="vod-shelf-meta">
-                            {show._count.episodes} {t('show_reel')}
-                          </p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <Link href={`/vod/${show.slug}`} className="watch-chip-link is-ghost">
-                              {t('open_title')}
-                            </Link>
-                            <Link href={playHref} className="watch-chip-link is-solid">
-                              {t('watch_asset')}
-                            </Link>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
               </section>
-            ) : null}
-          </div>
+            )}
 
-          {upcoming.length > 0 ? (
-            <aside className="watch-aside">
-              <SectionMark folio="03" title={t('next_up')} />
-              <ul className="mt-5 space-y-3">
-                {upcoming.map((item, index) => (
-                  <li key={item.id}>
-                    <Link href={`/watch/${item.id}`} className="watch-ticket watch-ticket-lux block px-4 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-primary">
-                          {item.channel?.name || item.episode?.show.title || t('booth')}
-                        </p>
-                        <span className="text-[9px] font-black tabular-nums text-foreground/35">
-                          {String(index + 1).padStart(2, '0')}
+            {/* VOD Library Shows */}
+            {shows.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-base font-black text-foreground flex items-center gap-2">
+                  <Film className="h-4 w-4 text-primary" />
+                  <span>{t('library')}</span>
+                </h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {shows.map((show) => (
+                    <Link
+                      key={show.id}
+                      href={`/vod/${show.slug}`}
+                      className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl transition-all hover:border-primary/40 hover:-translate-y-1 shadow-lg"
+                    >
+                      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+                        {show.posterUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={show.posterUrl}
+                            alt=""
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                            <Film className="h-6 w-6" />
+                          </div>
+                        )}
+                        <span className="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[9px] font-black text-white backdrop-blur-md">
+                          {typeLabel(show.type, t)}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm font-black leading-6">
+                      <div className="p-3">
+                        <h4 className="text-xs font-black text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                          {show.title}
+                        </h4>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {show.episodes.length} {t('episodes')}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Right Rail: Upcoming Schedule (4 Cols) */}
+          <aside className="space-y-6 xl:col-span-4">
+            <div className="rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl shadow-xl space-y-4">
+              <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <span>{t('upcoming')}</span>
+              </h3>
+
+              {upcoming.length > 0 ? (
+                <div className="space-y-3">
+                  {upcoming.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/watch/${item.id}`}
+                      className="group flex flex-col gap-1.5 rounded-2xl border border-white/5 bg-foreground/5 p-3.5 transition-all hover:border-primary/30 hover:bg-primary/5"
+                    >
+                      <div className="flex items-center justify-between text-[10px] font-bold text-primary">
+                        <span>{item.channel?.name || t('title')}</span>
+                        {item.startsAt && <ClientTime value={item.startsAt} />}
+                      </div>
+                      <strong className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
                         {item.match
                           ? `${item.match.homeTeam.name} vs ${item.match.awayTeam.name}`
-                          : item.channel?.name || item.episode?.show.title}
-                      </p>
-                      {item.startsAt ? (
-                        <ClientTime value={item.startsAt} className="mt-1 block text-[11px] text-foreground/45" />
-                      ) : null}
-                      <TicketBarcode className="mt-3 text-foreground/50" />
+                          : item.channel?.name}
+                      </strong>
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            </aside>
-          ) : null}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground py-4 text-center">{t('no_upcoming')}</p>
+              )}
+            </div>
+          </aside>
         </div>
       </div>
     </div>

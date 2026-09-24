@@ -1,4 +1,4 @@
-﻿import { getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { ArrowUpRight, Mail } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
@@ -61,78 +61,78 @@ export async function Footer() {
   ];
 
   return (
-    <footer className="site-colophon">
-      <div className="colophon-pitch" aria-hidden="true" />
-      <div className="colophon-flood" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-      <div className="colophon-spot" aria-hidden="true" />
-      <span className="colophon-corner colophon-corner-tl" aria-hidden="true" />
-      <span className="colophon-corner colophon-corner-tr" aria-hidden="true" />
-      <span className="colophon-corner colophon-corner-bl" aria-hidden="true" />
-      <span className="colophon-corner colophon-corner-br" aria-hidden="true" />
+    <footer className="relative overflow-hidden border-t border-border/70 bg-card/60 backdrop-blur-2xl">
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/10 via-primary/5 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 right-10 h-60 w-60 rounded-full bg-amber-500/10 blur-3xl" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-        <div className="colophon-mast">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/45">
-            <span className="text-orange-400/90">{t('footer.match_programme')}</span>
-            <span className="hidden h-px w-6 bg-white/15 sm:block" />
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-6 lg:px-8 pt-10 pb-6">
+        {/* Masthead Sub-Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-6">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">
+            <span className="text-primary">{t('footer.match_programme')}</span>
+            <span className="hidden h-px w-6 bg-border sm:block" />
             <span>
               {t('footer.since')} {year}
             </span>
-            <span className="text-white/20">·</span>
+            <span>·</span>
             <span>{t('footer.edition')}</span>
           </div>
-          <p className="hidden text-[10px] font-medium tracking-[0.08em] text-white/35 md:block">
+          <p className="hidden text-[10px] font-bold tracking-wider text-muted-foreground/70 md:block">
             {seals.join('  ·  ')}
           </p>
         </div>
 
-        <div className="grid gap-10 border-b border-white/[0.07] py-12 md:grid-cols-12 md:gap-8 lg:py-14">
-          <div className="flex flex-col gap-5 md:col-span-7 xl:col-span-5">
+        {/* Brand & Tonight Quick Gates */}
+        <div className="grid gap-10 border-b border-border/60 py-10 md:grid-cols-12 md:gap-8 lg:py-12">
+          <div className="flex flex-col gap-4 md:col-span-7 xl:col-span-5">
             <Link href="/" className="group inline-flex items-center gap-3.5 self-start" aria-label="Yalla Sport">
-              <BrandMark size={52} className="transition-transform duration-500 group-hover:scale-105" />
+              <BrandMark size={46} className="transition-transform duration-500 group-hover:scale-105 drop-shadow-[0_4px_12px_rgba(249,115,22,0.3)]" />
               <span className="flex flex-col">
-                <span className="text-[19px] font-extrabold leading-none tracking-[-0.06em] text-white">
+                <span className="text-xl font-black leading-none tracking-tight text-foreground">
                   YALLA SPORT
                 </span>
-                <span className="mt-2 text-[9px] font-bold uppercase tracking-[0.34em] text-orange-400">
+                <span className="mt-1.5 text-[9px] font-black uppercase tracking-[0.32em] text-primary">
                   {t('footer.tagline')}
                 </span>
               </span>
             </Link>
-            <p className="max-w-md text-[14px] leading-8 text-white/60">{t('footer.description')}</p>
-            <p className="max-w-sm border-s-2 border-orange-400/40 ps-4 text-[12px] leading-7 text-white/40">
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{t('footer.description')}</p>
+            <p className="max-w-sm border-s-2 border-primary/50 ps-3.5 text-xs leading-relaxed text-foreground/60">
               {t('footer.manifesto')}
             </p>
           </div>
 
           <div className="md:col-span-5 xl:col-span-7">
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.28em] text-orange-400/75">
+            <p className="mb-3 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
               {t('footer.tonight')}
             </p>
             <div className="grid gap-3 sm:grid-cols-3">
               {gates.map((gate) => (
-                <Link key={gate.href} href={gate.href} className="colophon-gate group">
+                <Link
+                  key={gate.href}
+                  href={gate.href}
+                  className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-card/80 p-4 transition-all hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5"
+                >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="tabular-nums text-[10px] font-bold tracking-[0.2em] text-white/25">
+                    <span className="tabular-nums text-[10px] font-black tracking-widest text-muted-foreground/60">
                       {gate.index}
                     </span>
-                    <ArrowUpRight className="h-3.5 w-3.5 text-orange-400/50 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-orange-400 rtl:rotate-[-90deg]" />
+                    <ArrowUpRight className="h-4 w-4 text-primary/70 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary rtl:rotate-[-90deg]" />
                   </div>
-                  <p className="mt-4 text-[14px] font-bold tracking-tight text-white transition-colors group-hover:text-orange-300">
-                    {gate.title}
-                  </p>
-                  <p className="mt-2 text-[12px] leading-6 text-white/40">{gate.copy}</p>
+                  <div className="mt-4">
+                    <p className="text-sm font-black text-foreground transition-colors group-hover:text-primary">
+                      {gate.title}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{gate.copy}</p>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="grid gap-12 py-12 md:grid-cols-12 md:gap-8 lg:py-14">
+        {/* Navigation Columns & Contact Ticket */}
+        <div className="grid gap-10 py-10 md:grid-cols-12 md:gap-8 lg:py-12">
           <nav
             className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:order-last md:col-span-12 xl:order-none xl:col-span-7"
             aria-label={t('footer.sitemap')}
@@ -143,80 +143,46 @@ export async function Footer() {
           </nav>
 
           <div className="md:col-span-5 xl:col-span-5">
-            <div className="colophon-ticket overflow-hidden rounded-2xl border border-white/10">
-              <div className="pointer-events-none absolute -end-10 -top-12 h-36 w-36 rounded-full bg-orange-500/14 blur-3xl" />
-              <div className="colophon-ticket-notch colophon-ticket-notch-top" aria-hidden="true" />
-              <div className="colophon-ticket-notch colophon-ticket-notch-bottom" aria-hidden="true" />
+            <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card/80 to-card p-5 backdrop-blur-md">
+              <div className="flex items-center justify-between gap-3 pb-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary">
+                  {t('footer.write_us')}
+                </p>
+                <span className="rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-primary">
+                  {t('footer.gate')} 01
+                </span>
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{t('footer.write_us_copy')}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground/70">{t('footer.desk_note')}</p>
+              
+              <a
+                href="mailto:contact@yallasport.com"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-black text-primary-foreground shadow-md shadow-primary/25 transition-all hover:scale-102 hover:brightness-110 active:scale-98"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                <span>{t('footer.email_cta')}</span>
+              </a>
 
-              <div className="grid sm:grid-cols-[1fr_5.5rem]">
-                <div className="p-5 ps-6 sm:p-6 sm:ps-7">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-orange-400/90">
-                      {t('footer.write_us')}
-                    </p>
-                    <span className="rounded-full border border-orange-400/25 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.22em] text-orange-300/80">
-                      {t('footer.gate')} 01
-                    </span>
-                  </div>
-                  <p className="mt-3 max-w-sm text-[13px] leading-7 text-white/55">{t('footer.write_us_copy')}</p>
-                  <p className="mt-2 text-[11px] text-white/30">{t('footer.desk_note')}</p>
-                  <a
-                    href="mailto:contact@yallasport.com"
-                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-card px-4 py-3.5 text-[12px] font-bold text-foreground transition-all duration-300 hover:bg-orange-500 hover:text-primary-foreground hover:shadow-[0_12px_30px_-16px_rgba(249,115,22,0.9)]"
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    {t('footer.email_cta')}
-                  </a>
-                  <div className="mt-4">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/25">
-                      {t('footer.desk')}
-                    </p>
-                    <p className="mt-1 text-[12px] tracking-wide text-white/45">contact@yallasport.com</p>
-                  </div>
-                </div>
-
-                <div className="colophon-ticket-stub flex items-center justify-center border-t border-white/10 py-4 sm:border-s sm:border-t-0 sm:py-0">
-                  <div className="flex flex-row items-center gap-3 sm:flex-col sm:gap-4">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-white/30 [writing-mode:horizontal-tb] sm:[writing-mode:vertical-rl] sm:rotate-180">
-                      YALLA
-                    </span>
-                    <TicketBarcode className="text-white/30 sm:rotate-90" />
-                  </div>
-                </div>
+              <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/5 text-[11px] text-muted-foreground">
+                <span>{t('footer.desk')}:</span>
+                <span className="font-mono text-foreground/80">contact@yallasport.com</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden pb-2 pt-2">
-          <PitchWatermark className="pointer-events-none absolute inset-x-0 top-1/2 mx-auto h-[min(200px,32vw)] w-auto -translate-y-1/2 text-white/[0.06]" />
-          <p
-            aria-hidden="true"
-            className="colophon-wordmark pointer-events-none select-none text-center font-black leading-[0.72] tracking-[-0.08em]"
-          >
-            YALLA
-          </p>
-          <p
-            aria-hidden="true"
-            className="colophon-wordmark-sub pointer-events-none select-none text-center font-black leading-none tracking-[0.42em]"
-          >
-            SPORT
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 border-t border-white/[0.07] py-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-1.5 text-[11px] text-white/40 sm:flex-row sm:items-center sm:gap-3">
-            <p>
-              © {year} Yalla Sport. {t('footer.rights')}
-            </p>
-            <span className="hidden h-1 w-1 rounded-full bg-white/20 sm:block" />
+        {/* Bottom Colophon & Copyright */}
+        <div className="flex flex-col gap-4 border-t border-border/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:gap-3">
+            <p>© {year} Yalla Sport. {t('footer.rights')}</p>
+            <span className="hidden h-1 w-1 rounded-full bg-muted-foreground/40 sm:block" />
             <p>{t('footer.designed')}</p>
           </div>
           <div className="flex items-center gap-3">
             <BackToTop label={t('footer.back_to_top')} />
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/15 bg-emerald-400/[0.06] px-3 py-1.5 text-[10px] font-semibold text-white/55">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-black text-emerald-400">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/80" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </span>
               {t('footer.operational')}
@@ -241,20 +207,20 @@ function FooterColumn({
 }) {
   return (
     <div className={className}>
-      <p className="mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.28em] text-orange-400/80">
-        <span className="tabular-nums text-white/25">{index}</span>
-        <span className="h-px w-4 bg-orange-400/40" />
+      <p className="mb-3.5 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
+        <span className="tabular-nums text-muted-foreground/60">{index}</span>
+        <span className="h-px w-3 bg-primary/40" />
         {title}
       </p>
-      <ul className="space-y-2.5">
+      <ul className="space-y-2">
         {links.map((link) => (
           <li key={`${link.href}-${link.name}`}>
             <Link
               href={link.href}
-              className="group inline-flex items-center gap-2 text-[13px] font-medium text-white/60 transition-colors hover:text-white"
+              className="group inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground transition-colors hover:text-primary"
             >
-              <span className="h-px w-0 bg-orange-400 transition-all duration-300 group-hover:w-3" />
-              {link.name}
+              <span className="h-px w-0 bg-primary transition-all duration-300 group-hover:w-2" />
+              <span>{link.name}</span>
             </Link>
           </li>
         ))}

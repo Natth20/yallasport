@@ -1,0 +1,1 @@
+import { prisma } from "@/lib/prisma"; async function main() { const articles = await prisma.news.findMany({ where: { status: "PUBLISHED" }, take: 5, select: { slug: true, title: true, sourceName: true }, orderBy: { publishedAt: "desc" } }); console.log(JSON.stringify(articles, null, 2)); process.exit(0); } main();

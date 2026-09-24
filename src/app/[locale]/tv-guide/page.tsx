@@ -1,4 +1,4 @@
-﻿// src/app/tv-guide/page.tsx
+// src/app/tv-guide/page.tsx
 import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { Tv, Globe, Clock, Search, PlayCircle, Radio } from 'lucide-react';
@@ -135,13 +135,17 @@ export default async function TVGuidePage({ searchParams }: { searchParams: Prom
         {matchChannels.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
             {matchChannels.map((mc) => (
-              <div key={mc.id} className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm dark:border-border dark:bg-foreground sm:rounded-3xl">
-                
+              <div key={mc.id} className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm dark:border-border dark:bg-card sm:rounded-3xl">
+
                 {/* Channel Context */}
-                <div className="relative flex items-center justify-between overflow-hidden bg-background dark:bg-foreground p-5 sm:p-8">
+                <div className="relative flex items-center justify-between overflow-hidden bg-background p-5 sm:p-8">
                   <div className="flex items-center gap-8 relative z-10">
                     <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center p-3 shadow-2xl transition-all duration-700 group-hover:scale-110 group-hover:rotate-6">
-                      <img src={mc.channel.logoUrl || ""} alt={mc.channel.name} className="w-full h-full object-contain" />
+                      {mc.channel.logoUrl ? (
+                        <img src={mc.channel.logoUrl} alt={mc.channel.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <Radio className="w-8 h-8 text-primary" />
+                      )}
                     </div>
                     <div>
                       <h3 className="font-black text-white text-2xl tracking-tight mb-2 uppercase">{mc.channel.name}</h3>
@@ -164,12 +168,12 @@ export default async function TVGuidePage({ searchParams }: { searchParams: Prom
                 <div className="space-y-6 p-6 text-center sm:p-10">
                   <div className="flex items-center justify-between gap-10">
                     <div className="flex flex-col items-center flex-1 gap-4">
-                       <img src={mc.match.homeTeam.logoUrl || ""} className="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
+                       <img src={mc.match.homeTeam.logoUrl || "/placeholder-team.png"} className="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
                        <span className="text-[11px] font-black uppercase tracking-wider text-foreground dark:text-foreground line-clamp-1">{mc.match.homeTeam.name}</span>
                     </div>
                     <div className="text-muted-foreground dark:text-foreground font-black text-xs uppercase tracking-[0.5em]">VS</div>
                     <div className="flex flex-col items-center flex-1 gap-4">
-                       <img src={mc.match.awayTeam.logoUrl || ""} className="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
+                       <img src={mc.match.awayTeam.logoUrl || "/placeholder-team.png"} className="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />
                        <span className="text-[11px] font-black uppercase tracking-wider text-foreground dark:text-foreground line-clamp-1">{mc.match.awayTeam.name}</span>
                     </div>
                   </div>

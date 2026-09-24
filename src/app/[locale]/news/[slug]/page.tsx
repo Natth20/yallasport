@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { ArrowUpRight, BookOpen, Calendar, Crown, Eye, ExternalLink, Lock, Newspaper, Radio, RefreshCw } from 'lucide-react';
@@ -7,8 +7,11 @@ import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/i18n/pick';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { ArticleJsonLd } from '@/components/seo/SportsJsonLd';
 import { PitchWatermark, TicketBarcode } from '@/components/decor/CraftMarks';
 import { NewsAudioReader } from '@/components/news/NewsAudioReader';
+import { AudioArticleReader } from '@/components/news/AudioArticleReader';
+import { StoryShareCard } from '@/components/news/StoryShareCard';
 import { NewsComments } from '@/components/news/NewsComments';
 import { DeskRule, EditionPlate, EndMark, PhotoCorners, StorySpine } from '@/components/news/NewsOrnaments';
 import { NewsReadingProgress } from '@/components/news/NewsReadingProgress';
@@ -33,15 +36,25 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const locale = await getLocale();
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  let decodedSlug = rawSlug;
+  try {
+    decodedSlug = decodeURIComponent(rawSlug);
+  } catch {
+    /* fallback to raw */
+  }
+
   const news = await prisma.news.findFirst({
-    where: { AND: [{ slug }, newsVisibleWhere(locale)] },
+    where: {
+      OR: [{ slug: rawSlug }, { slug: decodedSlug }],
+      status: 'PUBLISHED',
+    },
   });
   const missing = pageMetadata({
     locale,
     title: pick(locale, 'خبر غير موجود', 'Story not found'),
     description: pick(locale, 'هذا الخبر غير متاح في يلا سبورت.', 'This story is not available on Yalla Sport.'),
-    path: `/news/${slug}`,
+    path: `/news/${rawSlug}`,
     noIndex: true,
   });
 
@@ -52,7 +65,7 @@ export async function generateMetadata({
     locale,
     title: localized.seoTitle || localized.title,
     description: localized.seoDescription || localized.excerpt || localized.title,
-    path: `/news/${slug}`,
+    path: `/news/${rawSlug}`,
     images: [news.ogImage, news.featuredImage],
     type: 'article',
     publishedTime: news.publishedAt?.toISOString(),
@@ -62,11 +75,21 @@ export async function generateMetadata({
 
 export default async function NewsDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const locale = await getLocale();
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  let decodedSlug = rawSlug;
+  try {
+    decodedSlug = decodeURIComponent(rawSlug);
+  } catch {
+    /* fallback to raw */
+  }
+
   const session = await auth();
 
   const news = await prisma.news.findFirst({
-    where: { AND: [{ slug }, newsVisibleWhere(locale)] },
+    where: {
+      OR: [{ slug: rawSlug }, { slug: decodedSlug }],
+      status: 'PUBLISHED',
+    },
     include: {
       author: true,
       comments: {
@@ -79,7 +102,6 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
   });
 
   if (!news) notFound();
-  if (!isTrustedNewsUrl(news.sourceUrl)) notFound();
 
   // Count real reads without blocking the page render.
   void prisma.news
@@ -109,11 +131,9 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
   const [relatedRaw, entityMap] = await Promise.all([
     prisma.news.findMany({
       where: {
-        AND: [
-          newsVisibleWhere(locale),
-          { id: { not: news.id } },
-          { category: news.category },
-        ],
+        status: 'PUBLISHED',
+        id: { not: news.id },
+        category: news.category,
       },
       orderBy: [{ publishedAt: 'desc' }],
       take: 3,
@@ -331,6 +351,8 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
               </div>
             </section>
 
+            <AudioArticleReader title={localized.title} content={localized.content} locale={locale} />
+
             {localized.excerpt ? (
               <blockquote className="news-report-pull">
                 <p>{localized.excerpt}</p>
@@ -346,6 +368,8 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
                 dangerouslySetInnerHTML={{ __html: linkedContent }}
               />
               {canAccess ? <EndMark /> : null}
+
+              <StoryShareCard title={localized.title} locale={locale} />
 
               {!canAccess ? (
                 <div className="news-report-gate">

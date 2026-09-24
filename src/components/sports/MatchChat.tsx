@@ -179,7 +179,7 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
             LIVE
           </span>
           <div>
-            <span className="atlas-section-kicker text-orange-500">{t('chat')}</span>
+            <span className="atlas-section-kicker text-primary">{t('chat')}</span>
             <h3 className="match-chat-title">{t('live_chat')}</h3>
           </div>
         </div>

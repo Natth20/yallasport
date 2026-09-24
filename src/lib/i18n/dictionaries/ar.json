@@ -640,8 +640,8 @@
     "dark_house": "",
     "geo_copy": "هذا البث غير متاح في نطاقك.",
     "no_next": "لا مواعيد قادمة الآن.",
-    "show_reel": "حلقة",
     "house_empty": "لا بث للعرض الآن.",
+    "house_empty_copy": "تابع جدول البث والمباريات القادمة أدناه.",
     "library": "المكتبة",
     "published_reel": "",
     "no_published": "لا عروض في المكتبة بعد.",
@@ -652,7 +652,11 @@
     "kind_tv": "قنوات",
     "type_movie": "فيلم",
     "type_series": "مسلسل",
-    "type_doc": "وثائقي"
+    "type_doc": "وثائقي",
+    "upcoming": "المواعيد القادمة",
+    "no_upcoming": "لا مواعيد قادمة الآن.",
+    "episodes": "حلقة",
+    "watch_now": "شاهد الآن"
   },
   "auth": {
     "gate": "بوابة الملعب",

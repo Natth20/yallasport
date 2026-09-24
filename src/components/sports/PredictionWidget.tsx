@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Trophy, CheckCircle2, Lock } from 'lucide-react';
@@ -51,8 +51,8 @@ export const PredictionWidget: React.FC<PredictionWidgetProps> = ({
   if (!isLoggedIn) {
     return (
       <div className="px-5 py-8 text-center">
-        <Lock className="mx-auto h-6 w-6 text-orange-500" />
-        <h4 className="mt-3 text-sm font-bold text-foreground dark:text-foreground">{t('sign_in_predict')}</h4>
+        <Lock className="mx-auto h-6 w-6 text-primary" />
+        <h4 className="mt-3 text-sm font-bold text-foreground">{t('sign_in_predict')}</h4>
         <p className="mt-1 text-[11px] font-medium text-muted-foreground">{t('prediction_pitch')}</p>
       </div>
     );
@@ -60,9 +60,9 @@ export const PredictionWidget: React.FC<PredictionWidgetProps> = ({
 
   return (
     <div className="relative p-5">
-      <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-orange-500">{t('predict')}</span>
-      <h3 className="mt-1 flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
-        <Trophy className="h-4 w-4 text-orange-500" />
+      <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-primary">{t('predict')}</span>
+      <h3 className="mt-1 flex items-center gap-2 text-sm font-bold text-foreground">
+        <Trophy className="h-4 w-4 text-primary" />
         {t('predict_result')}
       </h3>
 
@@ -78,8 +78,8 @@ export const PredictionWidget: React.FC<PredictionWidgetProps> = ({
             disabled={submitted || submitting}
             className={`rounded-xl border px-2 py-3 text-[10px] font-bold transition-all ${
               prediction === opt.value
-                ? 'border-orange-500 bg-orange-500 text-primary-foreground'
-                : 'border-border bg-muted text-foreground hover:border-orange-500/30 dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
+                ? 'border-primary bg-primary text-white shadow-md shadow-primary/25'
+                : 'border-border bg-muted text-foreground hover:border-primary/40 dark:border-border dark:bg-card/[0.04]'
             }`}
           >
             {opt.label}
@@ -88,15 +88,15 @@ export const PredictionWidget: React.FC<PredictionWidgetProps> = ({
       </div>
 
       {submitted && (
-        <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+        <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 py-2 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
           <CheckCircle2 className="h-4 w-4" />
           {t('prediction_saved')}
         </div>
       )}
 
       {submitting && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/60 dark:bg-foreground/50">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/60 backdrop-blur-sm">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       )}
     </div>

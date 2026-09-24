@@ -1,9 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import { MatchCard } from '@/components/sports/MatchCard';
 import { MatchQuickActions } from '@/components/sports/MatchQuickActions';
 import { KickoffTimeline, type KickoffSlot } from '@/components/matches/KickoffTimeline';
 import { LiveNowBoard } from '@/components/matches/LiveNowBoard';
 import { MatchdayLenses } from '@/components/matches/MatchdayLenses';
+import { PinnedMatchesBar, type PinnedMatchData } from '@/components/matches/PinnedMatchesBar';
+import { WinProbabilityBar } from '@/components/matches/WinProbabilityBar';
 import { MatchdayDesk } from '@/components/matches/MatchdayDesk';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
@@ -16,6 +18,7 @@ import {
   normalizeTimezone,
 } from '@/lib/datetime/format';
 import { toNormalizedMatch } from '@/lib/sports-data/from-db';
+import { sportsData } from '@/lib/sports-data';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LiveDataStatus } from '@/components/sports/LiveDataStatus';
 import { TimezoneSelector } from '@/components/layout/TimezoneSelector';
@@ -393,65 +396,106 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     }
   }
 
-  const allMatches: DayMatch[] = matchRows.map((row: any) => {
-    const lineups = (row.lineups ?? []) as Array<{
-      teamId: string;
-      formation: string | null;
-      isPredicted: boolean;
-      playersJson: unknown;
-    }>;
-    const statistics = (row.statistics ?? []) as Array<{
-      teamId: string;
-      possession: number | null;
-      shotsOnTarget: number | null;
-      shotsOffTarget: number | null;
-      corners: number | null;
-      fouls: number | null;
-      offsides: number | null;
-    }>;
-    const confirmedLineups = lineups.filter((lineup) => !lineup.isPredicted);
-    const homeLineup = confirmedLineups.find((lineup) => belongsToTeam(lineup.teamId, row.homeTeam));
-    const awayLineup = confirmedLineups.find((lineup) => belongsToTeam(lineup.teamId, row.awayTeam));
-    const homeStats = statistics.find((stat) => belongsToTeam(stat.teamId, row.homeTeam));
-    const awayStats = statistics.find((stat) => belongsToTeam(stat.teamId, row.awayTeam));
-    return {
-      ...toNormalizedMatch(row),
-      round: roundById.get(row.id),
-      venueCity: row.venue?.city ?? undefined,
-      venueCapacity: row.venue?.capacity ?? undefined,
-      channels: (row.channels ?? []).map((entry: { channel: { name: string; logoUrl?: string | null } }) => entry.channel),
-      leagueCountry: row.league.country ?? undefined,
-      refereeName: row.referee?.name ?? undefined,
-      commentators: row.commentators ?? [],
-      homeFormation: homeLineup?.formation ?? undefined,
-      awayFormation: awayLineup?.formation ?? undefined,
+  // If DB is empty (no matches from Supabase), fetch from live API
+  const apiMatches =
+    matchRows.length === 0
+      ? await sportsData.getMatchesByDate(selectedDateStr).catch(() => [])
+      : [];
+
+  // Merge: API matches come first, DB matches supplement
+  const rawAllMatches: DayMatch[] = [
+    ...apiMatches.map((m) => ({
+      ...m,
+      round: undefined as string | undefined,
+      venueCity: undefined,
+      venueCapacity: undefined,
+      channels: [] as Array<{ name: string; logoUrl?: string | null }>,
+      leagueCountry: undefined,
+      refereeName: undefined,
+      commentators: [] as Array<{ name: string; role?: string; language?: string | null }>,
+      homeFormation: undefined,
+      awayFormation: undefined,
       homePredicted: undefined,
       awayPredicted: undefined,
-      homeCoach: row.homeTeam.coach?.name || undefined,
-      awayCoach: row.awayTeam.coach?.name || undefined,
-      hasLicensedStream: STREAMING_ENABLED && (row.streamAssets?.length ?? 0) > 0,
-      homePossession: homeStats?.possession ?? undefined,
-      awayPossession: awayStats?.possession ?? undefined,
-      homeShotsOn: homeStats?.shotsOnTarget ?? undefined,
-      awayShotsOn: awayStats?.shotsOnTarget ?? undefined,
-      homeShotsOff: homeStats?.shotsOffTarget ?? undefined,
-      awayShotsOff: awayStats?.shotsOffTarget ?? undefined,
-      homeCorners: homeStats?.corners ?? undefined,
-      awayCorners: awayStats?.corners ?? undefined,
-      homeFouls: homeStats?.fouls ?? undefined,
-      awayFouls: awayStats?.fouls ?? undefined,
-      homeOffsides: homeStats?.offsides ?? undefined,
-      awayOffsides: awayStats?.offsides ?? undefined,
-      homeStarters: (() => {
-        const starters = lineupStarters(homeLineup?.playersJson);
-        return starters.length ? starters : undefined;
-      })(),
-      awayStarters: (() => {
-        const starters = lineupStarters(awayLineup?.playersJson);
-        return starters.length ? starters : undefined;
-      })(),
-    };
-  });
+      homeCoach: undefined,
+      awayCoach: undefined,
+      hasLicensedStream: false,
+      homePossession: undefined,
+      awayPossession: undefined,
+      homeShotsOn: undefined,
+      awayShotsOn: undefined,
+      homeShotsOff: undefined,
+      awayShotsOff: undefined,
+      homeCorners: undefined,
+      awayCorners: undefined,
+      homeFouls: undefined,
+      awayFouls: undefined,
+      homeOffsides: undefined,
+      awayOffsides: undefined,
+      homeStarters: undefined,
+      awayStarters: undefined,
+    } as DayMatch)),
+    ...matchRows.map((row: any) => {
+      const lineups = (row.lineups ?? []) as Array<{
+        teamId: string;
+        formation: string | null;
+        isPredicted: boolean;
+        playersJson: unknown;
+      }>;
+      const statistics = (row.statistics ?? []) as Array<{
+        teamId: string;
+        possession: number | null;
+        shotsOnTarget: number | null;
+        shotsOffTarget: number | null;
+        corners: number | null;
+        fouls: number | null;
+        offsides: number | null;
+      }>;
+      const confirmedLineups = lineups.filter((lineup) => !lineup.isPredicted);
+      const homeLineup = confirmedLineups.find((lineup) => belongsToTeam(lineup.teamId, row.homeTeam));
+      const awayLineup = confirmedLineups.find((lineup) => belongsToTeam(lineup.teamId, row.awayTeam));
+      const homeStats = statistics.find((stat) => belongsToTeam(stat.teamId, row.homeTeam));
+      const awayStats = statistics.find((stat) => belongsToTeam(stat.teamId, row.awayTeam));
+      return {
+        ...toNormalizedMatch(row),
+        round: roundById.get(row.id),
+        venueCity: row.venue?.city ?? undefined,
+        venueCapacity: row.venue?.capacity ?? undefined,
+        channels: (row.channels ?? []).map((entry: { channel: { name: string; logoUrl?: string | null } }) => entry.channel),
+        leagueCountry: row.league.country ?? undefined,
+        refereeName: row.referee?.name ?? undefined,
+        commentators: row.commentators ?? [],
+        homeFormation: homeLineup?.formation ?? undefined,
+        awayFormation: awayLineup?.formation ?? undefined,
+        homePredicted: undefined,
+        awayPredicted: undefined,
+        homeCoach: row.homeTeam.coach?.name || undefined,
+        awayCoach: row.awayTeam.coach?.name || undefined,
+        hasLicensedStream: STREAMING_ENABLED && (row.streamAssets?.length ?? 0) > 0,
+        homePossession: homeStats?.possession ?? undefined,
+        awayPossession: awayStats?.possession ?? undefined,
+        homeShotsOn: homeStats?.shotsOnTarget ?? undefined,
+        awayShotsOn: awayStats?.shotsOnTarget ?? undefined,
+        homeShotsOff: homeStats?.shotsOffTarget ?? undefined,
+        awayShotsOff: awayStats?.shotsOffTarget ?? undefined,
+        homeCorners: homeStats?.corners ?? undefined,
+        awayCorners: awayStats?.corners ?? undefined,
+        homeFouls: homeStats?.fouls ?? undefined,
+        awayFouls: awayStats?.fouls ?? undefined,
+        homeOffsides: homeStats?.offsides ?? undefined,
+        awayOffsides: awayStats?.offsides ?? undefined,
+        homeStarters: (() => {
+          const starters = lineupStarters(homeLineup?.playersJson);
+          return starters.length ? starters : undefined;
+        })(),
+        awayStarters: (() => {
+          const starters = lineupStarters(awayLineup?.playersJson);
+          return starters.length ? starters : undefined;
+        })(),
+      } as DayMatch;
+    }),
+  ];
+  const allMatches = rawAllMatches;
 
   const nameLabels = await localizeEntityMap(
     allMatches.flatMap((match) => [
@@ -1179,6 +1223,18 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     ...(broadcasts.length > 0 ? [{ value: broadcasts.length, label: pick(locale, 'قناة', 'Channels') }] : []),
   ];
 
+  const pinnedMatchDataList: PinnedMatchData[] = allMatches.map((m) => ({
+    id: m.id,
+    homeTeam: { name: m.homeTeam.name, logoUrl: m.homeTeam.logoUrl ?? null },
+    awayTeam: { name: m.awayTeam.name, logoUrl: m.awayTeam.logoUrl ?? null },
+    homeScore: m.homeScore,
+    awayScore: m.awayScore,
+    status: m.status,
+    minute: m.minute,
+    kickoffTime: format(new Date(m.kickoffAt), 'HH:mm'),
+    leagueName: m.league.name,
+  }));
+
   return (
     <div className="matchday-board pb-32">
       <section className="floodlight-hero">
@@ -1247,6 +1303,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       </section>
 
       <main className="matchday-main mx-auto max-w-7xl space-y-6 px-5 pb-8 pt-5 sm:px-6 lg:px-8">
+        <PinnedMatchesBar allMatches={pinnedMatchDataList} locale={locale} />
         <MatchdayLenses
           leagues={leagueLenses}
           channels={channelLenses}

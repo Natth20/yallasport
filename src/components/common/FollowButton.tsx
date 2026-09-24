@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
@@ -50,14 +50,14 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     }
   };
 
-  const baseStyles = "px-8 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-3 backdrop-blur-md border shadow-lg active:scale-95 disabled:opacity-50";
+  const baseStyles = "px-6 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2.5 backdrop-blur-md border shadow-lg active:scale-95 disabled:opacity-50";
   const variants = {
     primary: isFollowing 
-      ? "bg-background border-border text-white" 
-      : "bg-orange-500 border-orange-400 text-primary-foreground shadow-orange-500/20",
+      ? "bg-card border-border text-foreground" 
+      : "bg-primary border-primary/50 text-white shadow-primary/25 hover:bg-primary/90",
     ghost: isFollowing 
-      ? "bg-white/20 border-white/20 text-white" 
-      : "bg-white/10 border-white/10 text-white hover:bg-white/20"
+      ? "bg-primary/20 border-primary/30 text-primary" 
+      : "bg-foreground/5 border-foreground/10 text-foreground hover:bg-foreground/10"
   };
 
   return (
