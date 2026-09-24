@@ -5,7 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { pick } from '@/i18n/pick';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { LexProgress, LexRail, type LexRailItem } from './LexRail';
-import './lex.css';
+import styles from './lex.module.css';
 import {
   ShieldCheck,
   Cookie,
@@ -137,49 +137,49 @@ export function LexChamber({
   };
 
   return (
-    <div className="lex-chamber" data-lex-tone={tone}>
-      <span className="lex-bg-glow" aria-hidden />
-      <span className="lex-bg-grid" aria-hidden />
+    <div className={styles['lex-chamber']} data-lex-tone={tone}>
+      <span className={styles['lex-bg-glow']} aria-hidden />
+      <span className={styles['lex-bg-grid']} aria-hidden />
       <LexProgress />
 
-      <div className="lex-container">
+      <div className={styles['lex-container']}>
         {/* ——— Hero Header ——— */}
-        <header className="lex-hero">
-          <div className="lex-hero-badge-row">
-            <span className="lex-pill-badge">
+        <header className={styles['lex-hero']}>
+          <div className={styles['lex-hero-badge-row']}>
+            <span className={styles['lex-pill-badge']}>
               <Sparkles className="w-3.5 h-3.5" />
               <span>{instrument}</span>
             </span>
-            <span className="lex-meta-badge">
+            <span className={styles['lex-meta-badge']}>
               <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
               <span>{isAr ? `تاريخ السريان: ${date}` : `Effective: ${date}`}</span>
             </span>
-            <span className="lex-meta-badge font-mono">
+            <span className={`${styles['lex-meta-badge']} font-mono`}>
               <span>{code}</span>
             </span>
           </div>
 
-          <h1 className="lex-hero-title">{wordmark}</h1>
-          <p className="lex-hero-lead">{lead}</p>
+          <h1 className={styles['lex-hero-title']}>{wordmark}</h1>
+          <p className={styles['lex-hero-lead']}>{lead}</p>
 
           {/* Quick Action Toolbar */}
-          <div className="lex-hero-actions">
-            <div className="lex-search-box">
-              <Search className="lex-search-icon w-4 h-4" />
+          <div className={styles['lex-hero-actions']}>
+            <div className={styles['lex-search-box']}>
+              <Search className={`${styles['lex-search-icon']} w-4 h-4`} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={isAr ? 'ابحث في بنود هذه الوثيقة...' : 'Search within this document...'}
-                className="lex-search-input"
+                className={styles['lex-search-input']}
               />
             </div>
 
-            <div className="lex-tool-btns">
+            <div className={styles['lex-tool-btns']}>
               <button
                 type="button"
                 onClick={handleShare}
-                className="lex-tool-btn"
+                className={styles['lex-tool-btn']}
                 title={isAr ? 'مشاركة الرابط' : 'Share link'}
               >
                 <Share2 className="w-3.5 h-3.5" />
@@ -189,7 +189,7 @@ export function LexChamber({
               <button
                 type="button"
                 onClick={handlePrint}
-                className="lex-tool-btn"
+                className={styles['lex-tool-btn']}
                 title={isAr ? 'طباعة الوثيقة' : 'Print document'}
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -201,7 +201,7 @@ export function LexChamber({
 
         {/* ——— Hub Navigation Ribbon ——— */}
         <nav
-          className="lex-nav-ribbon"
+          className={styles['lex-nav-ribbon']}
           aria-label={pick(locale, 'بوابة الوثائق القانونية', 'Legal & Trust Portal')}
         >
           {LEX_GATES.map((gate) => {
@@ -211,15 +211,15 @@ export function LexChamber({
               <Link
                 key={gate.href}
                 href={gate.href}
-                className="lex-nav-card"
+                className={styles['lex-nav-card']}
                 data-active={active ? 'true' : 'false'}
               >
-                <div className="lex-nav-card-icon">
+                <div className={styles['lex-nav-card-icon']}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <div className="lex-nav-card-text">
-                  <span className="lex-nav-card-title">{pick(locale, gate.ar, gate.en)}</span>
-                  <span className="lex-nav-card-desc">{pick(locale, gate.arDesc, gate.enDesc)}</span>
+                <div className={styles['lex-nav-card-text']}>
+                  <span className={styles['lex-nav-card-title']}>{pick(locale, gate.ar, gate.en)}</span>
+                  <span className={styles['lex-nav-card-desc']}>{pick(locale, gate.arDesc, gate.enDesc)}</span>
                 </div>
               </Link>
             );
@@ -227,9 +227,9 @@ export function LexChamber({
         </nav>
 
         {/* ——— Main Content Layout ——— */}
-        <div className="lex-main-grid">
+        <div className={styles['lex-main-grid']}>
           {/* Sticky Sidebar (Table of Contents & Quick Support) */}
-          <aside className="lex-sidebar">
+          <aside className={styles['lex-sidebar']}>
             <LexRail
               items={rail}
               heading={pick(locale, 'فهرس البنود', 'Article Index')}
@@ -237,7 +237,7 @@ export function LexChamber({
             />
 
             {aside || (
-              <div className="lex-sidebar-contact-card">
+              <div className={styles['lex-sidebar-contact-card']}>
                 <h4>{pick(locale, 'هل لديك استفسار؟', 'Have questions?')}</h4>
                 <p>
                   {pick(
@@ -246,7 +246,7 @@ export function LexChamber({
                     'Our team is available to address any privacy or terms concerns.'
                   )}
                 </p>
-                <Link href="/report" className="lex-sidebar-btn">
+                <Link href="/report" className={styles['lex-sidebar-btn']}>
                   <Send className="w-3.5 h-3.5" />
                   <span>{pick(locale, 'تواصل مع الدعم', 'Contact Support')}</span>
                 </Link>
@@ -255,14 +255,14 @@ export function LexChamber({
           </aside>
 
           {/* Main Document Content */}
-          <main className="lex-articles-flow" id="lex-doc-content">
+          <main className={styles['lex-articles-flow']} id="lex-doc-content">
             {children}
           </main>
         </div>
 
         {/* ——— Footer Colophon ——— */}
-        <footer className="lex-colophon-box">
-          <div className="lex-colophon-info">
+        <footer className={styles['lex-colophon-box']}>
+          <div className={styles['lex-colophon-info']}>
             <div className="w-10 h-10 rounded-xl bg-[var(--lex-accent-soft)] border border-[var(--lex-accent-border)] flex items-center justify-center text-[var(--lex-accent)] font-bold text-sm">
               YS
             </div>
@@ -274,7 +274,7 @@ export function LexChamber({
             </div>
           </div>
 
-          <p className="lex-colophon-legal-text">
+          <p className={styles['lex-colophon-legal-text']}>
             {pick(
               locale,
               'تخضع هذه الوثيقة لمراجعة دورية لضمان الامتثال التام لأعلى معايير حماية البيانات والشفافية الرقمية.',
@@ -298,7 +298,7 @@ export function LexChamber({
 /* ══════════════ SUBCOMPONENTS ══════════════ */
 
 export function LexHighlightsGrid({ children }: { children: ReactNode }) {
-  return <div className="lex-highlights-grid">{children}</div>;
+  return <div className={styles['lex-highlights-grid']}>{children}</div>;
 }
 
 export function LexHighlightCard({
@@ -313,15 +313,15 @@ export function LexHighlightCard({
   body: string;
 }) {
   return (
-    <div className="lex-highlight-card">
-      <div className="lex-highlight-header">
-        <div className="lex-highlight-icon-wrap">
+    <div className={styles['lex-highlight-card']}>
+      <div className={styles['lex-highlight-header']}>
+        <div className={styles['lex-highlight-icon-wrap']}>
           {Icon ? <Icon className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
         </div>
-        {badge ? <span className="lex-highlight-badge">{badge}</span> : null}
+        {badge ? <span className={styles['lex-highlight-badge']}>{badge}</span> : null}
       </div>
-      <h3 className="lex-highlight-title">{title}</h3>
-      <p className="lex-highlight-body">{body}</p>
+      <h3 className={styles['lex-highlight-title']}>{title}</h3>
+      <p className={styles['lex-highlight-body']}>{body}</p>
     </div>
   );
 }
@@ -344,19 +344,19 @@ export function LexSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <section id={id} className="lex-section-card" data-open={isOpen ? 'true' : 'false'}>
-      <div className="lex-section-head" onClick={() => setIsOpen(!isOpen)}>
-        <div className="lex-section-title-wrap">
-          <span className="lex-section-no">{index}</span>
+    <section id={id} className={styles['lex-section-card']} data-open={isOpen ? 'true' : 'false'}>
+      <div className={styles['lex-section-head']} onClick={() => setIsOpen(!isOpen)}>
+        <div className={styles['lex-section-title-wrap']}>
+          <span className={styles['lex-section-no']}>{index}</span>
           <div>
-            {kicker ? <span className="lex-section-kicker">{kicker}</span> : null}
-            <h2 className="lex-section-title">{title}</h2>
+            {kicker ? <span className={styles['lex-section-kicker']}>{kicker}</span> : null}
+            <h2 className={styles['lex-section-title']}>{title}</h2>
           </div>
         </div>
-        <ChevronDown className="lex-section-toggle-icon w-5 h-5" />
+        <ChevronDown className={`${styles['lex-section-toggle-icon']} w-5 h-5`} />
       </div>
 
-      {isOpen && <div className="lex-section-body">{children}</div>}
+      {isOpen && <div className={styles['lex-section-body']}>{children}</div>}
     </section>
   );
 }
@@ -369,8 +369,8 @@ export function LexModernTable({
   rows: (string | ReactNode)[][];
 }) {
   return (
-    <div className="lex-table-container">
-      <table className="lex-modern-table">
+    <div className={styles['lex-table-container']}>
+      <table className={styles['lex-modern-table']}>
         <thead>
           <tr>
             {headers.map((h, i) => (
@@ -394,10 +394,10 @@ export function LexModernTable({
 
 export function LexCheckList({ items }: { items: string[] }) {
   return (
-    <ul className="lex-check-list">
+    <ul className={styles['lex-check-list']}>
       {items.map((item, idx) => (
-        <li key={idx} className="lex-check-item">
-          <CheckCircle2 className="lex-check-icon w-4 h-4" />
+        <li key={idx} className={styles['lex-check-item']}>
+          <CheckCircle2 className={`${styles['lex-check-icon']} w-4 h-4`} />
           <span>{item}</span>
         </li>
       ))}
@@ -415,10 +415,10 @@ export function LexCallout({
   children: ReactNode;
 }) {
   return (
-    <aside className="lex-callout">
-      <Icon className="lex-callout-icon w-5 h-5" />
-      <div className="lex-callout-content">
-        {title ? <h4 className="lex-callout-title">{title}</h4> : null}
+    <aside className={styles['lex-callout']}>
+      <Icon className={`${styles['lex-callout-icon']} w-5 h-5`} />
+      <div className={styles['lex-callout-content']}>
+        {title ? <h4 className={styles['lex-callout-title']}>{title}</h4> : null}
         <div>{children}</div>
       </div>
     </aside>
@@ -435,7 +435,7 @@ export const LexNote = ({ label, children }: { label: string; children: ReactNod
   <LexCallout title={label}>{children}</LexCallout>
 );
 export const LexAsideCard = ({ title, children }: { title: string; children: ReactNode }) => (
-  <div className="lex-sidebar-contact-card">
+  <div className={styles['lex-sidebar-contact-card']}>
     <h4>{title}</h4>
     <div>{children}</div>
   </div>

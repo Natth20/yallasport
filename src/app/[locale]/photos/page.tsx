@@ -12,7 +12,7 @@ import { SalonStage } from '@/components/salon/SalonStage';
 import { PhotoHall, type PhotoFrame } from '@/components/photos/PhotoHall';
 import { swallow } from '@/lib/ops/caught';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();

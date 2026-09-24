@@ -10,7 +10,7 @@ import { safeRedisGet } from '@/lib/redis';
 import { LeaderboardExplorer, UserRankItem, RealScorerItem } from './LeaderboardExplorer';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { predictionAccuracy, rankByPoints, scorerDeskSlug, settledStreak } from '@/lib/predictions/rank';
-import './predictions-house.css';
+import styles from './predictions-house.module.css';
 
 function initials(name: string | null) {
   const parts = (name || '').trim().split(/\s+/).filter(Boolean);
@@ -213,11 +213,11 @@ export async function PredictionsHouse() {
   return (
     <div className="predictions-house relative min-h-screen overflow-hidden pb-16">
       <div className="mx-auto max-w-7xl space-y-12 px-4 pt-8 sm:px-6 lg:px-8">
-        <header className="ph-hero">
+        <header className={styles['ph-hero']}>
           <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
             <div className="space-y-6 lg:col-span-8">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="ph-kicker">
+                <span className={styles['ph-kicker']}>
                   {t('house')} · {t('folio')}
                 </span>
                 <span className="font-mono text-xs font-bold text-emerald-500">{now.getFullYear()}</span>
@@ -232,7 +232,7 @@ export async function PredictionsHouse() {
                 <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">{t('standfirst')}</p>
                 <p className="text-xs font-bold text-primary">{t('points_rule')}</p>
               </div>
-              <div className="ph-tally">
+              <div className={styles['ph-tally']}>
                 {tally.map((item) => (
                   <article key={item.label}>
                     <strong>{item.value}</strong>
@@ -243,7 +243,7 @@ export async function PredictionsHouse() {
             </div>
 
             <div className="lg:col-span-4">
-              <div className="ph-card space-y-4 rounded-2xl border-amber-500/30 p-6">
+              <div className={`${styles['ph-card']} space-y-4 rounded-2xl border-amber-500/30 p-6`}>
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-500">{t('place_kicker')}</span>
                   {onBoard && myRank ? (
@@ -268,12 +268,12 @@ export async function PredictionsHouse() {
                       </div>
                       <div className="flex flex-wrap gap-2 text-[11px] font-bold">
                         {accuracy != null ? (
-                          <span className="ph-chip is-ok">
+                          <span className={`${styles['ph-chip']} ${styles['is-ok']}`}>
                             {t('accuracy')}: {accuracy}%
                           </span>
                         ) : null}
                         {streak > 0 ? (
-                          <span className="ph-chip is-wait">
+                          <span className={`${styles['ph-chip']} ${styles['is-wait']}`}>
                             {t('streak')}: {streak}
                           </span>
                         ) : null}
@@ -303,9 +303,9 @@ export async function PredictionsHouse() {
         {me && myHistory.length > 0 ? (
           <section className="space-y-3">
             <h2 className="text-lg font-black">{t('your_ledger')}</h2>
-            <div className="ph-ledger">
+            <div className={styles['ph-ledger']}>
               {myHistory.map((slip) => (
-                <Link key={slip.match.id} href={`/match/${slip.match.id}`} className="ph-slip">
+                <Link key={slip.match.id} href={`/match/${slip.match.id}`} className={styles['ph-slip']}>
                   <strong className="text-sm">
                     {slip.match.homeTeam.name} × {slip.match.awayTeam.name}
                   </strong>
@@ -314,7 +314,7 @@ export async function PredictionsHouse() {
                     {slip.pointsAwarded ? ` · ${slip.pointsAwarded}` : ''}
                   </em>
                   <span
-                    className={`ph-chip ${slip.isCorrect === true ? 'is-ok' : slip.isCorrect === false ? 'is-no' : 'is-wait'
+                    className={`${styles['ph-chip']} ${slip.isCorrect === true ? styles['is-ok'] : slip.isCorrect === false ? styles['is-no'] : styles['is-wait']
                       }`}
                   >
                     {slip.isCorrect === true ? t('slip_ok') : slip.isCorrect === false ? t('slip_miss') : t('slip_wait')}
@@ -331,18 +331,18 @@ export async function PredictionsHouse() {
               <span className="text-xs font-bold uppercase tracking-widest text-amber-500">{t('podium_kicker')}</span>
               <h2 className="text-2xl font-black text-foreground sm:text-3xl">{t('podium_title')}</h2>
             </div>
-            <div className="ph-podium mx-auto max-w-4xl">
+            <div className={`${styles['ph-podium']} mx-auto max-w-4xl`}>
               {[podium[1], podium[0], podium[2]].map((seat, visual) => {
                 if (!seat) return <div key={visual} />;
                 const place = visual === 1 ? 1 : visual === 0 ? 2 : 3;
-                const seatClass = place === 1 ? 'is-gold' : place === 2 ? 'is-silver' : 'is-bronze';
+                const seatClass = place === 1 ? styles['is-gold'] : place === 2 ? styles['is-silver'] : styles['is-bronze'];
                 return (
-                  <article key={seat.id} className={`ph-seat ph-card is-place-${place} ${seatClass}`}>
-                    {place === 1 ? <span className="ph-crown">👑 {t('champion')}</span> : null}
-                    <span className={`ph-medal is-${place}`} aria-hidden>
+                  <article key={seat.id} className={`${styles['ph-seat']} ${styles['ph-card']} ${styles[`is-place-${place}`]} ${seatClass}`}>
+                    {place === 1 ? <span className={styles['ph-crown']}>👑 {t('champion')}</span> : null}
+                    <span className={`${styles['ph-medal']} ${styles[`is-${place}`]}`} aria-hidden>
                       <b>{place}</b>
                     </span>
-                    <div className="ph-seat-face mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl font-bold">
+                    <div className={`${styles['ph-seat-face']} mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl font-bold`}>
                       {seat.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={seat.image} alt="" className="h-full w-full object-cover" />
@@ -366,7 +366,7 @@ export async function PredictionsHouse() {
         ) : null}
 
         {moodTotal > 0 ? (
-          <section className="ph-mood rounded-3xl p-6 sm:p-8">
+          <section className={`${styles['ph-mood']} rounded-3xl p-6 sm:p-8`}>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('mood_kicker')}</p>
@@ -376,7 +376,7 @@ export async function PredictionsHouse() {
                 {moodTotal} {t('mood_count')}
               </span>
             </div>
-            <div className="ph-mood-bar mb-4">
+            <div className={`${styles['ph-mood-bar']} mb-4`}>
               {mood.map((item) => {
                 const pct = Math.round((item.value / moodTotal) * 100);
                 return <i key={item.key} className="ys-grow-x" style={{ width: `${pct}%`, background: item.color }} title={`${item.label}: ${pct}%`} />;
@@ -433,7 +433,7 @@ export async function PredictionsHouse() {
                         {match._count.predictions} {t('prog_slips')}
                       </span>
                       {mine ? (
-                        <span className="ph-chip is-ok">{t('prog_yours')}</span>
+                        <span className={`${styles['ph-chip']} ${styles['is-ok']}`}>{t('prog_yours')}</span>
                       ) : (
                         <span className="font-bold text-primary">{t('prog_open')}</span>
                       )}
@@ -479,7 +479,7 @@ export async function PredictionsHouse() {
           />
         </section>
 
-        <section className="ph-rules rounded-3xl p-6 sm:p-8">
+        <section className={`${styles['ph-rules']} rounded-3xl p-6 sm:p-8`}>
           <h2 className="mb-4 text-lg font-bold">{t('rules_title')}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {rules.map((rule) => (

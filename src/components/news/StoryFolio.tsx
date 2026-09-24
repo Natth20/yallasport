@@ -6,7 +6,7 @@ import { NewsAudioReader } from '@/components/news/NewsAudioReader';
 import { NewsComments, type NewsCommentRow } from '@/components/news/NewsComments';
 import { NewsShareMenu } from '@/components/news/NewsShareMenu';
 import { StoryShareCard } from '@/components/news/StoryShareCard';
-import './story-folio.css';
+import styles from './story-folio.module.css';
 
 export type StoryRelated = {
   id: string;
@@ -73,11 +73,11 @@ export function StoryFolio({
   isLoggedIn: boolean;
 }) {
   return (
-    <article className="ed">
-      <span className="ed-aura" aria-hidden />
-      <span className="ed-grain" aria-hidden />
-      <div className="ed-wrap">
-        <nav className="ed-nav">
+    <article className={styles['ed']}>
+      <span className={styles['ed-aura']} aria-hidden />
+      <span className={styles['ed-grain']} aria-hidden />
+      <div className={styles['ed-wrap']}>
+        <nav className={styles['ed-nav']}>
           <Link href="/news">{pick(locale, 'غرفة الأخبار', 'News desk')}</Link>
           <i />
           <span>{kicker}</span>
@@ -85,15 +85,15 @@ export function StoryFolio({
           {isPremium ? <b>{pick(locale, 'مميز', 'Premium')}</b> : null}
         </nav>
 
-        <header className="ed-mast">
-          <p className="ed-kicker">{kicker}</p>
+        <header className={styles['ed-mast']}>
+          <p className={styles['ed-kicker']}>{kicker}</p>
           <h1 dir={/[A-Za-z]/.test(title.slice(0, 2)) ? 'ltr' : 'auto'}>{title}</h1>
           {showExcerpt && excerpt ? (
-            <p className="ed-stand" dir={/[A-Za-z]/.test(excerpt.slice(0, 2)) ? 'ltr' : 'auto'}>
+            <p className={styles['ed-stand']} dir={/[A-Za-z]/.test(excerpt.slice(0, 2)) ? 'ltr' : 'auto'}>
               {excerpt}
             </p>
           ) : null}
-          <ul className="ed-by">
+          <ul className={styles['ed-by']}>
             <li>{sourceLabel}</li>
             <li>{deskAuthor}</li>
             <li>{publishedLabel}</li>
@@ -106,8 +106,8 @@ export function StoryFolio({
         </header>
 
         {heroImage ? (
-          <figure className="ed-cover">
-            <span className="ed-cover-media">
+          <figure className={styles['ed-cover']}>
+            <span className={styles['ed-cover-media']}>
               <CoverImage
                 src={heroImage}
                 srcSet={heroSrcSet}
@@ -116,10 +116,10 @@ export function StoryFolio({
                 priority
                 className="object-cover"
               />
-              <i className="ed-bracket is-tl" />
-              <i className="ed-bracket is-tr" />
-              <i className="ed-bracket is-bl" />
-              <i className="ed-bracket is-br" />
+              <i className={`${styles['ed-bracket']} ${styles['is-tl']}`} />
+              <i className={`${styles['ed-bracket']} ${styles['is-tr']}`} />
+              <i className={`${styles['ed-bracket']} ${styles['is-bl']}`} />
+              <i className={`${styles['ed-bracket']} ${styles['is-br']}`} />
             </span>
             <figcaption>
               <span>{sourceLabel}</span>
@@ -128,8 +128,8 @@ export function StoryFolio({
           </figure>
         ) : null}
 
-        <div className="ed-board">
-          <aside className="ed-rail">
+        <div className={styles['ed-board']}>
+          <aside className={styles['ed-rail']}>
             <StoryRail
               locale={locale}
               kicker={pick(locale, 'الآن على المكتب', 'On the desk')}
@@ -144,16 +144,16 @@ export function StoryFolio({
             />
           </aside>
 
-          <div className="ed-spine">
-            <div className="ed-sheet">
+          <div className={styles['ed-spine']}>
+            <div className={styles['ed-sheet']}>
               <div
                 id="news-report-prose"
-                className={`ed-prose${!canAccess ? ' is-gated' : ''}${/[A-Za-z]/.test(bodyHtml.replace(/<[^>]+>/g, '').trim().slice(0, 12)) ? ' is-latin' : ''}`}
+                className={`${styles['ed-prose']}${!canAccess ? ` ${styles['is-gated']}` : ''}${/[A-Za-z]/.test(bodyHtml.replace(/<[^>]+>/g, '').trim().slice(0, 12)) ? ` ${styles['is-latin']}` : ''}`}
                 dangerouslySetInnerHTML={{ __html: bodyHtml }}
               />
 
               {!canAccess ? (
-                <div className="ed-gate">
+                <div className={styles['ed-gate']}>
                   <strong>{pick(locale, 'هذا التقرير للمشتركين', 'This report is for subscribers')}</strong>
                   <p>
                     {pick(
@@ -165,13 +165,13 @@ export function StoryFolio({
                   <Link href="/login">{pick(locale, 'تسجيل الدخول', 'Sign in')}</Link>
                 </div>
               ) : (
-                <p className="ed-end" aria-hidden>
+                <p className={styles['ed-end']} aria-hidden>
                   ◆
                 </p>
               )}
 
               {canAccess && sourceUrl ? (
-                <a className="ed-source" href={sourceUrl} target="_blank" rel="noopener noreferrer">
+                <a className={styles['ed-source']} href={sourceUrl} target="_blank" rel="noopener noreferrer">
                   <span>
                     {clippedCopy
                       ? pick(
@@ -194,7 +194,7 @@ export function StoryFolio({
               ) : null}
 
               {canAccess ? (
-                <div className="ed-tools">
+                <div className={styles['ed-tools']}>
                   <NewsShareMenu title={title} />
                   <NewsAudioReader text={bodyHtml} />
                 </div>
@@ -203,7 +203,7 @@ export function StoryFolio({
               {canAccess ? <StoryShareCard title={title} locale={locale} /> : null}
 
               {entities.length > 0 || tags.length > 0 ? (
-                <div className="ed-chips">
+                <div className={styles['ed-chips']}>
                   {entities.map((entity) => (
                     <Link key={entity.href} href={entity.href}>
                       {entity.name}
@@ -216,14 +216,14 @@ export function StoryFolio({
               ) : null}
 
               {canAccess ? (
-                <section className="ed-talk">
+                <section className={styles['ed-talk']}>
                   <NewsComments newsId={newsId} isLoggedIn={isLoggedIn} initialComments={comments} />
                 </section>
               ) : null}
             </div>
           </div>
 
-          <aside className="ed-rail">
+          <aside className={styles['ed-rail']}>
             <StoryRail
               locale={locale}
               kicker={pick(locale, 'من نفس المكتب', 'Same desk')}
@@ -234,18 +234,18 @@ export function StoryFolio({
         </div>
 
         {related.length > 0 || latest.length > 0 ? (
-          <section className="ed-floor">
-            <div className="ed-more-head">
+          <section className={styles['ed-floor']}>
+            <div className={styles['ed-more-head']}>
               <div>
                 <p>{pick(locale, 'المزيد من الغرفة', 'More from the desk')}</p>
                 <h2>{pick(locale, 'تقارير تكمّل الطبعة', 'Reports that complete the edition')}</h2>
               </div>
               <Link href="/news">{pick(locale, 'كل الأخبار', 'All news')}</Link>
             </div>
-            <div className="ed-floor-grid">
+            <div className={styles['ed-floor-grid']}>
               {(related.length > 0 ? related : latest).slice(0, 8).map((story) => (
-                <Link key={story.id} href={`/news/${story.slug}`} className="ed-card">
-                  <span className="ed-card-media">
+                <Link key={story.id} href={`/news/${story.slug}`} className={styles['ed-card']}>
+                  <span className={styles['ed-card-media']}>
                     {story.image ? <CoverImage src={story.image} alt="" sizes="320px" className="object-cover" /> : null}
                   </span>
                   <strong dir={/[A-Za-z]/.test(story.title.slice(0, 2)) ? 'ltr' : 'auto'}>{story.title}</strong>
@@ -276,15 +276,15 @@ function StoryRail({
 }) {
   if (stories.length === 0) return null;
   return (
-    <section className="ed-rail-panel">
-      <div className="ed-rail-head">
+    <section className={styles['ed-rail-panel']}>
+      <div className={styles['ed-rail-head']}>
         <p>{kicker}</p>
         <h2>{title}</h2>
       </div>
-      <div className="ed-rail-list">
+      <div className={styles['ed-rail-list']}>
         {stories.map((story) => (
-          <Link key={story.id} href={`/news/${story.slug}`} className="ed-rail-item">
-            <span className="ed-rail-media">
+          <Link key={story.id} href={`/news/${story.slug}`} className={styles['ed-rail-item']}>
+            <span className={styles['ed-rail-media']}>
               {story.image ? <CoverImage src={story.image} alt="" sizes="160px" className="object-cover" /> : null}
             </span>
             <span>
@@ -297,7 +297,7 @@ function StoryRail({
           </Link>
         ))}
       </div>
-      <Link href="/news" className="ed-rail-more">
+      <Link href="/news" className={styles['ed-rail-more']}>
         {pick(locale, 'كل الأخبار', 'All news')}
       </Link>
     </section>

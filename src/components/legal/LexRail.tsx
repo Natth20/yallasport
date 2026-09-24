@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ChevronUp, ListOrdered, ArrowUpRight } from 'lucide-react';
+import styles from './lex.module.css';
 
 export type LexRailItem = { id: string; label: string };
 
@@ -102,13 +103,13 @@ export function LexRail({
   };
 
   return (
-    <div className="lex-rail-card">
-      <div className="lex-rail-header">
+    <div className={styles['lex-rail-card']}>
+      <div className={styles['lex-rail-header']}>
         <div className="flex items-center gap-2">
           <ListOrdered className="w-4 h-4 text-[var(--lex-accent)]" />
-          <span className="lex-rail-title">{heading}</span>
+          <span className={styles['lex-rail-title']}>{heading}</span>
         </div>
-        <span className="lex-rail-progress-pct">{readPct}%</span>
+        <span className={styles['lex-rail-progress-pct']}>{readPct}%</span>
       </div>
 
       <div className="w-full bg-secondary/50 h-1.5 rounded-full overflow-hidden mb-3">
@@ -118,12 +119,12 @@ export function LexRail({
         />
       </div>
 
-      <ul className="lex-rail-list" ref={listRef}>
+      <ul className={styles['lex-rail-list']} ref={listRef}>
         {items.map((item, index) => (
           <li key={item.id}>
             <a
               href={`#${item.id}`}
-              className="lex-rail-link group"
+              className={`${styles['lex-rail-link']} group`}
               data-active={item.id === active ? 'true' : 'false'}
               onClick={(e) => {
                 e.preventDefault();

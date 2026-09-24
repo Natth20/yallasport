@@ -6,7 +6,7 @@ import { ClientTime } from '@/components/datetime/ClientTime';
 import { Stagger, StaggerItem } from '@/components/motion/PageMotion';
 import { YOUTUBE_EMBED_BLOCKED } from '@/lib/youtube/channels';
 import { youtubeCopy } from '@/lib/youtube/present';
-import './youtube.css';
+import styles from './youtube.module.css';
 
 export type YoutubeClipCard = {
   youtubeId: string;
@@ -89,10 +89,10 @@ function YoutubeStage({
 
   if (blocked) {
     return (
-      <div className="yt-player is-blocked">
+      <div className={`${styles['yt-player']} ${styles['is-blocked']}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={poster} alt="" />
-        <div className="yt-blocked">
+        <div className={styles['yt-blocked']}>
           <p>{labels.embedBlocked}</p>
           <a href={watch} target="_blank" rel="noopener noreferrer">
             {labels.watchOnYoutube}
@@ -103,7 +103,7 @@ function YoutubeStage({
   }
 
   return (
-    <div className="yt-player">
+    <div className={styles['yt-player']}>
       <iframe
         key={clip.youtubeId}
         title={clip.title}
@@ -148,8 +148,8 @@ export function YoutubeDesk({
 
   if (!current) {
     return (
-      <div className="yt-empty">
-        <span className="yt-empty-mark" aria-hidden />
+      <div className={styles['yt-empty']}>
+        <span className={styles['yt-empty-mark']} aria-hidden />
         <strong>{empty}</strong>
       </div>
     );
@@ -164,22 +164,22 @@ export function YoutubeDesk({
   }
 
   return (
-    <div className={`yt-cinema${isReel ? ' is-reel' : ''}`}>
-      <section ref={stageRef} className="yt-screen" aria-live="polite">
-        <div className="yt-screen-glow" aria-hidden />
-        <div className="yt-frame">
-          <span className="yt-bracket is-tl" aria-hidden />
-          <span className="yt-bracket is-tr" aria-hidden />
-          <span className="yt-bracket is-bl" aria-hidden />
-          <span className="yt-bracket is-br" aria-hidden />
-          <div className="yt-marquee">
+    <div className={`${styles['yt-cinema']}${isReel ? ` ${styles['is-reel']}` : ''}`}>
+      <section ref={stageRef} className={styles['yt-screen']} aria-live="polite">
+        <div className={styles['yt-screen-glow']} aria-hidden />
+        <div className={styles['yt-frame']}>
+          <span className={`${styles['yt-bracket']} ${styles['is-tl']}`} aria-hidden />
+          <span className={`${styles['yt-bracket']} ${styles['is-tr']}`} aria-hidden />
+          <span className={`${styles['yt-bracket']} ${styles['is-bl']}`} aria-hidden />
+          <span className={`${styles['yt-bracket']} ${styles['is-br']}`} aria-hidden />
+          <div className={styles['yt-marquee']}>
             <b>{labels.nowShowing}</b>
             <em>{current.channelTitle}</em>
           </div>
           <YoutubeStage clip={current} reel={isReel} labels={labels} />
         </div>
-        <div className="yt-program">
-          <div className="yt-chips">
+        <div className={styles['yt-program']}>
+          <div className={styles['yt-chips']}>
             <span>{current.channelTitle}</span>
             <span>{langLabel}</span>
             {typeof current.durationSec === 'number' && current.durationSec > 0 ? (
@@ -194,8 +194,8 @@ export function YoutubeDesk({
             </span>
           </div>
           <h2>{current.title}</h2>
-          {current.description ? <p className="yt-blurb">{current.description}</p> : null}
-          <p className="yt-source">
+          {current.description ? <p className={styles['yt-blurb']}>{current.description}</p> : null}
+          <p className={styles['yt-source']}>
             {labels.source} · {labels.youtube} · {labels.notLive}
             {' · '}
             <a href={watchSrc(current.youtubeId, isReel)} target="_blank" rel="noopener noreferrer">
@@ -205,39 +205,39 @@ export function YoutubeDesk({
         </div>
       </section>
 
-      <section className="yt-shelf">
-        <header className="yt-shelf-head">
+      <section className={styles['yt-shelf']}>
+        <header className={styles['yt-shelf-head']}>
           <div>
             <h3>{labels.shelf}</h3>
             <p>{labels.shelfLead}</p>
           </div>
           <b>{clips.length}</b>
         </header>
-        <Stagger className={isReel ? 'yt-reel-grid' : 'yt-video-grid'} delay={0.03}>
+        <Stagger className={isReel ? styles['yt-reel-grid'] : styles['yt-video-grid']} delay={0.03}>
           {clips.map((clip) => {
             const on = clip.youtubeId === current.youtubeId;
             return (
               <StaggerItem key={clip.youtubeId}>
                 <button
                   type="button"
-                  className={`yt-tile${isReel ? ' is-reel' : ''}${on ? ' is-on' : ''}`}
+                  className={`${styles['yt-tile']}${isReel ? ` ${styles['is-reel']}` : ''}${on ? ` ${styles['is-on']}` : ''}`}
                   onClick={() => show(clip.youtubeId)}
                   aria-pressed={on}
                   aria-label={`${labels.play}: ${clip.title}`}
                 >
-                  <span className="yt-poster">
+                  <span className={styles['yt-poster']}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={clip.thumbnailUrl || `https://i.ytimg.com/vi/${clip.youtubeId}/hqdefault.jpg`}
                       alt=""
                     />
-                    <i className="yt-play" aria-hidden />
+                    <i className={styles['yt-play']} aria-hidden />
                     {typeof clip.durationSec === 'number' && clip.durationSec > 0 ? (
                       <time>{clock(clip.durationSec)}</time>
                     ) : null}
-                    {on ? <em className="yt-live-tag">{labels.nowPlaying}</em> : null}
+                    {on ? <em className={styles['yt-live-tag']}>{labels.nowPlaying}</em> : null}
                   </span>
-                  <span className="yt-tile-copy">
+                  <span className={styles['yt-tile-copy']}>
                     <b>{clip.title}</b>
                     <em>
                       {clip.channelTitle}
@@ -259,8 +259,8 @@ export function YoutubeDesk({
       </section>
 
       {archiveHref && archiveLabel ? (
-        <p className="yt-ticket-wrap">
-          <Link href={archiveHref} className="yt-ticket">
+        <p className={styles['yt-ticket-wrap']}>
+          <Link href={archiveHref} className={styles['yt-ticket']}>
             <span>{archiveLabel}</span>
             <i aria-hidden />
           </Link>

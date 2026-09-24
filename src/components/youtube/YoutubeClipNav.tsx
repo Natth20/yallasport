@@ -1,6 +1,6 @@
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/i18n/pick';
-import './youtube.css';
+import styles from './youtube.module.css';
 
 export function YoutubeClipNav({
   locale,
@@ -16,9 +16,9 @@ export function YoutubeClipNav({
   ];
 
   return (
-    <nav className="yt-tabs" aria-label={pick(locale, 'فيديو', 'Video')}>
+    <nav className={styles['yt-tabs']} aria-label={pick(locale, 'فيديو', 'Video')}>
       {items.map((item) => (
-        <Link key={item.id} href={item.href} className={`yt-tab${current === item.id ? ' is-on' : ''}`}>
+        <Link key={item.id} href={item.href} className={`${styles['yt-tab']}${current === item.id ? ` ${styles['is-on']}` : ''}`}>
           {item.label}
         </Link>
       ))}

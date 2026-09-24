@@ -6,7 +6,7 @@ import { CoverImage } from '@/components/common/CoverImage';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { pick } from '@/i18n/pick';
 import { Stagger, StaggerItem } from '@/components/motion/PageMotion';
-import './photo-hall.css';
+import styles from './photo-hall.module.css';
 
 export type PhotoFrame = {
   id: string;
@@ -70,8 +70,8 @@ export function PhotoHall({
 
   if (!current) {
     return (
-      <div className="ph-empty">
-        <span className="ph-empty-mark" aria-hidden />
+      <div className={styles['ph-empty']}>
+        <span className={styles['ph-empty-mark']} aria-hidden />
         <strong>{emptyTitle}</strong>
         <p>{emptyLead}</p>
       </div>
@@ -79,11 +79,11 @@ export function PhotoHall({
   }
 
   return (
-    <div className="ph-hall">
-      <section ref={easelRef} className="ph-easel" aria-live="polite">
-        <div className="ph-stage">
-          <div className="ph-print-wrap">
-            <Link href={`/news/${current.slug}`} className="ph-print" aria-label={current.title}>
+    <div className={styles['ph-hall']}>
+      <section ref={easelRef} className={styles['ph-easel']} aria-live="polite">
+        <div className={styles['ph-stage']}>
+          <div className={styles['ph-print-wrap']}>
+            <Link href={`/news/${current.slug}`} className={styles['ph-print']} aria-label={current.title}>
               <CoverImage
                 src={current.image}
                 srcSet={current.srcSet}
@@ -93,16 +93,16 @@ export function PhotoHall({
                 className="object-cover"
               />
             </Link>
-            <button type="button" className="ph-step is-prev" onClick={() => step(-1)} aria-label={pick(locale, 'الإطار السابق', 'Previous print')}>
+            <button type="button" className={`${styles['ph-step']} ${styles['is-prev']}`} onClick={() => step(-1)} aria-label={pick(locale, 'الإطار السابق', 'Previous print')}>
               ‹
             </button>
-            <button type="button" className="ph-step is-next" onClick={() => step(1)} aria-label={pick(locale, 'الإطار التالي', 'Next print')}>
+            <button type="button" className={`${styles['ph-step']} ${styles['is-next']}`} onClick={() => step(1)} aria-label={pick(locale, 'الإطار التالي', 'Next print')}>
               ›
             </button>
           </div>
-          <div className="ph-plaque">
-            <div className="ph-plaque-top">
-              <span className="ph-folio">{accession(currentIndex)}</span>
+          <div className={styles['ph-plaque']}>
+            <div className={styles['ph-plaque-top']}>
+              <span className={styles['ph-folio']}>{accession(currentIndex)}</span>
               <em>
                 {current.sourceName || pick(locale, 'قاعة الصور', 'Photo hall')}
                 {' · '}
@@ -116,19 +116,19 @@ export function PhotoHall({
             <h2 dir="auto">
               <Link href={`/news/${current.slug}`}>{current.title}</Link>
             </h2>
-            <Link href={`/news/${current.slug}`} className="ph-open">
+            <Link href={`/news/${current.slug}`} className={styles['ph-open']}>
               {pick(locale, 'اقرأ التقرير كامل', 'Read the full report')}
             </Link>
           </div>
         </div>
       </section>
 
-      <div className="ph-band">
+      <div className={styles['ph-band']}>
         <div>
           <h3>{pick(locale, 'جدار القاعة', 'The wall')}</h3>
           <p>{pick(locale, 'اضغط أي صورة لفتح التقرير كامل.', 'Tap any print to open the full report.')}</p>
         </div>
-        <dl className="ph-brief">
+        <dl className={styles['ph-brief']}>
           <div>
             <dt>{pick(locale, 'إطارات', 'Frames')}</dt>
             <dd>{frames.length}</dd>
@@ -146,14 +146,14 @@ export function PhotoHall({
         </dl>
       </div>
 
-      <Stagger className="ph-wall" delay={0.03}>
+      <Stagger className={styles['ph-wall']} delay={0.03}>
         {frames.map((frame, index) => (
-          <StaggerItem key={frame.id} className="ph-cell">
+          <StaggerItem key={frame.id} className={styles['ph-cell']}>
             <Link
               href={`/news/${frame.slug}`}
-              className={`ph-frame${frame.id === current.id ? ' is-on' : ''}`}
+              className={`${styles['ph-frame']}${frame.id === current.id ? ` ${styles['is-on']}` : ''}`}
             >
-              <div className="ph-print">
+              <div className={styles['ph-print']}>
                 <CoverImage
                   src={frame.image}
                   srcSet={frame.srcSet}
@@ -163,8 +163,8 @@ export function PhotoHall({
                   className="object-cover"
                 />
               </div>
-              <div className="ph-plaque">
-                <span className="ph-folio">{accession(index)}</span>
+              <div className={styles['ph-plaque']}>
+                <span className={styles['ph-folio']}>{accession(index)}</span>
                 <strong dir="auto">{frame.title}</strong>
               </div>
             </Link>

@@ -2,7 +2,7 @@ import { pick } from '@/i18n/pick';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { FOOTBALL_YOUTUBE_CHANNELS } from '@/lib/youtube/channels';
 import type { YoutubeDeskStats } from '@/lib/youtube/ingest';
-import './youtube.css';
+import styles from './youtube.module.css';
 
 export function YoutubeBrief({
   locale,
@@ -26,7 +26,7 @@ export function YoutubeBrief({
   ];
 
   return (
-    <aside className="yt-brief">
+    <aside className={styles['yt-brief']}>
       <dl>
         {cells.map((cell) => (
           <div key={cell.dt}>
@@ -34,7 +34,7 @@ export function YoutubeBrief({
             <dd>{cell.dd}</dd>
           </div>
         ))}
-        <div className="is-wide">
+        <div className={styles['is-wide']}>
           <dt>{pick(locale, 'آخر سحب', 'Last pull')}</dt>
           <dd>
             {stats.fetchedAt ? (
@@ -56,7 +56,7 @@ export function YoutubeBrief({
           'Each channel keeps only its newest clips on the shelf. A new upload archives the older one. Playback is the official YouTube player on this page — this is not Yalla Sport Live.',
         )}
       </p>
-      <p className="yt-roster">
+      <p className={styles['yt-roster']}>
         {pick(locale, 'دفتر القنوات العربية:', 'Arabic channels on the roster:')} {arNames}
       </p>
     </aside>

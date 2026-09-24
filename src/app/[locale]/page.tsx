@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { FrontPage } from '@/components/front/FrontPage';
 import { pageMetadata, defaultTitle, defaultDescription } from '@/lib/seo/site';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();

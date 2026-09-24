@@ -130,66 +130,66 @@ export async function WatchHouse({
           <div className="space-y-8 xl:col-span-8">
             {/* Live Sports Player Screen */}
             {!isLibrary ? (
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-black text-foreground flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-primary" />
-                  <span>{t('booth')} • {locale === 'ar' ? 'البث المباشر الفوري' : 'Live Stream'}</span>
-                </h2>
-                {live ? (
-                  <span className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-600/20 px-3 py-1 text-[10px] font-black text-red-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                    {t('on_air')}
-                  </span>
-                ) : null}
-              </div>
-
-              {featured ? (
-                <MatchStreamPlayer assetId={featured.id} />
-              ) : (
-                <div className="flex aspect-video w-full flex-col items-center justify-center rounded-3xl border border-white/10 bg-black/80 px-6 text-center">
-                  <Lock className="mb-3 h-8 w-8 text-white/40" />
-                  <p className="text-sm font-black text-white">{t('house_empty')}</p>
-                  <p className="mt-2 max-w-md text-xs text-muted-foreground">{t('house_empty_copy')}</p>
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base font-black text-foreground flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-primary" />
+                    <span>{t('booth')} • {locale === 'ar' ? 'سبورت لايف الفوري' : 'Live Stream'}</span>
+                  </h2>
+                  {live ? (
+                    <span className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-600/20 px-3 py-1 text-[10px] font-black text-red-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                      {t('on_air')}
+                    </span>
+                  ) : null}
                 </div>
-              )}
 
-              {/* Featured Match Card if active */}
-              {featured?.match && (
-                <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl transition-all hover:border-primary/40">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <img
-                          src={featured.match.homeTeam.logoUrl || '/placeholder-team.png'}
-                          alt=""
-                          className="h-10 w-10 object-contain"
-                        />
-                        <strong className="text-sm font-black text-foreground">{featured.match.homeTeam.name}</strong>
-                      </div>
-                      <span className="font-mono text-xs font-black text-primary">VS</span>
-                      <div className="flex items-center gap-2">
-                        <strong className="text-sm font-black text-foreground">{featured.match.awayTeam.name}</strong>
-                        <img
-                          src={featured.match.awayTeam.logoUrl || '/placeholder-team.png'}
-                          alt=""
-                          className="h-10 w-10 object-contain"
-                        />
-                      </div>
-                    </div>
+                {featured ? (
+                  <MatchStreamPlayer assetId={featured.id} />
+                ) : (
+                  <div className="flex aspect-video w-full flex-col items-center justify-center rounded-3xl border border-white/10 bg-black/80 px-6 text-center">
+                    <Lock className="mb-3 h-8 w-8 text-white/40" />
+                    <p className="text-sm font-black text-white">{t('house_empty')}</p>
+                    <p className="mt-2 max-w-md text-xs text-muted-foreground">{t('house_empty_copy')}</p>
+                  </div>
+                )}
 
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/match/${featured.match.id}`}
-                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-foreground hover:bg-white/10 transition-all"
-                      >
-                        {t('match_center')}
-                      </Link>
+                {/* Featured Match Card if active */}
+                {featured?.match && (
+                  <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl transition-all hover:border-primary/40">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={featured.match.homeTeam.logoUrl || '/placeholder-team.png'}
+                            alt=""
+                            className="h-10 w-10 object-contain"
+                          />
+                          <strong className="text-sm font-black text-foreground">{featured.match.homeTeam.name}</strong>
+                        </div>
+                        <span className="font-mono text-xs font-black text-primary">VS</span>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-sm font-black text-foreground">{featured.match.awayTeam.name}</strong>
+                          <img
+                            src={featured.match.awayTeam.logoUrl || '/placeholder-team.png'}
+                            alt=""
+                            className="h-10 w-10 object-contain"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/match/${featured.match.id}`}
+                          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-bold text-foreground hover:bg-white/10 transition-all"
+                        >
+                          {t('match_center')}
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </section>
+                )}
+              </section>
             ) : null}
 
             {/* Live & Linear Channels Grid */}
@@ -271,38 +271,38 @@ export async function WatchHouse({
           </div>
 
           {!isLibrary ? (
-          <aside className="space-y-6 xl:col-span-4">
-            <div className="rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl shadow-xl space-y-4">
-              <h3 className="text-sm font-black text-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <span>{t('upcoming')}</span>
-              </h3>
+            <aside className="space-y-6 xl:col-span-4">
+              <div className="rounded-3xl border border-white/10 bg-card/60 p-5 backdrop-blur-xl shadow-xl space-y-4">
+                <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span>{t('upcoming')}</span>
+                </h3>
 
-              {upcoming.length > 0 ? (
-                <div className="space-y-3">
-                  {upcoming.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/watch/${item.id}`}
-                      className="group flex flex-col gap-1.5 rounded-2xl border border-white/5 bg-foreground/5 p-3.5 transition-all hover:border-primary/30 hover:bg-primary/5"
-                    >
-                      <div className="flex items-center justify-between text-[10px] font-bold text-primary">
-                        <span>{item.channel?.name || t('title')}</span>
-                        {item.startsAt && <ClientTime value={item.startsAt} />}
-                      </div>
-                      <strong className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
-                        {item.match
-                          ? `${item.match.homeTeam.name} vs ${item.match.awayTeam.name}`
-                          : item.channel?.name}
-                      </strong>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground py-4 text-center">{t('no_upcoming')}</p>
-              )}
-            </div>
-          </aside>
+                {upcoming.length > 0 ? (
+                  <div className="space-y-3">
+                    {upcoming.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/watch/${item.id}`}
+                        className="group flex flex-col gap-1.5 rounded-2xl border border-white/5 bg-foreground/5 p-3.5 transition-all hover:border-primary/30 hover:bg-primary/5"
+                      >
+                        <div className="flex items-center justify-between text-[10px] font-bold text-primary">
+                          <span>{item.channel?.name || t('title')}</span>
+                          {item.startsAt && <ClientTime value={item.startsAt} />}
+                        </div>
+                        <strong className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
+                          {item.match
+                            ? `${item.match.homeTeam.name} vs ${item.match.awayTeam.name}`
+                            : item.channel?.name}
+                        </strong>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-4 text-center">{t('no_upcoming')}</p>
+                )}
+              </div>
+            </aside>
           ) : null}
         </div>
       </div>

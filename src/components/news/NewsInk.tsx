@@ -5,7 +5,7 @@ import { pick } from '@/i18n/pick';
 import { deskLabel } from '@/lib/news/desks';
 import { galleryImageSrcSet, publicStoryImage, upgradeGalleryImageUrl } from '@/lib/news/enrich-source';
 import type { ArchiveDay, Brief, DeskChip, DeskStats, SourceTally, Story } from '@/lib/news/load-desk';
-import './news-chamber.css';
+import styles from './news-chamber.module.css';
 
 type CardStory = Story | Brief;
 
@@ -26,11 +26,11 @@ export function NewsInkMast({
   stats: DeskStats;
 }) {
   return (
-    <header className="nk-mast">
-      <div className="nk-mast-copy">
-        <p className="nk-kicker">{pick(locale, 'غرفة الأخبار', 'News desk')}</p>
+    <header className={styles['nk-mast']}>
+      <div className={styles['nk-mast-copy']}>
+        <p className={styles['nk-kicker']}>{pick(locale, 'غرفة الأخبار', 'News desk')}</p>
         <h1>{pick(locale, 'الأخبار', 'News')}</h1>
-        <p className="nk-lead">
+        <p className={styles['nk-lead']}>
           {pick(
             locale,
             'تقارير من المصدر، تمرّ على التحرير، وتُنشر بعد الاعتماد فقط. اضغط أي عنوان لتقرأ الطبعة كاملة.',
@@ -38,7 +38,7 @@ export function NewsInkMast({
           )}
         </p>
       </div>
-      <dl className="nk-meters">
+      <dl className={styles['nk-meters']}>
         <div>
           <dt>{pick(locale, 'تقارير', 'Reports')}</dt>
           <dd>{stats.stories}</dd>
@@ -72,14 +72,14 @@ export function NewsInkPulse({
   if (archive.length === 0) return null;
   const days = [...archive].reverse();
   return (
-    <section className="nk-panel nk-pulse-panel">
-      <div className="nk-panel-head">
+    <section className={`${styles['nk-panel']} ${styles['nk-pulse-panel']}`}>
+      <div className={styles['nk-panel-head']}>
         <p>{pick(locale, 'إيقاع الأسبوع', 'Week pulse')}</p>
         <h2>{pick(locale, 'كم وصل على المكتب كل يوم', 'How much reached the desk each day')}</h2>
       </div>
-      <div className="nk-pulse">
+      <div className={styles['nk-pulse']}>
         {days.map((day) => (
-          <Link key={day.key} href={hrefFor({ day: day.key })} className="nk-pulse-day">
+          <Link key={day.key} href={hrefFor({ day: day.key })} className={styles['nk-pulse-day']}>
             <small>
               <ClientTime value={day.date} options={{ weekday: 'long' }} />
             </small>
@@ -107,17 +107,17 @@ export function NewsInkDesks({
 }) {
   if (desks.length === 0) return null;
   return (
-    <section className="nk-panel nk-desks-panel">
-      <div className="nk-panel-head">
+    <section className={`${styles['nk-panel']} ${styles['nk-desks-panel']}`}>
+      <div className={styles['nk-panel-head']}>
         <p>{pick(locale, 'خريطة التغطية', 'Coverage map')}</p>
         <h2>{pick(locale, 'الأبواب كما هي على الملف', 'Desks as filed')}</h2>
       </div>
-      <div className="nk-desks">
+      <div className={styles['nk-desks']}>
         {desks.map((desk, index) => (
           <Link
             key={desk.key}
             href={hrefFor({ desk: selected === desk.key ? 'all' : desk.key, page: 1 })}
-            className={`nk-desk${selected === desk.key ? ' is-on' : ''}`}
+            className={`${styles['nk-desk']}${selected === desk.key ? ` ${styles['is-on']}` : ''}`}
           >
             <b>{String(index + 1).padStart(2, '0')}</b>
             <em>{deskLabel(desk.key, locale)}</em>
@@ -132,24 +132,24 @@ export function NewsInkDesks({
 export function NewsInkFresh({ stories, locale }: { stories: Brief[]; locale: string }) {
   if (stories.length === 0) return null;
   return (
-    <section className="nk-panel nk-wire">
-      <div className="nk-panel-head">
+    <section className={`${styles['nk-panel']} ${styles['nk-wire']}`}>
+      <div className={styles['nk-panel-head']}>
         <p>{pick(locale, 'السلك', 'The wire')}</p>
         <h2>{pick(locale, 'آخر ما وصل واعتمد', 'Latest arrivals on file')}</h2>
       </div>
-      <ol className="nk-wire-list">
+      <ol className={styles['nk-wire-list']}>
         {stories.map((story, index) => {
           const cover = storyCover(story);
           return (
             <li key={story.id}>
-              <Link href={`/news/${story.slug}`} className="nk-wire-item">
-                <span className="nk-wire-media">
+              <Link href={`/news/${story.slug}`} className={styles['nk-wire-item']}>
+                <span className={styles['nk-wire-media']}>
                   {cover ? (
                     <CoverImage src={cover} alt="" sizes="(max-width: 900px) 50vw, 22vw" className="object-cover" />
                   ) : null}
-                  <b className="nk-wire-num">{String(index + 1).padStart(2, '0')}</b>
+                  <b className={styles['nk-wire-num']}>{String(index + 1).padStart(2, '0')}</b>
                 </span>
-                <span className="nk-wire-copy">
+                <span className={styles['nk-wire-copy']}>
                   <em>{deskLabel(story.category, locale)}</em>
                   <strong dir={titleDir(story.title)}>{story.title}</strong>
                   <small>
@@ -184,8 +184,8 @@ export function NewsInkLedger({
   const english = sources.filter((source) => source.locales.some((item) => item.toLowerCase().startsWith('en'))).length;
   const top = sources[0];
   return (
-    <section className="nk-panel nk-ledger">
-      <div className="nk-panel-head">
+    <section className={`${styles['nk-panel']} ${styles['nk-ledger']}`}>
+      <div className={styles['nk-panel-head']}>
         <p>{pick(locale, 'دفتر المصادر', 'Source book')}</p>
         <h2>{pick(locale, 'من أين يأتي الملف', 'Where the file comes from')}</h2>
       </div>
@@ -214,8 +214,8 @@ export function NewsInkLead({ story, locale }: { story: CardStory; locale: strin
   const cover = storyCover(story);
   const srcSet = publicStoryImage(story);
   return (
-    <Link href={`/news/${story.slug}`} className="nk-front">
-      <span className="nk-front-media">
+    <Link href={`/news/${story.slug}`} className={styles['nk-front']}>
+      <span className={styles['nk-front-media']}>
         {cover ? (
           <CoverImage
             src={cover}
@@ -226,12 +226,12 @@ export function NewsInkLead({ story, locale }: { story: CardStory; locale: strin
             className="object-cover"
           />
         ) : null}
-        <i className="nk-bracket is-tl" />
-        <i className="nk-bracket is-tr" />
-        <i className="nk-bracket is-bl" />
-        <i className="nk-bracket is-br" />
+        <i className={`${styles['nk-bracket']} ${styles['is-tl']}`} />
+        <i className={`${styles['nk-bracket']} ${styles['is-tr']}`} />
+        <i className={`${styles['nk-bracket']} ${styles['is-bl']}`} />
+        <i className={`${styles['nk-bracket']} ${styles['is-br']}`} />
       </span>
-      <span className="nk-front-copy">
+      <span className={styles['nk-front-copy']}>
         <em>
           {deskLabel(story.category, locale)}
           {story.breaking ? ` · ${pick(locale, 'عاجل', 'Breaking')}` : ''}
@@ -270,8 +270,8 @@ export function NewsInkTools({
   hrefFor: (next: { q?: string; desk?: string; source?: string; page?: number }) => string;
 }) {
   return (
-    <section className="nk-tools">
-      <form method="get" className="nk-search">
+    <section className={styles['nk-tools']}>
+      <form method="get" className={styles['nk-search']}>
         <label htmlFor="nk-q">{pick(locale, 'ابحث في التقارير المعتمدة', 'Search approved reports')}</label>
         <input
           id="nk-q"
@@ -284,17 +284,17 @@ export function NewsInkTools({
         {selectedSource !== 'all' ? <input type="hidden" name="source" value={selectedSource} /> : null}
       </form>
 
-      <div className="nk-tool-row">
+      <div className={styles['nk-tool-row']}>
         <p>{pick(locale, 'الأبواب', 'Desks')}</p>
-        <nav className="nk-index" aria-label={pick(locale, 'أبواب التغطية', 'Coverage desks')}>
-          <Link href={hrefFor({ desk: 'all', page: 1 })} className={selectedDesk === 'all' ? 'is-on' : undefined}>
+        <nav className={styles['nk-index']} aria-label={pick(locale, 'أبواب التغطية', 'Coverage desks')}>
+          <Link href={hrefFor({ desk: 'all', page: 1 })} className={selectedDesk === 'all' ? styles['is-on'] : undefined}>
             <em>{pick(locale, 'الكل', 'All')}</em>
           </Link>
           {desks.map((desk) => (
             <Link
               key={desk.key}
               href={hrefFor({ desk: desk.key, page: 1 })}
-              className={selectedDesk === desk.key ? 'is-on' : undefined}
+              className={selectedDesk === desk.key ? styles['is-on'] : undefined}
             >
               <em>{deskLabel(desk.key, locale)}</em>
               <b>{desk.count}</b>
@@ -304,17 +304,17 @@ export function NewsInkTools({
       </div>
 
       {sources.length > 1 ? (
-        <div className="nk-tool-row">
+        <div className={styles['nk-tool-row']}>
           <p>{pick(locale, 'المصادر', 'Sources')}</p>
-          <nav className="nk-index is-source" aria-label={pick(locale, 'المصادر', 'Sources')}>
-            <Link href={hrefFor({ source: 'all', page: 1 })} className={selectedSource === 'all' ? 'is-on' : undefined}>
+          <nav className={`${styles['nk-index']} ${styles['is-source']}`} aria-label={pick(locale, 'المصادر', 'Sources')}>
+            <Link href={hrefFor({ source: 'all', page: 1 })} className={selectedSource === 'all' ? styles['is-on'] : undefined}>
               <em>{pick(locale, 'الكل', 'All')}</em>
             </Link>
             {sources.map((source) => (
               <Link
                 key={source.name}
                 href={hrefFor({ source: source.name, page: 1 })}
-                className={selectedSource === source.name ? 'is-on' : undefined}
+                className={selectedSource === source.name ? styles['is-on'] : undefined}
               >
                 <em>{source.name}</em>
                 <b>{source.count}</b>
@@ -330,11 +330,11 @@ export function NewsInkTools({
 export function NewsInkCard({ story, locale }: { story: CardStory; locale: string }) {
   const cover = storyCover(story);
   return (
-    <Link href={`/news/${story.slug}`} className="nk-card">
-      <span className="nk-card-media">
+    <Link href={`/news/${story.slug}`} className={styles['nk-card']}>
+      <span className={styles['nk-card-media']}>
         {cover ? <CoverImage src={cover} alt="" sizes="220px" className="object-cover" /> : null}
       </span>
-      <span className="nk-card-copy">
+      <span className={styles['nk-card-copy']}>
         <em>{deskLabel(story.category, locale)}</em>
         <strong dir={titleDir(story.title)}>{story.title}</strong>
         <small>
