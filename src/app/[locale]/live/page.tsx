@@ -17,7 +17,7 @@ import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
-import '@/components/live/live-hall.css';
+import styles from '@/components/live/live-hall.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('live');
@@ -216,7 +216,7 @@ async function LivePageBody({
   const featuredChannel = featuredSports?.assets[0]?.channel?.name ?? featuredListing?.channel?.name;
 
   return (
-    <div className="live-hall">
+    <div className={`${styles.liveHall} live-hall`}>
       <span className="live-aura" aria-hidden />
       <span className="live-grain" aria-hidden />
 

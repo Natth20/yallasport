@@ -3,14 +3,14 @@
    Ultra-Minimalist Luxury Design
    ══════════════════════════════════════════════════════════════════════ */
 
-.live-hall {
+.liveHall {
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
 }
 
 /* Very subtle red ambient glow for live */
-.live-hall::before {
+.liveHall::before {
   content: '';
   position: absolute;
   top: 0;
@@ -24,7 +24,7 @@
   z-index: -1;
 }
 
-.lh-card {
+.lhCard {
   position: relative;
   border-radius: 1.5rem;
   background: color-mix(in srgb, var(--card) 60%, transparent);
@@ -36,16 +36,16 @@
   overflow: hidden;
 }
 
-html.dark .lh-card {
+:global(html.dark) .lhCard {
   box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
 }
 
-.lh-card:hover {
+.lhCard:hover {
   transform: translateY(-4px);
   border-color: color-mix(in srgb, var(--ys-red, #ef4444) 30%, var(--border));
 }
 
-.lh-card-header {
+.lhCardHeader {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
   display: flex;
@@ -53,7 +53,7 @@ html.dark .lh-card {
   align-items: center;
 }
 
-.lh-live-badge {
+.lhLiveBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -66,25 +66,25 @@ html.dark .lh-card {
   letter-spacing: 0.1em;
 }
 
-.lh-live-badge::before {
+.lhLiveBadge::before {
   content: '';
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-  animation: lh-pulse 2s infinite;
+  animation: lhPulse 2s infinite;
 }
 
-@keyframes lh-pulse {
+@keyframes lhPulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
 }
 
-.lh-card-body {
+.lhCardBody {
   padding: 1.5rem;
 }
 
-.lh-score {
+.lhScore {
   font-size: 3rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -92,7 +92,7 @@ html.dark .lh-card {
   color: var(--foreground);
 }
 
-.lh-meter {
+.lhMeter {
   height: 4px;
   border-radius: 2px;
   background: color-mix(in srgb, var(--foreground) 10%, transparent);
@@ -100,7 +100,7 @@ html.dark .lh-card {
   margin-top: 1rem;
 }
 
-.lh-meter-fill {
+.lhMeterFill {
   height: 100%;
   background: var(--primary);
   border-radius: inherit;
