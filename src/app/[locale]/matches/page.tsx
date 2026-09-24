@@ -4,8 +4,10 @@ import { MatchCard } from '@/components/sports/MatchCard';
 import { MatchQuickActions } from '@/components/sports/MatchQuickActions';
 import { KickoffTimeline, type KickoffSlot } from '@/components/matches/KickoffTimeline';
 import { LiveNowBoard } from '@/components/matches/LiveNowBoard';
+import { PinnedMatchesBar } from '@/components/matches/PinnedMatchesBar';
 import { MatchdayLenses } from '@/components/matches/MatchdayLenses';
 import { MatchdayDesk } from '@/components/matches/MatchdayDesk';
+import { MatchdayLedger } from '@/components/matches/MatchdayLedger';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
@@ -1128,6 +1130,28 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
 
   const dayIds = liveBoardPool.flatMap((match) => [match.id, match.externalId]);
 
+  const pinnedMatchesData = allMatches.map((m) => ({
+    id: m.id,
+    homeTeam: { name: m.homeTeam.name, logoUrl: m.homeTeam.logoUrl ?? null },
+    awayTeam: { name: m.awayTeam.name, logoUrl: m.awayTeam.logoUrl ?? null },
+    homeScore: m.homeScore ?? null,
+    awayScore: m.awayScore ?? null,
+    status: m.status,
+    minute: m.minute ?? null,
+    kickoffTime: format(new Date(m.kickoffAt), 'HH:mm'),
+    leagueName: m.league.name,
+  }));
+
+  const groundsMap = new Map<string, { name: string; city?: string; count: number }>();
+  for (const match of queryMatches) {
+    if (match.venue) {
+      const current = groundsMap.get(match.venue);
+      if (current) current.count += 1;
+      else groundsMap.set(match.venue, { name: match.venue, city: match.venueCity, count: 1 });
+    }
+  }
+  const grounds = Array.from(groundsMap.values()).sort((first, second) => second.count - first.count);
+
   const matchCardFor = (match: DayMatch) => {
     const matchEvents = eventsByMatch.get(match.id) ?? [];
     const homeTable = standingFor(match.league.id, match.homeTeam.id);
@@ -1321,6 +1345,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         />
 
         <LiveNowBoard seed={liveBoard} dayIds={dayIds} lastEvents={lastEvents} />
+
+        <PinnedMatchesBar allMatches={pinnedMatchesData} locale={locale} />
 
         {spotlightMatch ? (
           <article
@@ -2069,6 +2095,18 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
             </div>
           </aside>
         </div>
+
+        <MatchdayLedger
+          census={dayCensus.map((item) => ({
+            label: item.label,
+            value: item.value,
+            tone: item.label === t('goal') ? 'goal' : item.label === t('yellow_card') ? 'yellow' : item.label === t('red_card') ? 'red' : undefined,
+          }))}
+          grounds={grounds}
+          broadcasts={broadcasts}
+          hrefForChannel={(name) => pageHref({ channel: selectedChannel === name ? undefined : name })}
+          activeChannel={selectedChannel}
+        />
       </main>
     </div>
   );

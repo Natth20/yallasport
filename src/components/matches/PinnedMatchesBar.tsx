@@ -8,8 +8,8 @@ import { Link } from '@/i18n/navigation';
 
 export interface PinnedMatchData {
   id: string;
-  homeTeam: { name: string; logoUrl: string | null };
-  awayTeam: { name: string; logoUrl: string | null };
+  homeTeam: { name: string; logoUrl?: string | null };
+  awayTeam: { name: string; logoUrl?: string | null };
   homeScore?: number | null;
   awayScore?: number | null;
   status: string;

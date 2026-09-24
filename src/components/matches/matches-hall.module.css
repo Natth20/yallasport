@@ -1,53 +1,594 @@
-/* Quiet luxury restyle for the matches board */
+/* ==========================================================================
+   MatchesHall — CSS Module (matches-hall.module.css)
+   Scoped styling for /matches (Matchday Programme & Live Desk)
+   Zero !important, clean tokens, full RTL/LTR & Dark/Light support.
+   ========================================================================== */
+
 .matchdayBoard {
-  --ys-elev-1: 0 10px 28px -20px color-mix(in srgb, var(--ys-ink, #0f172a) 42%, transparent);
+  isolation: isolate;
+  background:
+    radial-gradient(85% 45% at 50% 0%, color-mix(in srgb, var(--ys-orange) 6%, transparent), transparent 60%),
+    var(--background);
+  color: var(--foreground);
+  padding-bottom: 6rem;
+  min-height: 100vh;
 }
 
+/* ---- Floodlight Hero ---- */
 .floodlightHero {
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid var(--border);
   background:
-    radial-gradient(70% 50% at 90% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 58%),
-    var(--background);
+    radial-gradient(60% 70% at 85% -10%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 70%),
+    radial-gradient(50% 60% at 10% 110%, color-mix(in srgb, var(--ys-green) 10%, transparent), transparent 65%),
+    color-mix(in srgb, var(--card) 95%, transparent);
 }
 
 .floodBeam {
-  opacity: 0.55;
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.6;
+}
+
+.floodBeamLeft {
+  composes: floodBeam;
+  top: -4rem;
+  inset-inline-start: -3rem;
+  width: 14rem;
+  height: 14rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ys-orange) 35%, transparent), transparent 70%);
+}
+
+.floodBeamRight {
+  composes: floodBeam;
+  top: -2rem;
+  inset-inline-end: -2rem;
+  width: 12rem;
+  height: 12rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ys-green) 30%, transparent), transparent 70%);
+}
+
+.heroWatermark {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  inset-inline-end: 4%;
+  top: 10%;
+  font-size: clamp(5rem, 16vw, 11rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.08em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--ys-orange) 18%, transparent);
+  opacity: 0.4;
+  z-index: 1;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  width: min(1280px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding-block: 1.5rem 2rem;
+}
+
+.heroHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.sectionKicker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.folioMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 15%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
 }
 
 .matchdayWordmark {
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.8rem, 3.8vw, 2.8rem);
+  font-weight: 900;
   letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--foreground);
 }
 
-.matchdaySectionKicker {
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.livePulseDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--destructive);
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  animation: pulseLive 1.6s ease-out infinite;
+}
+
+@keyframes pulseLive {
+  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  100% { box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0); }
+}
+
+/* ---- Signature Stats Grid ---- */
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.statTile {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 4px 16px -8px color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.statTile strong {
+  font-size: 1.45rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.statTile span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+}
+
+/* ---- Main Content Layout ---- */
+.matchdayMain {
+  width: min(1280px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding-block: 2rem 4rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.contentGrid {
+  display: grid;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr) 21rem;
+  }
+}
+
+/* ---- Dock (Date Navigator & Status Filter Bar) ---- */
+.dock {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: 1.4rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.dateStrip {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scrollbar-width: none;
+}
+
+.dateStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.navArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  shrink: 0;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  color: var(--muted-foreground);
+  transition: all 160ms ease;
+  text-decoration: none;
+}
+
+.navArrow:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+}
+
+.dateChip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 4.8rem;
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-decoration: none;
+  color: var(--foreground);
+  transition: all 180ms ease;
+}
+
+.dateChip:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 50%, var(--border));
+  transform: translateY(-2px);
+}
+
+.dateChipActive {
+  composes: dateChip;
+  background: linear-gradient(135deg, var(--ys-orange), #ea580c);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(249, 115, 22, 0.7);
+}
+
+.dateChipActive .chipDay,
+.dateChipActive .chipCount {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.chipDay {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+.chipNumber {
+  font-size: 1.2rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.chipCount {
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+}
+
+/* ---- Controls Row (Filters + Search) ---- */
+.controlsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.filterPills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+}
+
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-decoration: none;
+  color: var(--muted-foreground);
+  transition: all 160ms ease;
+}
+
+.filterBtn:hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
+.filterBtnActive {
+  composes: filterBtn;
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.filterBtnActiveLive {
+  composes: filterBtn;
+  background: var(--destructive);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(239, 68, 68, 0.5);
+}
+
+.filterCount {
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+.filterDivider {
+  width: 1px;
+  height: 1.2rem;
+  background: var(--border);
+  margin-inline: 0.2rem;
+}
+
+.searchWrap {
+  position: relative;
+  width: 100%;
+  max-width: 20rem;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0.85rem;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 2.6rem;
+  padding-inline: 2.3rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 0.82rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.searchInput:focus {
+  border-color: var(--ys-orange);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ys-orange) 15%, transparent);
+}
+
+/* ---- Spotlight Showcase Match Card ---- */
+.spotlight {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.6rem;
+  border: 1px solid color-mix(in srgb, #fff 12%, transparent);
+  background:
+    radial-gradient(65% 55% at 85% 10%, rgba(249, 115, 22, 0.25), transparent 60%),
+    radial-gradient(70% 60% at 10% 90%, rgba(22, 101, 52, 0.35), transparent 65%),
+    linear-gradient(180deg, #070d1a 0%, #040810 100%);
+  color: #fff;
+  padding: 1.75rem;
+  box-shadow: 0 20px 48px -24px rgba(0, 0, 0, 0.6);
+}
+
+.spotlightTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.spotlightDuel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.25rem;
+  margin-block: 1.75rem 1.25rem;
+}
+
+.spotlightTeam {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.spotlightTeamName {
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.spotlightScore {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+
+.scoreDigit {
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #fff;
+}
+
+.spotlightFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ---- League Board Card ---- */
+.leagueBoard {
+  overflow: hidden;
+  border-radius: 1.4rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 4px 18px -10px color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.leagueHeader {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
 }
 
-.matchdaySpotlight {
-  box-shadow: var(--ys-elev-2, 0 18px 40px -24px rgba(0, 0, 0, 0.45));
+.leagueInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
-.matchdaySpotlightName {
-  font-size: 1.05rem;
+.leagueLogo {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: contain;
+  padding: 0.2rem;
+  border-radius: 0.7rem;
+  background: var(--card);
+  border: 1px solid var(--border);
 }
 
-:global(.jumbotron).matchdaySpotlight {
-  border: 1px solid color-mix(in srgb, #fff 10%, transparent);
+.leagueTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: color 140ms ease;
 }
 
-.matchdayBoard :global(.text-\[8px\]),
-.matchdayBoard :global(.text-\[9px\]) {
-  font-size: 0.72rem;
+.leagueTitle:hover {
+  color: var(--ys-orange);
 }
 
-.matchdayMain > * {
-  border-radius: 1.2rem;
+.leagueMeta {
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
 }
 
-.matchdayDesk,
-.fixtureCard {
-  box-shadow: var(--ys-elev-1, 0 8px 24px -18px rgba(11, 18, 32, 0.4));
+.leagueMatchesList {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.6rem;
+}
+
+/* ---- Sidebar Cards ---- */
+.sidebar {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sidebarCard {
+  border-radius: 1.3rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 1.25rem;
+  box-shadow: 0 4px 16px -10px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.sidebarTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+/* ---- Empty State ---- */
+.emptyState {
+  text-align: center;
+  padding: 4rem 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+}
+
+.emptyIcon {
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  color: var(--ys-orange);
+  margin-bottom: 1rem;
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+}
+
+.emptyDesc {
+  font-size: 0.86rem;
+  color: var(--muted-foreground);
+  max-width: 26rem;
+  margin-inline: auto;
+  margin-bottom: 1.5rem;
 }
