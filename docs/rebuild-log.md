@@ -38,5 +38,13 @@
   1. `Button.tsx` (95 سطر) + `button.module.css` (221 سطر): يدعم 7 Variants، 4 أحجام، Loading Spinner متحرك، أيقونات، وFullWidth.
   2. `Card.tsx` (92 سطر) + `card.module.css` (111 سطر): يدعم 6 Variants (بما فيها Glass و Interactive)، 4 أحجام حشو، ومكونات فرعية (Header, Title, Description, Content, Footer).
   3. `Badge.tsx` (68 سطر) + `badge.module.css` (172 سطر): يدعم 8 Variants وشارة `live` بنبض متوهج (Pulse & Ping) للمباريات المباشرة.
-  4. `index.ts` (6 أسطر): تصدير مركزي للمكونات.
+  4. `index.ts`: تصدير مركزي للمكونات.
 - **الفحص**: نجاح تام لـ TypeScript `npx tsc --noEmit` بنسبة 0 أخطاء و 0 `!important`.
+
+### المجموعة 2/4: Input + Tabs + Modal + صفحة Demo تفاعلية (مكتملة ✅)
+- **المكونات المنجزة**:
+  1. `Input.tsx` (166 سطر) + `input.module.css` (185 سطر): يدعم جميع أنواع الإدخال (text, email, password, search, number)، أحجام sm/md/lg، أزرار المسح التلقائي وإظهار/إخفاء كلمة المرور، الأيقونات، ورسائل الخطأ.
+  2. `Tabs.tsx` (179 سطر) + `tabs.module.css` (198 سطر): هيكل Compound كامل (Tabs, TabsList, TabsTrigger, TabsContent)، أنماط Pills و Underline و Default، توجيه أفقي وعمودي، وانتقالات ناعمة.
+  3. `Modal.tsx` (167 سطر) + `modal.module.css` (158 سطر): نوافذ منبثقة تفاعلية عبر React Portal، أحجام sm/md/lg/full، دعم ESC وقفل التمرير والخلفية الضبابية المعتمة.
+  4. `src/app/[locale]/demo/ui/page.tsx` (360 سطر) + `demo-ui.module.css` (106 سطر): صفحة تفاعلية لمعاينة واختبار جميع المكونات المنفذة حتى الآن.
+- **الفحص**: نجاح تام لـ TypeScript `npx tsc --noEmit` (0 أخطاء).

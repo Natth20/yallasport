@@ -1,0 +1,184 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-family: var(--font-sans);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+  user-select: none;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+
+.inputWrapper.hasError {
+  border-color: var(--destructive);
+}
+
+.inputWrapper.hasError:focus-within {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 20%, transparent);
+}
+
+.inputWrapper.disabled {
+  background-color: var(--muted);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Sizes
+   ========================================================================== */
+
+.sm {
+  height: 2.125rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-md);
+}
+
+.sm .input {
+  padding: 0 0.75rem;
+}
+
+.md {
+  height: 2.625rem;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-lg);
+}
+
+.md .input {
+  padding: 0 1rem;
+}
+
+.lg {
+  height: 3.125rem;
+  font-size: 1.0625rem;
+  border-radius: var(--radius-xl);
+}
+
+.lg .input {
+  padding: 0 1.25rem;
+}
+
+/* ==========================================================================
+   Input Element
+   ========================================================================== */
+
+.input {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: inherit;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Icons & Actions
+   ========================================================================== */
+
+.leftIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline-start: 0.875rem;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.leftIcon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.rightActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-inline-end: 0.75rem;
+  flex-shrink: 0;
+}
+
+.rightIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+}
+
+.rightIcon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease-in-out;
+}
+
+.actionButton:hover {
+  color: var(--foreground);
+}
+
+.actionIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ==========================================================================
+   Helper & Error Text
+   ========================================================================== */
+
+.errorMessage {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--destructive);
+  margin: 0;
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}

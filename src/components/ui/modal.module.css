@@ -1,0 +1,157 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  font-family: var(--font-sans);
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeInBackdrop 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dialog {
+  position: relative;
+  z-index: 10;
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--ys-shadow-lg);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleInDialog 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================================================
+   Sizes
+   ========================================================================== */
+
+.sm {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.md {
+  width: 100%;
+  max-width: 36rem;
+}
+
+.lg {
+  width: 100%;
+  max-width: 52rem;
+}
+
+.full {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 0;
+}
+
+/* ==========================================================================
+   Close Button
+   ========================================================================== */
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  z-index: 20;
+}
+
+.closeButton:hover {
+  background-color: var(--muted);
+  color: var(--foreground);
+}
+
+.closeIcon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* ==========================================================================
+   Sub-elements
+   ========================================================================== */
+
+.header {
+  padding: 1.5rem 1.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.content {
+  padding: 0.75rem 1.5rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.footer {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: var(--secondary);
+  border-top: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleInDialog {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
