@@ -36,6 +36,7 @@ import { pageMetadata } from '@/lib/seo/site';
 import { CrestImage } from '@/components/common/CrestImage';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { MatchHero } from '@/components/sports/MatchHero';
+import { MatchDetailTabs } from '@/components/sports/MatchDetailTabs';
 import styles from '@/components/sports/match-dossier.module.css';
 
 export const revalidate = 60;
@@ -394,7 +395,24 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
           </>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
+          <MatchDetailTabs
+            matchId={match.id}
+            status={match.status}
+            initialEvents={match.events}
+            initialLineups={match.lineups}
+            initialStatistics={match.statistics}
+            h2hMatches={h2hMatches}
+            homeTeamId={match.homeTeam.id}
+            awayTeamId={match.awayTeam.id}
+            homeTeamName={match.homeTeam.name}
+            awayTeamName={match.awayTeam.name}
+            homeTeamLogo={match.homeTeam.logoUrl}
+            awayTeamLogo={match.awayTeam.logoUrl}
+            homeStanding={standingChip(homeStanding)}
+            awayStanding={standingChip(awayStanding)}
+          />
+
           {homeStanding && awayStanding ? (
           <WinProbabilityBar
             homeTeamName={match.homeTeam.name}

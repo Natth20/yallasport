@@ -241,12 +241,6 @@
   text-shadow: 0 0 28px rgba(74, 222, 128, 0.35);
 }
 
-.scoreColon {
-  display: inline-block;
-  margin-inline: 0.35rem;
-  color: rgba(255, 255, 255, 0.4);
-}
-
 .minutePill {
   display: inline-flex;
   align-items: center;
@@ -342,4 +336,292 @@
   font-weight: 800;
   margin-bottom: 1.25rem;
   color: var(--foreground);
+}
+
+/* ---- Tabs Navigation Container ---- */
+.tabsNav {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.4rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+  scrollbar-width: none;
+}
+
+.tabsNav::-webkit-scrollbar {
+  display: none;
+}
+
+.tabButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 160ms ease;
+}
+
+.tabButton:hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
+.tabButtonActive {
+  composes: tabButton;
+  color: #fff;
+  background: var(--primary);
+  box-shadow: 0 4px 14px -4px rgba(10, 77, 58, 0.6);
+}
+
+/* ---- Events Timeline ---- */
+.eventsTimeline {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  padding-inline-start: 2rem;
+}
+
+.eventsTimeline::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  inset-inline-start: 0.85rem;
+  width: 2px;
+  background: var(--border);
+}
+
+.eventItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.eventItem:hover {
+  transform: translateX(-2px);
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+}
+
+.eventIcon {
+  position: absolute;
+  inset-inline-start: -1.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--card);
+  font-size: 0.72rem;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+
+.eventGoal {
+  composes: eventIcon;
+  background: #10b981;
+  color: #fff;
+}
+
+.eventYellow {
+  composes: eventIcon;
+  background: #f59e0b;
+  color: #fff;
+}
+
+.eventRed {
+  composes: eventIcon;
+  background: #ef4444;
+  color: #fff;
+}
+
+.eventSub {
+  composes: eventIcon;
+  background: #3b82f6;
+  color: #fff;
+}
+
+.eventVar {
+  composes: eventIcon;
+  background: #8b5cf6;
+  color: #fff;
+}
+
+.eventTitle {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.eventSubtitle {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+.eventMinute {
+  font-size: 0.84rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+}
+
+/* ---- Tactical Pitch and Lineup Tables ---- */
+.lineupSection {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.lineupGrid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .lineupGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.lineupCard {
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 1.25rem;
+}
+
+.lineupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.lineupPlayerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+  margin-bottom: 0.4rem;
+}
+
+.playerNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--ys-orange);
+}
+
+.playerName {
+  flex: 1;
+  font-size: 0.82rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerPos {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+/* ---- Statistics Meters ---- */
+.statsList {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.statRow {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.statRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.statLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.statMeterTrack {
+  display: flex;
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.statMeterHome {
+  background: linear-gradient(90deg, #10b981, #059669);
+  transition: width 400ms ease;
+}
+
+.statMeterAway {
+  background: linear-gradient(90deg, #f97316, #ea580c);
+  transition: width 400ms ease;
+}
+
+/* ---- Head to Head & Standings ---- */
+.h2hList {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.h2hRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.h2hScore {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: 0.88rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary);
 }

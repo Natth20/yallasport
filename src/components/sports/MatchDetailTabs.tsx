@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Activity, History, PlayCircle, RefreshCw, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Activity, History, ListOrdered, PlayCircle, RefreshCw, Trophy, Users } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { TacticalPitch } from '@/components/sports/TacticalPitch';
+import { LeagueCrest } from '@/components/leagues/LeagueCrest';
+import { useLocale, useTranslations } from 'next-intl';
+import { pick } from '@/i18n/pick';
 import type {
   NormalizedLineup,
   NormalizedMatch,
@@ -9,9 +14,18 @@ import type {
   NormalizedMatchEvent,
   NormalizedStatistic,
 } from '@/lib/sports-data/types';
-import {useTranslations} from 'next-intl';
+import styles from './match-dossier.module.css';
 
-import { TacticalPitch } from '@/components/sports/TacticalPitch';
+export interface StandingChipData {
+  rank: number;
+  points: number;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+}
 
 interface MatchDetailTabsProps {
   matchId: string;
@@ -24,9 +38,11 @@ interface MatchDetailTabsProps {
   awayTeamId: string;
   homeTeamName: string;
   awayTeamName: string;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
+  homeStanding?: StandingChipData;
+  awayStanding?: StandingChipData;
 }
-
-type Tab = 'events' | 'lineups' | 'statistics' | 'h2h';
 
 const eventLabelKeys = {
   GOAL: 'goal',
@@ -38,43 +54,52 @@ const eventLabelKeys = {
   VAR: 'var',
 } as const;
 
-export function MatchDetailTabs(props: MatchDetailTabsProps) {
+export function MatchDetailTabs({
+  matchId,
+  status,
+  initialEvents,
+  initialLineups,
+  initialStatistics,
+  h2hMatches,
+  homeTeamId,
+  awayTeamId,
+  homeTeamName,
+  awayTeamName,
+  homeTeamLogo,
+  awayTeamLogo,
+  homeStanding,
+  awayStanding,
+}: MatchDetailTabsProps) {
+  const locale = useLocale();
   const t = useTranslations('sports');
-  const [tab, setTab] = useState<Tab>('events');
   const [lineupView, setLineupView] = useState<'pitch' | 'list'>('pitch');
-  const [events, setEvents] = useState(props.initialEvents);
-  const [lineups, setLineups] = useState(props.initialLineups.filter((lineup) => lineup.status === 'CONFIRMED'));
-  const [statistics, setStatistics] = useState(props.initialStatistics);
+  const [events, setEvents] = useState(initialEvents);
+  const [lineups, setLineups] = useState(initialLineups.filter((l) => l.status === 'CONFIRMED'));
+  const [statistics, setStatistics] = useState(initialStatistics);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    if (props.status !== 'LIVE' && props.status !== 'HALFTIME') return;
+    if (status !== 'LIVE' && status !== 'HALFTIME') return;
     const refresh = async () => {
       setUpdating(true);
       try {
-        const response = await fetch(`/api/sports/match/${props.matchId}/live`, { cache: 'no-store' });
+        const response = await fetch(`/api/sports/match/${matchId}/live`, { cache: 'no-store' });
         if (!response.ok) return;
         const match: NormalizedMatchDetail = await response.json();
         setEvents(match.events);
-        setLineups((match.lineups ?? []).filter((lineup) => lineup.status === 'CONFIRMED'));
+        setLineups((match.lineups ?? []).filter((l) => l.status === 'CONFIRMED'));
         setStatistics(match.statistics);
       } finally {
         setUpdating(false);
       }
     };
-    const timer = window.setInterval(refresh, 15000);
+    const timer = window.setInterval(refresh, 12000);
     return () => window.clearInterval(timer);
-  }, [props.matchId, props.status]);
+  }, [matchId, status]);
 
-  const tabs: { id: Tab; label: string; icon: typeof Activity }[] = [
-    { id: 'events', label: t('events'), icon: Activity },
-    { id: 'lineups', label: t('lineups'), icon: Users },
-    { id: 'statistics', label: t('statistics'), icon: PlayCircle },
-    { id: 'h2h', label: t('head_to_head'), icon: History },
-  ];
+  const homeStats = statistics.find((s) => s.teamId === homeTeamId);
+  const awayStats = statistics.find((s) => s.teamId === awayTeamId);
 
-  const homeStats = statistics.find((item) => item.teamId === props.homeTeamId);
-  const awayStats = statistics.find((item) => item.teamId === props.awayTeamId);
   const statisticRows = [
     [t('possession'), homeStats?.possession, awayStats?.possession, '%'],
     [t('shots_on_target'), homeStats?.shotsOnTarget, awayStats?.shotsOnTarget, ''],
@@ -82,198 +107,339 @@ export function MatchDetailTabs(props: MatchDetailTabsProps) {
     [t('corners'), homeStats?.corners, awayStats?.corners, ''],
     [t('offsides'), homeStats?.offsides, awayStats?.offsides, ''],
     [t('fouls'), homeStats?.fouls, awayStats?.fouls, ''],
+    [t('passes'), homeStats?.passes, awayStats?.passes, ''],
+    [t('pass_accuracy'), homeStats?.passAccuracy, awayStats?.passAccuracy, '%'],
+    [t('expected_goals'), homeStats?.expectedGoals, awayStats?.expectedGoals, ''],
   ].filter((row) => typeof row[1] === 'number' && typeof row[2] === 'number');
 
-  return (
-    <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_25px_70px_-45px_rgba(15,23,42,0.3)] dark:border-border dark:bg-card/[0.04]">
-      <nav className="flex gap-1 overflow-x-auto border-b border-border bg-muted/70 p-2 no-scrollbar dark:border-border dark:bg-card/[0.03]">
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setTab(item.id)}
-            className={`flex min-w-28 flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-[11px] font-bold transition-all ${
-              tab === item.id
-                ? 'bg-card text-foreground shadow-sm dark:bg-muted/10 dark:text-foreground'
-                : 'text-muted-foreground hover:text-foreground dark:hover:text-foreground'
-            }`}
-          >
-            <item.icon className={`h-3.5 w-3.5 ${tab === item.id ? 'text-orange-500' : ''}`} />
-            {item.label}
-          </button>
-        ))}
-      </nav>
+  const defaultTab = events.length > 0 ? 'events' : lineups.length > 0 ? 'lineups' : 'statistics';
 
-      <div className="p-5 sm:p-8">
-        {tab === 'events' && (
-          <div>
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold">{t('event_timeline')}</h3>
-                <p className="mt-1 text-[10px] font-medium text-muted-foreground">{t('event_timeline_description')}</p>
-              </div>
-              {updating && <RefreshCw className="h-4 w-4 animate-spin text-orange-500" />}
-            </div>
-            {events.length > 0 ? (
-              <div className="relative space-y-3 before:absolute before:bottom-3 before:right-[15px] before:top-3 before:w-px before:bg-muted dark:before:bg-border">
-                {events.slice().reverse().map((event, index) => (
-                  <div key={event.id ?? `${event.minute}-${event.type}-${index}`} className="relative flex gap-4">
-                    <span className={`relative z-10 mt-3 h-8 w-8 shrink-0 rounded-full border-4 border-white dark:border-slate-950 ${
-                      event.type === 'GOAL' || event.type === 'PENALTY' ? 'bg-emerald-500'
-                        : event.type === 'RED_CARD' ? 'bg-red-500'
-                          : event.type === 'YELLOW_CARD' ? 'bg-amber-400' : 'bg-orange-500'
-                    }`} />
-                    <div className="flex flex-1 items-center justify-between rounded-xl bg-muted px-4 py-3 dark:bg-card/[0.04]">
+  return (
+    <div className={styles.panelCard}>
+      <Tabs defaultValue={defaultTab} variant="pills">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-3 border-b border-border">
+          <TabsList className={styles.tabsNav}>
+            <TabsTrigger value="events" icon={<Activity className="h-4 w-4" />}>
+              {t('events')} ({events.length})
+            </TabsTrigger>
+            <TabsTrigger value="lineups" icon={<Users className="h-4 w-4" />}>
+              {t('lineups')}
+            </TabsTrigger>
+            <TabsTrigger value="statistics" icon={<PlayCircle className="h-4 w-4" />}>
+              {t('statistics')}
+            </TabsTrigger>
+            {homeStanding || awayStanding ? (
+              <TabsTrigger value="standings" icon={<Trophy className="h-4 w-4" />}>
+                {pick(locale, 'الترتيب', 'Standings')}
+              </TabsTrigger>
+            ) : null}
+            {h2hMatches.length > 0 ? (
+              <TabsTrigger value="h2h" icon={<History className="h-4 w-4" />}>
+                {t('head_to_head')}
+              </TabsTrigger>
+            ) : null}
+          </TabsList>
+
+          {updating ? (
+            <span className="flex items-center gap-1.5 text-xs text-orange-500 font-bold">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              {t('live')}
+            </span>
+          ) : null}
+        </div>
+
+        {/* ---- Tab 1: Events Timeline ---- */}
+        <TabsContent value="events">
+          {events.length > 0 ? (
+            <div className={styles.eventsTimeline}>
+              {events
+                .slice()
+                .reverse()
+                .map((event, idx) => {
+                  const isGoal = event.type === 'GOAL' || event.type === 'PENALTY';
+                  const isYellow = event.type === 'YELLOW_CARD';
+                  const isRed = event.type === 'RED_CARD';
+                  const isSub = event.type === 'SUBSTITUTION';
+                  const isVar = event.type === 'VAR';
+
+                  const iconClass = isGoal
+                    ? styles.eventGoal
+                    : isYellow
+                    ? styles.eventYellow
+                    : isRed
+                    ? styles.eventRed
+                    : isSub
+                    ? styles.eventSub
+                    : isVar
+                    ? styles.eventVar
+                    : styles.eventIcon;
+
+                  return (
+                    <div
+                      key={event.id || `${event.minute}-${event.type}-${idx}`}
+                      className={styles.eventItem}
+                    >
+                      <span className={iconClass} aria-hidden>
+                        {isGoal ? '⚽' : isYellow ? '🟨' : isRed ? '🟥' : isSub ? '🔄' : '📺'}
+                      </span>
+
                       <div>
-                        <strong className="block text-sm text-foreground dark:text-foreground">{t(eventLabelKeys[event.type])}</strong>
-                        <span className="mt-0.5 block text-[10px] font-medium text-muted-foreground">
+                        <strong className={styles.eventTitle}>
+                          {t(eventLabelKeys[event.type] || event.type)}
+                        </strong>
+                        <span className={styles.eventSubtitle}>
                           {event.player || event.detail || t('event_details')}
-                          {event.assistPlayer ? t('assist_by', {player: event.assistPlayer}) : ''}
+                          {event.assistPlayer ? ` · ${t('assist_by', { player: event.assistPlayer })}` : ''}
                         </span>
                       </div>
-                      <span className="text-sm font-bold tabular-nums text-orange-500">
-                        {event.minute}{event.extraMinute ? `+${event.extraMinute}` : ''}&prime;
+
+                      <span className={styles.eventMinute}>
+                        {event.minute}
+                        {event.extraMinute ? `+${event.extraMinute}` : ''}&prime;
                       </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+            </div>
+          ) : (
+            <p className="text-center py-10 text-sm text-muted-foreground font-semibold">
+              {t('no_events')}
+            </p>
+          )}
+        </TabsContent>
+
+        {/* ---- Tab 2: Lineups & Tactical Pitch ---- */}
+        <TabsContent value="lineups">
+          <div className={styles.lineupSection}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground">
+                {lineupView === 'pitch'
+                  ? pick(locale, 'الملعب التكتيكي والتشكيلات', 'Tactical Pitch & Lineups')
+                  : pick(locale, 'قائمة اللاعبين والبدلاء', 'Player List & Bench')}
+              </h3>
+
+              <div className="flex rounded-xl bg-foreground/5 p-1 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setLineupView('pitch')}
+                  className={`rounded-lg px-3 py-1.5 transition-all ${
+                    lineupView === 'pitch'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  ⚽ {pick(locale, 'الملعب', 'Pitch')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLineupView('list')}
+                  className={`rounded-lg px-3 py-1.5 transition-all ${
+                    lineupView === 'list'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  📋 {pick(locale, 'القائمة', 'List')}
+                </button>
               </div>
+            </div>
+
+            {lineupView === 'pitch' ? (
+              <TacticalPitch
+                homeTeamName={homeTeamName}
+                awayTeamName={awayTeamName}
+                homeLineup={lineups.find((l) => l.teamId === homeTeamId)}
+                awayLineup={lineups.find((l) => l.teamId === awayTeamId)}
+                locale={locale}
+              />
             ) : (
-              <EmptyState text={t('no_events')} />
+              <div className={styles.lineupGrid}>
+                {[
+                  { teamId: homeTeamId, name: homeTeamName, logo: homeTeamLogo },
+                  { teamId: awayTeamId, name: awayTeamName, logo: awayTeamLogo },
+                ].map((team) => {
+                  const lineup = lineups.find((l) => l.teamId === team.teamId);
+                  const starters = lineup?.players || [];
+                  const bench = lineup?.bench || [];
+
+                  return (
+                    <div key={team.teamId} className={styles.lineupCard}>
+                      <div className={styles.lineupHeader}>
+                        <div className="flex items-center gap-2">
+                          <LeagueCrest name={team.name} logoUrl={team.logo} className="h-6 w-6" />
+                          <strong className="text-sm font-bold text-foreground">{team.name}</strong>
+                        </div>
+                        {lineup?.formation ? (
+                          <span className={styles.formationBadge}>{lineup.formation}</span>
+                        ) : null}
+                      </div>
+
+                      {lineup?.coach?.name ? (
+                        <p className="text-[11px] text-muted-foreground font-medium mb-3">
+                          {pick(locale, 'المدرب:', 'Coach:')} {lineup.coach.name}
+                        </p>
+                      ) : null}
+
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase mb-2">
+                        {pick(locale, 'التشكيلة الأساسية', 'Starting XI')}
+                      </h4>
+
+                      {starters.length > 0 ? (
+                        starters.map((player, i) => (
+                          <div
+                            key={player.id || `${player.name}-${i}`}
+                            className={styles.lineupPlayerRow}
+                          >
+                            <span className={styles.playerNum}>{player.number ?? i + 1}</span>
+                            <span className={styles.playerName}>{player.name}</span>
+                            {player.position ? (
+                              <span className={styles.playerPos}>{player.position}</span>
+                            ) : null}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground py-2">
+                          {pick(locale, 'لم تعلن التشكيلة بعد', 'Lineup not announced yet')}
+                        </p>
+                      )}
+
+                      {bench.length > 0 ? (
+                        <>
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase mt-4 mb-2">
+                            {pick(locale, 'البدلاء', 'Substitutes')}
+                          </h4>
+                          {bench.map((player, i) => (
+                            <div
+                              key={player.id || `${player.name}-${i}`}
+                              className={styles.lineupPlayerRow}
+                            >
+                              <span className={styles.playerNum}>{player.number ?? '-'}</span>
+                              <span className={styles.playerName}>{player.name}</span>
+                              {player.position ? (
+                                <span className={styles.playerPos}>{player.position}</span>
+                              ) : null}
+                            </div>
+                          ))}
+                        </>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
-        )}
+        </TabsContent>
 
-        {tab === 'lineups' && (
-          lineups.length > 0 ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground">عرض التشكيلة</span>
-                <div className="flex rounded-xl bg-foreground/5 p-1 text-[11px] font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setLineupView('pitch')}
-                    className={`rounded-lg px-3 py-1.5 transition-all ${
-                      lineupView === 'pitch' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground'
-                    }`}
-                  >
-                    الملعب التكتيكي ⚽
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLineupView('list')}
-                    className={`rounded-lg px-3 py-1.5 transition-all ${
-                      lineupView === 'list' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground'
-                    }`}
-                  >
-                    القائمة التفصيلية 📋
-                  </button>
-                </div>
+        {/* ---- Tab 3: Statistics ---- */}
+        <TabsContent value="statistics">
+          {statisticRows.length > 0 ? (
+            <div className={styles.statsList}>
+              <div className="flex justify-between items-center text-xs font-bold text-foreground mb-1">
+                <span>{homeTeamName}</span>
+                <span>{awayTeamName}</span>
               </div>
 
-              {lineupView === 'pitch' ? (
-                <TacticalPitch
-                  homeTeamName={props.homeTeamName}
-                  awayTeamName={props.awayTeamName}
-                  homeLineup={lineups.find((l) => l.teamId === props.homeTeamId)}
-                  awayLineup={lineups.find((l) => l.teamId === props.awayTeamId)}
-                />
-              ) : (
-                <div className="grid gap-5 md:grid-cols-2">
-                  {lineups.map((lineup) => (
-                    <div key={`${lineup.teamId}-${lineup.status}`} className="rounded-2xl border border-border p-5 dark:border-border">
-                      <div className="mb-5 flex items-center justify-between">
-                        <div>
-                          <strong className="text-sm text-foreground dark:text-foreground">
-                            {lineup.teamId === props.homeTeamId ? props.homeTeamName : props.awayTeamName}
-                          </strong>
-                          <span className="mt-1 block text-[9px] font-medium text-muted-foreground">{t('formation', {formation: lineup.formation || t('unannounced')})}</span>
-                        </div>
-                        <span className={`rounded-full px-2.5 py-1 text-[8px] font-bold ${
-                          lineup.status === 'CONFIRMED'
-                            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10'
-                            : 'bg-amber-50 text-amber-600 dark:bg-amber-500/10'
-                        }`}>
-                          {lineup.status === 'CONFIRMED' ? t('confirmed') : t('predicted')}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {lineup.players.map((player, index) => (
-                          <div key={player.id || `${player.name}-${index}`} className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 dark:bg-card/[0.04]">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-card text-[9px] font-bold text-orange-500 shadow-sm dark:bg-muted/10">
-                              {player.number ?? index + 1}
-                            </span>
-                            <span className="flex-1 truncate text-[11px] font-semibold text-foreground dark:text-muted-foreground">{player.name}</span>
-                            <span className="text-[8px] font-medium text-muted-foreground">{player.position}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {lineup.status === 'PREDICTED' && (
-                        <p className="mt-4 text-[9px] leading-5 text-amber-600">{t('prediction_disclaimer')}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : <EmptyState text={t('no_lineups')} />
-        )}
-
-        {tab === 'statistics' && (
-          statisticRows.length > 0 ? (
-            <div className="space-y-5">
-              <div className="flex justify-between text-xs font-bold text-foreground dark:text-foreground">
-                <span>{props.homeTeamName}</span>
-                <span>{props.awayTeamName}</span>
-              </div>
-              {statisticRows.map(([label, homeValue, awayValue, suffix]) => {
-                const home = Number(homeValue);
-                const away = Number(awayValue);
+              {statisticRows.map(([label, homeVal, awayVal, suffix]) => {
+                const home = Number(homeVal);
+                const away = Number(awayVal);
                 const total = Math.max(home + away, 1);
+                const homePercent = Math.round((home / total) * 100);
+                const awayPercent = 100 - homePercent;
+
                 return (
-                  <div key={String(label)}>
-                    <div className="mb-2 flex items-center justify-between text-[11px]">
-                      <strong className="w-12 text-foreground dark:text-foreground">{home}{suffix}</strong>
-                      <span className="font-medium text-muted-foreground">{label}</span>
-                      <strong className="w-12 text-left text-foreground dark:text-foreground">{away}{suffix}</strong>
+                  <div key={String(label)} className={styles.statRow}>
+                    <div className={styles.statRowHeader}>
+                      <span className="tabular-nums font-black text-emerald-600 dark:text-emerald-400">
+                        {home}
+                        {suffix}
+                      </span>
+                      <span className={styles.statLabel}>{label}</span>
+                      <span className="tabular-nums font-black text-orange-500">
+                        {away}
+                        {suffix}
+                      </span>
                     </div>
-                    <div className="flex h-1.5 overflow-hidden rounded-full bg-muted dark:bg-muted/10">
-                      <div className="bg-orange-500" style={{ width: `${home / total * 100}%` }} />
-                      <div className="bg-slate-800 dark:bg-slate-300" style={{ width: `${away / total * 100}%` }} />
+
+                    <div className={styles.statMeterTrack}>
+                      <div className={styles.statMeterHome} style={{ width: `${homePercent}%` }} />
+                      <div className={styles.statMeterAway} style={{ width: `${awayPercent}%` }} />
                     </div>
                   </div>
                 );
               })}
             </div>
-          ) : <EmptyState text={t('no_statistics')} />
-        )}
+          ) : (
+            <p className="text-center py-10 text-sm text-muted-foreground font-semibold">
+              {t('no_statistics')}
+            </p>
+          )}
+        </TabsContent>
 
-        {tab === 'h2h' && (
-          props.h2hMatches.length > 0 ? (
-            <div className="space-y-2">
-              {props.h2hMatches.slice(0, 5).map((match) => (
-                <div key={match.id} className="flex items-center justify-between rounded-xl bg-muted px-4 py-3 text-[11px] dark:bg-card/[0.04]">
-                  <span className="flex-1 truncate font-semibold">{match.homeTeam.name}</span>
-                  <strong className="mx-4 rounded-lg bg-card px-3 py-1.5 tabular-nums shadow-sm dark:bg-muted/10">
-                    {typeof match.homeScore === 'number' && typeof match.awayScore === 'number'
-                      ? `${match.homeScore} - ${match.awayScore}`
+        {/* ---- Tab 4: Standings ---- */}
+        {homeStanding || awayStanding ? (
+          <TabsContent value="standings">
+            <div className="space-y-4">
+              {[
+                { name: homeTeamName, logo: homeTeamLogo, data: homeStanding },
+                { name: awayTeamName, logo: awayTeamLogo, data: awayStanding },
+              ]
+                .filter((team) => team.data)
+                .map((team) => (
+                  <div
+                    key={team.name}
+                    className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border border-border bg-card"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500 text-xs font-black">
+                        #{team.data!.rank}
+                      </span>
+                      <LeagueCrest name={team.name} logoUrl={team.logo} className="h-7 w-7" />
+                      <div>
+                        <strong className="text-sm font-bold text-foreground">{team.name}</strong>
+                        <span className="block text-[10px] text-muted-foreground">
+                          {team.data!.played} {pick(locale, 'مباراة', 'played')} · {team.data!.won}{' '}
+                          {pick(locale, 'فوز', 'W')} · {team.data!.drawn} {pick(locale, 'تعادل', 'D')} ·{' '}
+                          {team.data!.lost} {pick(locale, 'خسارة', 'L')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs font-black">
+                      <span>
+                        {team.data!.goalsFor}:{team.data!.goalsAgainst}{' '}
+                        <small className="text-[10px] text-muted-foreground font-normal">
+                          {pick(locale, 'أهداف', 'goals')}
+                        </small>
+                      </span>
+                      <span className="rounded-xl bg-primary/10 px-3 py-1.5 text-primary">
+                        {team.data!.points} {pick(locale, 'نقطة', 'pts')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </TabsContent>
+        ) : null}
+
+        {/* ---- Tab 5: H2H History ---- */}
+        {h2hMatches.length > 0 ? (
+          <TabsContent value="h2h">
+            <div className={styles.h2hList}>
+              {h2hMatches.map((item) => (
+                <div key={item.id} className={styles.h2hRow}>
+                  <span className="flex-1 truncate">{item.homeTeam.name}</span>
+                  <span className={styles.h2hScore}>
+                    {typeof item.homeScore === 'number' && typeof item.awayScore === 'number'
+                      ? `${item.homeScore} - ${item.awayScore}`
                       : '—'}
-                  </strong>
-                  <span className="flex-1 truncate text-left font-semibold">{match.awayTeam.name}</span>
+                  </span>
+                  <span className="flex-1 truncate text-end">{item.awayTeam.name}</span>
                 </div>
               ))}
             </div>
-          ) : <EmptyState text={t('no_h2h')} />
-        )}
-      </div>
-    </section>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center text-sm font-medium text-muted-foreground dark:border-border">
-      {text}
+          </TabsContent>
+        ) : null}
+      </Tabs>
     </div>
   );
 }
