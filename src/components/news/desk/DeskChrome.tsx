@@ -6,7 +6,7 @@ import { TicketBarcode } from '@/components/decor/CraftMarks';
 import { deskLabel } from '@/lib/news/desks';
 import { pick } from '@/i18n/pick';
 import type { DeskChip, DeskStats, PitchMatch, SourceTally } from '@/lib/news/load-desk';
-import { ChevronLeft, ChevronRight, Search, Radio, Flame } from 'lucide-react';
+import { ChevronRight, Search, Flame } from 'lucide-react';
 
 /** Live and same-day fixtures from the sports API sync — newest first, never invented. */
 export function EditionWire({ matches, locale }: { matches: PitchMatch[]; locale: string }) {

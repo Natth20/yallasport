@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Search, Menu, User, Sparkles } from 'lucide-react';
+import { Search, Menu, User } from 'lucide-react';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { BrandMark } from '@/components/brand/BrandMark';
@@ -12,7 +12,6 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  DropdownDivider,
 } from '@/components/ui';
 import { LanguageToggle } from './LanguageToggle';
 import { ThemeToggle } from './ThemeToggle';

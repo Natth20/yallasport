@@ -1,9 +1,8 @@
 'use client';
 import { reportCaughtError } from '@/lib/ops/caught';
 
-
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Download, X, Sparkles } from 'lucide-react';
+import {Download, X, Sparkles} from 'lucide-react';
 import { BrandMark } from '@/components/brand/BrandMark';
 
 export function PwaInstallBanner({ locale = 'ar' }: { locale?: string }) {

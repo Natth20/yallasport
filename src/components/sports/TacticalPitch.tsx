@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import type { NormalizedLineup } from '@/lib/sports-data/types';
-import { Shield, Users, Eye } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 interface TacticalPitchProps {
   homeTeamName: string;
@@ -39,9 +39,8 @@ export function TacticalPitch({
   awayTeamName,
   homeLineup,
   awayLineup,
-  locale = 'ar',
+  locale: _locale = 'ar',
 }: TacticalPitchProps) {
-  const isAr = locale === 'ar';
   const [selectedTeam, setSelectedTeam] = useState<'home' | 'away'>('home');
 
   const activeLineup = selectedTeam === 'home' ? homeLineup : awayLineup;

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Activity, ShieldAlert, Sparkles, Zap } from 'lucide-react';
+import {Activity, ShieldAlert, Zap} from 'lucide-react';
 import type { NormalizedMatchEvent, NormalizedStatistic } from '@/lib/sports-data/types';
 import { useTranslations } from 'next-intl';
 import styles from '@/components/sports/match-dossier.module.css';

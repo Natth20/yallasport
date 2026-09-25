@@ -8,7 +8,6 @@ import { auth } from '@/lib/auth/auth';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { Link } from '@/i18n/navigation';
-import { SalonStage } from '@/components/salon/SalonStage';
 import { Stagger, StaggerItem, HeroEnter } from '@/components/motion/PageMotion';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
@@ -20,8 +19,6 @@ import {
   Sparkles,
   ArrowRight,
   ArrowLeft,
-  Search,
-  CheckCircle2,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';

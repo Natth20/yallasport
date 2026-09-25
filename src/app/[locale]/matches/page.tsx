@@ -34,7 +34,6 @@ import {
   Radio,
   Search,
   Shield,
-  Trophy,
   Tv,
   Users,
 } from 'lucide-react';

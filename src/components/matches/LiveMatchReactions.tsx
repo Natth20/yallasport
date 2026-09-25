@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { swallow } from '@/lib/ops/caught';
-import { Sparkles, MessageCircle } from 'lucide-react';
+import {Sparkles} from 'lucide-react';
 import styles from '@/components/sports/match-dossier.module.css';
 
 const REACTIONS = [

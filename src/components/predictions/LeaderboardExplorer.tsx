@@ -1,20 +1,14 @@
 'use client';
 import { reportCaughtError } from '@/lib/ops/caught';
 
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Search,
   Mic,
-  MicOff,
   Trophy,
-  Flame,
   Sparkles,
-  TrendingUp,
   Target,
-  Medal,
   X,
-  Volume2
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 

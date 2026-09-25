@@ -12,22 +12,17 @@ import {
   LexCallout,
 } from './LexChamber';
 import {
-  ShieldCheck,
   Lock,
   EyeOff,
   UserCheck,
-  Database,
   Globe,
   Trash2,
   Bell,
   RefreshCw,
   Mail,
-  Smartphone,
-  Layers,
 } from 'lucide-react';
 
 export function PrivacyVault({ locale, analyticsId = '' }: { locale: string; analyticsId?: string }) {
-  const isAr = locale === 'ar';
   const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [

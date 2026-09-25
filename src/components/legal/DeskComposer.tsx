@@ -10,7 +10,6 @@ import {
   CheckCircle,
   AlertCircle,
   Link as LinkIcon,
-  Mail,
   FileText,
   Copy,
   Sparkles,

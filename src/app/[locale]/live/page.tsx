@@ -1,5 +1,5 @@
 import { swallow } from '@/lib/ops/caught';
-import React, { Suspense, type ReactNode } from 'react';
+import React, { Suspense } from 'react';
 import { cookies, headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
@@ -22,7 +22,7 @@ import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
-import { Radio, Tv, Play, Video, Film, Sparkles, Calendar, Layers, ChevronRight } from 'lucide-react';
+import { Radio, Tv, Play } from 'lucide-react';
 import styles from '@/components/live/live-hall.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,7 +56,6 @@ async function LivePageBody({
   searchParams: Promise<{ leagueId?: string; channelId?: string }>;
 }) {
   const locale = await getLocale();
-  const isAr = locale === 'ar';
   const t = await getTranslations('live');
   const tw = await getTranslations('watch');
   const params = await searchParams;

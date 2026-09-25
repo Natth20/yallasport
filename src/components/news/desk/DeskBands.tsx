@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from '@/i18n/navigation';
 import { ClientTime } from '@/components/datetime/ClientTime';
-import { DeskRule } from '@/components/news/NewsOrnaments';
 import { pick } from '@/i18n/pick';
 import type { ArchiveDay, Broadcast, GoalMoment, TableSnapshot } from '@/lib/news/load-desk';
 import { Goal, Radio, Tv, Trophy, ChevronRight } from 'lucide-react';

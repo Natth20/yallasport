@@ -13,7 +13,15 @@ import {
 } from '@/lib/streaming/catalog';
 import { countryFromHeaders, isGeoAllowed } from '@/lib/streaming/entitlement';
 import { ClientTime } from '@/components/datetime/ClientTime';
-import { Tv, Radio, PlayCircle, Film, Sparkles, Flame, Clock, Shield, ArrowRight, ArrowLeft, Lock } from 'lucide-react';
+import {
+  Tv,
+  Radio,
+  Film,
+  Sparkles,
+  Flame,
+  Clock,
+  Lock,
+} from 'lucide-react';
 import { MatchStreamPlayer } from '@/components/streaming/MatchStreamPlayer';
 
 function typeLabel(

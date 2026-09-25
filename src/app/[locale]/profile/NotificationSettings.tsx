@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, Goal, PlayCircle, StopCircle, Zap } from 'lucide-react';
-import {useLocale} from 'next-intl';
-import {pick} from '@/i18n/pick';
+import {
+  Goal,
+  PlayCircle,
+  StopCircle,
+  Zap,
+} from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { pick } from '@/i18n/pick';
 
 interface NotificationSettingsProps {
   initialPrefs: {
@@ -33,7 +38,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ init
         method: 'POST',
         body: JSON.stringify(newPrefs),
       });
-    } catch (e) {
+    } catch {
       console.error('Failed to update notification preferences');
     } finally {
       setSaving(false);

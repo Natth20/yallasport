@@ -9,24 +9,18 @@ import {
   LexHighlightsGrid,
   LexHighlightCard,
   LexCheckList,
-  LexCallout,
 } from './LexChamber';
 import {
-  AlertTriangle,
   Clock,
   ShieldCheck,
   Zap,
   Mail,
   Trophy,
   FileText,
-  Radio,
   Flame,
-  Bug,
-  HelpCircle,
 } from 'lucide-react';
 
 export function ReportDesk({ locale }: { locale: string }) {
-  const isAr = locale === 'ar';
   const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [

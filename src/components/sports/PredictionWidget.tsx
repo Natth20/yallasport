@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trophy, CheckCircle2, Lock, Sparkles } from 'lucide-react';
+import {Trophy, CheckCircle2, Lock} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import styles from '@/components/sports/match-dossier.module.css';

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { TrendingUp, ShieldCheck } from 'lucide-react';
+import {TrendingUp} from 'lucide-react';
 import styles from '@/components/sports/match-dossier.module.css';
 
 export interface WinProbabilityBarProps {

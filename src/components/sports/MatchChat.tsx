@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, MessageSquare, Send, Shield, User as UserIcon } from 'lucide-react';
+import { ChevronDown, MessageSquare, Send, Shield } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { swallow, reportCaughtError } from '@/lib/ops/caught';

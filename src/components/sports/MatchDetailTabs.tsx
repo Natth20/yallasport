@@ -1,7 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Activity, History, ListOrdered, PlayCircle, RefreshCw, Trophy, Users } from 'lucide-react';
+import {
+  Activity,
+  History,
+  PlayCircle,
+  RefreshCw,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { TacticalPitch } from '@/components/sports/TacticalPitch';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';

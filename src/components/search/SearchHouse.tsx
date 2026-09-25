@@ -1,6 +1,6 @@
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { BrandMark } from '@/components/brand/BrandMark';
-import { HeroEnter, Reveal, Stagger, StaggerItem } from '@/components/motion/PageMotion';
+import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
 import { Link } from '@/i18n/navigation';
 import type { Prisma } from '@/generated/prisma';
 import { localizeEntityMap, newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
@@ -10,7 +10,6 @@ import { SearchTicket } from './SearchTicket';
 import { canShowScore, clampSeekQuery, parseSeekKind, seekHref, type SeekKind } from './seek';
 import {
   Search as SearchIcon,
-  Radio,
   Trophy,
   Shield,
   Users,
@@ -19,7 +18,6 @@ import {
   Sparkles,
   Flame,
 } from 'lucide-react';
-
 
 function newsSeekWhere(locale: string, q: string): Prisma.NewsWhereInput {
   const contains = { contains: q, mode: 'insensitive' as const };

@@ -1,9 +1,8 @@
 'use client';
 import { reportCaughtError } from '@/lib/ops/caught';
 
-
 import React, { useState, useEffect } from 'react';
-import { Star, Flame, ChevronRight, X } from 'lucide-react';
+import {Star, X} from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 
 export interface PinnedMatchData {

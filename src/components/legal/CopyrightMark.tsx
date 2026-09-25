@@ -1,7 +1,6 @@
 'use client';
 
 import { pick } from '@/i18n/pick';
-import { CONTACT_EMAIL } from '@/lib/seo/site';
 import {
   LexChamber,
   LexSection,
@@ -9,25 +8,16 @@ import {
   LexHighlightCard,
   LexModernTable,
   LexCheckList,
-  LexCallout,
 } from './LexChamber';
 import {
   Scale,
   ShieldAlert,
-  ShieldCheck,
-  CheckCircle2,
   FileBadge,
-  Sparkles,
   Building,
-  Radio,
-  Image as ImageIcon,
-  Clock,
-  Mail,
   Send,
 } from 'lucide-react';
 
 export function CopyrightMark({ locale }: { locale: string }) {
-  const isAr = locale === 'ar';
   const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [

@@ -1,7 +1,6 @@
 'use client';
 
 import { pick } from '@/i18n/pick';
-import { CONTACT_EMAIL } from '@/lib/seo/site';
 import {
   LexChamber,
   LexSection,
@@ -9,25 +8,15 @@ import {
   LexHighlightCard,
   LexModernTable,
   LexCheckList,
-  LexCallout,
 } from './LexChamber';
 import {
-  FileText,
   Shield,
   Award,
-  AlertOctagon,
   Users,
   Trophy,
-  Tv,
-  CheckCircle,
-  Scale,
-  Ban,
-  Radio,
-  BookOpen,
 } from 'lucide-react';
 
 export function TermsDeed({ locale }: { locale: string }) {
-  const isAr = locale === 'ar';
   const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [

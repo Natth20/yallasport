@@ -12,21 +12,13 @@ import {
   LexCallout,
 } from './LexChamber';
 import {
-  Cookie,
   Sliders,
   ShieldCheck,
-  CheckCircle2,
   Lock,
-  Database,
-  Globe,
-  Settings2,
-  Trash2,
   EyeOff,
-  Cpu,
 } from 'lucide-react';
 
 export function CookieLedger({ locale, analyticsId = '' }: { locale: string; analyticsId?: string }) {
-  const isAr = locale === 'ar';
   const date = pick(locale, '23 سبتمبر 2026', '23 September 2026');
 
   const rail = [
