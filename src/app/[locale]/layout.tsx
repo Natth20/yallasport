@@ -62,15 +62,22 @@ export async function generateMetadata({
     formatDetection: { telephone: false, email: false, address: false },
     icons: {
       icon: [
+        { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+        { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
         { url: "/icon.png", type: "image/png" },
-        { url: "/images/logo.png", type: "image/png" },
       ],
-      apple: [{ url: "/apple-icon.png", type: "image/png" }],
-      shortcut: "/images/logo.png",
+      apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
+      shortcut: "/icons/icon-192.png",
     },
     manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      title: locale === "ar" ? "يلا سبورت" : "Yalla Sport",
+      statusBarStyle: "black-translucent",
+    },
     other: {
-      "msapplication-TileColor": THEME_COLOR,
+      "msapplication-TileColor": "#0b0b0b",
+      "mobile-web-app-capable": "yes",
     },
     alternates: {
       languages: {
@@ -144,6 +151,9 @@ export default async function RootLayout({
     >
       <head>
         <meta name="theme-color" content={THEME_COLOR} />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
         <script
           dangerouslySetInnerHTML={{
             __html:
