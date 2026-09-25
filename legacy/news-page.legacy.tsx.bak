@@ -30,8 +30,6 @@ import { normalizeTimezone } from '@/lib/datetime/format';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 
-import styles from '@/components/news/news-chamber.module.css';
-
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -94,24 +92,24 @@ async function NewsPageBody({
   };
 
   return (
-    <div className={styles['nk-hall']}>
-      <span className={styles['nk-aura']} aria-hidden />
-      <span className={styles['nk-grain']} aria-hidden />
+    <div className="nk-hall">
+      <span className="nk-aura" aria-hidden />
+      <span className="nk-grain" aria-hidden />
 
       <Suspense fallback={<FrontSkeleton kind="pulse" />}>
         <NewsWire timezone={timezone} locale={locale} />
       </Suspense>
 
-      <div className={styles['nk-inner']}>
+      <div className="nk-inner">
         <NewsInkMast locale={locale} stats={data.stats} />
 
-        <div className={styles['nk-board']}>
+        <div className="nk-board">
           <div className="min-w-0">
             {data.lead ? (
-              <div className={styles['nk-stage']}>
+              <div className="nk-stage">
                 <NewsInkLead story={data.lead} locale={locale} />
                 {data.subLeads.length > 0 ? (
-                  <div className={styles['nk-side']}>
+                  <div className="nk-side">
                     {data.subLeads.slice(0, 3).map((story) => (
                       <NewsInkCard key={story.id} story={story} locale={locale} />
                     ))}
@@ -149,7 +147,7 @@ async function NewsPageBody({
             />
 
             {data.rest.length > 0 ? (
-              <div className={styles['nk-folio']}>
+              <div className="nk-folio">
                 <BandHead
                   locale={locale}
                   kicker={pick(locale, 'السجل', 'The log')}
@@ -167,7 +165,7 @@ async function NewsPageBody({
                   )}
                 </div>
 
-                <div className={styles['nk-log']}>
+                <div className="nk-log">
                   {data.rest.map((story) => (
                     <NewsInkCard key={story.id} story={story} locale={locale} />
                   ))}
@@ -178,7 +176,7 @@ async function NewsPageBody({
                     {data.page > 1 && (
                       <Link
                         href={hrefFor({ page: data.page - 1 })}
-                        className="rounded-xl border border-border px-4 py-2 text-[10px] font-bold text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                        className="rounded-xl border border-border px-4 py-2 text-[10px] font-bold text-muted-foreground"
                       >
                         {pick(locale, 'السابق', 'Previous')}
                       </Link>
@@ -189,7 +187,7 @@ async function NewsPageBody({
                     {data.page < data.totalPages && (
                       <Link
                         href={hrefFor({ page: data.page + 1 })}
-                        className="rounded-xl bg-primary px-4 py-2 text-[10px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+                        className="rounded-xl bg-foreground px-4 py-2 text-[10px] font-bold text-white dark:bg-card dark:text-foreground"
                       >
                         {pick(locale, 'التالي', 'Next')}
                       </Link>
@@ -204,7 +202,7 @@ async function NewsPageBody({
             )}
           </div>
 
-          <aside className={styles['nk-rail']}>
+          <aside className="nk-rail">
             <MostReadRail articles={data.mostRead} locale={locale} />
             <SourceLedger sources={data.sources} locale={locale} selected={source} hrefFor={hrefFor} />
             {data.lead && (
@@ -220,15 +218,15 @@ async function NewsPageBody({
           <NewsSportBands timezone={timezone} locale={locale} />
         </Suspense>
 
-        <div className={styles['nk-close']}>
+        <div className="nk-close">
           <NewsInkPulse archive={data.archive} locale={locale} hrefFor={hrefFor} />
-          <div className={styles['nk-atlas']}>
+          <div className="nk-atlas">
             <NewsInkDesks desks={data.deskChips} locale={locale} selected={desk} hrefFor={hrefFor} />
             <NewsInkLedger sources={data.sources} locale={locale} />
           </div>
         </div>
 
-        <p aria-hidden="true" className="mt-10 text-center text-[clamp(2.2rem,7vw,4.4rem)] font-black tracking-widest text-foreground/10 select-none">
+        <p aria-hidden="true" className="news-colophon-mark">
           DESK
         </p>
       </div>
