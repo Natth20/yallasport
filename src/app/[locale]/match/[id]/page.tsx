@@ -35,6 +35,8 @@ import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { CrestImage } from '@/components/common/CrestImage';
 import { FrontSkeleton } from '@/components/front/FrontMark';
+import { MatchHero } from '@/components/sports/MatchHero';
+import styles from '@/components/sports/match-dossier.module.css';
 
 export const revalidate = 60;
 
