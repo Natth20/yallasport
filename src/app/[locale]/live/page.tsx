@@ -1,9 +1,15 @@
 import { swallow } from '@/lib/ops/caught';
-import { Suspense, type ReactNode } from 'react';
+import React, { Suspense, type ReactNode } from 'react';
 import { cookies, headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { listLinearCatalog, listLiveCatalog, listPublishedLibrary, listTonightTvGuide, upcomingLicensedWindows } from '@/lib/streaming/catalog';
+import {
+  listLinearCatalog,
+  listLiveCatalog,
+  listPublishedLibrary,
+  listTonightTvGuide,
+  upcomingLicensedWindows,
+} from '@/lib/streaming/catalog';
 import { countryFromHeaders, isGeoAllowed } from '@/lib/streaming/entitlement';
 import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { STREAMING_ENABLED } from '@/lib/streaming';
@@ -16,7 +22,7 @@ import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
-import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
+import { Radio, Tv, Play, Video, Film, Sparkles, Calendar, Layers, ChevronRight } from 'lucide-react';
 import styles from '@/components/live/live-hall.module.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,18 +37,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const isLiveStatus = (status?: string) => status === 'LIVE' || status === 'HALFTIME';
-
-function BandHead({ folio, title, lead, extra }: { folio: string; title: string; lead?: string; extra?: ReactNode }) {
-  return (
-    <div className="live-band-head">
-      <div className="live-mark">
-        <i>{folio}</i>
-        <h2>{title}</h2>
-      </div>
-      {extra ?? (lead ? <p>{lead}</p> : null)}
-    </div>
-  );
-}
 
 export default function LivePage({
   searchParams,
@@ -62,6 +56,7 @@ async function LivePageBody({
   searchParams: Promise<{ leagueId?: string; channelId?: string }>;
 }) {
   const locale = await getLocale();
+  const isAr = locale === 'ar';
   const t = await getTranslations('live');
   const tw = await getTranslations('watch');
   const params = await searchParams;
@@ -75,21 +70,21 @@ async function LivePageBody({
 
   const items = STREAMING_ENABLED
     ? await listLiveCatalog({
-      country,
-      leagueId: leagueId || undefined,
-      channelId: channelId || undefined,
-    }).catch(swallow("src/app/[locale]/live/page.tsx:67", []))
+        country,
+        leagueId: leagueId || undefined,
+        channelId: channelId || undefined,
+      }).catch(swallow('LivePage.listLiveCatalog', []))
     : [];
 
   const linear = STREAMING_ENABLED
     ? await listLinearCatalog({
-      country,
-      channelId: channelId || undefined,
-    }).catch(swallow("src/app/[locale]/live/page.tsx:74", []))
+        country,
+        channelId: channelId || undefined,
+      }).catch(swallow('LivePage.listLinearCatalog', []))
     : [];
 
   const library = STREAMING_ENABLED
-    ? await listPublishedLibrary({ take: 12 }).catch(swallow("src/app/[locale]/live/page.tsx:78", []))
+    ? await listPublishedLibrary({ take: 12 }).catch(swallow('LivePage.listPublishedLibrary', []))
     : [];
 
   const tvRows = await listTonightTvGuide({
@@ -97,11 +92,14 @@ async function LivePageBody({
     end,
     leagueId: leagueId || undefined,
     channelId: channelId || undefined,
-  }).catch(swallow("src/app/[locale]/live/page.tsx:86", [] as Awaited<ReturnType<typeof listTonightTvGuide>>));
+  }).catch(swallow('LivePage.listTonightTvGuide', [] as Awaited<ReturnType<typeof listTonightTvGuide>>));
 
   const upcoming = STREAMING_ENABLED
-    ? (await upcomingLicensedWindows(8).catch(swallow("src/app/[locale]/live/page.tsx:89", []))).filter((asset) => isGeoAllowed(country, asset.geoAllow))
+    ? (await upcomingLicensedWindows(8).catch(swallow('LivePage.upcomingLicensedWindows', []))).filter((asset) =>
+        isGeoAllowed(country, asset.geoAllow)
+      )
     : [];
+
   walkLocalizeNames(locale, items);
   walkLocalizeNames(locale, linear);
   walkLocalizeNames(locale, tvRows);
@@ -140,10 +138,8 @@ async function LivePageBody({
   });
 
   const featuredSports = STREAMING_ENABLED ? programs[0] : undefined;
-  const featuredListing =
-    tvRows.find((row) => isLiveStatus(row.match.status)) ?? tvRows[0] ?? null;
-  const featuredLive =
-    isLiveStatus(featuredSports?.match?.status) || isLiveStatus(featuredListing?.match.status);
+  const featuredListing = tvRows.find((row) => isLiveStatus(row.match.status)) ?? tvRows[0] ?? null;
+  const featuredLive = isLiveStatus(featuredSports?.match?.status) || isLiveStatus(featuredListing?.match.status);
 
   type ChannelCard = {
     id: string;
@@ -216,305 +212,401 @@ async function LivePageBody({
   const featuredChannel = featuredSports?.assets[0]?.channel?.name ?? featuredListing?.channel?.name;
 
   return (
-    <div className={`${styles.liveHall} live-hall`}>
-      <span className="live-aura" aria-hidden />
-      <span className="live-grain" aria-hidden />
-
-      <div className="live-inner">
-        <HeroEnter>
-          <header className="live-mast">
-            <div className="live-mast-brand">
-              <BrandMark size={52} priority />
-              <div className="live-mast-copy">
-                <p className="live-kicker">{t('studio_kicker')}</p>
-                <h1>{t('title')}</h1>
-                <p className="live-mast-lead">{t('description')}</p>
-              </div>
+    <div className={styles.liveHall}>
+      <div className={styles.inner}>
+        {/* ==========================================================================
+            1. LIVE BROADCAST MAST (Hero Header & Metrics)
+            ========================================================================== */}
+        <header className={styles.mast}>
+          <div className={styles.mastBrand}>
+            <BrandMark size={48} priority />
+            <div className={styles.mastCopy}>
+              <span className={styles.kicker}>
+                <Radio className="h-3.5 w-3.5 animate-pulse" />
+                {t('studio_kicker')}
+              </span>
+              <h1 className={styles.mastTitle}>{t('title')}</h1>
+              <p className={styles.mastLead}>{t('description')}</p>
             </div>
-            <div className="live-meters">
-              <div className={`live-meter${featuredLive ? ' is-hot' : ''}`}>
-                <b>{featuredLive ? 'LIVE' : '—'}</b>
-                <span>{t('now_on_air')}</span>
-              </div>
-              <div className="live-meter">
-                <b>{tvRows.length}</b>
-                <span>{t('listing_count')}</span>
-              </div>
-              <div className="live-meter">
-                <b>{channelWall.length}</b>
-                <span>{t('channel_count')}</span>
-              </div>
-            </div>
-          </header>
-        </HeroEnter>
+          </div>
 
-        <Reveal className="live-screen">
-          <div className="live-screen-bezel">
-            <span className="live-scan" aria-hidden />
-            {featuredMatch || featuredSports ? (
-              <div className="live-stage">
-                <div className="live-stage-top">
-                  <em>
-                    {[featuredLeague, featuredChannel].filter(Boolean).join(' · ')}
-                  </em>
-                  <span className={`live-pill${featuredLive ? '' : ' is-ready'}`}>
-                    <i />
-                    {featuredLive
-                      ? featuredSports?.match?.minute
-                        ? `${t('now_on_air')} ${featuredSports.match.minute}'`
-                        : t('now_on_air')
-                      : featuredListing
-                        ? t('on_television')
-                        : t('watch')}
-                  </span>
-                </div>
-                <div className="live-duel">
-                  <div className="live-side">
-                    {featuredMatch ? (
+          <div className={styles.metersGrid}>
+            <div className={featuredLive ? styles.meterLive : styles.meterCard}>
+              <span className={styles.meterValue}>{featuredLive ? 'LIVE' : '—'}</span>
+              <span className={styles.meterLabel}>{t('now_on_air')}</span>
+            </div>
+            <div className={styles.meterCard}>
+              <span className={styles.meterValue}>{tvRows.length}</span>
+              <span className={styles.meterLabel}>{t('listing_count')}</span>
+            </div>
+            <div className={styles.meterCard}>
+              <span className={styles.meterValue}>{channelWall.length}</span>
+              <span className={styles.meterLabel}>{t('channel_count')}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* ==========================================================================
+            2. FEATURED ON-AIR STAGE (Cinematic Match Screen)
+            ========================================================================== */}
+        <section className={styles.featuredScreen}>
+          {featuredMatch || featuredSports ? (
+            <div>
+              <div className={styles.stageTop}>
+                <span className={styles.stageCategory}>
+                  {[featuredLeague, featuredChannel].filter(Boolean).join(' · ')}
+                </span>
+                <span className={styles.liveBadge}>
+                  <span className={styles.liveDot} />
+                  {featuredLive
+                    ? featuredSports?.match?.minute
+                      ? `${t('now_on_air')} ${featuredSports.match.minute}'`
+                      : t('now_on_air')
+                    : featuredListing
+                      ? t('on_television')
+                      : t('watch')}
+                </span>
+              </div>
+
+              <div className={styles.stageDuel}>
+                {/* Home Side */}
+                <div className={styles.stageSide}>
+                  {featuredMatch ? (
+                    <div className={styles.stageCrest}>
                       <LeagueCrest
                         name={featuredMatch.homeTeam.name}
                         logoUrl={featuredMatch.homeTeam.logoUrl}
-                        className="live-crest"
+                        className="h-full w-full object-contain"
                       />
-                    ) : null}
-                    <strong>
-                      {featuredMatch?.homeTeam.name ?? featuredChannel}
-                    </strong>
-                  </div>
-                  <div className="live-score">
-                    <b className={featuredLive ? 'is-live' : ''}>
-                      {scoreLabel(featuredMatch?.homeScore, featuredMatch?.awayScore)}
-                    </b>
-                    <span>VS</span>
-                  </div>
-                  <div className="live-side is-away">
-                    {featuredMatch ? (
+                    </div>
+                  ) : null}
+                  <strong className={styles.stageTeamName}>
+                    {featuredMatch?.homeTeam.name ?? featuredChannel}
+                  </strong>
+                </div>
+
+                {/* Center Score */}
+                <div className={styles.stageScore}>
+                  <span className={styles.scoreDigits}>
+                    {scoreLabel(featuredMatch?.homeScore, featuredMatch?.awayScore)}
+                  </span>
+                  <span className={styles.scoreVs}>VS</span>
+                </div>
+
+                {/* Away Side */}
+                <div className={styles.stageSide}>
+                  {featuredMatch ? (
+                    <div className={styles.stageCrest}>
                       <LeagueCrest
                         name={featuredMatch.awayTeam.name}
                         logoUrl={featuredMatch.awayTeam.logoUrl}
-                        className="live-crest"
+                        className="h-full w-full object-contain"
                       />
-                    ) : null}
-                    <strong>{featuredMatch?.awayTeam.name ?? ''}</strong>
-                  </div>
+                    </div>
+                  ) : null}
+                  <strong className={styles.stageTeamName}>
+                    {featuredMatch?.awayTeam.name ?? ''}
+                  </strong>
                 </div>
-                <div className="live-actions">
-                  {STREAMING_ENABLED
-                    ? featuredAssets.map((asset) => (
-                      <Link key={asset.id} href={`/watch/${asset.id}`} className="live-cta">
+              </div>
+
+              <div className={styles.stageActions}>
+                {STREAMING_ENABLED
+                  ? featuredAssets.map((asset) => (
+                      <Link key={asset.id} href={`/watch/${asset.id}`} className={styles.ctaWatch}>
+                        <Play className="h-4 w-4 fill-current" />
                         {asset.channel?.name || t('watch_here')}
                       </Link>
                     ))
-                    : null}
-                  {featuredMatch ? (
-                    <Link href={`/match/${featuredMatch.id}`} className="live-ghost">
-                      {t('match_center')}
-                    </Link>
-                  ) : null}
-                </div>
+                  : null}
+                {featuredMatch ? (
+                  <Link href={`/match/${featuredMatch.id}`} className={styles.ctaGhost}>
+                    {t('match_center')}
+                  </Link>
+                ) : null}
               </div>
-            ) : (
-              <div className="live-empty">
-                <p>{t('empty')}</p>
-              </div>
-            )}
-          </div>
-        </Reveal>
+            </div>
+          ) : (
+            <div className={styles.emptyCard}>
+              <Tv className="h-10 w-10 opacity-30 mb-2" />
+              <p>{t('empty')}</p>
+            </div>
+          )}
+        </section>
 
-        {(leagues.length > 1 || channelWall.length > 1 || leagueId || channelId) ? (
-          <Reveal className="live-band">
-            <div className="live-band-head">
-              <div className="live-mark">
-                <i>01</i>
-                <h2>{t('filters')}</h2>
+        {/* ==========================================================================
+            3. LEAGUE & CHANNEL RAILS (Filters Bar)
+            ========================================================================== */}
+        {leagues.length > 1 || channelWall.length > 1 || leagueId || channelId ? (
+          <section className={styles.bandSection}>
+            <div className={styles.bandHead}>
+              <div className={styles.bandMark}>
+                <span className={styles.bandFolio}>01</span>
+                <h2 className={styles.bandTitle}>{t('filters')}</h2>
               </div>
               {leagueId || channelId ? (
-                <Link href="/live">{pick(locale, 'عرض كل القنوات', 'Show every channel')}</Link>
+                <Link href="/live" className="text-xs font-bold text-[var(--ys-orange)] hover:underline">
+                  {pick(locale, 'إعادة ضبط كل الفلاتر', 'Reset all filters')}
+                </Link>
               ) : null}
             </div>
-            <div className="live-filters">
+
+            <div className={styles.filterSection}>
               {leagues.length > 0 ? (
-                <div className="live-rail">
+                <div className={styles.filterRail}>
                   {leagues.map((league) => {
                     const active = leagueId === league.id;
                     return (
                       <Link
                         key={league.id}
                         href={pageHref({ leagueId: active ? undefined : league.id })}
-                        className={`live-chip${active ? ' is-on' : ''}`}
+                        className={active ? styles.filterChipActive : styles.filterChip}
                       >
                         {league.logoUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={league.logoUrl} alt="" />
+                          <img src={league.logoUrl} alt="" className="h-4 w-4 object-contain" />
                         ) : null}
-                        {league.name}
+                        <span>{league.name}</span>
                       </Link>
                     );
                   })}
                 </div>
               ) : null}
+
               {channelWall.length > 0 ? (
-                <div className="live-rail">
+                <div className={styles.filterRail}>
                   {channelWall.map((channel) => {
                     const active = channelId === channel.id;
                     return (
                       <Link
                         key={channel.id}
                         href={pageHref({ channelId: active ? undefined : channel.id })}
-                        className={`live-chip${active ? ' is-on' : ''}`}
+                        className={active ? styles.filterChipActive : styles.filterChip}
                       >
                         {channel.logoUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={channel.logoUrl} alt="" />
+                          <img src={channel.logoUrl} alt="" className="h-4 w-4 object-contain" />
                         ) : null}
-                        {channel.name}
+                        <span>{channel.name}</span>
                       </Link>
                     );
                   })}
                 </div>
               ) : null}
             </div>
-          </Reveal>
+          </section>
         ) : null}
 
-        <div className="live-deck">
-          <div>
-            <Reveal className="live-band">
-              <BandHead folio="02" title={t('channels_wall')} lead={t('tonight')} />
+        {/* ==========================================================================
+            4. TWO-COLUMN CONTENT DECK (Channels, Schedule, VOD & Upcoming)
+            ========================================================================== */}
+        <div className={styles.twoColLayout}>
+          {/* Main Column */}
+          <div className={styles.mainColumn}>
+            {/* Channels Wall */}
+            <section className={styles.bandSection}>
+              <div className={styles.bandHead}>
+                <div className={styles.bandMark}>
+                  <span className={styles.bandFolio}>02</span>
+                  <div>
+                    <h2 className={styles.bandTitle}>{t('channels_wall')}</h2>
+                    <p className={styles.bandLead}>{t('tonight')}</p>
+                  </div>
+                </div>
+              </div>
+
               {channelWall.length > 0 ? (
-                <div className="live-channels">
+                <div className={styles.channelsGrid}>
                   {channelWall.map((channel) => {
-                    const liveListing = channel.listings.find((row) => isLiveStatus(row.match.status)) ?? channel.listings[0];
+                    const liveListing =
+                      channel.listings.find((row) => isLiveStatus(row.match.status)) ?? channel.listings[0];
                     const headline = channel.playable[0]?.match ?? liveListing?.match;
                     return (
-                      <article key={channel.id} className="live-channel">
-                        <div className="live-channel-top">
-                          <div className="live-channel-id">
-                            <div className="live-channel-crest">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={channel.logoUrl || '/placeholder.png'} alt="" />
+                      <article key={channel.id} className={styles.channelCard}>
+                        <div>
+                          <div className={styles.channelHeader}>
+                            <div className={styles.channelMeta}>
+                              <div className={styles.channelCrest}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={channel.logoUrl || '/placeholder.png'}
+                                  alt=""
+                                  className="h-full w-full object-contain"
+                                />
+                              </div>
+                              <div>
+                                <h3 className={styles.channelName}>{channel.name}</h3>
+                                <p className={styles.channelSub}>
+                                  {[channel.country, channel.playable.length ? t('watch_here') : t('tv_only')]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                </p>
+                              </div>
                             </div>
-                            <div>
-                              <h3>{channel.name}</h3>
-                              <p>
-                                {[channel.country, channel.playable.length ? t('watch_here') : t('tv_only')]
-                                  .filter(Boolean)
-                                  .join(' · ')}
-                              </p>
-                            </div>
-                          </div>
-                          <span className={`live-pill${channel.playable.length ? '' : ' is-ready'}`}>
-                            <i />
-                            {channel.playable.length ? t('now_on_air') : t('on_television')}
-                          </span>
-                        </div>
-
-                        {headline ? (
-                          <div className="live-matchline">
-                            <span>
-                              <LeagueCrest name={headline.homeTeam.name} logoUrl={headline.homeTeam.logoUrl} className="h-5 w-5" />
-                              {headline.homeTeam.name} × {headline.awayTeam.name}
-                              <LeagueCrest name={headline.awayTeam.name} logoUrl={headline.awayTeam.logoUrl} className="h-5 w-5" />
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                channel.playable.length
+                                  ? 'bg-rose-500/15 text-rose-500'
+                                  : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
+                              }`}
+                            >
+                              {channel.playable.length ? t('now_on_air') : t('on_television')}
                             </span>
-                            <em>
-                              {isLiveStatus(headline.status) ? (
-                                scoreLabel(headline.homeScore, headline.awayScore)
-                              ) : (
-                                <ClientTime value={headline.kickoffAt} />
-                              )}
-                            </em>
                           </div>
-                        ) : null}
 
-                        <div className="live-actions">
-                          {STREAMING_ENABLED
-                            ? channel.playable.map((asset) => (
-                              <Link key={asset.id} href={`/watch/${asset.id}`} className="live-cta">
-                                {t('watch_here')}
-                              </Link>
-                            ))
-                            : null}
                           {headline ? (
-                            <Link href={`/match/${headline.id}`} className="live-ghost">
-                              {t('match_center')}
-                            </Link>
+                            <div className={styles.matchLine}>
+                              <span className="flex items-center gap-2 truncate">
+                                <LeagueCrest
+                                  name={headline.homeTeam.name}
+                                  logoUrl={headline.homeTeam.logoUrl}
+                                  className="h-4 w-4 shrink-0"
+                                />
+                                <span className="truncate">
+                                  {headline.homeTeam.name} × {headline.awayTeam.name}
+                                </span>
+                                <LeagueCrest
+                                  name={headline.awayTeam.name}
+                                  logoUrl={headline.awayTeam.logoUrl}
+                                  className="h-4 w-4 shrink-0"
+                                />
+                              </span>
+                              <em className="font-bold not-italic text-[var(--primary)] tabular-nums">
+                                {isLiveStatus(headline.status) ? (
+                                  scoreLabel(headline.homeScore, headline.awayScore)
+                                ) : (
+                                  <ClientTime value={headline.kickoffAt} />
+                                )}
+                              </em>
+                            </div>
                           ) : null}
                         </div>
 
-                        {channel.listings.length > 1 ? (
-                          <ul className="live-listings">
-                            {channel.listings.slice(0, 4).map((row) => (
-                              <li key={row.id}>
-                                <span>
-                                  {row.match.homeTeam.name} × {row.match.awayTeam.name}
-                                </span>
-                                <ClientTime value={row.match.kickoffAt} />
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
+                        <div>
+                          <div className="flex items-center gap-2 pt-2">
+                            {STREAMING_ENABLED &&
+                              channel.playable.map((asset) => (
+                                <Link
+                                  key={asset.id}
+                                  href={`/watch/${asset.id}`}
+                                  className="flex-1 text-center rounded-lg bg-[var(--primary)] py-1.5 text-xs font-bold text-white transition hover:opacity-90"
+                                >
+                                  {t('watch_here')}
+                                </Link>
+                              ))}
+                            {headline ? (
+                              <Link
+                                href={`/match/${headline.id}`}
+                                className="flex-1 text-center rounded-lg border border-[var(--border)] bg-[var(--card)] py-1.5 text-xs font-bold text-[var(--foreground)] transition hover:border-[var(--primary)]"
+                              >
+                                {t('match_center')}
+                              </Link>
+                            ) : null}
+                          </div>
+
+                          {channel.listings.length > 1 ? (
+                            <ul className={styles.listingsList}>
+                              {channel.listings.slice(0, 3).map((row) => (
+                                <li key={row.id} className={styles.listingRow}>
+                                  <span className="truncate">
+                                    {row.match.homeTeam.name} × {row.match.awayTeam.name}
+                                  </span>
+                                  <ClientTime value={row.match.kickoffAt} />
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null}
+                        </div>
                       </article>
                     );
                   })}
                 </div>
               ) : (
-                <div className="live-void">
+                <div className={styles.emptyCard}>
                   <p>{t('empty_tv')}</p>
-                  <Link href="/matches" className="live-cta" style={{ marginTop: '0.9rem' }}>
+                  <Link
+                    href="/matches"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white"
+                  >
                     {pick(locale, 'برنامج المباريات', 'Match programme')}
                   </Link>
                 </div>
               )}
-            </Reveal>
+            </section>
 
+            {/* Broadcast Schedule */}
             {programs.length > 0 ? (
-              <Reveal className="live-band">
-                <BandHead folio="03" title={t('schedule')} />
-                <div className="live-programs">
+              <section className={styles.bandSection}>
+                <div className={styles.bandHead}>
+                  <div className={styles.bandMark}>
+                    <span className={styles.bandFolio}>03</span>
+                    <h2 className={styles.bandTitle}>{t('schedule')}</h2>
+                  </div>
+                </div>
+
+                <div className={styles.programsGrid}>
                   {programs.map((program) => (
-                    <article key={program.assets[0].id} className="live-program">
-                      <p>
-                        {program.match?.league.name}
-                        {program.match &&
+                    <article key={program.assets[0].id} className={styles.programCard}>
+                      <div>
+                        <span className={styles.programLeague}>
+                          {program.match?.league.name}
+                          {program.match &&
                           isMajorLeague({
                             name: program.match.league.name,
                             slug: program.match.league.slug,
                             country: program.match.league.country ?? undefined,
                           })
-                          ? ` · ${pick(locale, 'كبرى', 'Major')}`
-                          : ''}
-                      </p>
-                      <h3>
-                        {program.match
-                          ? `${program.match.homeTeam.name} × ${program.match.awayTeam.name}`
-                          : program.assets[0]?.channel?.name}
-                      </h3>
-                      <div className="live-actions" style={{ marginTop: '0.7rem' }}>
-                        {STREAMING_ENABLED
-                          ? program.assets.map((asset) => (
-                            <Link key={asset.id} href={`/watch/${asset.id}`} className="live-ghost">
+                            ? ` · ${pick(locale, 'دوري رئيسي', 'Major League')}`
+                            : ''}
+                        </span>
+                        <h3 className={styles.programTitle}>
+                          {program.match
+                            ? `${program.match.homeTeam.name} × ${program.match.awayTeam.name}`
+                            : program.assets[0]?.channel?.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-4">
+                        {STREAMING_ENABLED ? (
+                          program.assets.map((asset) => (
+                            <Link
+                              key={asset.id}
+                              href={`/watch/${asset.id}`}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-[var(--primary)] hover:underline"
+                            >
+                              <Play className="h-3 w-3 fill-current" />
                               {asset.channel?.name || t('watch')}
                             </Link>
                           ))
-                          : program.match ? (
-                            <Link href={`/match/${program.match.id}`} className="live-ghost">
-                              {t('match_center')}
-                            </Link>
-                          ) : null}
+                        ) : program.match ? (
+                          <Link
+                            href={`/match/${program.match.id}`}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-[var(--foreground)] hover:underline"
+                          >
+                            {t('match_center')}
+                          </Link>
+                        ) : null}
                       </div>
                     </article>
                   ))}
                 </div>
-              </Reveal>
+              </section>
             ) : null}
 
+            {/* Linear Continuous Channels */}
             {linear.length > 0 ? (
-              <Reveal className="live-band">
-                <BandHead folio="04" title={t('linear_wall')} />
-                <div className="live-linear">
+              <section className={styles.bandSection}>
+                <div className={styles.bandHead}>
+                  <div className={styles.bandMark}>
+                    <span className={styles.bandFolio}>04</span>
+                    <h2 className={styles.bandTitle}>{t('linear_wall')}</h2>
+                  </div>
+                </div>
+
+                <div className={styles.linearGrid}>
                   {linear.map((asset) => (
-                    <Link key={asset.id} href={`/watch/${asset.id}`}>
-                      <em>
+                    <Link key={asset.id} href={`/watch/${asset.id}`} className={styles.linearCard}>
+                      <span className={styles.linearTag}>
                         {asset.channel?.kind === 'NEWS'
                           ? t('kind_news')
                           : asset.channel?.kind === 'MOVIE'
@@ -524,35 +616,54 @@ async function LivePageBody({
                               : asset.status === 'LIVE'
                                 ? t('now_on_air')
                                 : tw('ready_status')}
-                      </em>
-                      <strong>{asset.channel?.name || t('title')}</strong>
+                      </span>
+                      <strong className={styles.linearName}>{asset.channel?.name || t('title')}</strong>
                     </Link>
                   ))}
                 </div>
-              </Reveal>
+              </section>
             ) : null}
 
+            {/* VOD Library */}
             {library.length > 0 ? (
-              <Reveal className="live-band">
-                <BandHead folio="05" title={t('vod_shelf')} />
-                <div className="live-programs">
+              <section className={styles.bandSection}>
+                <div className={styles.bandHead}>
+                  <div className={styles.bandMark}>
+                    <span className={styles.bandFolio}>05</span>
+                    <h2 className={styles.bandTitle}>{t('vod_shelf')}</h2>
+                  </div>
+                </div>
+
+                <div className={styles.programsGrid}>
                   {library.map((show) => {
                     const firstEpisode = show.episodes[0];
                     return (
-                      <article key={show.id} className="live-program">
-                        <p>
-                          {show.type}
-                          {show.releaseYear ? ` · ${show.releaseYear}` : ''}
-                        </p>
-                        <h3>
-                          <Link href={`/vod/${show.slug}`}>{show.title}</Link>
-                        </h3>
-                        <div className="live-actions" style={{ marginTop: '0.7rem' }}>
-                          <Link href={`/vod/${show.slug}`} className="live-ghost">
+                      <article key={show.id} className={styles.programCard}>
+                        <div>
+                          <span className={styles.programLeague}>
+                            {show.type}
+                            {show.releaseYear ? ` · ${show.releaseYear}` : ''}
+                          </span>
+                          <h3 className={styles.programTitle}>
+                            <Link href={`/vod/${show.slug}`} className="hover:text-[var(--primary)]">
+                              {show.title}
+                            </Link>
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-4">
+                          <Link
+                            href={`/vod/${show.slug}`}
+                            className="text-xs font-bold text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                          >
                             {tw('open_title')}
                           </Link>
                           {firstEpisode ? (
-                            <Link href={`/vod/player/${firstEpisode.id}`} className="live-cta">
+                            <Link
+                              href={`/vod/player/${firstEpisode.id}`}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-[var(--primary)] hover:underline"
+                            >
+                              <Play className="h-3 w-3 fill-current" />
                               {tw('watch_asset')}
                             </Link>
                           ) : null}
@@ -561,26 +672,37 @@ async function LivePageBody({
                     );
                   })}
                 </div>
-              </Reveal>
+              </section>
             ) : null}
           </div>
 
+          {/* Side Aside: Upcoming Windows */}
           {upcoming.length > 0 ? (
-            <aside className="live-aside">
-              <BandHead folio="06" title={t('coming_windows')} />
-              {upcoming.map((asset) => (
-                <Link key={asset.id} href={`/watch/${asset.id}`} className="live-ticket">
-                  <p>{asset.channel?.name || t('title')}</p>
-                  <strong>
-                    {asset.match
-                      ? `${asset.match.homeTeam.name} × ${asset.match.awayTeam.name}`
-                      : t('title')}
-                  </strong>
-                  {asset.startsAt || asset.match?.kickoffAt ? (
-                    <ClientTime value={asset.startsAt ?? asset.match!.kickoffAt} />
-                  ) : null}
-                </Link>
-              ))}
+            <aside className={styles.sideColumn}>
+              <div className={styles.bandHead}>
+                <div className={styles.bandMark}>
+                  <span className={styles.bandFolio}>06</span>
+                  <h2 className={styles.bandTitle}>{t('coming_windows')}</h2>
+                </div>
+              </div>
+
+              <div className={styles.ticketList}>
+                {upcoming.map((asset) => (
+                  <Link key={asset.id} href={`/watch/${asset.id}`} className={styles.ticketCard}>
+                    <span className={styles.ticketChannel}>{asset.channel?.name || t('title')}</span>
+                    <strong className={styles.ticketTitle}>
+                      {asset.match
+                        ? `${asset.match.homeTeam.name} × ${asset.match.awayTeam.name}`
+                        : t('title')}
+                    </strong>
+                    {asset.startsAt || asset.match?.kickoffAt ? (
+                      <span className={styles.ticketTime}>
+                        <ClientTime value={asset.startsAt ?? asset.match!.kickoffAt} />
+                      </span>
+                    ) : null}
+                  </Link>
+                ))}
+              </div>
             </aside>
           ) : null}
         </div>

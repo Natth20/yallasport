@@ -1,107 +1,684 @@
-/* ══════════════════════════════════════════════════════════════════════
-   YALLA SPORT — LIVE HALL
-   Ultra-Minimalist Luxury Design
-   ══════════════════════════════════════════════════════════════════════ */
+/* ==========================================================================
+   LiveHall — CSS Module (live-hall.module.css)
+   Scoped styling for /live (Live Stream & TV Broadcasts)
+   Zero !important, clean tokens, full RTL/LTR & Dark/Light support.
+   ========================================================================== */
 
 .liveHall {
   position: relative;
   isolation: isolate;
-  min-height: 100dvh;
-}
-
-/* Very subtle red ambient glow for live */
-.liveHall::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 1200px;
-  height: 50vh;
-  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--ys-red, #ef4444) 8%, transparent), transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.lhCard {
-  position: relative;
-  border-radius: 1.5rem;
-  background: color-mix(in srgb, var(--card) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
-  overflow: hidden;
-}
-
-:global(html.dark) .lhCard {
-  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
-}
-
-.lhCard:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--ys-red, #ef4444) 30%, var(--border));
-}
-
-.lhCardHeader {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.lhLiveBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ys-red, #ef4444) 15%, transparent);
-  color: var(--ys-red, #ef4444);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-}
-
-.lhLiveBadge::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: lhPulse 2s infinite;
-}
-
-@keyframes lhPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-.lhCardBody {
-  padding: 1.5rem;
-}
-
-.lhScore {
-  font-size: 3rem;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
+  min-height: 100vh;
+  padding-bottom: 6rem;
+  background:
+    radial-gradient(75% 45% at 50% 0%, color-mix(in srgb, #ef4444 8%, transparent), transparent 60%),
+    var(--background);
   color: var(--foreground);
 }
 
-.lhMeter {
-  height: 4px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--foreground) 10%, transparent);
-  overflow: hidden;
-  margin-top: 1rem;
+.inner {
+  width: min(1280px, calc(100% - 2rem));
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding-top: 1.5rem;
 }
 
-.lhMeterFill {
-  height: 100%;
+/* ==========================================================================
+   1. LIVE BROADCAST MAST (Hero Header & Metrics)
+   ========================================================================== */
+
+.mast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.75rem;
+  padding: 2rem 2.25rem;
+  border-radius: 1.75rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 75%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
+.mastBrand {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.mastCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ef4444;
+}
+
+.mastTitle {
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  line-height: 1.15;
+  margin: 0;
+}
+
+.mastLead {
+  font-size: 0.84rem;
+  color: var(--muted-foreground);
+  margin: 0;
+  max-width: 32rem;
+  line-height: 1.5;
+}
+
+.metersGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.meterCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.5rem;
+  padding: 0.75rem 1.15rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2.5%, var(--card));
+  text-align: center;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.meterCard:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--foreground) 20%, var(--border));
+}
+
+.meterValue {
+  font-size: 1.25rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.meterLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.2rem;
+}
+
+.meterLive {
+  composes: meterCard;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: color-mix(in srgb, #ef4444 8%, var(--card));
+}
+
+.meterLive .meterValue {
+  color: #ef4444;
+}
+
+/* ==========================================================================
+   2. FEATURED ON-AIR STAGE (Cinematic Bezel & Duel)
+   ========================================================================== */
+
+.featuredScreen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(70% 60% at 85% 15%, rgba(239, 68, 68, 0.25), transparent 60%),
+    radial-gradient(60% 60% at 15% 85%, rgba(16, 185, 129, 0.2), transparent 60%),
+    linear-gradient(180deg, #090e17 0%, #03060c 100%);
+  color: #fff;
+  padding: 2.25rem;
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
+}
+
+.stageTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stageCategory {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.04em;
+}
+
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.25);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.liveDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  animation: liveDotPulse 1.6s ease-out infinite;
+}
+
+@keyframes liveDotPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  100% { box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0); }
+}
+
+.stageDuel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.5rem;
+  margin-block: 2.25rem 2rem;
+}
+
+@media (max-width: 640px) {
+  .stageDuel {
+    gap: 0.75rem;
+  }
+}
+
+.stageSide {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.stageCrest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(4.5rem, 9vw, 6.5rem);
+  height: clamp(4.5rem, 9vw, 6.5rem);
+  padding: 0.6rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: transform 200ms ease;
+}
+
+.stageCrest:hover {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.stageTeamName {
+  font-size: clamp(1.05rem, 2.2vw, 1.5rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.stageScore {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 0.4rem;
+}
+
+.scoreDigits {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #4ade80;
+  text-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+}
+
+.scoreVs {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stageActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ctaWatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 0.9rem;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 4px 18px -4px rgba(239, 68, 68, 0.6);
+  transition: all 180ms ease;
+}
+
+.ctaWatch:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px -4px rgba(239, 68, 68, 0.75);
+}
+
+.ctaGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 180ms ease;
+}
+
+.ctaGhost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ==========================================================================
+   3. LEAGUE & CHANNEL RAILS (Filters Bar)
+   ========================================================================== */
+
+.filterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.filterRail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scrollbar-width: none;
+}
+
+.filterRail::-webkit-scrollbar {
+  display: none;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+  color: var(--foreground);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 160ms ease;
+}
+
+.filterChip:hover {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 8%, var(--card));
+}
+
+.filterChipActive {
+  composes: filterChip;
+  border-color: var(--primary);
   background: var(--primary);
-  border-radius: inherit;
+  color: #fff;
+  box-shadow: 0 4px 12px -3px rgba(10, 77, 58, 0.5);
+}
+
+/* ==========================================================================
+   4. SECTION HEADERS & BAND STYLING
+   ========================================================================== */
+
+.bandSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.bandHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.bandMark {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.bandFolio {
+  font-size: 0.72rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+
+.bandTitle {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.bandLead {
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ==========================================================================
+   5. CHANNELS WALL & MATCHDAY TV GUIDE
+   ========================================================================== */
+
+.channelsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.channelCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.35rem;
+  border-radius: 1.4rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 4px 20px -8px color-mix(in srgb, var(--foreground) 5%, transparent);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.channelCard:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+}
+
+.channelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.channelMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.channelCrest {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  border: 1px solid var(--border);
+  padding: 0.35rem;
+}
+
+.channelName {
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.channelSub {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.matchLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--foreground) 2.5%, var(--card));
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  font-weight: 800;
+  margin-block: 0.75rem;
+}
+
+.listingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.76rem;
+  color: var(--muted-foreground);
+}
+
+.listingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* ==========================================================================
+   6. TWO-COLUMN LAYOUT & SIDE ASIDE
+   ========================================================================== */
+
+.twoColLayout {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 1100px) {
+  .twoColLayout {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+  }
+}
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.sideColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ---- Programs & VOD Shelf ---- */
+.programsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.programCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.15rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.programCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.programLeague {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.35rem;
+}
+
+.programTitle {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* ---- Linear TV Channels ---- */
+.linearGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.linearCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-decoration: none;
+  transition: all 180ms ease;
+}
+
+.linearCard:hover {
+  border-color: #ef4444;
+  background: color-mix(in srgb, #ef4444 4%, var(--card));
+  transform: translateY(-2px);
+}
+
+.linearTag {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.linearName {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+/* ---- Upcoming Windows (Aside Tickets) ---- */
+.ticketList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ticketCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.ticketCard:hover {
+  transform: translateX(-3px);
+  border-color: var(--ys-orange);
+}
+
+.ticketChannel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.ticketTitle {
+  font-size: 0.84rem;
+  font-weight: 900;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.ticketTime {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Empty States ---- */
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--foreground) 1.5%, transparent);
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+  font-weight: 700;
 }
