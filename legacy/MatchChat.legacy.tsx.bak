@@ -1,14 +1,13 @@
 'use client';
+import { swallow, reportCaughtError } from '@/lib/ops/caught';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, MessageSquare, Send, Shield, User as UserIcon } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { swallow, reportCaughtError } from '@/lib/ops/caught';
 import { CHAT_MAX_LENGTH, CHAT_MIN_LENGTH } from '@/lib/utils/word-filter';
-import styles from '@/components/sports/match-dossier.module.css';
 
-export interface Comment {
+interface Comment {
   id: string;
   content: string;
   createdAt: string;
@@ -18,7 +17,7 @@ export interface Comment {
   };
 }
 
-export interface MatchChatProps {
+interface MatchChatProps {
   matchId: string;
   isLoggedIn: boolean;
   initialComments: Comment[];
@@ -29,6 +28,34 @@ function initials(name: string) {
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+}
+
+function roleTone(role: string) {
+  const value = role.toUpperCase();
+  if (value.includes('ADMIN') || value.includes('EDITOR') || value.includes('MODERATOR')) return 'is-desk';
+  if (value.includes('PREMIUM')) return 'is-premium';
+  return '';
+}
+
+function mapError(code: string | undefined, t: ReturnType<typeof useTranslations<'sports'>>) {
+  switch (code) {
+    case 'unauthorized':
+      return t('chat_error_auth');
+    case 'rate_limited':
+      return t('chat_error_rate');
+    case 'invalid_length':
+      return t('chat_error_length');
+    case 'flagged':
+      return t('chat_error_flagged');
+    case 'no_links':
+      return t('chat_error_links');
+    case 'spam':
+      return t('chat_error_spam');
+    case 'duplicate':
+      return t('chat_error_duplicate');
+    default:
+      return t('chat_error_generic');
+  }
 }
 
 export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initialComments }) => {
@@ -78,8 +105,9 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
           latestStamp.current = next[next.length - 1]!.createdAt;
           return next.slice(-120);
         });
-      } catch (err) {
-        reportCaughtError('MatchChat.pull', err, { persist: false });
+      } catch (error) {
+        reportCaughtError("src/components/sports/MatchChat.tsx:108", error, { persist: false });
+        // Keep the room available if a poll fails.
       }
     };
 
@@ -122,9 +150,9 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId, content: text }),
       });
-      const data = await res.json().catch(swallow('MatchChat.post', null, { persist: false }));
+      const data = await res.json().catch(swallow("src/components/sports/MatchChat.tsx:151", null, { persist: false }));
       if (!res.ok || !data?.success) {
-        setError(data?.error || t('chat_error_generic'));
+        setError(mapError(data?.error, t));
         return;
       }
       const comment = data.comment as Comment;
@@ -136,8 +164,8 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
       });
       setNewComment('');
       stickToBottom.current = true;
-    } catch (err) {
-      reportCaughtError('MatchChat.submit', err, { persist: false });
+    } catch (error) {
+      reportCaughtError("src/components/sports/MatchChat.tsx:166", error, { persist: false });
       setError(t('chat_error_generic'));
     } finally {
       setSubmitting(false);
@@ -147,116 +175,118 @@ export const MatchChat: React.FC<MatchChatProps> = ({ matchId, isLoggedIn, initi
   const remaining = CHAT_MAX_LENGTH - newComment.length;
 
   return (
-    <div className={styles.chatContainer}>
-      <div className={styles.chatHeader}>
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-[var(--ys-orange)]" />
-          <h3 className="text-xs font-black uppercase tracking-wider text-[var(--foreground)]">
-            {t('chat')}
-          </h3>
+    <div className="match-chat">
+      <div className="match-chat-head">
+        <div className="match-chat-head-copy">
+            <span className="match-chat-folio" aria-hidden>
+            CHAT
+          </span>
+          <div>
+            <span className="atlas-section-kicker text-primary">{t('chat')}</span>
+            <h3 className="match-chat-title">{t('chat')}</h3>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-[11px] font-bold text-[var(--muted-foreground)]">
-          <span className="tabular-nums">{comments.length}</span>
+        <div className="match-chat-meta">
+          <MessageSquare className="h-3.5 w-3.5" aria-hidden />
+          <strong>{comments.length}</strong>
           <span>{t('chat_msgs')}</span>
         </div>
       </div>
 
-      <div className="border-b border-[var(--border)] bg-[var(--muted)]/20 px-3 py-1.5 text-[11px]">
+      <div className="match-chat-rules">
         <button
           type="button"
-          className="flex w-full items-center justify-between font-bold text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          className="match-chat-rules-toggle"
           aria-expanded={rulesOpen}
           onClick={() => setRulesOpen((open) => !open)}
         >
-          <span className="flex items-center gap-1.5">
-            <Shield className="h-3 w-3 text-[var(--ys-orange)]" />
-            <span>{t('chat_rules_title')}</span>
-          </span>
-          <ChevronDown className={`h-3 w-3 transition-transform ${rulesOpen ? 'rotate-180' : ''}`} />
+          <Shield className="h-3.5 w-3.5" aria-hidden />
+          <span>{t('chat_rules_title')}</span>
+          <ChevronDown className={`h-3.5 w-3.5 transition ${rulesOpen ? 'rotate-180' : ''}`} aria-hidden />
         </button>
         {rulesOpen ? (
-          <ul className="mt-2 space-y-1 text-[10px] text-[var(--muted-foreground)]">
-            <li>• {t('chat_rule_1')}</li>
-            <li>• {t('chat_rule_2')}</li>
-            <li>• {t('chat_rule_3')}</li>
+          <ul className="match-chat-rules-list">
+            <li>{t('chat_rule_1')}</li>
+            <li>{t('chat_rule_2')}</li>
+            <li>{t('chat_rule_3')}</li>
+            <li>{t('chat_rule_4')}</li>
+            <li>{t('chat_rule_5')}</li>
           </ul>
         ) : null}
       </div>
 
-      <div ref={scrollRef} onScroll={onFeedScroll} className={styles.chatFeed}>
+      <div ref={scrollRef} onScroll={onFeedScroll} className="match-chat-feed no-scrollbar">
         {comments.length > 0 ? (
           comments.map((comment) => (
-            <div key={comment.id} className={styles.chatMessage}>
-              <div className={styles.chatAvatar}>
+            <article key={comment.id} className={`match-chat-bubble ${roleTone(comment.user.role)}`}>
+              <div className="match-chat-avatar" aria-hidden>
                 {initials(comment.user.name)}
               </div>
-              <div className={styles.chatBubble}>
-                <div className={styles.chatUserRow}>
-                  <span className={styles.chatUserName}>{comment.user.name}</span>
-                  <time className={styles.chatTime} dateTime={comment.createdAt}>
+              <div className="match-chat-body">
+                <div className="match-chat-byline">
+                  <strong>{comment.user.name}</strong>
+                  <time dateTime={comment.createdAt}>
                     {new Date(comment.createdAt).toLocaleTimeString(locale === 'ar' ? 'ar-EG' : 'en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </time>
                 </div>
-                <p className={styles.chatText}>{comment.content}</p>
+                <p>{comment.content}</p>
               </div>
-            </div>
+            </article>
           ))
         ) : (
-          <div className="flex h-full flex-col items-center justify-center py-8 text-center text-[var(--muted-foreground)]">
-            <MessageSquare className="h-8 w-8 opacity-30" />
-            <strong className="mt-2 text-xs font-bold text-[var(--foreground)]">{t('first_comment')}</strong>
-            <p className="text-[11px]">{t('chat_empty_copy')}</p>
+          <div className="match-chat-empty">
+            <span className="match-chat-empty-mark" aria-hidden>
+              <MessageSquare className="h-5 w-5" />
+            </span>
+            <strong>{t('first_comment')}</strong>
+            <p>{t('chat_empty_copy')}</p>
           </div>
         )}
       </div>
 
-      <div className={styles.chatInputArea}>
+      <div className="match-chat-composer">
         {isLoggedIn ? (
-          <form onSubmit={handleSubmit} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--muted-foreground)]">
-                <input
-                  type="checkbox"
-                  checked={acceptedRules}
-                  onChange={(e) => setAcceptedRules(e.target.checked)}
-                  className="rounded border-[var(--border)]"
-                />
-                <span>{t('chat_accept_rules')}</span>
-              </label>
-              <span className="ms-auto text-[10px] font-bold tabular-nums text-[var(--muted-foreground)]">
-                {remaining}
-              </span>
-            </div>
-
-            <div className={styles.chatInputForm}>
+          <form onSubmit={handleSubmit} className="match-chat-form-stack">
+            <label className="match-chat-accept">
               <input
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value.slice(0, CHAT_MAX_LENGTH))}
-                disabled={submitting}
-                placeholder={t('comment_placeholder')}
-                maxLength={CHAT_MAX_LENGTH}
-                className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-xs text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none"
+                type="checkbox"
+                checked={acceptedRules}
+                onChange={(e) => setAcceptedRules(e.target.checked)}
               />
+              <span>{t('chat_accept_rules')}</span>
+            </label>
+            <div className="match-chat-form">
+              <div className="match-chat-input-shell">
+                <span className="match-chat-input-avatar" aria-hidden>
+                  <UserIcon className="h-3.5 w-3.5" />
+                </span>
+                <input
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value.slice(0, CHAT_MAX_LENGTH))}
+                  disabled={submitting}
+                  placeholder={t('comment_placeholder')}
+                  maxLength={CHAT_MAX_LENGTH}
+                  aria-label={t('comment_placeholder')}
+                />
+                <em className={`match-chat-count${remaining < 40 ? ' is-warn' : ''}`}>{remaining}</em>
+              </div>
               <button
                 type="submit"
                 disabled={submitting || newComment.trim().length < CHAT_MIN_LENGTH || !acceptedRules}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)] text-white transition hover:opacity-90 disabled:opacity-40"
+                aria-label={t('chat')}
               >
                 <Send className="h-4 w-4" />
               </button>
             </div>
-            {error ? <p className="text-[10px] font-bold text-rose-500">{error}</p> : null}
+            {error ? <p className="match-chat-error">{error}</p> : null}
           </form>
         ) : (
-          <div className="flex items-center justify-between py-1">
-            <p className="text-[11px] font-medium text-[var(--muted-foreground)]">{t('chat_sign_in')}</p>
-            <Link
-              href="/login"
-              className="rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
-            >
+          <div className="match-chat-gate">
+            <p>{t('chat_sign_in')}</p>
+            <Link href="/login" className="match-chat-gate-link">
               {t('chat_sign_in_cta')}
             </Link>
           </div>

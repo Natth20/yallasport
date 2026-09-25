@@ -351,7 +351,7 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
       : undefined;
 
   return (
-    <>
+    <div className={styles.matchCenter}>
       <MatchJsonLd
         id={match.id}
         name={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
@@ -363,318 +363,140 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
         status={match.status}
         venueName={typeof venueName === 'string' ? venueName : undefined}
       />
-      <MatchDossier
-        initial={match}
-        h2hMatches={h2hMatches}
-        homeStanding={standingChip(homeStanding)}
-        awayStanding={standingChip(awayStanding)}
-        homeForm={homeForm}
-        awayForm={awayForm}
-        h2hTally={h2hMatches.length > 0 ? h2hTally : undefined}
-        leagueCountry={match.league.country ?? undefined}
-        headerActions={
-          <>
-            <FollowButton
-              entityId={match.id}
-              entityType="MATCH"
-              isLoggedIn={!!session}
-              initialIsFollowing={!!userFollow}
-            />
-            <MatchQuickActions
+
+      {/* ---- HERO STAGE (5.2.1) ---- */}
+      <MatchHero
+        match={match}
+        isLoggedIn={Boolean(session?.user)}
+        hasReminder={Boolean(userReminder)}
+        hasLicensedStream={Boolean(STREAMING_ENABLED && licensedAsset)}
+        userFollow={Boolean(userFollow)}
+      />
+
+      {/* ---- MAIN BODY (5.2.2 Tabs + 5.2.3 Side Rail) ---- */}
+      <div className={styles.mainLayout}>
+        <div className={styles.mainGrid}>
+          {/* Main Column: Match Detail Tabs */}
+          <div>
+            <MatchDetailTabs
               matchId={match.id}
-              title={`${match.homeTeam.name} ${pick(locale, 'ضد', 'vs')} ${match.awayTeam.name}`}
-              kickoffAt={new Date(match.kickoffAt).toISOString()}
-              venue={typeof venueName === 'string' ? venueName : undefined}
-              isLoggedIn={Boolean(session?.user)}
-              initialReminder={Boolean(userReminder)}
+              status={match.status}
+              initialEvents={match.events}
+              initialLineups={match.lineups}
+              initialStatistics={match.statistics}
+              h2hMatches={h2hMatches}
+              homeTeamId={match.homeTeam.id}
+              awayTeamId={match.awayTeam.id}
+              homeTeamName={match.homeTeam.name}
+              awayTeamName={match.awayTeam.name}
+              homeTeamLogo={match.homeTeam.logoUrl}
+              awayTeamLogo={match.awayTeam.logoUrl}
+              homeStanding={standingChip(homeStanding)}
+              awayStanding={standingChip(awayStanding)}
             />
-            <ShareButton
-              title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
-              text={pick(locale, 'تابع المباراة مباشرة على يلا سبورت', 'Follow the match live on Yalla Sport')}
-            />
-          </>
-        }
-      >
-        <div className="space-y-6">
-          <MatchDetailTabs
-            matchId={match.id}
-            status={match.status}
-            initialEvents={match.events}
-            initialLineups={match.lineups}
-            initialStatistics={match.statistics}
-            h2hMatches={h2hMatches}
-            homeTeamId={match.homeTeam.id}
-            awayTeamId={match.awayTeam.id}
-            homeTeamName={match.homeTeam.name}
-            awayTeamName={match.awayTeam.name}
-            homeTeamLogo={match.homeTeam.logoUrl}
-            awayTeamLogo={match.awayTeam.logoUrl}
-            homeStanding={standingChip(homeStanding)}
-            awayStanding={standingChip(awayStanding)}
-          />
+          </div>
 
-          {homeStanding && awayStanding ? (
-          <WinProbabilityBar
-            homeTeamName={match.homeTeam.name}
-            awayTeamName={match.awayTeam.name}
-            homeRank={homeStanding.rank}
-            awayRank={awayStanding.rank}
-            locale={locale}
-          />
-          ) : null}
-          <LiveMatchReactions matchId={match.id} locale={locale} />
-          {matchPollView ? <HomeFanPoll locale={locale} poll={matchPollView} /> : null}
-        </div>
-
-        {hasBrief ? (
-          <FolioPanel
-            folio="05"
-            kicker={pick(locale, 'ملخص', 'Brief')}
-            title={pick(locale, 'قراءة تحريرية من الأرقام', 'Editorial reading of the numbers')}
-          >
-            <MatchAIAnalyst
-              homeName={match.homeTeam.name}
-              awayName={match.awayTeam.name}
-              homeStats={homeStats}
-              awayStats={awayStats}
-              events={match.events}
-            />
-          </FolioPanel>
-        ) : null}
-
-        {STREAMING_ENABLED && licensedAsset ? (
-          <FolioPanel
-            folio="06"
-            kicker={pick(locale, 'النقل', 'Broadcast')}
-            title={pick(locale, 'البث', 'Stream')}
-          >
-            <div id="match-stream-anchor">
-              <MatchStreamPlayer assetId={licensedAsset.id} />
-            </div>
-            <FloatingStreamDock
-              title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
-              targetAnchorId="match-stream-anchor"
+          {/* Side Rail Column: 5.2.3 Interaction Widgets */}
+          <aside className="space-y-5">
+            {/* 1. Win Probability */}
+            <WinProbabilityBar
+              homeTeamName={match.homeTeam.name}
+              awayTeamName={match.awayTeam.name}
+              homeRank={homeStanding?.rank}
+              awayRank={awayStanding?.rank}
               locale={locale}
             />
-            <Link href={`/watch/${licensedAsset.id}`} className="mt-3 inline-block text-xs font-black text-orange-500">
-              {pick(locale, 'فتح صفحة المشاهدة', 'Open watch page')}
-            </Link>
-          </FolioPanel>
-        ) : null}
 
-      {(homeStanding || awayStanding) && (
-        <FolioPanel
-          folio="07"
-          kicker={pick(locale, 'المستوى', 'Form')}
-          title={pick(locale, 'موقع الفريقين', 'Team positions')}
-        >
-          <div className="space-y-3">
-            {[
-              { row: homeStanding, form: homeForm },
-              { row: awayStanding, form: awayForm },
-            ]
-              .filter((item) => item.row)
-              .map(({ row, form }) => (
-                <div key={row!.team.id} className="match-side-team">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold tabular-nums text-orange-500">{row!.rank}</span>
-                    <CrestImage src={row!.team.logoUrl} alt="" size={24} className="h-6 w-6 object-contain" />
-                    <span className="truncate text-[12px] font-bold text-foreground dark:text-foreground">
-                      {row!.team.name}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[10px] font-medium text-muted-foreground">
-                    {row!.played} {pick(locale, 'لعب', 'P')} · {row!.won}
-                    {pick(locale, 'ف', 'W')} {row!.drawn}
-                    {pick(locale, 'ت', 'D')} {row!.lost}
-                    {pick(locale, 'خ', 'L')} · {row!.goalsFor}:{row!.goalsAgainst} · {row!.points}{' '}
-                    {pick(locale, 'نقطة', 'points')}
-                  </p>
-                  {form.length > 0 ? (
-                    <div className="mt-2 flex gap-1">
-                      {form.map((letter, index) => (
-                        <span
-                          key={`${row!.team.id}-${index}`}
-                          className={`flex h-5 w-5 items-center justify-center rounded text-[8px] font-bold ${
-                            letter === 'W'
-                              ? 'bg-emerald-500 text-white'
-                              : letter === 'L'
-                                ? 'bg-red-500 text-white'
-                                : 'bg-slate-200 text-foreground dark:bg-muted/10 dark:text-foreground/70'
-                          }`}
-                        >
-                          {letter === 'W'
-                            ? pick(locale, 'ف', 'W')
-                            : letter === 'L'
-                              ? pick(locale, 'خ', 'L')
-                              : pick(locale, 'ت', 'D')}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
+            {/* 2. Live Match Reactions */}
+            <LiveMatchReactions matchId={match.id} locale={locale} />
+
+            {/* 3. Home Fan Poll */}
+            {matchPollView ? <HomeFanPoll locale={locale} poll={matchPollView} /> : null}
+
+            {/* 4. AI Analyst Reading */}
+            {hasBrief ? (
+              <MatchAIAnalyst
+                homeName={match.homeTeam.name}
+                awayName={match.awayTeam.name}
+                homeStats={homeStats}
+                awayStats={awayStats}
+                events={match.events}
+              />
+            ) : null}
+
+            {/* 5. Score Prediction */}
+            <PredictionWidget
+              matchId={match.id}
+              homeTeamName={match.homeTeam.name}
+              awayTeamName={match.awayTeam.name}
+              isLoggedIn={Boolean(session?.user)}
+              existingPrediction={userPrediction?.predictedOutcome}
+            />
+
+            {/* 6. Live Match Chat */}
+            <MatchChat
+              matchId={match.id}
+              isLoggedIn={Boolean(session?.user?.id)}
+              initialComments={matchComments.map((comment) => ({
+                id: comment.id,
+                content: comment.content,
+                createdAt: comment.createdAt.toISOString(),
+                user: {
+                  name: comment.user.name || 'User',
+                  role: comment.user.role,
+                },
+              }))}
+            />
+
+            {/* Stream Player (if licensed) */}
+            {STREAMING_ENABLED && licensedAsset ? (
+              <div className={styles.panelCard}>
+                <div id="match-stream-anchor">
+                  <MatchStreamPlayer assetId={licensedAsset.id} />
                 </div>
-              ))}
-          </div>
-        </FolioPanel>
-      )}
-
-      <div className="match-plate overflow-hidden !p-0">
-        <PredictionWidget
-          matchId={match.id}
-          homeTeamName={match.homeTeam.name}
-          awayTeamName={match.awayTeam.name}
-          isLoggedIn={!!session}
-          existingPrediction={userPrediction?.predictedOutcome}
-        />
-      </div>
-
-      {tableWindow.length > 0 ? (
-        <div className="match-table-plate">
-          <div className="match-table-head">
-            <div className="match-section-kicker-row">
-              <span className="match-folio-mark is-light">08</span>
-              <span className="atlas-section-kicker text-orange-400">
-                {pick(locale, 'الجدول', 'Table')}
-              </span>
-            </div>
-            <h2 className="mt-2 text-base font-bold text-white">
-              {pick(locale, 'نافذة الترتيب', 'Standings window')}
-            </h2>
-          </div>
-          <div className="divide-y divide-white/[0.07]">
-            <div className="grid grid-cols-[1.5rem_1fr_repeat(4,1.6rem)] gap-1 px-5 py-2 text-[8px] font-bold text-white/35">
-              <span>#</span>
-              <span>{pick(locale, 'فريق', 'Team')}</span>
-              <span className="text-center">{pick(locale, 'ل', 'P')}</span>
-              <span className="text-center">{pick(locale, 'ف', 'W')}</span>
-              <span className="text-center">+/-</span>
-              <span className="text-center">{pick(locale, 'ن', 'Pts')}</span>
-            </div>
-            {tableWindow.map((row) => {
-              const involved = row.team.id === match.homeTeam.id || row.team.id === match.awayTeam.id;
-              return (
-                <div
-                  key={row.team.id}
-                  className={`grid grid-cols-[1.5rem_1fr_repeat(4,1.6rem)] items-center gap-1 px-5 py-3 ${
-                    involved ? 'bg-orange-500/10' : ''
-                  }`}
+                <FloatingStreamDock
+                  title={`${match.homeTeam.name} vs ${match.awayTeam.name}`}
+                  targetAnchorId="match-stream-anchor"
+                  locale={locale}
+                />
+                <Link
+                  href={`/watch/${licensedAsset.id}`}
+                  className="mt-3 inline-block text-xs font-black text-[var(--ys-orange)] hover:underline"
                 >
-                  <span className="text-[10px] font-bold tabular-nums text-white/30">{row.rank}</span>
-                  <span className="flex min-w-0 items-center gap-2">
-                    <CrestImage src={row.team.logoUrl} alt="" size={20} className="h-5 w-5 object-contain" />
-                    <span className="truncate text-[11px] font-bold">{row.team.name}</span>
-                  </span>
-                  <span className="text-center text-[10px] tabular-nums text-white/60">{row.played}</span>
-                  <span className="text-center text-[10px] tabular-nums text-white/60">{row.won}</span>
-                  <span className="text-center text-[10px] tabular-nums text-white/60">
-                    {row.goalsFor - row.goalsAgainst}
-                  </span>
-                  <span className="text-center text-[11px] font-bold tabular-nums text-orange-300">
-                    {row.points}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <Link
-            href={`/league/${match.league.slug}/standings`}
-            className="block border-t border-white/10 px-5 py-3 text-[10px] font-bold text-orange-400"
-          >
-            {pick(locale, 'الجدول الكامل', 'Full table')}
-          </Link>
-        </div>
-      ) : null}
+                  {pick(locale, 'فتح صفحة المشاهدة الكاملة', 'Open full watch page')}
+                </Link>
+              </div>
+            ) : null}
 
-      {matchSheetRows.length > 0 ? (
-        <FolioPanel
-          folio="09"
-          kicker={pick(locale, 'ملاحظات', 'Notes')}
-          title={pick(locale, 'ورقة المباراة', 'Match sheet')}
-        >
-          <div className="-mx-1 divide-y divide-[rgba(15,23,42,0.06)] dark:divide-white/5">
-            {matchSheetRows.map((row) => (
-              <div key={row.label} className="flex items-start gap-3 py-3.5">
-                <row.icon className="mt-0.5 h-4 w-4 text-orange-500" />
-                <div>
-                  <span className="block text-[9px] font-semibold text-muted-foreground">{row.label}</span>
-                  <strong className="mt-1 block text-[13px] text-foreground dark:text-foreground">{row.value}</strong>
+            {/* Related News */}
+            {relatedNews.length > 0 ? (
+              <div className="space-y-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">
+                  {pick(locale, 'تقارير ذات صلة', 'Related reports')}
+                </span>
+                <div className="space-y-2.5">
+                  {relatedNews.map(
+                    (news) =>
+                      news.publishedAt && (
+                        <NewsCard
+                          key={news.id}
+                          news={{
+                            ...news,
+                            excerpt: news.excerpt ?? undefined,
+                            featuredImage: news.featuredImage ?? undefined,
+                            publishedAt: news.publishedAt,
+                          }}
+                          variant="horizontal"
+                        />
+                      )
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        </FolioPanel>
-      ) : null}
-
-      {relatedNews.length > 0 ? (
-        <div>
-          <div className="match-section-kicker-row mb-3">
-            <span className="match-folio-mark">10</span>
-            <span className="atlas-section-kicker text-orange-500">
-              {pick(locale, 'تقارير ذات صلة', 'Related reports')}
-            </span>
-          </div>
-          <div className="space-y-3">
-            {relatedNews.map(
-              (news) =>
-                news.publishedAt && (
-                  <NewsCard
-                    key={news.id}
-                    news={{
-                      ...news,
-                      excerpt: news.excerpt ?? undefined,
-                      featuredImage: news.featuredImage ?? undefined,
-                      publishedAt: news.publishedAt,
-                    }}
-                    variant="horizontal"
-                  />
-                )
-            )}
-          </div>
+            ) : null}
+          </aside>
         </div>
-      ) : null}
-
-      <div className="match-plate match-chat-plate overflow-hidden !p-0">
-        <MatchChat
-          matchId={match.id}
-          isLoggedIn={Boolean(session?.user?.id)}
-          initialComments={matchComments.map((comment) => ({
-            id: comment.id,
-            content: comment.content,
-            createdAt: comment.createdAt.toISOString(),
-            user: {
-              name: comment.user.name || 'User',
-              role: comment.user.role,
-            },
-          }))}
-        />
       </div>
-    </MatchDossier>
-    </>
+    </div>
   );
 }
 
-function FolioPanel({
-  folio,
-  kicker,
-  title,
-  children,
-}: {
-  folio: string;
-  kicker: string;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="match-plate">
-      <div className="match-section-kicker-row">
-        <span className="match-folio-mark" aria-hidden>
-          {folio}
-        </span>
-        <span className="atlas-section-kicker">{kicker}</span>
-      </div>
-      <h2 className="match-section-title !text-[1.2rem]">{title}</h2>
-      <DeskRule className="my-3 max-w-[9rem] opacity-45" />
-      <div>{children}</div>
-    </section>
-  );
-}

@@ -1,11 +1,11 @@
 'use client';
-import { reportCaughtError } from '@/lib/ops/caught';
-
 
 import React, { useMemo, useState } from 'react';
+import { reportCaughtError } from '@/lib/ops/caught';
 import { CheckCircle2, Flame, Users, Sparkles } from 'lucide-react';
 import { CrestImage } from '@/components/common/CrestImage';
 import type { PollKey } from '@/lib/polls/match-poll';
+import styles from '@/components/sports/match-dossier.module.css';
 
 export type HomePollView = {
   id: string;
@@ -73,8 +73,8 @@ export function HomeFanPoll({ locale = 'ar', poll }: { locale?: string; poll: Ho
           votes: data.options?.[opt.key] ?? opt.votes,
         })),
       );
-    } catch (error) {
-      reportCaughtError("src/components/home/HomeFanPoll.tsx:74", error, { persist: false });
+    } catch (err) {
+      reportCaughtError('HomeFanPoll.handleVote', err, { persist: false });
       setError(isEn ? 'Vote could not be saved.' : 'تعذّر حفظ التصويت.');
     } finally {
       setPending(false);
@@ -82,81 +82,72 @@ export function HomeFanPoll({ locale = 'ar', poll }: { locale?: string; poll: Ho
   };
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/85 via-card/65 to-card/90 p-6 shadow-xl backdrop-blur-xl">
-      <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/5 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-500 to-primary text-white shadow-md shadow-primary/30">
-            <Flame className="h-4 w-4" />
+    <div className={styles.panelCard}>
+      <div className={styles.pollBox}>
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--ys-orange)]/15 text-[var(--ys-orange)]">
+              <Flame className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--ys-orange)]">
+                {poll.category}
+              </span>
+              <h3 className="text-xs font-black uppercase text-[var(--foreground)]">
+                {isEn ? 'Fan Voice' : 'صوت الجماهير'}
+              </h3>
+            </div>
           </div>
-          <div>
-            <span className="rounded-full border border-primary/25 bg-primary/20 px-2 py-0.5 text-[9px] font-black text-primary">
-              {poll.category}
+          <div className="flex items-center gap-1 text-[11px] font-bold text-[var(--muted-foreground)]">
+            <Users className="h-3.5 w-3.5" />
+            <span className="tabular-nums">
+              {totalVotes.toLocaleString(isEn ? 'en-US' : 'ar-EG')} {isEn ? 'votes' : 'صوت'}
             </span>
-            <h3 className="text-xs font-black uppercase tracking-wider text-foreground">
-              {isEn ? 'Fan voice · this fixture' : 'صوت الجماهير · هذه المباراة'}
-            </h3>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
-          <Users className="h-3.5 w-3.5" />
-          <span className="tabular-nums">
-            {totalVotes.toLocaleString('en-US')} {isEn ? 'votes' : 'صوت'}
-          </span>
-        </div>
-      </div>
 
-      <p className="mb-4 text-sm font-black leading-relaxed text-foreground">{poll.question}</p>
+        <p className="text-xs font-black leading-relaxed text-[var(--foreground)]">{poll.question}</p>
 
-      <div className="space-y-2.5">
-        {options.map((opt) => {
-          const isSelected = voted === opt.key;
-          const percent = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
-          return (
-            <button
-              key={opt.key}
-              type="button"
-              onClick={() => void handleVote(opt.key)}
-              disabled={Boolean(voted) || pending}
-              className={`group relative w-full overflow-hidden rounded-2xl border p-3.5 text-start transition-all duration-300 ${
-                isSelected
-                  ? 'border-primary bg-primary/15 shadow-md shadow-primary/20'
-                  : voted
-                    ? 'border-white/10 bg-white/[0.02]'
-                    : 'border-white/10 bg-white/[0.03] hover:border-primary/40 hover:bg-white/[0.06]'
-              }`}
-            >
-              {voted ? (
-                <div
-                  className={`absolute inset-y-0 start-0 transition-all duration-1000 ease-out ${
-                    isSelected ? 'bg-primary/25' : 'bg-white/10'
-                  }`}
-                  style={{ width: `${percent}%` }}
-                />
-              ) : null}
-              <div className="relative z-10 flex items-center justify-between gap-2 text-xs font-bold">
-                <span className="flex items-center gap-2.5 text-foreground">
-                  {opt.logoUrl ? <CrestImage src={opt.logoUrl} alt="" size={20} className="h-5 w-5 object-contain" /> : null}
-                  {isSelected ? <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" /> : null}
-                  <span className="font-bold">{opt.label}</span>
+        <div className={styles.pollOptions}>
+          {options.map((opt) => {
+            const isSelected = voted === opt.key;
+            const percent = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => void handleVote(opt.key)}
+                disabled={Boolean(voted) || pending}
+                className={isSelected ? styles.pollOptionBtnActive : styles.pollOptionBtn}
+              >
+                {voted ? (
+                  <div className={styles.pollFillBar} style={{ width: `${percent}%` }} />
+                ) : null}
+                <span className={styles.pollLabelContent}>
+                  {opt.logoUrl ? (
+                    <CrestImage src={opt.logoUrl} alt="" size={18} className="h-4 w-4 object-contain" />
+                  ) : null}
+                  {isSelected ? <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--primary)]" /> : null}
+                  <span>{opt.label}</span>
                 </span>
                 {voted ? (
-                  <span className={`text-xs font-black tabular-nums ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
-                    {percent}% ({opt.votes.toLocaleString('en-US')})
+                  <span className={styles.pollVotePercentage}>
+                    {percent}%
                   </span>
                 ) : null}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {voted ? (
-        <div className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 py-2 text-center text-xs font-black text-emerald-400">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>{isEn ? 'Vote saved on the server.' : 'صوتك محفوظ على السيرفر.'}</span>
+              </button>
+            );
+          })}
         </div>
-      ) : null}
-      {error ? <p className="mt-3 text-center text-xs font-bold text-red-400">{error}</p> : null}
+
+        {voted ? (
+          <div className="flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 py-2 text-center text-[11px] font-bold text-emerald-500">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{isEn ? 'Vote recorded' : 'تم تسجيل صوتك'}</span>
+          </div>
+        ) : null}
+        {error ? <p className="text-center text-[11px] font-bold text-rose-500">{error}</p> : null}
+      </div>
     </div>
   );
 }

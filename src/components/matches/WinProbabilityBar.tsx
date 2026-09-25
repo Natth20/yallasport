@@ -1,14 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { TrendingUp, ShieldCheck } from 'lucide-react';
+import styles from '@/components/sports/match-dossier.module.css';
 
-interface WinProbabilityBarProps {
+export interface WinProbabilityBarProps {
   homeTeamName: string;
   awayTeamName: string;
-  homeProb?: number; // e.g. 48
-  drawProb?: number; // e.g. 26
-  awayProb?: number; // e.g. 26
+  homeProb?: number;
+  drawProb?: number;
+  awayProb?: number;
   homeRank?: number | null;
   awayRank?: number | null;
   locale?: string;
@@ -50,7 +51,6 @@ export function WinProbabilityBar({
     }
   }
 
-  // Normalize to 100
   const total = hp + dp + ap;
   const hPercent = Math.round((hp / total) * 100);
   const dPercent = Math.round((dp / total) * 100);
@@ -58,79 +58,81 @@ export function WinProbabilityBar({
 
   if (compact) {
     return (
-      <div className="w-full space-y-1">
-        <div className="flex items-center justify-between text-[10px] font-bold text-foreground/60 tabular-nums">
-          <span className="text-primary">{hPercent}%</span>
-          <span className="text-muted-foreground">{dPercent}% {isAr ? 'تعادل' : 'Draw'}</span>
+      <div className="w-full space-y-1.5">
+        <div className="flex items-center justify-between text-[11px] font-black tabular-nums">
+          <span className="text-emerald-500">{hPercent}%</span>
+          <span className="text-[var(--muted-foreground)]">{dPercent}% {isAr ? 'تعادل' : 'Draw'}</span>
           <span className="text-blue-500">{aPercent}%</span>
         </div>
-        <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-          <div style={{ width: `${hPercent}%` }} className="bg-primary transition-all duration-500" />
-          <div style={{ width: `${dPercent}%` }} className="bg-muted-foreground/40 transition-all duration-500" />
-          <div style={{ width: `${aPercent}%` }} className="bg-blue-500 transition-all duration-500" />
+        <div className={styles.winProbBarTrack}>
+          <div style={{ width: `${hPercent}%` }} className={styles.winProbSegmentHome} />
+          <div style={{ width: `${dPercent}%` }} className={styles.winProbSegmentDraw} />
+          <div style={{ width: `${aPercent}%` }} className={styles.winProbSegmentAway} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur-md">
-      <div className="flex items-center justify-between gap-2 pb-3">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <h4 className="text-xs font-black uppercase tracking-wider text-foreground">
-            {isAr ? 'تقدير تحريري للنتيجة' : 'Editorial result estimate'}
-          </h4>
-        </div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">
-          {isAr ? 'ليست نموذجاً إحصائياً' : 'Not a statistical model'}
-        </span>
-      </div>
-
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-foreground/10 p-0.5">
-        <div
-          style={{ width: `${hPercent}%` }}
-          className="rounded-s-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500"
-          title={`${homeTeamName}: ${hPercent}%`}
-        />
-        <div
-          style={{ width: `${dPercent}%` }}
-          className="bg-muted-foreground/40 transition-all duration-500"
-          title={`${isAr ? 'تعادل' : 'Draw'}: ${dPercent}%`}
-        />
-        <div
-          style={{ width: `${aPercent}%` }}
-          className="rounded-e-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
-          title={`${awayTeamName}: ${aPercent}%`}
-        />
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 items-center text-center text-xs">
-        <div className="flex flex-col items-start text-start">
-          <span className="truncate max-w-[100px] text-[11px] font-bold text-foreground/70">
-            {homeTeamName}
+    <div className={styles.panelCard}>
+      <div className={styles.winProbBox}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-[var(--foreground)]">
+              {isAr ? 'احتمالات نتيجة اللقاء' : 'Match Outcome Probabilities'}
+            </h4>
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">
+            {isAr ? 'تقدير تحريري' : 'Editorial index'}
           </span>
-          <strong className="text-sm font-black text-primary tabular-nums">
-            {hPercent}%
-          </strong>
         </div>
 
-        <div className="flex flex-col items-center">
-          <span className="text-[11px] font-bold text-muted-foreground">
-            {isAr ? 'التعادل' : 'Draw'}
-          </span>
-          <strong className="text-sm font-black text-muted-foreground tabular-nums">
-            {dPercent}%
-          </strong>
+        <div className={styles.winProbBarTrack}>
+          <div
+            style={{ width: `${hPercent}%` }}
+            className={styles.winProbSegmentHome}
+            title={`${homeTeamName}: ${hPercent}%`}
+          />
+          <div
+            style={{ width: `${dPercent}%` }}
+            className={styles.winProbSegmentDraw}
+            title={`${isAr ? 'التعادل' : 'Draw'}: ${dPercent}%`}
+          />
+          <div
+            style={{ width: `${aPercent}%` }}
+            className={styles.winProbSegmentAway}
+            title={`${awayTeamName}: ${aPercent}%`}
+          />
         </div>
 
-        <div className="flex flex-col items-end text-end">
-          <span className="truncate max-w-[100px] text-[11px] font-bold text-foreground/70">
-            {awayTeamName}
-          </span>
-          <strong className="text-sm font-black text-blue-500 tabular-nums">
-            {aPercent}%
-          </strong>
+        <div className={styles.winProbValues}>
+          <div className="flex flex-col items-start text-start">
+            <span className="max-w-[110px] truncate text-[11px] font-bold text-[var(--foreground)]">
+              {homeTeamName}
+            </span>
+            <span className="text-sm font-black tabular-nums text-emerald-500">
+              {hPercent}%
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center text-center">
+            <span className="text-[11px] font-bold text-[var(--muted-foreground)]">
+              {isAr ? 'التعادل' : 'Draw'}
+            </span>
+            <span className="text-sm font-black tabular-nums text-[var(--muted-foreground)]">
+              {dPercent}%
+            </span>
+          </div>
+
+          <div className="flex flex-col items-end text-end">
+            <span className="max-w-[110px] truncate text-[11px] font-bold text-[var(--foreground)]">
+              {awayTeamName}
+            </span>
+            <span className="text-sm font-black tabular-nums text-blue-500">
+              {aPercent}%
+            </span>
+          </div>
         </div>
       </div>
     </div>
