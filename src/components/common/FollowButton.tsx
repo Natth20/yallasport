@@ -4,6 +4,7 @@ import { swallow } from '@/lib/ops/caught';
 import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import {useTranslations} from 'next-intl';
+import { ensurePushSubscription } from '@/components/pwa/ensure-push';
 
 interface FollowButtonProps {
   entityId: string;
@@ -67,6 +68,9 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
 
       if (response.ok) {
         setIsFollowing(!isFollowing);
+        if (!isFollowing) {
+          await ensurePushSubscription().catch(() => undefined);
+        }
       }
     } catch (error) {
       console.error('Follow action failed:', error);

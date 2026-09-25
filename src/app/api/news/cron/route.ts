@@ -5,6 +5,7 @@ import { TRUSTED_RSS_FEEDS } from '@/lib/news/trusted-sources';
 import { AlertSeverity, AlertType, logSystemAlert } from '@/lib/monitoring';
 import { isAuthorizedCron } from '@/lib/security/cron';
 import { prisma } from '@/lib/prisma';
+import { alertRecentPublishedBreaking } from '@/lib/notifications/news-alerts';
 
 /**
  * Hourly trusted news import + desk alerts.
@@ -57,11 +58,14 @@ export async function GET(req: Request) {
       );
     }
 
+    const breakingPushed = await alertRecentPublishedBreaking();
+
     return NextResponse.json({
       success: true,
       imported,
       pendingCount,
       breakingPending: breakingPending.length,
+      breakingPushed,
       autoPublished: 0,
     });
   } catch (error) {

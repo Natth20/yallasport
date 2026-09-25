@@ -35,6 +35,10 @@ export async function sendWebPush(
       endpoint: subscription.endpoint,
       keys: { p256dh: subscription.p256dh, auth: subscription.auth },
     },
-    JSON.stringify(payload)
+    JSON.stringify({
+      ...payload,
+      icon: payload.icon || '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+    })
   );
 }

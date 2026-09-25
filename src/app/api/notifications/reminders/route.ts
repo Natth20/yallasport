@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { redis } from '@/lib/redis';
-import { sendWebPush } from '@/lib/notifications/web-push';
+import { deliverPush, prefers, reserveOnce, release } from '@/lib/notifications/deliver';
 import { isAuthorizedCron } from '@/lib/security/cron';
 
 interface NotificationPreferences {
@@ -42,48 +41,33 @@ export async function GET(request: Request) {
 
     for (const reminder of reminders) {
       const preferences = reminder.user.notificationPrefs as NotificationPreferences | null;
-      if (preferences?.matchStart === false) continue;
+      if (!prefers(preferences as Record<string, unknown> | null, 'matchStart')) continue;
 
-      const dedupKey = `notification:match-start:${match.id}:${reminder.userId}`;
-      const reserved = await redis.set(dedupKey, '1', { nx: true, ex: 86400 });
+      const dedupKey = `notification:kickoff-soon:${match.id}:${reminder.userId}`;
+      const reserved = await reserveOnce(dedupKey, 86400);
       if (!reserved) continue;
 
-      const payload = {
-        title: 'المباراة تبدأ بعد 15 دقيقة',
-        body: `${match.homeTeam.name} ضد ${match.awayTeam.name}`,
-        url: `/match/${match.id}`,
-        tag: `match-start-${match.id}`,
-        icon: '/images/logo.png',
-      };
-
-      let delivered = false;
-      for (const subscription of reminder.user.pushSubscriptions) {
-        try {
-          await sendWebPush(subscription, payload);
-          delivered = true;
-        } catch (error) {
-          failed += 1;
-          const statusCode = (error as { statusCode?: number }).statusCode;
-          if (statusCode === 404 || statusCode === 410) {
-            await prisma.pushSubscription.delete({ where: { id: subscription.id } });
-          }
+      const delivered = await deliverPush(
+        reminder.userId,
+        reminder.user.pushSubscriptions,
+        {
+          title: 'المباراة تبدأ بعد 15 دقيقة',
+          body: `${match.homeTeam.name} ضد ${match.awayTeam.name}`,
+          url: `/ar/match/${match.id}`,
+          tag: `kickoff-soon-${match.id}`,
+        },
+        {
+          type: 'MATCH_START',
+          entityType: 'MATCH',
+          entityId: match.id,
+          matchId: match.id,
         }
-      }
+      );
 
-      if (delivered) {
-        await prisma.notification.create({
-          data: {
-            userId: reminder.userId,
-            matchId: match.id,
-            type: 'MATCH_START',
-            entityType: 'MATCH',
-            entityId: match.id,
-            payload,
-          },
-        });
-        sent += 1;
-      } else {
-        await redis.del(dedupKey);
+      if (delivered) sent += 1;
+      else {
+        failed += 1;
+        await release(dedupKey);
       }
     }
   }

@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { pick } from '@/i18n/pick';
+import { EnablePush } from '@/components/pwa/EnablePush';
+import { ensurePushSubscription } from '@/components/pwa/ensure-push';
 
 interface NotificationSettingsProps {
   initialPrefs: {
@@ -33,9 +35,12 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ init
     setSaving(true);
     
     try {
-      // API call to update preferences
+      if (newPrefs[key]) {
+        await ensurePushSubscription().catch(() => undefined);
+      }
       await fetch('/api/user/notifications/prefs', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPrefs),
       });
     } catch {
@@ -54,6 +59,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ init
 
   return (
     <div className="space-y-4">
+      <EnablePush />
       {options.map((opt) => (
         <div 
           key={opt.key}

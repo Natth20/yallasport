@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/sports/sync",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/sports/sync-transfers",
       "schedule": "0 6 * * *"
     },

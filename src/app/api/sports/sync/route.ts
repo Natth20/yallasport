@@ -6,7 +6,7 @@ import { redis } from '@/lib/redis';
 import { logSystemAlert, AlertType, AlertSeverity } from '@/lib/monitoring';
 import { persistMatchDetail, persistNormalizedMatch } from '@/lib/sports-data/persistence';
 import { cronFixtureDateKeys, liveKickoffFloor } from '@/lib/sports-data/match-window';
-import { sendWebPush } from '@/lib/notifications/web-push';
+import { alertMatchFans } from '@/lib/notifications/match-alerts';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { isAuthorizedCron } from '@/lib/security/cron';
 import { settleFinishedPredictions } from '@/lib/predictions/settle';
@@ -47,44 +47,34 @@ export async function GET(req: Request) {
       if (!detail) continue;
       const dbMatch = await persistMatchDetail(detail);
 
+      if (dbMatch.status === 'LIVE' || dbMatch.status === 'HALFTIME') {
+        await alertMatchFans(dbMatch, 'MATCH_START', {
+          title: 'بدأت المباراة',
+          body: `${dbMatch.homeTeam.name} ضد ${dbMatch.awayTeam.name}`,
+          tag: `match-start-${dbMatch.id}`,
+          entityId: 'live',
+        });
+      }
+
+      if (dbMatch.status === 'FINISHED') {
+        await alertMatchFans(dbMatch, 'MATCH_END', {
+          title: 'انتهت المباراة',
+          body: `${dbMatch.homeTeam.name} ${dbMatch.homeScore ?? 0} - ${dbMatch.awayScore ?? 0} ${dbMatch.awayTeam.name}`,
+          tag: `match-end-${dbMatch.id}`,
+          entityId: 'finished',
+        });
+      }
+
       for (const goal of detail.events.filter((event) =>
         event.type === 'GOAL' || event.type === 'PENALTY' || event.type === 'OWN_GOAL'
       )) {
         const eventKey = `${goal.minute}-${goal.extraMinute ?? 0}-${goal.playerId ?? goal.player ?? 'goal'}`;
-        const dedupKey = `notification:goal:${dbMatch.id}:${eventKey}`;
-        const reserved = await redis.set(dedupKey, '1', { nx: true, ex: 172800 });
-        if (!reserved) continue;
-
-        const followers = await prisma.userFavorite.findMany({
-          where: { entityType: 'MATCH', entityId: dbMatch.id },
-          include: { user: { include: { pushSubscriptions: true } } },
+        await alertMatchFans(dbMatch, 'GOAL', {
+          title: `هدف${goal.player ? ` — ${goal.player}` : ''}`,
+          body: `${detail.homeTeam.name} ${detail.homeScore ?? 0} - ${detail.awayScore ?? 0} ${detail.awayTeam.name}`,
+          tag: `goal-${dbMatch.id}-${eventKey}`,
+          entityId: eventKey,
         });
-        for (const follower of followers) {
-          const preferences = follower.user.notificationPrefs as { goal?: boolean } | null;
-          if (preferences?.goal === false) continue;
-          const payload = {
-            title: `هدف${goal.player ? ` — ${goal.player}` : ''}`,
-            body: `${detail.homeTeam.name} ${detail.homeScore ?? 0} - ${detail.awayScore ?? 0} ${detail.awayTeam.name}`,
-            url: `/match/${dbMatch.id}`,
-            tag: `goal-${dbMatch.id}-${eventKey}`,
-            icon: '/images/logo.png',
-          };
-          const deliveries = await Promise.allSettled(
-            follower.user.pushSubscriptions.map((subscription) => sendWebPush(subscription, payload))
-          );
-          if (deliveries.some((delivery) => delivery.status === 'fulfilled')) {
-            await prisma.notification.create({
-              data: {
-                userId: follower.userId,
-                matchId: dbMatch.id,
-                type: 'GOAL',
-                entityType: 'MATCH_EVENT',
-                entityId: eventKey,
-                payload,
-              },
-            });
-          }
-        }
       }
     }
 

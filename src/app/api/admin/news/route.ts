@@ -8,6 +8,7 @@ import { pushProvenance } from '@/lib/news/provenance';
 import { readingTimeMinutes } from '@/lib/news/reading-time';
 import { isEditorialNewsItem, isTrustedNewsUrl } from '@/lib/news/trusted-sources';
 import { prisma } from '@/lib/prisma';
+import { alertBreakingNews } from '@/lib/notifications/news-alerts';
 
 const EDITOR_ROLES = ['SUPER_ADMIN', 'EDITOR', 'NEWS_EDITOR'];
 
@@ -154,6 +155,9 @@ export const POST = auth(async function POST(req) {
       },
     });
     await enqueueNewsTranslation(updated.id);
+    if (updated.breaking || /عاجل|breaking/i.test(updated.title)) {
+      await alertBreakingNews(updated).catch(swallow('src/app/api/admin/news/route.ts:breaking-push', undefined));
+    }
     return NextResponse.json({
       success: true,
       status: updated.status,
@@ -232,6 +236,9 @@ export const POST = auth(async function POST(req) {
     });
     if (nextStatus === 'PUBLISHED') {
       await enqueueNewsTranslation(updated.id);
+      if (updated.breaking || /عاجل|breaking/i.test(updated.title)) {
+        await alertBreakingNews(updated).catch(swallow('src/app/api/admin/news/route.ts:save-breaking-push', undefined));
+      }
     }
 
     return NextResponse.json({

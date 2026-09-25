@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Bell, BellOff, CalendarPlus, Check, Loader2 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import {useLocale, useTranslations} from 'next-intl';
+import { ensurePushSubscription } from '@/components/pwa/ensure-push';
 
 interface MatchQuickActionsProps {
   matchId: string;
@@ -22,13 +23,6 @@ const toCalendarDate = (value: Date) =>
 const escapeCalendarText = (value: string) =>
   value.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
 
-const urlBase64ToUint8Array = (value: string) => {
-  const padding = '='.repeat((4 - value.length % 4) % 4);
-  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
-  return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
-};
-
 export function MatchQuickActions({
   matchId,
   title,
@@ -44,36 +38,6 @@ export function MatchQuickActions({
   const [reminderLoading, setReminderLoading] = useState(false);
   const [calendarAdded, setCalendarAdded] = useState(false);
   const [reminderError, setReminderError] = useState(false);
-
-  const ensurePushSubscription = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      throw new Error('Push is not supported');
-    }
-
-    const permission = Notification.permission === 'default'
-      ? await Notification.requestPermission()
-      : Notification.permission;
-    if (permission !== 'granted') throw new Error('Notification permission denied');
-
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
-      const keyResponse = await fetch('/api/user/push/subscribe');
-      if (!keyResponse.ok) throw new Error('Push is not configured');
-      const { publicKey } = await keyResponse.json();
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
-    }
-
-    const response = await fetch('/api/user/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(subscription.toJSON()),
-    });
-    if (!response.ok) throw new Error('Could not save push subscription');
-  };
 
   const toggleReminder = async () => {
     if (!isLoggedIn) {
