@@ -1,6 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
+import styles from './compare.module.css';
 
 export type DerbyLink = {
   key: string;
@@ -21,23 +22,13 @@ export function QuickDerbyBar({
   const isAr = locale === 'ar';
 
   return (
-    <div className="mb-8 rounded-2xl border border-primary/20 bg-card/80 p-4">
-      <h3 className="mb-3 text-xs font-black uppercase tracking-wider">
-        {isAr ? 'ديربيات من الدفتر' : 'Derbies on the ledger'}
-      </h3>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className={styles.derby}>
+      <h3>{isAr ? 'ديربيات من الدفتر' : 'Derbies on the ledger'}</h3>
+      <div className={styles.derbyRow}>
         {items.map((derby) => (
-          <Link
-            key={derby.key}
-            href={derby.href}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold ${
-              derby.active
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-border bg-card text-foreground hover:border-primary'
-            }`}
-          >
+          <Link key={derby.key} href={derby.href} className={derby.active ? styles.derbyOn : undefined}>
             {derby.label}
-            <span className="ms-1 text-[9px] opacity-60">{derby.tag}</span>
+            <span className={styles.tag}>{derby.tag}</span>
           </Link>
         ))}
       </div>

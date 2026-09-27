@@ -4,10 +4,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
 import { isAbortError } from '@/lib/ops/caught';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { versusHref, type VersusTeamOption } from './versus';
-import styles from './compare.module.css';
 
 function TeamWell({
   locale,
@@ -75,42 +72,45 @@ function TeamWell({
   }, [query, locale, occupied, selected]);
 
   return (
-    <div className={styles.well}>
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{slot}</p>
       {selected ? (
-        <div className={styles.picked}>
+        <div className="flex items-center gap-3">
           {selected.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={selected.logoUrl} alt="" />
+            <img src={selected.logoUrl} alt="" className="h-10 w-10 object-contain" />
           ) : (
-            <span className={styles.mark}>{selected.name.charAt(0)}</span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-muted">{selected.name.charAt(0)}</span>
           )}
-          <strong>{selected.name}</strong>
-          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+          <strong className="min-w-0 flex-1 truncate">{selected.name}</strong>
+          <button type="button" className="text-xs font-bold text-primary" onClick={onClear}>
             {t('clear')}
-          </Button>
+          </button>
         </div>
       ) : (
         <>
-          <Input
-            label={slot}
-            type="search"
-            value={query}
-            maxLength={80}
-            autoComplete="off"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('type_name')}
-            aria-label={label}
-            aria-controls={listId}
-            aria-expanded={open}
-          />
+          <label className="block text-xs font-bold">
+            <span className="sr-only">{label}</span>
+            <input
+              type="search"
+              value={query}
+              maxLength={80}
+              autoComplete="off"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t('type_name')}
+              className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none"
+              aria-controls={listId}
+              aria-expanded={open}
+            />
+          </label>
           {open ? (
-            <ul id={listId} className={styles.hits}>
+            <ul id={listId} className="mt-2 max-h-52 overflow-auto rounded-xl border border-border">
               {hits.length > 0 ? (
                 hits.map((team) => (
                   <li key={team.slug}>
                     <button
                       type="button"
-                      className={styles.hit}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-muted"
                       onClick={() => {
                         onPick(team);
                         setQuery('');
@@ -119,20 +119,20 @@ function TeamWell({
                     >
                       {team.logoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={team.logoUrl} alt="" />
+                        <img src={team.logoUrl} alt="" className="h-6 w-6 object-contain" />
                       ) : (
-                        <span className={styles.hitMark}>{team.name.charAt(0)}</span>
+                        <span className="grid h-6 w-6 place-items-center rounded bg-muted text-[10px]">{team.name.charAt(0)}</span>
                       )}
                       {team.name}
                     </button>
                   </li>
                 ))
               ) : (
-                <li className={styles.emptyHit}>{t('no_team', { q: query.trim() })}</li>
+                <li className="px-3 py-2 text-xs text-muted-foreground">{t('no_team', { q: query.trim() })}</li>
               )}
             </ul>
           ) : query.trim().length < 2 ? (
-            <p className={styles.note}>{t('type_hint')}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{t('type_hint')}</p>
           ) : null}
         </>
       )}
@@ -156,7 +156,7 @@ export function VersusPair({
   const ready = Boolean(left && right && left.slug !== right.slug);
 
   return (
-    <div className={styles.pair}>
+    <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
       <TeamWell
         locale={locale}
         label={t('seat_a')}
@@ -166,7 +166,7 @@ export function VersusPair({
         onPick={setLeft}
         onClear={() => setLeft(null)}
       />
-      <p className={styles.pairMark} aria-hidden>
+      <p className="text-center text-2xl font-black text-muted-foreground" aria-hidden>
         ×
       </p>
       <TeamWell
@@ -178,10 +178,10 @@ export function VersusPair({
         onPick={setRight}
         onClear={() => setRight(null)}
       />
-      <div className={styles.actions}>
-        <Button
+      <div className="md:col-span-3 flex flex-wrap items-center gap-3">
+        <button
           type="button"
-          variant="accent"
+          className="rounded-2xl bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground disabled:opacity-40"
           disabled={!ready}
           onClick={() => {
             if (!left || !right) return;
@@ -189,10 +189,10 @@ export function VersusPair({
           }}
         >
           {t('open_scale')}
-        </Button>
-        {left && right && left.slug === right.slug ? <p className={styles.warn}>{t('same')}</p> : null}
+        </button>
+        {left && right && left.slug === right.slug ? <p className="text-xs text-amber-500">{t('same')}</p> : null}
         {left && !right ? (
-          <Link href={`/team/${left.slug}`} className={styles.fileLink}>
+          <Link href={`/team/${left.slug}`} className="text-xs font-bold text-primary">
             {t('open_file')}
           </Link>
         ) : null}

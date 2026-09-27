@@ -8,8 +8,13 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { VersusPair } from './VersusPair';
 import { QuickDerbyBar } from './QuickDerbyBar';
 import { CrestImage } from '@/components/common/CrestImage';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { DERBY_NEEDLES, recordFor, remapMatchSides, shareBar, versusHref, type VersusTeamOption } from './versus';
 import type { DerbyLink } from './QuickDerbyBar';
+import styles from './compare.module.css';
 
 
 const TEAM_SELECT = { id: true, slug: true, name: true, logoUrl: true, externalId: true } as const;
@@ -289,304 +294,240 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
   ];
 
   return (
-    <div className="versus-house relative min-h-screen overflow-hidden pb-16">
-      {/* Background Lighting */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-cyan-500/15 via-primary/10 to-transparent blur-3xl" />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 pt-8">
+    <SalonStage
+      tone="podium"
+      wide
+      kicker={`${t('house')} · ${t('folio')}`}
+      title={paired ? t('headline_pair', { a: leftName, b: rightName }) : t('headline')}
+      lead={t('standfirst')}
+      aside={
+        <Badge variant="outline" size="sm">
+          {teamCount} {locale === 'en' ? 'teams in the ledger' : 'فريق في الدفتر'}
+        </Badge>
+      }
+    >
+      <div className={styles.stack}>
         <QuickDerbyBar items={derbyItems} locale={locale} />
 
-        {/* ——— Epic Head-to-Head Clash Masthead ——— */}
-        <header className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-card/90 via-card/60 to-card/30 p-6 md:p-10 backdrop-blur-2xl shadow-2xl">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5 mb-8">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold tracking-wider text-primary uppercase border border-primary/20">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                {t('house')} · {t('folio')}
-              </span>
-              <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-xs font-mono text-cyan-400 font-bold">
-                HEAD TO HEAD ARENA
-              </span>
-            </div>
-            <span className="text-xs text-muted-foreground font-mono">
-              {teamCount} {locale === 'en' ? 'teams in the ledger' : 'فريق في الدفتر'}
-            </span>
+        <div className={styles.duel}>
+          <Card variant="bordered" padding="md" className={styles.side}>
+            {left ? (
+              <>
+                <Link href={`/team/${left.slug}`} className={styles.crest}>
+                  <CrestImage src={left.logoUrl} name={leftName} size={72} className={styles.crestImg} />
+                </Link>
+                <Link href={`/team/${left.slug}`} className={styles.name}>
+                  {leftName}
+                </Link>
+                {scale ? (
+                  <Badge variant="accent" size="sm" className={styles.record}>
+                    {scale.recA.won} {t('row_h2h_w')} · {scale.recA.drawn} {t('row_h2h_d')} · {scale.recA.lost} {t('row_h2h_l')}
+                  </Badge>
+                ) : (
+                  <p className={styles.note}>{t('pick_second')}</p>
+                )}
+              </>
+            ) : (
+              <>
+                <Badge variant="outline" size="sm">{t('kaf_a')}</Badge>
+                <p className={styles.seat}>{t('seat_a')}</p>
+              </>
+            )}
+          </Card>
+
+          <span className={styles.vs} aria-hidden>VS</span>
+
+          <Card variant="bordered" padding="md" className={styles.side}>
+            {right ? (
+              <>
+                <Link href={`/team/${right.slug}`} className={styles.crest}>
+                  <CrestImage src={right.logoUrl} name={rightName} size={72} className={styles.crestImg} />
+                </Link>
+                <Link href={`/team/${right.slug}`} className={styles.name}>
+                  {rightName}
+                </Link>
+                {scale ? (
+                  <Badge variant="outline" size="sm" className={styles.record}>
+                    {scale.recB.won} {t('row_h2h_w')} · {scale.recB.drawn} {t('row_h2h_d')} · {scale.recB.lost} {t('row_h2h_l')}
+                  </Badge>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <Badge variant="outline" size="sm">{t('kaf_b')}</Badge>
+                <p className={styles.seat}>{t('seat_b')}</p>
+              </>
+            )}
+          </Card>
+        </div>
+
+        <section>
+          <div className={styles.head}>
+            <p>{t('pair_kicker')}</p>
+            <h2>{t('pair_title')}</h2>
+            <p>{t('pair_note')}</p>
           </div>
-
-          {/* Clash Stage */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-11 md:items-center">
-            {/* Team A (Left) */}
-            <div className="md:col-span-5 rounded-2xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-card/50 to-card/20 p-6 text-center backdrop-blur-md">
-              {left ? (
-                <div className="space-y-3">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-cyan-500/40 bg-cyan-500/15 p-2">
-                    <CrestImage src={left.logoUrl} name={leftName} size={72} className="h-full w-full object-contain" />
-                  </div>
-                  <h2 className="truncate text-xl font-black sm:text-2xl">{leftName}</h2>
-                  {scale ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/20 px-3 py-1 font-mono text-xs font-bold text-cyan-300">
-                      <span>
-                        {scale.recA.won} {t('row_h2h_w')}
-                      </span>
-                      <span>·</span>
-                      <span>
-                        {scale.recA.drawn} {t('row_h2h_d')}
-                      </span>
-                      <span></span>
-                      <span>
-                        {scale.recA.lost} {t('row_h2h_l')}
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">{t('pick_second')}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-2 py-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 font-mono">
-                    {t('kaf_a')}
-                  </span>
-                  <p className="text-base font-bold text-muted-foreground">{t('seat_a')}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Middle VS Beam */}
-            <div className="md:col-span-1 flex flex-col items-center justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary via-emerald-400 to-cyan-400 font-black text-black text-sm shadow-xl shadow-primary/20 animate-pulse">
-                VS
-              </div>
-            </div>
-
-            {/* Team B (Right) */}
-            <div className="md:col-span-5 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card/50 to-card/20 p-6 text-center backdrop-blur-md">
-              {right ? (
-                <div className="space-y-3">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/15 p-2">
-                    <CrestImage src={right.logoUrl} name={rightName} size={72} className="h-full w-full object-contain" />
-                  </div>
-                  <h2 className="truncate text-xl font-black sm:text-2xl">{rightName}</h2>
-                  {scale ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/20 px-3 py-1 font-mono text-xs font-bold text-amber-300">
-                      <span>
-                        {scale.recB.won} {t('row_h2h_w')}
-                      </span>
-                      <span>·</span>
-                      <span>
-                        {scale.recB.drawn} {t('row_h2h_d')}
-                      </span>
-                      <span>·</span>
-                      <span>
-                        {scale.recB.lost} {t('row_h2h_l')}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="space-y-2 py-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-400 font-mono">
-                    {t('kaf_b')}
-                  </span>
-                  <p className="text-base font-bold text-muted-foreground">{t('seat_b')}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-8 text-center space-y-2 max-w-2xl mx-auto">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">
-              {paired ? t('headline_pair', { a: leftName, b: rightName }) : t('headline')}
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              {t('standfirst')}
-            </p>
-          </div>
-        </header>
-
-        {/* ——— Team Selector Pair ——— */}
-        <section className="rounded-3xl border border-border bg-card/40 p-6 sm:p-8 backdrop-blur-xl">
-          <div className="border-b border-border pb-4 mb-6">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('pair_kicker')}</p>
-            <h2 className="text-lg sm:text-xl font-black text-foreground mt-1">{t('pair_title')}</h2>
-            <p className="text-xs text-muted-foreground mt-1">{t('pair_note')}</p>
-          </div>
-
-          {missing && (
-            <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300">
-              {t('missing')}
-            </div>
-          )}
-
+          {missing ? <p className={styles.missing}>{t('missing')}</p> : null}
           <VersusPair locale={locale} initialA={left ? asOption(left) : null} initialB={right ? asOption(right) : null} />
         </section>
 
-        {/* ——— Head-to-Head Power Sliders (When Paired) ——— */}
-        {scale && left && right && (
-          <>
-            <section className="rounded-3xl border border-border bg-card/40 p-6 sm:p-8 backdrop-blur-xl space-y-6">
-              <div className="border-b border-border pb-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('scale_kicker')}</p>
-                <h2 className="text-xl sm:text-2xl font-black text-foreground mt-1">{t('scale_title')}</h2>
-                <p className="text-xs text-muted-foreground mt-1">{t('scale_note')}</p>
-              </div>
+        {scale && left && right ? (
+          <Tabs defaultValue="scale" variant="underline">
+            <TabsList aria-label={t('scale_title')}>
+              <TabsTrigger value="scale">{t('scale_title')}</TabsTrigger>
+              <TabsTrigger value="meet">{t('meet_title')}</TabsTrigger>
+            </TabsList>
 
-              {/* Sliders Grid */}
-              <div className="mx-auto max-w-3xl space-y-4">
-                {[
-                  { label: t('row_h2h_w'), a: scale.recA.won, b: scale.recB.won },
-                  { label: t('row_goals'), a: scale.leftGoals.goals, b: scale.rightGoals.goals },
-                  { label: t('row_played'), a: scale.leftGoals.matches, b: scale.rightGoals.matches },
-                  {
-                    label: t('row_gpm'),
-                    a: scale.leftGoals.matches ? Number((scale.leftGoals.goals / scale.leftGoals.matches).toFixed(2)) : 0,
-                    b: scale.rightGoals.matches ? Number((scale.rightGoals.goals / scale.rightGoals.matches).toFixed(2)) : 0,
-                  },
-                  { label: t('row_squad'), a: scale.leftSquad, b: scale.rightSquad },
-                  { label: t('row_h2h_d'), a: scale.recA.drawn, b: scale.recB.drawn },
-                ].map((row) => {
-                  const bar = shareBar(row.a, row.b);
-                  return (
-                    <div key={row.label} className="space-y-2 rounded-2xl border border-border bg-card p-4">
-                      <div className="flex items-center justify-between text-xs font-bold">
-                        <span className="font-mono text-sm text-cyan-400">{bar.empty ? '—' : row.a}</span>
-                        <span className="uppercase tracking-wider text-muted-foreground">{row.label}</span>
-                        <span className="font-mono text-sm text-amber-400">{bar.empty ? '—' : row.b}</span>
-                      </div>
-                      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          style={{ width: `${bar.pct}%` }}
-                          className={`ys-grow-x h-full ${bar.empty ? 'bg-muted-foreground/30' : 'bg-cyan-500'}`}
-                        />
-                        <div
-                          style={{ width: `${100 - bar.pct}%` }}
-                          className={`ys-grow-x h-full ${bar.empty ? 'bg-muted-foreground/20' : 'bg-amber-500'}`}
-                        />
-                      </div>
+            <TabsContent value="scale">
+              <div className={styles.stack}>
+                <div className={styles.head}>
+                  <p>{t('scale_kicker')}</p>
+                  <p>{t('scale_note')}</p>
+                </div>
+                <div className={styles.meters}>
+                  {[
+                    { label: t('row_h2h_w'), a: scale.recA.won, b: scale.recB.won },
+                    { label: t('row_goals'), a: scale.leftGoals.goals, b: scale.rightGoals.goals },
+                    { label: t('row_played'), a: scale.leftGoals.matches, b: scale.rightGoals.matches },
+                    {
+                      label: t('row_gpm'),
+                      a: scale.leftGoals.matches ? Number((scale.leftGoals.goals / scale.leftGoals.matches).toFixed(2)) : 0,
+                      b: scale.rightGoals.matches ? Number((scale.rightGoals.goals / scale.rightGoals.matches).toFixed(2)) : 0,
+                    },
+                    { label: t('row_squad'), a: scale.leftSquad, b: scale.rightSquad },
+                    { label: t('row_h2h_d'), a: scale.recA.drawn, b: scale.recB.drawn },
+                  ].map((row) => {
+                    const bar = shareBar(row.a, row.b);
+                    return (
+                      <Card key={row.label} variant="bordered" padding="sm" className={styles.meter}>
+                        <div className={styles.meterHead}>
+                          <span className={bar.empty ? styles.meterMuted : styles.meterA}>{bar.empty ? '—' : row.a}</span>
+                          <span className={styles.meterLabel}>{row.label}</span>
+                          <span className={bar.empty ? styles.meterMuted : styles.meterB}>{bar.empty ? '—' : row.b}</span>
+                        </div>
+                        <div className={styles.track}>
+                          <span
+                            className={bar.empty ? styles.fillEmpty : styles.fillA}
+                            style={{ width: `${bar.pct}%` }}
+                          />
+                          <span
+                            className={bar.empty ? styles.fillEmptySoft : styles.fillB}
+                            style={{ width: `${100 - bar.pct}%` }}
+                          />
+                        </div>
+                      </Card>
+                    );
+                  })}
+                  {scale.recA.skipped > 0 ? (
+                    <p className={styles.note}>{t('skipped', { n: String(scale.recA.skipped) })}</p>
+                  ) : null}
+                </div>
+
+                <div className={styles.facts}>
+                  {[
+                    { name: leftName, full: scale.leftFull, last: scale.leftLast },
+                    { name: rightName, full: scale.rightFull, last: scale.rightLast },
+                  ].map((club) => (
+                    <Card key={club.name} variant="bordered" padding="sm" className={styles.fact}>
+                      <strong>{club.name}</strong>
+                      <p className={styles.meta}>
+                        {[club.full?.venue?.name, club.full?.founded ? `${t('founded')} ${club.full.founded}` : null]
+                          .filter(Boolean)
+                          .join(' · ') || '—'}
+                      </p>
+                      {club.last ? (
+                        <Link href={`/match/${club.last.id}`}>
+                          {t('last_label')}: {club.last.homeTeam.name} {club.last.homeScore}–{club.last.awayScore} {club.last.awayTeam.name}
+                        </Link>
+                      ) : (
+                        <p className={styles.meta}>{t('last_none')}</p>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+
+                <div className={styles.stack}>
+                  <p className={styles.note}>{t('shared_note')}</p>
+                  {scale.shared.length === 0 ? (
+                    <p className={styles.note}>{t('shared_empty')}</p>
+                  ) : (
+                    <div className={styles.chips}>
+                      {scale.shared.map((league) => (
+                        <Link key={league.slug} href={`/league/${league.slug}`} className={styles.chip}>
+                          {league.name}
+                        </Link>
+                      ))}
                     </div>
-                  );
-                })}
-                {scale.recA.skipped > 0 ? (
-                  <p className="text-center text-xs text-muted-foreground">{t('skipped', { n: String(scale.recA.skipped) })}</p>
-                ) : null}
+                  )}
+                </div>
               </div>
+            </TabsContent>
 
-              <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
-                {[
-                  { name: leftName, tint: 'text-cyan-400', full: scale.leftFull, last: scale.leftLast },
-                  { name: rightName, tint: 'text-amber-400', full: scale.rightFull, last: scale.rightLast },
-                ].map((club) => (
-                  <div key={club.name} className="space-y-1 rounded-2xl border border-border bg-muted/50 p-4 text-xs">
-                    <p className={`font-bold ${club.tint}`}>{club.name}</p>
-                    <p className="text-muted-foreground">
-                      {[club.full?.venue?.name, club.full?.founded ? `${t('founded')} ${club.full.founded}` : null]
-                        .filter(Boolean)
-                        .join(' · ') || '—'}
-                    </p>
-                    {club.last ? (
-                      <Link href={`/match/${club.last.id}`} className="block font-bold text-foreground">
-                        {t('last_label')}: {club.last.homeTeam.name} {club.last.homeScore}–{club.last.awayScore} {club.last.awayTeam.name}
-                      </Link>
-                    ) : (
-                      <p className="text-muted-foreground">{t('last_none')}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="mb-2 text-xs text-muted-foreground">{t('shared_note')}</p>
-                {scale.shared.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">{t('shared_empty')}</p>
+            <TabsContent value="meet">
+              <div className={styles.stack}>
+                <div className={styles.head}>
+                  <p>{t('meet_kicker')}</p>
+                </div>
+                {scale.h2hRecent.length === 0 ? (
+                  <p className={styles.note}>{t('meet_empty')}</p>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {scale.shared.map((league) => (
-                      <Link
-                        key={league.slug}
-                        href={`/league/${league.slug}`}
-                        className="rounded-full border border-border px-3 py-1 text-xs font-bold"
-                      >
-                        {league.name}
-                      </Link>
-                    ))}
+                  <div className={styles.meetings}>
+                    {scale.h2hRecent.map((row) => {
+                      const home = nameOf(names, row.homeTeam.id, row.homeTeam.name);
+                      const away = nameOf(names, row.awayTeam.id, row.awayTeam.name);
+                      const hasScore = row.homeScore != null && row.awayScore != null;
+                      const href = localByExt.get(String(row.id));
+                      const body = (
+                        <>
+                          <div className={styles.meetingTop}>
+                            <span>{row.league.name}</span>
+                            <ClientTime value={row.kickoffAt} />
+                          </div>
+                          <p className={styles.club}>{home}</p>
+                          <p className={styles.score}>{hasScore ? `${row.homeScore} – ${row.awayScore}` : '—'}</p>
+                          <p className={styles.club}>{away}</p>
+                        </>
+                      );
+                      return href ? (
+                        <Card key={row.id} variant="interactive" padding="sm">
+                          <Link href={`/match/${href}`} className={styles.meeting}>
+                            {body}
+                          </Link>
+                        </Card>
+                      ) : (
+                        <Card key={row.id} variant="bordered" padding="sm" className={styles.meeting}>
+                          {body}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            </section>
+            </TabsContent>
+          </Tabs>
+        ) : null}
 
-            {/* Recent Meetings H2H Log */}
-            <section className="rounded-3xl border border-border bg-card/40 p-6 sm:p-8 backdrop-blur-xl space-y-6">
-              <div className="border-b border-border pb-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('meet_kicker')}</p>
-                <h2 className="text-xl sm:text-2xl font-black text-foreground mt-1">{t('meet_title')}</h2>
-              </div>
-
-              {scale.h2hRecent.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-6">{t('meet_empty')}</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {scale.h2hRecent.map((row) => {
-                    const home = nameOf(names, row.homeTeam.id, row.homeTeam.name);
-                    const away = nameOf(names, row.awayTeam.id, row.awayTeam.name);
-                    const hasScore = row.homeScore != null && row.awayScore != null;
-                    const href = localByExt.get(String(row.id));
-                    const body = (
-                      <>
-                        <div className="mb-2 flex items-center justify-between border-b border-border pb-2 text-[11px] text-muted-foreground">
-                          <span className="truncate">{row.league.name}</span>
-                          <ClientTime value={row.kickoffAt} className="font-mono" />
-                        </div>
-                        <div className="py-2 text-center">
-                          <p className="text-xs font-bold leading-snug">{home}</p>
-                          <span className="my-1 inline-block font-mono text-sm font-black text-primary">
-                            {hasScore ? `${row.homeScore} – ${row.awayScore}` : '—'}
-                          </span>
-                          <p className="text-xs font-bold leading-snug">{away}</p>
-                        </div>
-                      </>
-                    );
-                    return href ? (
-                      <Link key={row.id} href={`/match/${href}`} className="flex flex-col justify-between rounded-2xl border border-border bg-card/40 p-4">
-                        {body}
-                      </Link>
-                    ) : (
-                      <div key={row.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card/40 p-4">
-                        {body}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-
-        {/* Rules & Footer */}
-        <section className="rounded-3xl border border-border bg-card/40 p-6 sm:p-8 backdrop-blur-xl">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section>
+          <div className={styles.rules}>
             {rules.map((rule) => (
-              <div key={rule.no} className="rounded-2xl border border-border bg-card p-4">
-                <span className="font-mono text-xs font-bold text-primary">{rule.no}</span>
-                <h3 className="text-xs font-bold text-foreground mt-1.5 mb-1">{rule.title}</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{rule.body}</p>
-              </div>
+              <Card key={rule.no} variant="bordered" padding="sm" className={styles.rule}>
+                <b>{rule.no}</b>
+                <h3>{rule.title}</h3>
+                <p>{rule.body}</p>
+              </Card>
             ))}
           </div>
-
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
-            <div className="flex flex-wrap gap-2">
-              <Link href="/matches" className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90">
-                {t('door_matches')}
-              </Link>
-              <Link href="/leagues" className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition hover:border-primary/40">
-                {t('door_leagues')}
-              </Link>
+          <div className={styles.doors}>
+            <div className={styles.doorRow}>
+              <Link href="/matches" className={styles.chip}>{t('door_matches')}</Link>
+              <Link href="/leagues" className={styles.chip}>{t('door_leagues')}</Link>
             </div>
-            <p className="text-xs text-muted-foreground font-mono">
+            <p className={styles.note}>
               {t('house')} · {t('folio')} · {locale.toUpperCase()}
             </p>
           </div>
         </section>
       </div>
-    </div>
+    </SalonStage>
   );
 }

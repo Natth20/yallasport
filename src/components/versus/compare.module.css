@@ -1,0 +1,520 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.duel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(0.65rem, 2vw, 1.5rem);
+}
+
+.side {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(4.25rem, 12vw, 6.5rem);
+  height: clamp(4.25rem, 12vw, 6.5rem);
+  padding: 0.55rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+}
+
+.crestImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(1rem, 2.4vw, 1.45rem);
+  font-weight: 800;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.name:hover {
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.seat {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.side .record {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.vs {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  background: var(--ys-orange);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0 0 1rem;
+}
+
+.head p,
+.note,
+.meta {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.missing {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--ys-orange-soft);
+  color: var(--foreground);
+  font-size: 0.85rem;
+}
+
+.meters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.meterHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.meterLabel {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.meterA {
+  color: var(--ys-orange);
+}
+
+.meterB {
+  color: var(--ys-green);
+}
+
+.meterMuted {
+  color: var(--muted-foreground);
+}
+
+.track {
+  display: flex;
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+}
+
+.fillA,
+.fillB,
+.fillEmpty,
+.fillEmptySoft {
+  height: 100%;
+}
+
+.fillA {
+  background: var(--ys-orange);
+}
+
+.fillB {
+  background: var(--ys-green);
+}
+
+.fillEmpty {
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+}
+
+.fillEmptySoft {
+  background: color-mix(in srgb, var(--muted-foreground) 18%, transparent);
+}
+
+.facts {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.fact strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.fact a {
+  color: var(--foreground);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fact a:hover {
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 0.3rem 0.75rem;
+  color: var(--foreground);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chip:hover,
+.derby a:hover {
+  border-color: var(--ys-orange);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.meetings,
+.rules {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.meeting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.meetingTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.72rem;
+}
+
+.meetingTop span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  margin: 0.15rem 0;
+  color: var(--ys-orange);
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.club {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.rule b {
+  color: var(--ys-orange);
+  font-size: 0.75rem;
+}
+
+.rule h3 {
+  margin: 0.35rem 0 0.2rem;
+  font-size: 0.85rem;
+}
+
+.rule p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.doors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.doorRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.derby {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.derby h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.derbyRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.derby a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  color: var(--foreground);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.derbyOn {
+  border-color: var(--ys-orange);
+  background: var(--ys-orange);
+  color: #fff;
+}
+
+.derbyOn:hover {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
+.tag {
+  opacity: 0.7;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.pair {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.pairMark {
+  margin: 0;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.well {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.picked {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.picked img,
+.mark {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: contain;
+  flex: none;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.picked strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 13rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+
+.hit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.hit:hover {
+  background: var(--muted);
+}
+
+.hit img,
+.hitMark {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  flex: none;
+}
+
+.hitMark {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.emptyHit {
+  padding: 0.55rem 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fileLink {
+  color: var(--ys-orange);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fileLink:hover {
+  color: var(--ys-orange-hover);
+  -webkit-text-fill-color: var(--ys-orange-hover);
+}
+
+.warn {
+  margin: 0;
+  color: var(--ys-orange);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .duel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 640px) {
+  .facts,
+  .meetings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 720px) {
+  .pair {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 960px) {
+  .rules,
+  .meetings {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
