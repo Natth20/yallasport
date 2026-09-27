@@ -167,6 +167,30 @@
   color: var(--ys-orange-hover);
 }
 
+.metallic {
+  background-image: var(--gradient-metallic-orange);
+  background-size: 180% 180%;
+  background-position: 20% 40%;
+  color: #1a0a04;
+  font-weight: var(--ys-weight-display);
+  border-color: transparent;
+  clip-path: var(--ys-clip-mark);
+  filter: drop-shadow(0 8px 14px rgb(220 38 38 / 0.28));
+  transition: background-position var(--ys-duration-fast) var(--ys-ease), filter var(--ys-duration-fast) var(--ys-ease), transform var(--ys-duration-fast) var(--ys-ease);
+}
+
+.metallic:hover:not(:disabled) {
+  background-image: var(--gradient-primary-hover);
+  background-position: 80% 60%;
+  transform: translateY(-1px);
+}
+
+.metallic:active:not(:disabled) {
+  background-image: var(--gradient-primary-active);
+  transform: translateY(0);
+  filter: none;
+}
+
 /* ==========================================================================
    Icon & Loading Spinner
    ========================================================================== */

@@ -1,7 +1,7 @@
 import React, { forwardRef, type HTMLAttributes, type ReactNode, type ElementType } from 'react';
 import styles from './card.module.css';
 
-export type CardVariant = 'default' | 'elevated' | 'bordered' | 'glass' | 'interactive' | 'accent';
+export type CardVariant = 'default' | 'elevated' | 'bordered' | 'glass' | 'interactive' | 'accent' | 'premium';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;

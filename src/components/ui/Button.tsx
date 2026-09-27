@@ -8,7 +8,8 @@ export type ButtonVariant =
   | 'outline'
   | 'ghost'
   | 'danger'
-  | 'link';
+  | 'link'
+  | 'metallic';
 
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 

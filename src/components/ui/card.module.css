@@ -49,6 +49,26 @@
   box-shadow: var(--ys-shadow-sm);
 }
 
+.premium {
+  background-color: var(--ys-bg-2);
+  border-color: transparent;
+  clip-path: var(--ys-clip-mark);
+  filter: drop-shadow(0 14px 22px rgb(0 0 0 / 0.32));
+}
+
+.premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: var(--gradient-metallic-orange);
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
 /* ==========================================================================
    Paddings
    ========================================================================== */

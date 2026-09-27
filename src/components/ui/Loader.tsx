@@ -1,4 +1,5 @@
 import React, { forwardRef, type HTMLAttributes } from 'react';
+import { MetalMark } from '@/components/brand/MetalMark';
 import styles from './loader.module.css';
 
 export type LoaderVariant = 'spinner' | 'dots' | 'football';
@@ -76,10 +77,7 @@ export const Loader = forwardRef<HTMLDivElement, LoaderProps>(
 
         {variant === 'football' && (
           <div className={loaderClasses}>
-            <div className={styles.footballWrapper}>
-              <div className={styles.footballBall}>⚽</div>
-              <div className={styles.footballShadow} />
-            </div>
+            <MetalMark size={size} />
           </div>
         )}
 

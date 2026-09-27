@@ -108,11 +108,30 @@
 
 /* LIVE Status Badge: High-impact for matches */
 .live {
-  background-color: var(--ys-red);
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
-  letter-spacing: 0.05em;
+  background-image: var(--gradient-metallic-orange);
+  background-size: 180% 180%;
+  color: #1a0a04;
+  border-radius: var(--ys-radius-sharp);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  animation: liveSheen 2.2s var(--ys-ease) infinite;
+}
+
+@keyframes liveSheen {
+  0%, 100% {
+    background-position: 0% 40%;
+    filter: brightness(1);
+  }
+  50% {
+    background-position: 100% 60%;
+    filter: brightness(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live {
+    animation: none;
+  }
 }
 
 /* ==========================================================================

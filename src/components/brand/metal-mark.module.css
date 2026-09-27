@@ -1,0 +1,86 @@
+.plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background-image: var(--gradient-metallic-orange);
+  background-size: 180% 180%;
+  background-position: 20% 40%;
+  clip-path: var(--ys-clip-mark);
+  animation: metalPulse 2.2s var(--ys-ease) infinite;
+}
+
+.letters {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-sans);
+  font-weight: 900;
+  letter-spacing: -0.07em;
+  line-height: 1;
+  color: #1a0a04;
+}
+
+.plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 34%, rgb(255 255 255 / 0.5) 50%, transparent 66%);
+  transform: translateX(-120%);
+  animation: metalSweep 1.8s var(--ys-ease) infinite;
+}
+
+.sm {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.sm .letters {
+  font-size: 0.95rem;
+}
+
+.md {
+  width: 4.25rem;
+  height: 4.25rem;
+}
+
+.md .letters {
+  font-size: 1.65rem;
+}
+
+.lg {
+  width: 7.5rem;
+  height: 7.5rem;
+}
+
+.lg .letters {
+  font-size: 2.85rem;
+}
+
+@keyframes metalPulse {
+  0%,
+  100% {
+    background-position: 12% 40%;
+  }
+
+  50% {
+    background-position: 88% 60%;
+  }
+}
+
+@keyframes metalSweep {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plate,
+  .plate::after {
+    animation: none;
+  }
+
+  .plate::after {
+    opacity: 0.35;
+    transform: none;
+  }
+}

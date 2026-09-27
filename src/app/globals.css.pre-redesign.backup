@@ -107,55 +107,6 @@
   --ys-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
   --ys-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
 
-  /* Metallic brand — light surfaces. Metal gradients stay in both modes. */
-  --gradient-primary: linear-gradient(118deg, #9a3412 0%, #f97316 22%, #fff7ed 38%, #f97316 52%, #dc2626 78%, #7f1d1d 100%);
-  --gradient-primary-hover: linear-gradient(118deg, #c2410c 0%, #fb923c 22%, #ffffff 40%, #fb923c 54%, #ef4444 80%, #991b1b 100%);
-  --gradient-primary-active: linear-gradient(118deg, #7c2d12 0%, #ea580c 36%, #b91c1c 100%);
-  --gradient-metallic-orange: var(--gradient-primary);
-  --gradient-metallic-silver: linear-gradient(118deg, #64748b 0%, #e2e8f0 24%, #ffffff 42%, #f8fafc 50%, #cbd5e1 68%, #94a3b8 100%);
-  --gradient-metallic-silver-hover: linear-gradient(118deg, #475569 0%, #f8fafc 28%, #ffffff 46%, #e2e8f0 70%, #64748b 100%);
-  --gradient-metallic-silver-active: linear-gradient(118deg, #334155 0%, #cbd5e1 100%);
-  --ys-bg-0: #f4f6f8;
-  --ys-bg-1: #ffffff;
-  --ys-bg-2: #f8fafc;
-  --ys-bg-3: #eef2f6;
-  --ys-text: #0f172a;
-  --ys-text-secondary: #334155;
-  --ys-text-muted: #64748b;
-  --ys-divider: #e2e8f0;
-  --ys-green-live: #059669;
-  --ys-font-h1: clamp(1.75rem, 3.5vw, 2.5rem);
-  --ys-font-h2: clamp(1.4rem, 2.5vw, 1.875rem);
-  --ys-font-h3: clamp(1.2rem, 2vw, 1.5rem);
-  --ys-font-h4: 1.25rem;
-  --ys-font-h5: 1.125rem;
-  --ys-font-h6: 1rem;
-  --ys-font-body: 1rem;
-  --ys-font-small: 0.875rem;
-  --ys-weight-display: 800;
-  --ys-weight-title: 700;
-  --ys-weight-body: 400;
-  --ys-weight-ui: 500;
-  --ys-space-1: 0.25rem;
-  --ys-space-2: 0.5rem;
-  --ys-space-3: 0.75rem;
-  --ys-space-4: 1rem;
-  --ys-space-5: 1.5rem;
-  --ys-space-6: 2rem;
-  --ys-space-8: 3rem;
-  --ys-space-10: 4rem;
-  --ys-elev-1: var(--ys-shadow-sm);
-  --ys-elev-2: var(--ys-shadow-md);
-  --ys-elev-3: var(--ys-shadow-lg);
-  --ys-elev-4: 0 16px 32px -16px rgb(15 23 42 / 0.28);
-  --ys-shadow-metallic: 0 10px 24px -12px rgb(220 38 38 / 0.45);
-  --ys-clip-mark: polygon(0.65rem 0, calc(100% - 0.65rem) 0, 100% 0.65rem, 100% calc(100% - 0.65rem), calc(100% - 0.65rem) 100%, 0.65rem 100%, 0 calc(100% - 0.65rem), 0 0.65rem);
-  --ys-radius-sharp: 0.25rem;
-  --ys-radius-ui: 0.5rem;
-  --ys-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ys-duration-fast: 160ms;
-  --ys-duration: 220ms;
-
   color-scheme: light;
 }
 
@@ -204,17 +155,6 @@
   --ys-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
   --ys-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --ys-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-  --ys-bg-0: #070707;
-  --ys-bg-1: #0a0a0a;
-  --ys-bg-2: #121212;
-  --ys-bg-3: #1a1a1a;
-  --ys-text: #f8fafc;
-  --ys-text-secondary: #e2e8f0;
-  --ys-text-muted: #a1a1aa;
-  --ys-divider: #27272a;
-  --ys-green-live: #34d399;
-  --ys-elev-4: 0 18px 36px -14px rgb(0 0 0 / 0.65);
-  --ys-shadow-metallic: 0 12px 28px -12px rgb(220 38 38 / 0.55);
 
   color-scheme: dark;
 }
@@ -388,16 +328,4 @@ img {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
-}
-
-.ys-gradient-primary {
-  background-image: var(--gradient-primary);
-}
-
-.ys-gradient-metallic-orange {
-  background-image: var(--gradient-metallic-orange);
-}
-
-.ys-gradient-metallic-silver {
-  background-image: var(--gradient-metallic-silver);
 }
