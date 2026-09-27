@@ -2,11 +2,11 @@
 
 **النطاق:** 18 صفحة في `src/app/[locale]/admin/**/page.tsx`.  
 **التاريخ:** 27 سبتمبر 2026.  
-**الحالة:** الصفحات الثماني عشرة خضراء بعد إصلاح البيانات. قرار أدوار تعديل المباراة ما زال مؤجلاً أعلاه، ولم يُمس `proxy.ts` ولا `assertEditor` ولا `ADMIN_NAV`.
+**الحالة:** الصفحات الثماني عشرة خضراء بعد إصلاح البيانات. قرار المنتج طُبّق: `EDITOR` يفتح `/admin/matches` و`/admin/matches/[id]` من القائمة ومن `canAccessAdminPath`، بما يطابق `assertEditor()` الموجود أصلاً.
 
-## ملاحظة مؤجلة — بانتظار قرار المنتج
+## قرار منتج — طُبّق
 
-حفظ بيانات مباراة واحدة (`saveMatchMetadata` و`savePredictedLineup` في `src/app/[locale]/admin/matches/[id]/actions.ts`) يسمح في الكود لدور `EDITOR` عبر `assertEditor()`. صفحة `/admin/matches/[id]` ومسار `/admin/matches` في `ADMIN_NAV` و`proxy.ts` مفتوحان فقط لـ `SUPER_ADMIN` و`CONTENT_MANAGER`. لا صفحة أخرى تستدعي الإجراءين، وطلب `POST` إلى رابط المباراة يوقفه الـ proxy قبل التنفيذ. هذا عدم اتساق في قائمة الأدوار، وليس ثغرة نشطة. القرار مؤجل: هل يُسمح للمحرر بتعديل المباريات أم يُضيَّق `assertEditor()` ليطابق الصفحة. لا يُمس `proxy.ts` ولا `assertEditor` ولا `ADMIN_NAV` إلى أن يُحسم.
+`EDITOR` يعدّل صفحة المباراة: الملعب، الحكم، المعلّق، القناة، والتشكيلة المتوقعة. `ADMIN_NAV` لمسار `/admin/matches` صار `SUPER_ADMIN` و`CONTENT_MANAGER` و`EDITOR`. `canAccessAdminPath` يقرأ هذه القائمة، فيسمح الـ proxy بالمسار وبـ `/admin/matches/[id]`. `assertEditor()` لم يُغيَّر. أدوار بقية الصفحات كما كانت. مزامنة المباريات (`triggerSportsSync`) ما زالت لـ `SUPER_ADMIN` و`CONTENT_MANAGER` فقط.
 
 **هوية المكتب:** الصفحات تشترك في `admin/layout.tsx`: شريط جانبي `brand-green`، برتقالي للأفعال، وبطاقات Tailwind (`rounded-[2rem]` / `rounded-[2.5rem]`). هذا مكتب إداري واحد، وليس صالون الصفحات العامة. الاتساق يُقاس على هذا المكتب.
 
@@ -64,7 +64,7 @@
 ## 2. `/admin/matches`
 
 **التصنيف:** 🟢 GOOD  
-**الصلاحية:** `SUPER_ADMIN`، `CONTENT_MANAGER`. الـ proxy. الصفحة بلا فحص دور. إجراء `triggerSportsSync` يقبل نفس الدورين.
+**الصلاحية:** `SUPER_ADMIN`، `CONTENT_MANAGER`، `EDITOR`. الـ proxy عبر `ADMIN_NAV`. الصفحة بلا فحص دور. إجراء `triggerSportsSync` يبقى لـ `SUPER_ADMIN` و`CONTENT_MANAGER` فقط.
 
 | القسم | مصدر البيانات الحالي | حقيقي أم وهمي؟ | الإجراء |
 |---|---|---|---|
@@ -79,14 +79,14 @@
 ## 3. `/admin/matches/[id]`
 
 **التصنيف:** 🟢 GOOD  
-**الصلاحية:** يرث `/admin/matches` في الـ proxy (`SUPER_ADMIN`، `CONTENT_MANAGER`). الصفحة بلا فحص دور. `saveMatchMetadata` و`savePredictedLineup` يقبلان أيضاً `EDITOR`، وهو دور لا يفتح هذه الصفحة من الرابط.
+**الصلاحية:** يرث `/admin/matches` في الـ proxy (`SUPER_ADMIN`، `CONTENT_MANAGER`، `EDITOR`). الصفحة بلا فحص دور. `saveMatchMetadata` و`savePredictedLineup` يقبلان نفس الأدوار الثلاثة عبر `assertEditor()`.
 
 | القسم | مصدر البيانات الحالي | حقيقي أم وهمي؟ | الإجراء |
 |---|---|---|---|
 | المباراة | `prisma.match.findUnique` مع الملعب والحكم والمعلق والقنوات | ✅ 404 إن غابت | لا شيء |
 | التشكيلة المتوقعة | `lineups` حيث `isPredicted` و`source: EDITORIAL` | ✅ ليست تشكيلة رسمية مخترعة | لا شيء |
 | مثال `4-3-3` | `placeholder` لحقل الخطة | ✅ لا يُعرض كخطة محفوظة | لا شيء |
-| حفظ البيانات | إجراء السيرفر أعلاه | ✅ مع فرق الدور المذكور | بعد الموافقة: طابق أدوار الإجراء مع الصفحة |
+| حفظ البيانات | إجراء السيرفر أعلاه | ✅ الأدوار مطابقة لفتح الصفحة | لا شيء |
 
 ---
 

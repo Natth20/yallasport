@@ -15,7 +15,7 @@ export const ADMIN_NAV: Array<{ href: string; roles: StaffRole[]; ar: string; en
   { href: '/admin/news/calendar', roles: ['SUPER_ADMIN', 'EDITOR', 'NEWS_EDITOR'], ar: 'التقويم التحريري', en: 'Editorial calendar' },
   { href: '/admin/comments', roles: ['SUPER_ADMIN', 'MODERATOR'], ar: 'إدارة التعليقات', en: 'Manage comments' },
   { href: '/admin/inbox', roles: ['SUPER_ADMIN', 'MODERATOR', 'EDITOR'], ar: 'صندوق المكتب', en: 'Desk inbox' },
-  { href: '/admin/matches', roles: ['SUPER_ADMIN', 'CONTENT_MANAGER'], ar: 'إدارة المباريات', en: 'Manage matches' },
+  { href: '/admin/matches', roles: ['SUPER_ADMIN', 'CONTENT_MANAGER', 'EDITOR'], ar: 'إدارة المباريات', en: 'Manage matches' },
   { href: '/admin/leagues', roles: ['SUPER_ADMIN', 'CONTENT_MANAGER'], ar: 'إدارة البطولات', en: 'Manage leagues' },
   { href: '/admin/teams', roles: ['SUPER_ADMIN', 'CONTENT_MANAGER'], ar: 'إدارة الأندية', en: 'Manage teams' },
   { href: '/admin/players', roles: ['SUPER_ADMIN', 'CONTENT_MANAGER'], ar: 'إدارة اللاعبين', en: 'Manage players' },
