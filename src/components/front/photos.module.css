@@ -1,0 +1,80 @@
+.tone {
+  background: var(--ys-bg-2);
+  --card: var(--ys-bg-1);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--ys-space-3);
+}
+
+.card {
+  display: grid;
+  gap: var(--ys-space-2);
+  color: inherit;
+  text-decoration: none;
+}
+
+.card:hover {
+  color: inherit;
+  -webkit-text-fill-color: currentcolor;
+}
+
+.frame {
+  position: relative;
+  border-radius: var(--ys-radius-ui);
+  overflow: hidden;
+  background: var(--ys-bg-3);
+  box-shadow: var(--ys-elev-2);
+}
+
+.frame img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.cat,
+.src {
+  position: absolute;
+  inset-block-start: var(--ys-space-2);
+  max-width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.cat {
+  inset-inline-start: var(--ys-space-2);
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--ys-radius-sharp);
+  background: var(--ys-bg-1);
+  color: var(--ys-text);
+  font-size: var(--ys-font-small);
+}
+
+.src {
+  inset-inline-end: var(--ys-space-2);
+  padding: 0.08rem 0.32rem;
+  border-radius: var(--ys-radius-sharp);
+  background-image: var(--gradient-metallic-silver);
+  color: #1a0a04;
+  -webkit-text-fill-color: #1a0a04;
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+.card strong {
+  font-size: var(--ys-font-h6);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ys-text);
+}
+
+.card p {
+  margin: 0;
+}

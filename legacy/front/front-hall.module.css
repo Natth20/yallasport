@@ -1,0 +1,1896 @@
+/* ==========================================================================
+   FrontPage — CSS Module (front-hall.module.css)
+   Scoped styles for the homepage. Zero !important, clean selectors.
+   ========================================================================== */
+
+/* ---- Root container ---- */
+.root {
+  --fp-ink: #060910;
+  --fp-line: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --fp-card: color-mix(in srgb, var(--card) 97%, transparent);
+  --fp-glow: color-mix(in srgb, var(--ys-orange) 42%, #ff8a3d);
+  isolation: isolate;
+  background:
+    radial-gradient(90% 42% at 50% -8%, color-mix(in srgb, var(--ys-orange) 7%, transparent), transparent 58%),
+    var(--background);
+  color: var(--foreground);
+  padding-block: 0 6rem;
+}
+
+.inner {
+  width: min(1260px, calc(100% - 2rem));
+  margin-inline: auto;
+  display: grid;
+  gap: 2.2rem;
+  margin-top: 1.4rem;
+}
+
+.iconFoyer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.4rem, 1fr));
+  gap: 0.7rem;
+}
+
+.iconDoor {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 1rem 0.7rem 0.95rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: var(--card);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.iconDoor:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--ys-orange) 42%, var(--border));
+  box-shadow: 0 16px 32px -22px color-mix(in srgb, var(--ys-orange) 55%, transparent);
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.iconMark {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--ys-orange) 16%, var(--muted));
+  color: var(--ys-orange);
+}
+
+.iconDoor:nth-child(2) .iconMark {
+  background: color-mix(in srgb, #38bdf8 16%, var(--muted));
+  color: #38bdf8;
+}
+
+.iconDoor:nth-child(3) .iconMark {
+  background: color-mix(in srgb, var(--ys-green) 18%, var(--muted));
+  color: var(--ys-green);
+}
+
+.iconDoor:nth-child(4) .iconMark {
+  background: color-mix(in srgb, #f43f5e 16%, var(--muted));
+  color: #fb7185;
+}
+
+.iconDoor:nth-child(5) .iconMark {
+  background: color-mix(in srgb, #a855f7 16%, var(--muted));
+  color: #c084fc;
+}
+
+.iconDoor:nth-child(6) .iconMark {
+  background: color-mix(in srgb, var(--ys-orange) 20%, var(--muted));
+  color: var(--ys-orange);
+}
+
+.iconDoor:nth-child(7) .iconMark {
+  background: color-mix(in srgb, #22d3ee 16%, var(--muted));
+  color: #22d3ee;
+}
+
+.iconDoor strong {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.iconDoor em {
+  font-style: normal;
+  font-size: 0.64rem;
+  color: var(--muted-foreground);
+}
+
+.tagline {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--ys-orange) 80%, #fff);
+}
+
+.cinema {
+  display: grid;
+  gap: 1.4rem;
+  align-items: end;
+}
+
+@media (min-width: 1024px) {
+  .cinema {
+    grid-template-columns: minmax(0, 1.4fr) minmax(17rem, 22rem);
+    gap: 2rem;
+  }
+}
+
+.cinemaMain {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 46rem;
+}
+
+.cinemaRail {
+  padding: 0.85rem;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, #0b1220 62%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.cinemaRail p {
+  margin: 0 0 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.cinemaRail ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cinemaRail a {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  text-decoration: none;
+  color: #fffdf8;
+}
+
+.cinemaRail img,
+.cinemaRail a>span {
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 0.7rem;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cinemaRail a>span {
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+}
+
+.cinemaRail strong {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.arena {
+  display: grid;
+  gap: 1.6rem;
+}
+
+.arenaBlock {
+  display: grid;
+  gap: 1rem;
+}
+
+.arenaSplit {
+  display: grid;
+  gap: 1.2rem;
+}
+
+@media (min-width: 980px) {
+  .arenaSplit {
+    grid-template-columns: 1.2fr 0.9fr;
+    align-items: start;
+  }
+}
+
+.scoreGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
+}
+
+.score {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.05rem 0.95rem;
+  border-radius: 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.score:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+  box-shadow: 0 18px 34px -22px color-mix(in srgb, var(--foreground) 55%, transparent);
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.scoreLive {
+  border-color: color-mix(in srgb, var(--ys-green) 45%, var(--border));
+  box-shadow: inset 3px 0 0 var(--ys-green);
+}
+
+.scoreComp {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.scoreComp em {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-style: normal;
+  color: var(--ys-orange);
+}
+
+.scoreLive .scoreComp em {
+  color: var(--ys-green);
+}
+
+.scoreDuel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.scoreDuel span {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.scoreDuel strong {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.scoreDuel b {
+  font-size: 1.45rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.scoreDuel b i {
+  font-style: normal;
+  color: var(--muted-foreground);
+}
+
+.scoreCta {
+  justify-self: center;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: #111;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.kickGrid {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+}
+
+.kick {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 0.8rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+}
+
+.kick:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.kickComp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.kickDuel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.kickDuel b {
+  font-size: 1.05rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+}
+
+.kick em {
+  font-style: normal;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+
+.newsRail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.newsRail a {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.45rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+}
+
+.newsRail a:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 36%, var(--border));
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.newsRail img,
+.newsFallback {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 0.8rem;
+  object-fit: cover;
+  background: var(--muted);
+}
+
+.newsFallback {
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: var(--ys-orange);
+}
+
+.newsRail span {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.newsRail em,
+.newsRail b {
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.newsRail b {
+  color: var(--muted-foreground);
+}
+
+.newsRail strong {
+  font-size: 0.84rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.leagueStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.leagueChip {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 0.85rem 0.5rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+}
+
+.leagueChip:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.leagueChip span {
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+/* ==========================================================================
+   HERO — Cinematic Stage
+   ========================================================================== */
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  background: var(--fp-ink);
+  color: #fbfaf7;
+}
+
+.stageMedia,
+.stageMedia img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stageMedia img {
+  object-fit: cover;
+  opacity: 0.5;
+  transform: scale(1.06);
+  filter: saturate(1.05);
+}
+
+.stageMedia {
+  background:
+    radial-gradient(60% 55% at 82% 12%, rgba(249, 115, 22, 0.22), transparent 60%),
+    radial-gradient(65% 60% at 8% 96%, rgba(22, 101, 52, 0.32), transparent 62%),
+    linear-gradient(180deg, #060b16 0%, #04070e 100%);
+}
+
+.stageMedia::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(78deg, rgba(4, 7, 14, 0.94) 0%, rgba(4, 7, 14, 0.72) 38%, rgba(4, 7, 14, 0.18) 76%),
+    linear-gradient(to top, rgba(4, 7, 14, 0.9) 0%, transparent 42%);
+}
+
+.aurora {
+  position: absolute;
+  z-index: 1;
+  width: 36rem;
+  height: 36rem;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.auroraA {
+  composes: aurora;
+  top: -14rem;
+  inset-inline-end: -10rem;
+  background: radial-gradient(circle, var(--fp-glow), transparent 68%);
+  animation: driftA 18s ease-in-out infinite alternate;
+}
+
+.auroraB {
+  composes: aurora;
+  bottom: -16rem;
+  inset-inline-start: -8rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--ys-green) 70%, #2ee06a), transparent 68%);
+  animation: driftB 22s ease-in-out infinite alternate;
+}
+
+.pitch {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.12;
+  pointer-events: none;
+  background-image:
+    linear-gradient(color-mix(in srgb, #ffffff 40%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, #ffffff 40%, transparent) 1px, transparent 1px);
+  background-size: 3.4rem 3.4rem;
+  mask-image: radial-gradient(80% 80% at 30% 40%, #000 20%, transparent 75%);
+}
+
+@keyframes driftA {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(-4rem, 3rem, 0) scale(1.12);
+  }
+}
+
+@keyframes driftB {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(3rem, -3rem, 0) scale(1.1);
+  }
+}
+
+.stageShell {
+  position: relative;
+  z-index: 3;
+  width: min(1260px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding-block: 1rem 2.4rem;
+}
+
+/* ---- Live Ticker ---- */
+.ticker {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-block: 1.1rem 2rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(14px);
+}
+
+.tickerTag {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 0.95rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: #0b1220;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tickerRail {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tickerRail::-webkit-scrollbar {
+  display: none;
+}
+
+.tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-decoration: none;
+  color: rgba(255, 253, 248, 0.86);
+  font-size: 0.78rem;
+  transition: background-color 160ms ease;
+}
+
+.tick:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tick b {
+  font-weight: 600;
+}
+
+.tick i {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: #fff;
+}
+
+.tick em {
+  font-style: normal;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: rgba(255, 253, 248, 0.45);
+}
+
+.tickLive i {
+  color: #4ade80;
+}
+
+.tickLive em {
+  color: #4ade80;
+}
+
+/* ---- Hero Body ---- */
+.stageBody {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+  padding-block: 1.5rem 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .stageBody {
+    grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 24rem);
+    gap: 3rem;
+  }
+}
+
+.stageCopy {
+  display: grid;
+  gap: 1.15rem;
+  max-width: 44rem;
+}
+
+.stageBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stageBrand span {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.stageMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stageMeta em {
+  font-style: normal;
+  font-weight: 800;
+  color: #0b1220;
+  background: #fdba74;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.stageMeta b {
+  font-weight: 700;
+  color: rgba(255, 253, 248, 0.6);
+}
+
+.stageCopy h1 {
+  position: relative;
+  margin: 0;
+  padding-top: 0.5rem;
+  font-size: clamp(2.2rem, 5vw, 4.3rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  font-weight: 900;
+  color: #fffdf8;
+}
+
+.stageCopy h1::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  width: 3.2rem;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ys-orange), transparent);
+}
+
+.stageCopy h1 a {
+  color: inherit;
+  text-decoration: none;
+  background-image: linear-gradient(90deg, var(--ys-orange), var(--ys-orange));
+  background-size: 0% 2px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 260ms ease;
+}
+
+.stageCopy h1 a:hover {
+  background-size: 100% 2px;
+}
+
+.stageLede {
+  margin: 0;
+  max-width: 36rem;
+  font-size: 1.04rem;
+  line-height: 1.65;
+  color: rgba(255, 253, 248, 0.74);
+}
+
+/* ---- Pulse Chips ---- */
+.pulseChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+}
+
+.pulseChips li {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 4.8rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.chipLive {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.pulseChips strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chipLive strong {
+  color: #4ade80;
+}
+
+.pulseChips span {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 253, 248, 0.55);
+}
+
+/* ---- Hero CTA ---- */
+.heroCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--fp-line);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  color: var(--foreground);
+  padding: 0.68rem 1.15rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+.stage .btn {
+  border-color: rgba(255, 253, 248, 0.2);
+  background: rgba(255, 253, 248, 0.07);
+  color: #fffdf8;
+}
+
+.stage .btn:hover {
+  background: rgba(255, 253, 248, 0.14);
+}
+
+.btnSolid {
+  composes: btn;
+  background: linear-gradient(135deg, #ff8a3d, var(--ys-orange));
+  border-color: transparent;
+  color: #0b1220;
+  box-shadow: 0 10px 30px -12px rgba(249, 115, 22, 0.8);
+}
+
+.btnSolid:hover {
+  box-shadow: 0 16px 36px -12px rgba(249, 115, 22, 0.9);
+}
+
+/* ==========================================================================
+   SPOTLIGHT — Featured Match Card
+   ========================================================================== */
+
+.stageSide {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.spot {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.4rem;
+  background: rgba(8, 12, 22, 0.55);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--ys-elev-2, 0 18px 40px -24px rgba(0, 0, 0, 0.7));
+  color: #fffdf8;
+  text-decoration: none;
+  transition: transform 200ms ease, border-color 200ms ease;
+}
+
+.spot:hover {
+  transform: translateY(-2px);
+  border-color: rgba(253, 186, 116, 0.42);
+}
+
+.spotLive {
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.spotTop {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 253, 248, 0.6);
+}
+
+.spotTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-inline-start: auto;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  font-style: normal;
+  font-weight: 800;
+  color: #fdba74;
+}
+
+.spotLive .spotTag {
+  background: rgba(34, 197, 94, 0.16);
+  color: #4ade80;
+}
+
+.liveDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+  animation: pulse 1.6s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0.6rem rgba(74, 222, 128, 0);
+  }
+}
+
+.spotDuel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spotTeam {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  text-align: center;
+  min-width: 0;
+}
+
+.spotTeam strong {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.spotTeam :is(img, .ys-portrait) {
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
+}
+
+.spotMid {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  padding-inline: 0.4rem;
+}
+
+.spotScore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 2rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.spotScore i {
+  font-style: normal;
+  color: rgba(255, 253, 248, 0.4);
+}
+
+.spotVs {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: rgba(255, 253, 248, 0.5);
+}
+
+.spotTime {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: #fdba74;
+}
+
+.spotCta {
+  justify-self: center;
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #fffdf8;
+  transition: background-color 160ms ease;
+}
+
+.spot:hover .spotCta {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stageDock {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.stageDock .match {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(9, 14, 26, 0.6);
+  color: #fffdf8;
+  backdrop-filter: blur(16px);
+}
+
+.stageDock .matchComp,
+.stageDock .match em {
+  color: rgba(255, 253, 248, 0.6);
+}
+
+.stageDock .matchDuel i {
+  color: #fdba74;
+}
+
+/* ==========================================================================
+   CHAPTER SECTIONS
+   ========================================================================== */
+
+.chapter {
+  display: grid;
+  gap: 1.4rem;
+  padding: 1.35rem 1.2rem 1.45rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--ys-orange) 8%, transparent), transparent 46%),
+    var(--card);
+}
+
+/* ---- Section Mark (header) ---- */
+.mark {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.4rem 1.1rem;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--fp-line);
+}
+
+.mark>span {
+  grid-row: span 2;
+  font-family: var(--font-sans);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1.4px color-mix(in srgb, var(--ys-orange) 75%, transparent);
+}
+
+.mark h2 {
+  margin: 0;
+  align-self: end;
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.mark p {
+  margin: 0;
+  grid-column: 2;
+  align-self: start;
+  max-width: 40rem;
+  font-size: 0.88rem;
+  color: var(--muted-foreground);
+}
+
+.markCta {
+  grid-row: span 2;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--fp-line);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--foreground);
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.markCta:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+/* ---- Shared card hover transition ---- */
+.match,
+.stories a,
+.table,
+.doors a,
+.scorers a,
+.scorers div,
+.people a,
+.list a,
+.crestGrid a,
+.video,
+.photo {
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+
+.match:hover,
+.stories a:hover,
+.table:hover,
+.doors a:hover,
+.scorers a:hover,
+.people a:hover,
+.list a:hover,
+.crestGrid a:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+  box-shadow: 0 18px 34px -22px color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.video:hover img,
+.photo:hover img {
+  transform: scale(1.03);
+}
+
+/* ==========================================================================
+   MATCH GRID — BoardChapter
+   ========================================================================== */
+
+.matchGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+
+.match {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--fp-card);
+  text-decoration: none;
+  color: inherit;
+}
+
+.matchLive {
+  border-color: color-mix(in srgb, var(--ys-green) 45%, var(--border));
+  box-shadow: inset 3px 0 0 var(--ys-green);
+}
+
+.matchComp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.matchDuel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.matchDuel span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.matchDuel span:last-of-type {
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
+.matchDuel strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+}
+
+.matchDuel i {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.match em {
+  font-style: normal;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+/* ==========================================================================
+   STORIES — StoriesChapter
+   ========================================================================== */
+
+.stories {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 860px) {
+  .stories li:first-child {
+    grid-column: span 2;
+  }
+}
+
+.stories a {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.35rem;
+  background: var(--fp-card);
+  text-decoration: none;
+  color: inherit;
+}
+
+.stories img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: var(--muted);
+}
+
+.stories span {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+  padding: 1rem;
+}
+
+.stories em,
+.stories b {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.stories b {
+  color: var(--muted-foreground);
+}
+
+.stories strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.stories p {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+/* ==========================================================================
+   TABLES — TablesChapter
+   ========================================================================== */
+
+.tables {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+}
+
+.table {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.35rem;
+  background: var(--fp-card);
+}
+
+.tableHead {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+  text-decoration: none;
+  color: inherit;
+  font-weight: 800;
+}
+
+.tableHead em {
+  margin-inline-start: auto;
+  font-style: normal;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.table ol {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+}
+
+.table li a {
+  display: grid;
+  grid-template-columns: 1.5rem 1.4rem minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 1.1rem;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.82rem;
+}
+
+.table li a:hover {
+  background: color-mix(in srgb, var(--ys-orange) 8%, transparent);
+}
+
+.table li a span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table li a b {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  color: var(--muted-foreground);
+}
+
+.table li a i {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.table li em {
+  display: block;
+  padding-block: 0 0.5rem;
+  padding-inline: 3.9rem 1.1rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.01em;
+  color: var(--muted-foreground);
+}
+
+.zoneCl,
+.zoneDirect {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ys-green) 80%, transparent);
+}
+
+.zoneEl,
+.zonePlayoff {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ys-orange) 70%, transparent);
+}
+
+.zoneRel,
+.zoneOut {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--destructive, #b42318) 70%, transparent);
+}
+
+/* ==========================================================================
+   SCORERS / PEOPLE / LISTS — ScorersChapter, SquadsChapter, TransfersChapter, BroadcastChapter
+   ========================================================================== */
+
+.chapterH3 {
+  margin: 0 0 0.7rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.split {
+  display: grid;
+  gap: 1.4rem;
+}
+
+@media (min-width: 860px) {
+  .split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.scorers,
+.people,
+.list,
+.crestGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.scorers a,
+.scorers div,
+.people a,
+.list a,
+.crestGrid a {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  background: var(--fp-card);
+  text-decoration: none;
+  color: inherit;
+}
+
+.list a {
+  flex-wrap: wrap;
+}
+
+.scorers img,
+.people img,
+.list img {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--muted);
+}
+
+.list em {
+  flex: 1 1 100%;
+  padding-inline-start: 3.4rem;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+.scorers em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--ys-orange) 80%, transparent);
+}
+
+.scorers strong,
+.people strong,
+.list strong {
+  font-weight: 700;
+}
+
+.scorers b {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.crestRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.crestGrid {
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+
+.crestGrid span,
+.people strong {
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   VIDEO / PHOTOS — VideoChapter, PhotosChapter
+   ========================================================================== */
+
+.videoRail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(15.5rem, 18rem);
+  gap: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scrollbar-width: thin;
+}
+
+.photos {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.video,
+.photo {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.video::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 2.6rem);
+  inset-inline-start: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin-inline-start: -1.2rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 92%, #111);
+  box-shadow: 0 8px 18px -8px #000;
+  clip-path: polygon(38% 30%, 38% 70%, 70% 50%);
+}
+
+.video img,
+.photo img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 1.1rem;
+  background: var(--card);
+}
+
+.photo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.1rem;
+}
+
+.photo span {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 1.5rem 0.9rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+}
+
+.video span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.video strong {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.video em {
+  font-style: normal;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+/* ==========================================================================
+   PREDICTIONS — PredictChapter
+   ========================================================================== */
+
+.pulseInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pulseInline li {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 7rem;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--fp-card);
+}
+
+.pulseInline strong {
+  font-size: 1.7rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.pulseInline span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* ==========================================================================
+   DOORS — DoorsChapter
+   ========================================================================== */
+
+.doors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.6rem;
+}
+
+.doors a {
+  border: 1px solid var(--border);
+  border-radius: 1.1rem;
+  background: var(--fp-card);
+  padding: 0.95rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   SKELETONS
+   ========================================================================== */
+
+.skel {
+  background: color-mix(in srgb, var(--muted-foreground) 10%, var(--card));
+  border-radius: 1.35rem;
+}
+
+.skelHero {
+  composes: skel;
+  min-height: 60vh;
+}
+
+.skelPulse {
+  composes: skel;
+  min-height: 4.2rem;
+}
+
+.skelChapter {
+  composes: skel;
+  min-height: 8rem;
+}
+
+/* ==========================================================================
+   QUIET HERO (FrontHero fallback)
+   ========================================================================== */
+
+.heroQuiet {
+  padding-top: 2rem;
+}
+
+.heroCopy {
+  display: grid;
+  gap: 1rem;
+}
+
+.kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.heroRail {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+}
+
+/* ---- Moment (FrontMoment) ---- */
+.moment {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  text-decoration: none;
+}
+
+.moment img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transition: transform 400ms ease;
+}
+
+.moment:hover img {
+  transform: scale(1.03);
+}
+
+.momentVeil {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: grid;
+  gap: 0.35rem;
+  padding: 3rem 1.2rem 1.2rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  color: #fff;
+}
+
+.momentVeil em {
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fdba74;
+}
+
+.momentVeil strong {
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.momentVeil b {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   RESPONSIVE — Mobile
+   ========================================================================== */
+
+@media (max-width: 720px) {
+  .mark {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .markCta {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .inner {
+    margin-top: 3rem;
+    gap: 3.4rem;
+  }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY — Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .aurora,
+  .liveDot,
+  .stageMedia img {
+    animation: none;
+  }
+}
+
+html[data-data-saver='on'] .aurora,
+html[data-reduced-motion='on'] .aurora,
+html[data-data-saver='on'] .liveDot,
+html[data-reduced-motion='on'] .liveDot {
+  animation: none;
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .stage {
+  background:
+    radial-gradient(90% 42% at 50% -8%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 58%),
+    var(--background);
+  color: var(--foreground);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .stageMedia {
+  background:
+    radial-gradient(60% 55% at 82% 12%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--background), var(--card));
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .stageMedia img {
+  opacity: 0.28;
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .stageMedia::after {
+  background:
+    linear-gradient(78deg, color-mix(in srgb, var(--background) 88%, transparent) 0%, color-mix(in srgb, var(--background) 42%, transparent) 48%, transparent 80%),
+    linear-gradient(to top, var(--background) 0%, transparent 42%);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .ticker {
+  border-color: color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .tick,
+:global(html:not(.dark):not([data-theme="dark"])) .tick i,
+:global(html:not(.dark):not([data-theme="dark"])) .stageCopy h1,
+:global(html:not(.dark):not([data-theme="dark"])) .spot,
+:global(html:not(.dark):not([data-theme="dark"])) .spotCta,
+:global(html:not(.dark):not([data-theme="dark"])) .stageDock .match {
+  color: var(--foreground);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .tick em,
+:global(html:not(.dark):not([data-theme="dark"])) .stageMeta b,
+:global(html:not(.dark):not([data-theme="dark"])) .stageLede,
+:global(html:not(.dark):not([data-theme="dark"])) .pulseChips span,
+:global(html:not(.dark):not([data-theme="dark"])) .spotTop,
+:global(html:not(.dark):not([data-theme="dark"])) .stageDock .matchComp,
+:global(html:not(.dark):not([data-theme="dark"])) .stageDock .match em {
+  color: var(--muted-foreground);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .tick:hover {
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .pulseChips li,
+:global(html:not(.dark):not([data-theme="dark"])) .spot,
+:global(html:not(.dark):not([data-theme="dark"])) .stageDock .match {
+  border-color: color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: var(--card);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .stage .btn {
+  border-color: var(--border);
+  background: var(--card);
+  color: var(--foreground);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .stage .btn:hover {
+  background: color-mix(in srgb, var(--ys-orange) 10%, var(--card));
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .spotTime,
+:global(html:not(.dark):not([data-theme="dark"])) .stageDock .matchDuel i {
+  color: var(--ys-orange);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .cinemaRail {
+  border-color: color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: var(--card);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .cinemaRail p {
+  color: var(--ys-orange);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .cinemaRail a {
+  color: var(--foreground);
+}
+
+:global(html:not(.dark):not([data-theme="dark"])) .tagline {
+  color: var(--ys-orange);
+}

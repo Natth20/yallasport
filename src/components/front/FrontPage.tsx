@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { FrontStage } from './FrontStage';
 import { FrontSkeleton } from './FrontMark';
-import { BoardChapter } from './chapters/BoardChapter';
+import { FrontArena } from './FrontArena';
 import { StoriesChapter } from './chapters/StoriesChapter';
 import { TablesChapter } from './chapters/TablesChapter';
 import { ScorersChapter } from './chapters/ScorersChapter';
@@ -13,7 +13,8 @@ import { BroadcastChapter } from './chapters/BroadcastChapter';
 import { PredictChapter } from './chapters/PredictChapter';
 import { PersonalBand } from './chapters/PersonalBand';
 import { DoorsChapter } from './chapters/DoorsChapter';
-import styles from './front-hall.module.css';
+import { FrontFoyer } from './FrontFoyer';
+import styles from './front-page.module.css';
 
 export function FrontPage() {
   return (
@@ -21,44 +22,45 @@ export function FrontPage() {
       <Suspense fallback={<FrontSkeleton kind="hero" />}>
         <FrontStage />
       </Suspense>
-      <div className={styles.inner}>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <BoardChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <StoriesChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <TablesChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <ScorersChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <SquadsChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <TransfersChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <VideoChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <PhotosChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <BroadcastChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <PredictChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <PersonalBand />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <DoorsChapter />
-        </Suspense>
-      </div>
+      <Suspense fallback={<FrontSkeleton kind="pulse" />}>
+        <FrontFoyer />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <FrontArena />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <StoriesChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <TablesChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <ScorersChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <SquadsChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <TransfersChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <VideoChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <PhotosChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <BroadcastChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <PredictChapter />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <PersonalBand />
+      </Suspense>
+      <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+        <DoorsChapter />
+      </Suspense>
     </div>
   );
 }

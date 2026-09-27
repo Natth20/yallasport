@@ -1,0 +1,67 @@
+.mark {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--ys-space-2) var(--ys-space-4);
+  align-items: end;
+}
+
+.titles {
+  display: grid;
+  gap: var(--ys-space-1);
+  min-width: 0;
+}
+
+.titles em {
+  font-style: normal;
+  font-size: var(--ys-font-small);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--ys-text-muted);
+}
+
+.titles h2 {
+  margin: 0;
+  font-size: var(--ys-font-h2);
+  font-weight: var(--ys-weight-title);
+  line-height: 1.2;
+  color: var(--ys-text);
+}
+
+.mark p {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--ys-font-small);
+  font-weight: 400;
+  color: var(--ys-text-muted);
+}
+
+.cta {
+  justify-self: end;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--ys-divider);
+  border-radius: var(--ys-radius-ui);
+  background: var(--ys-bg-1);
+  box-shadow: var(--ys-elev-1);
+  font-size: var(--ys-font-small);
+  font-weight: 500;
+  color: var(--ys-text-secondary);
+  text-decoration: none;
+  transition: border-color var(--ys-duration-fast) var(--ys-ease), box-shadow var(--ys-duration-fast) var(--ys-ease);
+}
+
+.cta:hover {
+  color: var(--ys-text);
+  -webkit-text-fill-color: currentcolor;
+  border-color: color-mix(in srgb, var(--ys-text-muted) 50%, var(--ys-divider));
+  box-shadow: var(--ys-elev-2);
+}
+
+@media (max-width: 640px) {
+  .mark {
+    grid-template-columns: 1fr;
+  }
+
+  .cta {
+    justify-self: start;
+  }
+}

@@ -1,0 +1,121 @@
+.tone {
+  background: var(--ys-bg-0);
+  --card: var(--ys-bg-1);
+}
+
+.h3 {
+  margin: var(--ys-space-2) 0 var(--ys-space-3);
+  font-size: var(--ys-font-h5);
+  font-weight: 700;
+  color: var(--ys-text);
+}
+
+.crests {
+  display: flex;
+  gap: var(--ys-space-3);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  margin: 0;
+  padding: 0 0 var(--ys-space-2);
+  list-style: none;
+}
+
+.crests a {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: center;
+  gap: var(--ys-space-2);
+  width: 5.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.crests a:hover,
+.grid a:hover,
+.people a:hover,
+.actions a:hover {
+  color: inherit;
+  -webkit-text-fill-color: currentcolor;
+}
+
+.crests span,
+.grid span,
+.people strong {
+  font-size: var(--ys-font-small);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ys-text);
+}
+
+.grid,
+.people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: var(--ys-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grid a,
+.people a {
+  display: flex;
+  align-items: center;
+  gap: var(--ys-space-3);
+  padding: var(--ys-space-3);
+  border: 1px solid var(--ys-divider);
+  border-radius: var(--ys-radius-ui);
+  background: var(--card);
+  box-shadow: var(--ys-elev-1);
+  color: inherit;
+  text-decoration: none;
+}
+
+.grid a:hover,
+.people a:hover {
+  box-shadow: var(--ys-elev-2);
+}
+
+.people img,
+.people span {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--ys-bg-3);
+}
+
+.people a > span {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--ys-text-secondary);
+}
+
+.people strong {
+  text-align: start;
+  font-size: var(--ys-font-h6);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ys-space-2);
+}
+
+.actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--ys-divider);
+  border-radius: var(--ys-radius-ui);
+  background: var(--card);
+  box-shadow: var(--ys-elev-1);
+  font-size: var(--ys-font-small);
+  font-weight: 500;
+  color: var(--ys-text);
+  text-decoration: none;
+}

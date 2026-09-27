@@ -1,0 +1,30 @@
+.tone {
+  background: var(--ys-bg-2);
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ys-space-2);
+}
+
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--ys-divider);
+  border-radius: var(--ys-radius-ui);
+  background: var(--ys-bg-1);
+  box-shadow: var(--ys-elev-1);
+  font-size: var(--ys-font-small);
+  font-weight: 500;
+  color: var(--ys-text-secondary);
+  text-decoration: none;
+}
+
+.nav a:hover {
+  color: var(--ys-text);
+  -webkit-text-fill-color: currentcolor;
+  box-shadow: var(--ys-elev-2);
+}

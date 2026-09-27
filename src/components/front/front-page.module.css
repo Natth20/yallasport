@@ -1,0 +1,23 @@
+.root {
+  background: var(--ys-bg-0);
+  color: var(--ys-text);
+}
+
+.skelPulse,
+.skelChapter {
+  width: min(72rem, calc(100% - var(--ys-space-6)));
+  margin-inline: auto;
+  border-radius: var(--ys-radius-ui);
+  background: var(--ys-bg-2);
+  box-shadow: var(--ys-elev-1);
+}
+
+.skelPulse {
+  height: 5.5rem;
+  margin-block: var(--ys-space-4);
+}
+
+.skelChapter {
+  height: 12rem;
+  margin-block: var(--ys-space-5);
+}

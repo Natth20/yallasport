@@ -1,7 +1,7 @@
-import React from 'react';
 import { BrandBuildScreen } from '@/components/brand/BrandBuildScreen';
-import { HouseMark } from '@/components/house/HouseMark';
-import styles from './front-hall.module.css';
+import { Link } from '@/i18n/navigation';
+import styles from './front-mark.module.css';
+import page from './front-page.module.css';
 
 export function FrontMark({
   num,
@@ -16,11 +16,24 @@ export function FrontMark({
   href?: string;
   cta?: string;
 }) {
-  return <HouseMark num={num} title={title} note={note} href={href} cta={cta} />;
+  return (
+    <header className={styles.mark}>
+      <div className={styles.titles}>
+        <em>{num}</em>
+        <h2>{title}</h2>
+      </div>
+      {note ? <p>{note}</p> : null}
+      {href && cta ? (
+        <Link href={href as '/'} className={styles.cta}>
+          {cta}
+        </Link>
+      ) : null}
+    </header>
+  );
 }
 
 export function FrontSkeleton({ kind }: { kind: 'hero' | 'pulse' | 'chapter' }) {
   if (kind === 'hero') return <BrandBuildScreen compact />;
-  if (kind === 'pulse') return <div className={styles.skelPulse} aria-hidden />;
-  return <div className={styles.skelChapter} aria-hidden />;
+  if (kind === 'pulse') return <div className={page.skelPulse} aria-hidden />;
+  return <div className={page.skelChapter} aria-hidden />;
 }
