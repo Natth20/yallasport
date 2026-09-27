@@ -13,11 +13,12 @@ export default async function AdminPage() {
   const endOfDay = new Date(now);
   endOfDay.setHours(23, 59, 59, 999);
 
-  const [newsCount, todayMatches, pendingNews, upcomingMatches, unreadDesk] = await Promise.all([
+  const [newsCount, todayMatches, pendingCount, pendingNews, upcomingMatches, unreadDesk] = await Promise.all([
     prisma.news.count(),
     prisma.match.count({
       where: { kickoffAt: { gte: startOfDay, lte: endOfDay } },
     }),
+    prisma.news.count({ where: { status: 'DRAFT' } }),
     prisma.news.findMany({
       where: { status: 'DRAFT' },
       orderBy: { updatedAt: 'desc' },
@@ -51,7 +52,7 @@ export default async function AdminPage() {
         </div>
         <div className="rounded-lg border-r-4 border-blue-500 bg-card p-6 shadow-md dark:bg-muted">
           <h3 className="text-sm font-medium text-muted-foreground">{pick(locale, 'بانتظار المراجعة', 'Awaiting review')}</h3>
-          <p className="mt-2 text-3xl font-bold">{pendingNews.length}</p>
+          <p className="mt-2 text-3xl font-bold">{pendingCount}</p>
         </div>
         <Link href="/admin/inbox" className="rounded-lg border-r-4 border-orange-400 bg-card p-6 shadow-md dark:bg-muted">
           <h3 className="text-sm font-medium text-muted-foreground">{pick(locale, 'صندوق المكتب', 'Desk inbox')}</h3>
