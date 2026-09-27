@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         reminder.userId,
         reminder.user.pushSubscriptions,
         {
-          title: 'المباراة تبدأ بعد 15 دقيقة',
+          title: 'المباراة تبدأ خلال 10-16 دقيقة',
           body: `${match.homeTeam.name} ضد ${match.awayTeam.name}`,
           url: `/ar/match/${match.id}`,
           tag: `kickoff-soon-${match.id}`,

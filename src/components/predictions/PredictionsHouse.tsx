@@ -11,6 +11,9 @@ import { LeaderboardExplorer, UserRankItem, RealScorerItem } from './Leaderboard
 import { getLocale, getTranslations } from 'next-intl/server';
 import { predictionAccuracy, rankByPoints, scorerDeskSlug, settledStreak } from '@/lib/predictions/rank';
 import styles from './predictions-house.module.css';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import type { NormalizedScorer } from '@/lib/sports-data/types';
 
 function initials(name: string | null) {
   const parts = (name || '').trim().split(/\s+/).filter(Boolean);
@@ -29,28 +32,22 @@ const SCORER_LEAGUES = [
   { id: '307', ar: 'دوري روشن السعودي', en: 'Saudi Pro League' },
 ] as const;
 
+const OPEN_LEAGUE_IDS = ['2', '39', '140', '307', '135', '78', '61', '3'] as const;
+
 export async function PredictionsHouse() {
   const t = await getTranslations('board');
   const locale = await getLocale();
   const session = await auth();
   const now = new Date();
   const season = String(currentFootballSeason());
-  const openWhere = { status: 'NOT_STARTED' as const, kickoffAt: { gte: now } };
+  const openWhere = {
+    status: 'NOT_STARTED' as const,
+    kickoffAt: { gte: now },
+    league: { externalId: { in: [...OPEN_LEAGUE_IDS] } },
+  };
   const participantWhere = { OR: [{ points: { gt: 0 } }, { predictions: { some: {} } }] };
 
-  const [
-    rows,
-    peopleCount,
-    pointsAgg,
-    slipCount,
-    settledCount,
-    openCount,
-    openMatches,
-    moodRows,
-    me,
-    liveMeta,
-    ...scorerPacks
-  ] = await Promise.all([
+  const [rows, peopleCount, pointsAgg] = await Promise.all([
     prisma.user.findMany({
       where: participantWhere,
       select: {
@@ -65,9 +62,15 @@ export async function PredictionsHouse() {
     }),
     prisma.user.count({ where: participantWhere }),
     prisma.user.aggregate({ where: participantWhere, _sum: { points: true } }),
+  ]);
+
+  const [slipCount, settledCount, openCount] = await Promise.all([
     prisma.prediction.count(),
     prisma.prediction.count({ where: { isCorrect: { not: null } } }),
     prisma.match.count({ where: openWhere }),
+  ]);
+
+  const [openMatches, moodRows, me] = await Promise.all([
     prisma.match.findMany({
       where: openWhere,
       orderBy: { kickoffAt: 'asc' },
@@ -96,11 +99,20 @@ export async function PredictionsHouse() {
         },
       })
       : Promise.resolve(null),
-    safeRedisGet<{ syncedAt?: string; predictionsSettled?: number }>('sports:meta:live'),
-    ...SCORER_LEAGUES.map((league) =>
-      sportsData.getTopScorers(league.id, season).catch(swallow('PredictionsHouse.scorers', [])),
-    ),
   ]);
+
+  const liveMeta = await safeRedisGet<{ syncedAt?: string; predictionsSettled?: number }>('sports:meta:live');
+  const scorerPacks: NormalizedScorer[][] = [];
+  let scorerSeason = season;
+  for (const league of SCORER_LEAGUES) {
+    let pack = await sportsData.getTopScorers(league.id, season).catch(swallow('PredictionsHouse.scorers', []));
+    if (!pack?.length) {
+      const previous = String(Number(season) - 1);
+      pack = await sportsData.getTopScorers(league.id, previous).catch(swallow('PredictionsHouse.scorers', []));
+      if (pack?.length) scorerSeason = previous;
+    }
+    scorerPacks.push(pack || []);
+  }
 
   const scorerIds = scorerPacks.flatMap((pack) => (pack || []).map((row) => row.player.id));
   const ledgerPlayers =
@@ -115,10 +127,10 @@ export async function PredictionsHouse() {
   const realScorerItems: RealScorerItem[] = SCORER_LEAGUES.flatMap((league, packIndex) =>
     (scorerPacks[packIndex] || []).map((s, idx) => ({
       id: `${league.id}-${s.player.id}`,
-      name: s.player.name,
+      name: localizePlainName(locale, s.player.name),
       slug: slugByExt.get(s.player.id) || scorerDeskSlug(s.player.name, s.player.id),
       photoUrl: s.player.photoUrl || null,
-      teamName: s.teamName,
+      teamName: s.teamName ? localizePlainName(locale, s.teamName) : undefined,
       goals: s.goals,
       leagueName: locale === 'ar' ? league.ar : league.en,
       rank: idx + 1,
@@ -211,103 +223,87 @@ export async function PredictionsHouse() {
     value === 'HOME_WIN' ? t('door_home') : value === 'AWAY_WIN' ? t('door_away') : t('door_draw');
 
   return (
-    <div className="predictions-house relative min-h-screen overflow-hidden pb-16">
-      <div className="mx-auto max-w-7xl space-y-12 px-4 pt-8 sm:px-6 lg:px-8">
-        <header className={styles['ph-hero']}>
-          <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
-            <div className="space-y-6 lg:col-span-8">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={styles['ph-kicker']}>
-                  {t('house')} · {t('folio')}
-                </span>
-                <span className="font-mono text-xs font-bold text-emerald-500">{now.getFullYear()}</span>
-                {liveMeta?.syncedAt ? (
-                  <span className="text-xs text-muted-foreground">
-                    {t('last_settled')}: <ClientTime value={liveMeta.syncedAt} />
-                  </span>
-                ) : null}
-              </div>
-              <div className="space-y-3">
-                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">{t('headline')}</h1>
-                <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">{t('standfirst')}</p>
-                <p className="text-xs font-bold text-primary">{t('points_rule')}</p>
-              </div>
-              <div className={styles['ph-tally']}>
-                {tally.map((item) => (
-                  <article key={item.label}>
-                    <strong>{item.value}</strong>
-                    <span>{item.label}</span>
-                  </article>
-                ))}
-              </div>
-            </div>
-
-            <div className="lg:col-span-4">
-              <div className={`${styles['ph-card']} space-y-4 rounded-2xl border-amber-500/30 p-6`}>
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-amber-500">{t('place_kicker')}</span>
-                  {onBoard && myRank ? (
-                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 font-mono text-[11px] font-bold text-emerald-400">
-                      #{myRank}
-                    </span>
-                  ) : null}
-                </div>
-                {me ? (
-                  onBoard ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/20 font-bold text-amber-400">
-                          {initials(me.name)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-foreground">{me.name}</p>
-                          <p className="font-mono text-xs text-muted-foreground">
-                            {me.points} {t('col_points')} · {me._count.predictions} {t('col_slips')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-[11px] font-bold">
-                        {accuracy != null ? (
-                          <span className={`${styles['ph-chip']} ${styles['is-ok']}`}>
-                            {t('accuracy')}: {accuracy}%
-                          </span>
-                        ) : null}
-                        {streak > 0 ? (
-                          <span className={`${styles['ph-chip']} ${styles['is-wait']}`}>
-                            {t('streak')}: {streak}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">{t('place_none')}</p>
-                      <Link href="/matches" className="inline-flex rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">
-                        {t('empty_cta')}
-                      </Link>
-                    </div>
-                  )
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">{t('login_hint')}</p>
-                    <Link href="/login" className="inline-flex rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-black">
-                      {t('login_cta')}
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
+    <SalonStage
+      tone="podium"
+      wide
+      kicker={`${t('house')} · ${now.getFullYear()}`}
+      title={t('headline')}
+      lead={`${t('standfirst')} ${t('points_rule')}`}
+      aside={
+        liveMeta?.syncedAt ? (
+          <span>
+            {t('last_settled')}: <ClientTime value={liveMeta.syncedAt} />
+          </span>
+        ) : undefined
+      }
+      tools={
+        <div className="salon-foyer">
+          <nav className="salon-tabs" aria-label={t('toc_kicker')}>
+            <a href="#board-desk" className="salon-tab">{t('nav_desk')}</a>
+            <a href="#board-open" className="salon-tab">{t('nav_open')}</a>
+            <a href="#board-table" className="salon-tab">{t('nav_table')}</a>
+            <a href="#board-rules" className="salon-tab">{t('nav_rules')}</a>
+          </nav>
+        </div>
+      }
+    >
+      <div className={styles['ph-stack']}>
+        <section id="board-desk" className={styles['ph-split']}>
+          <div className={styles['ph-tally']}>
+            {tally.map((item) => (
+              <article key={item.label}>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </article>
+            ))}
           </div>
-        </header>
+          <aside className={styles['ph-place']}>
+            <p>{t('place_kicker')}</p>
+            {me ? (
+              onBoard ? (
+                <>
+                  <strong>{me.name || t('unnamed')}</strong>
+                  <em>
+                    #{myRank} · {me.points} {t('col_points')} · {me._count.predictions} {t('col_slips')}
+                  </em>
+                  <span>
+                    {accuracy != null ? (
+                      <i className={`${styles['ph-chip']} ${styles['is-ok']}`}>
+                        {t('accuracy')}: {accuracy}%
+                      </i>
+                    ) : null}
+                    {streak > 0 ? (
+                      <i className={`${styles['ph-chip']} ${styles['is-wait']}`}>
+                        {t('streak')}: {streak}
+                      </i>
+                    ) : null}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <em>{t('place_none')}</em>
+                  <Link href="/matches" className={styles['ph-go']}>{t('empty_cta')}</Link>
+                </>
+              )
+            ) : (
+              <>
+                <em>{t('login_hint')}</em>
+                <Link href="/login" className={styles['ph-go']}>{t('login_cta')}</Link>
+              </>
+            )}
+          </aside>
+        </section>
 
         {me && myHistory.length > 0 ? (
-          <section className="space-y-3">
-            <h2 className="text-lg font-black">{t('your_ledger')}</h2>
+          <section className={styles['ph-block']}>
+            <header className={styles['ph-head']}>
+              <h2>{t('your_ledger')}</h2>
+            </header>
             <div className={styles['ph-ledger']}>
               {myHistory.map((slip) => (
                 <Link key={slip.match.id} href={`/match/${slip.match.id}`} className={styles['ph-slip']}>
-                  <strong className="text-sm">
-                    {slip.match.homeTeam.name} × {slip.match.awayTeam.name}
+                  <strong>
+                    {localizePlainName(locale, slip.match.homeTeam.name)} × {localizePlainName(locale, slip.match.awayTeam.name)}
                   </strong>
                   <em>
                     {outcomeLabel(slip.predictedOutcome)}
@@ -326,69 +322,65 @@ export async function PredictionsHouse() {
         ) : null}
 
         {podium.length > 0 ? (
-          <section className="space-y-6">
-            <div className="space-y-2 text-center">
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-500">{t('podium_kicker')}</span>
-              <h2 className="text-2xl font-black text-foreground sm:text-3xl">{t('podium_title')}</h2>
-            </div>
-            <div className={`${styles['ph-podium']} mx-auto max-w-4xl`}>
-              {[podium[1], podium[0], podium[2]].map((seat, visual) => {
-                if (!seat) return <div key={visual} />;
-                const place = visual === 1 ? 1 : visual === 0 ? 2 : 3;
-                const seatClass = place === 1 ? styles['is-gold'] : place === 2 ? styles['is-silver'] : styles['is-bronze'];
+          <section className={styles['ph-block']}>
+            <header className={styles['ph-head']}>
+              <p>{t('podium_kicker')}</p>
+              <h2>{t('podium_title')}</h2>
+            </header>
+            <div className={styles['ph-podium']}>
+              {podium.map((seat, index) => {
+                const place = index + 1;
                 return (
-                  <article key={seat.id} className={`${styles['ph-seat']} ${styles['ph-card']} ${styles[`is-place-${place}`]} ${seatClass}`}>
-                    {place === 1 ? <span className={styles['ph-crown']}>👑 {t('champion')}</span> : null}
-                    <span className={`${styles['ph-medal']} ${styles[`is-${place}`]}`} aria-hidden>
-                      <b>{place}</b>
+                  <article key={seat.id} className={`${styles['ph-seat']} ${styles['ph-card']}`}>
+                    {place === 1 ? <span className={styles['ph-crown']}>{t('champion')}</span> : null}
+                    <span className={styles['ph-medal']} aria-hidden>
+                      {String(place).padStart(2, '0')}
                     </span>
-                    <div className={`${styles['ph-seat-face']} mx-auto mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl font-bold`}>
+                    <div className={styles['ph-seat-face']}>
                       {seat.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={seat.image} alt="" className="h-full w-full object-cover" />
+                        <img src={seat.image} alt="" />
                       ) : (
                         initials(seat.name)
                       )}
                     </div>
-                    <h3 className="truncate text-base font-bold">{seat.name || t('unnamed')}</h3>
-                    <p className="mt-2 font-mono text-xs font-bold">
+                    <h3>{seat.name || t('unnamed')}</h3>
+                    <b>
                       {seat.points} {t('col_points')}
-                    </p>
+                    </b>
                   </article>
                 );
               })}
             </div>
           </section>
         ) : peopleCount === 0 ? (
-          <p className="rounded-2xl border border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">
-            {t('empty_body')}
-          </p>
+          <p className={styles['ph-empty']}>{t('empty_body')}</p>
         ) : null}
 
         {moodTotal > 0 ? (
-          <section className={`${styles['ph-mood']} rounded-3xl p-6 sm:p-8`}>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('mood_kicker')}</p>
-                <h2 className="mt-1 text-xl font-extrabold">{t('mood_title')}</h2>
-              </div>
-              <span className="font-mono text-xs text-muted-foreground">
+          <section className={styles['ph-mood']}>
+            <header className={styles['ph-head']}>
+              <p>{t('mood_kicker')}</p>
+              <h2>{t('mood_title')}</h2>
+              <em>
                 {moodTotal} {t('mood_count')}
-              </span>
-            </div>
-            <div className={`${styles['ph-mood-bar']} mb-4`}>
-              {mood.map((item) => {
-                const pct = Math.round((item.value / moodTotal) * 100);
-                return <i key={item.key} className="ys-grow-x" style={{ width: `${pct}%`, background: item.color }} title={`${item.label}: ${pct}%`} />;
-              })}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+              </em>
+            </header>
+            <div className={styles['ph-mood-bar']}>
               {mood.map((item) => {
                 const pct = Math.round((item.value / moodTotal) * 100);
                 return (
-                  <div key={item.key} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
-                    <span className="text-xs font-bold">{item.label}</span>
-                    <span className="font-mono text-sm font-black">{pct}%</span>
+                  <i key={item.key} style={{ width: `${pct}%`, background: item.color }} title={`${item.label}: ${pct}%`} />
+                );
+              })}
+            </div>
+            <div className={styles['ph-mood-grid']}>
+              {mood.map((item) => {
+                const pct = Math.round((item.value / moodTotal) * 100);
+                return (
+                  <div key={item.key}>
+                    <span>{item.label}</span>
+                    <b>{pct}%</b>
                   </div>
                 );
               })}
@@ -396,48 +388,42 @@ export async function PredictionsHouse() {
           </section>
         ) : null}
 
-        <section className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('prog_kicker')}</p>
-              <h2 className="mt-1 text-xl font-black sm:text-2xl">{t('prog_title')}</h2>
-            </div>
-            <Link href="/matches" className="text-xs font-bold text-primary hover:underline">
-              {t('door_matches')}
-            </Link>
-          </div>
+        <section id="board-open" className={styles['ph-block']}>
+          <header className={styles['ph-head']}>
+            <p>{t('prog_kicker')}</p>
+            <h2>{t('prog_title')}</h2>
+            <Link href="/matches">{t('door_matches')}</Link>
+          </header>
           {openMatches.length === 0 ? (
-            <p className="rounded-2xl border border-border bg-card/20 py-8 text-center text-xs text-muted-foreground">{t('prog_empty')}</p>
+            <p className={styles['ph-empty']}>{t('prog_empty')}</p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className={styles['ph-kicks']}>
               {openMatches.map((match) => {
                 const mine = myByMatch.get(match.id);
+                const home = localizePlainName(locale, match.homeTeam.name);
+                const away = localizePlainName(locale, match.awayTeam.name);
                 return (
-                  <Link key={match.id} href={`/match/${match.id}`} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4">
-                    <div className="mb-3 flex items-center justify-between border-b border-border pb-2 text-[11px]">
-                      <span className="truncate text-muted-foreground">{match.league.name}</span>
-                      <ClientTime value={match.kickoffAt} className="font-mono font-bold text-primary" />
-                    </div>
-                    <div className="space-y-2 py-1">
-                      <div className="flex items-center gap-2">
-                        <CrestImage src={match.homeTeam.logoUrl} name={match.homeTeam.name} size={20} className="h-5 w-5 object-contain" />
-                        <span className="truncate text-xs font-bold">{match.homeTeam.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CrestImage src={match.awayTeam.logoUrl} name={match.awayTeam.name} size={20} className="h-5 w-5 object-contain" />
-                        <span className="truncate text-xs font-bold">{match.awayTeam.name}</span>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between border-t border-border pt-2 text-[11px]">
-                      <span className="font-mono text-muted-foreground">
-                        {match._count.predictions} {t('prog_slips')}
-                      </span>
+                  <Link key={match.id} href={`/match/${match.id}`} className={styles['ph-kick']}>
+                    <span>
+                      {localizePlainName(locale, match.league.name)}
+                      <ClientTime value={match.kickoffAt} options={{ weekday: 'short', hour: '2-digit', minute: '2-digit' }} />
+                    </span>
+                    <strong>
+                      <CrestImage src={match.homeTeam.logoUrl} name={home} size={22} />
+                      {home}
+                    </strong>
+                    <strong>
+                      <CrestImage src={match.awayTeam.logoUrl} name={away} size={22} />
+                      {away}
+                    </strong>
+                    <em>
+                      {match._count.predictions} {t('prog_slips')}
                       {mine ? (
-                        <span className={`${styles['ph-chip']} ${styles['is-ok']}`}>{t('prog_yours')}</span>
+                        <i className={`${styles['ph-chip']} ${styles['is-ok']}`}>{t('prog_yours')}</i>
                       ) : (
-                        <span className="font-bold text-primary">{t('prog_open')}</span>
+                        <b>{t('prog_open')}</b>
                       )}
-                    </div>
+                    </em>
                   </Link>
                 );
               })}
@@ -445,16 +431,16 @@ export async function PredictionsHouse() {
           )}
         </section>
 
-        <section className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-primary">{t('list_kicker')}</p>
-              <h2 className="mt-1 text-xl font-black sm:text-2xl">{t('list_title')}</h2>
-            </div>
-            <span className="font-mono text-xs text-muted-foreground">
-              {peopleCount} {t('racers')} · {realScorerItems.length} {t('scorers_count')} · {season}/{Number(season) + 1}
-            </span>
-          </div>
+        <section id="board-table" className={styles['ph-block']}>
+          <header className={styles['ph-head']}>
+            <p>{t('list_kicker')}</p>
+            <h2>{t('list_title')}</h2>
+            <em>
+              {peopleCount} {t('racers')}
+              {realScorerItems.length > 0 ? ` · ${realScorerItems.length} ${t('scorers_count')}` : ''}
+              {` · ${scorerSeason}/${Number(scorerSeason) + 1}`}
+            </em>
+          </header>
           <LeaderboardExplorer
             userRanks={userRankItems}
             realScorers={realScorerItems}
@@ -475,23 +461,27 @@ export async function PredictionsHouse() {
               colLeague: t('col_league'),
               emptyMessage: t('search_empty'),
               clearSearch: t('clear_search'),
+              you: t('you'),
+              allLeagues: t('all_leagues'),
             }}
           />
         </section>
 
-        <section className={`${styles['ph-rules']} rounded-3xl p-6 sm:p-8`}>
-          <h2 className="mb-4 text-lg font-bold">{t('rules_title')}</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section id="board-rules" className={styles['ph-rules']}>
+          <header className={styles['ph-head']}>
+            <h2>{t('rules_title')}</h2>
+          </header>
+          <div className={styles['ph-rule-grid']}>
             {rules.map((rule) => (
-              <div key={rule.no} className="rounded-2xl border border-border bg-card p-4">
-                <span className="font-mono text-xs font-bold text-primary">{rule.no}</span>
-                <h3 className="mt-1.5 mb-1 text-xs font-bold">{rule.title}</h3>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">{rule.body}</p>
-              </div>
+              <article key={rule.no}>
+                <em>{rule.no}</em>
+                <h3>{rule.title}</h3>
+                <p>{rule.body}</p>
+              </article>
             ))}
           </div>
         </section>
       </div>
-    </div>
+    </SalonStage>
   );
 }

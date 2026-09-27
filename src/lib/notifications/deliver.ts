@@ -56,7 +56,7 @@ export async function usersWanting(pref: PrefKey) {
 
   return users.filter((user) => {
     const prefs = user.notificationPrefs as Record<string, unknown> | null;
-    return prefs?.[pref] !== false;
+    return prefs?.[pref] === true;
   });
 }
 
@@ -114,5 +114,5 @@ export async function release(key: string) {
 }
 
 export function prefers(prefs: Record<string, unknown> | null, key: PrefKey) {
-  return prefs?.[key] !== false;
+  return prefs?.[key] === true;
 }
