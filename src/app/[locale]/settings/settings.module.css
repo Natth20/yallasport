@@ -1,0 +1,59 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.summary strong {
+  font-size: 1.05rem;
+}
+
+.meta,
+.note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.switchCopy {
+  min-width: 0;
+}
+
+.switchCopy strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  color: var(--foreground);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.action:hover {
+  border-color: var(--ys-orange);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
