@@ -10,12 +10,31 @@ import { pick } from '@/i18n/pick';
 import { HouseStage } from '@/components/house/HouseStage';
 import { HousePlate } from '@/components/house/HouseMark';
 
-const defaults = {
-  goal: true,
-  matchStart: true,
-  matchEnd: true,
-  breakingNews: true,
+const emptyPrefs = {
+  goal: false,
+  matchStart: false,
+  matchEnd: false,
+  breakingNews: false,
 };
+
+function readStoredPrefs(raw: unknown): { prefs: typeof emptyPrefs; configured: boolean } {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { prefs: emptyPrefs, configured: false };
+  }
+  const row = raw as Record<string, unknown>;
+  const keys = ['goal', 'matchStart', 'matchEnd', 'breakingNews'] as const;
+  const configured = keys.some((key) => key in row);
+  if (!configured) return { prefs: emptyPrefs, configured: false };
+  return {
+    configured: true,
+    prefs: {
+      goal: row.goal === true,
+      matchStart: row.matchStart === true,
+      matchEnd: row.matchEnd === true,
+      breakingNews: row.breakingNews === true,
+    },
+  };
+}
 
 export default function NotificationSettingsPage() {
   return (
@@ -44,16 +63,20 @@ async function NotificationSettingsPageBody() {
     where: { id: session.user.id },
     select: { notificationPrefs: true },
   });
-  const preferences = { ...defaults, ...(user?.notificationPrefs as Partial<typeof defaults> ?? {}) };
+  const stored = readStoredPrefs(user?.notificationPrefs);
 
   return (
     <HouseStage
       kicker={pick(locale, 'مركز التنبيهات', 'Notification Center')}
       title={pick(locale, 'إعدادات التنبيهات', 'Notification settings')}
-      lead={pick(locale, 'اختر التنبيهات التي تريد استقبالها. تذكير بداية المباراة يُرسل قبل 15 دقيقة.', 'Choose which alerts to receive. Match-start reminders are sent 15 minutes before kickoff.')}
+      lead={pick(
+        locale,
+        'اختر التنبيهات التي تريد استقبالها. تذكير بداية المباراة يُرسل عندما تبقى على الركلة بين 10 و16 دقيقة، وهي نافذة الكرون الفعلية.',
+        'Choose which alerts to receive. A match-start reminder is sent when kickoff is 10 to 16 minutes away — the cron window that actually runs.',
+      )}
     >
       <HousePlate className="mt-8 p-4">
-        <NotificationSettings initialPrefs={preferences} />
+        <NotificationSettings initialPrefs={stored.prefs} configured={stored.configured} />
       </HousePlate>
     </HouseStage>
   );

@@ -19,12 +19,13 @@ interface NotificationSettingsProps {
     matchEnd: boolean;
     breakingNews: boolean;
   };
+  configured?: boolean;
 }
 
 /**
  * NotificationSettings - UI for users to toggle specific push notification types.
  */
-export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ initialPrefs }) => {
+export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ initialPrefs, configured = true }) => {
   const locale = useLocale();
   const [prefs, setPrefs] = useState(initialPrefs);
   const [saving, setSaving] = useState(false);
@@ -60,6 +61,11 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ init
   return (
     <div className="space-y-4">
       <EnablePush />
+      {configured ? null : (
+        <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm font-bold text-muted-foreground">
+          {pick(locale, 'غير مضبوط بعد. المفاتيح مطفأة حتى تحفظ اختيارك.', 'Not set yet. Switches stay off until you save a choice.')}
+        </p>
+      )}
       {options.map((opt) => (
         <div 
           key={opt.key}
