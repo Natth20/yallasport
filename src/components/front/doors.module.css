@@ -1,30 +1,185 @@
 .tone {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: var(--ys-bg-2);
 }
 
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ys-space-2);
+.tone::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 8%;
+  inset-block-start: 0;
+  height: 1px;
+  background: var(--gradient-primary);
+  opacity: 0.55;
 }
 
-.nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.4rem;
-  padding: 0.4rem 0.8rem;
+.tone::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.045;
+  background-image:
+    linear-gradient(118deg, transparent 0 42%, color-mix(in srgb, #f97316 70%, transparent) 42.2% 42.55%, transparent 42.7%),
+    linear-gradient(118deg, transparent 0 71%, color-mix(in srgb, #94a3b8 60%, transparent) 71.15% 71.4%, transparent 71.55%);
+}
+
+.stage {
+  position: relative;
+  z-index: 1;
+}
+
+.atlas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ys-space-3);
+}
+
+.door {
+  display: grid;
+  justify-items: start;
+  align-content: space-between;
+  min-height: 8.5rem;
+  padding: var(--ys-space-5) var(--ys-space-4);
   border: 1px solid var(--ys-divider);
   border-radius: var(--ys-radius-ui);
-  background: var(--ys-bg-1);
+  background: linear-gradient(165deg, var(--ys-bg-2) 0%, var(--ys-bg-3) 100%);
   box-shadow: var(--ys-elev-1);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform var(--ys-duration) var(--ys-ease),
+    box-shadow var(--ys-duration) var(--ys-ease),
+    border-color var(--ys-duration-fast) var(--ys-ease);
+}
+
+.door:hover {
+  color: inherit;
+  -webkit-text-fill-color: currentcolor;
+  transform: translateY(-3px);
+  box-shadow: var(--ys-elev-3);
+  border-color: color-mix(in srgb, #f97316 28%, var(--ys-divider));
+}
+
+.door::after {
+  content: "";
+  display: block;
+  width: 1.6rem;
+  height: 2px;
+  margin-block-start: var(--ys-space-3);
+  background: var(--ys-divider);
+  transition: width var(--ys-duration) var(--ys-ease), background var(--ys-duration) var(--ys-ease);
+}
+
+.door:hover::after {
+  width: 3rem;
+  background: var(--gradient-primary);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--ys-text-muted);
+  transition: color var(--ys-duration) var(--ys-ease), transform var(--ys-duration) var(--ys-ease);
+}
+
+.door:hover .icon {
+  color: #f97316;
+  transform: scale(1.06);
+}
+
+.door strong {
+  display: block;
+  margin-block-start: var(--ys-space-3);
+  font-size: var(--ys-font-h6);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ys-text);
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.35rem;
+  row-gap: 0.35rem;
+  padding-block-start: var(--ys-space-5);
+  margin-block-start: var(--ys-space-2);
+  border-top: 1px solid var(--ys-divider);
+}
+
+.legal a {
   font-size: var(--ys-font-small);
-  font-weight: 500;
-  color: var(--ys-text-secondary);
+  font-weight: 400;
+  color: var(--ys-text-muted);
   text-decoration: none;
 }
 
-.nav a:hover {
-  color: var(--ys-text);
+.legal a:hover {
+  color: var(--ys-text-secondary);
   -webkit-text-fill-color: currentcolor;
-  box-shadow: var(--ys-elev-2);
+}
+
+.legal a + a::before {
+  content: "·";
+  margin-inline-end: 0.35rem;
+  color: var(--ys-divider);
+}
+
+@media (min-width: 860px) {
+  .atlas {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--ys-space-3);
+  }
+
+  .wide {
+    grid-column: span 3;
+    min-height: 10.5rem;
+    padding: var(--ys-space-6);
+  }
+
+  .wide .icon {
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .wide strong {
+    font-size: var(--ys-font-h5);
+  }
+
+  .mid {
+    grid-column: span 2;
+    min-height: 9.5rem;
+  }
+
+  .slim {
+    grid-column: span 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door,
+  .icon,
+  .door::after {
+    transition: none;
+  }
+
+  .door:hover {
+    transform: none;
+  }
+
+  .door:hover .icon {
+    transform: none;
+  }
 }

@@ -1,17 +1,5 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import {
-  ArrowLeftRight,
-  BarChart3,
-  CalendarDays,
-  Clapperboard,
-  Images,
-  Newspaper,
-  Radio,
-  Scale,
-  Trophy,
-  Users,
-} from 'lucide-react';
 import { FrontMark } from '../FrontMark';
 import shell from '../front-shell.module.css';
 import styles from '../doors.module.css';
@@ -40,43 +28,12 @@ export async function DoorsChapter() {
     { href: '/cookies' as const, label: t('door_cookies') },
     { href: '/copyright' as const, label: t('door_copyright') },
   ];
-
-  const daily = [
-    { href: '/matches', Icon: CalendarDays, span: styles.wide },
-    { href: '/live', Icon: Radio, span: styles.wide },
-    { href: '/news', Icon: Newspaper, span: styles.mid },
-    { href: '/leagues', Icon: Trophy, span: styles.mid },
-    { href: '/videos', Icon: Clapperboard, span: styles.mid },
-    { href: '/photos', Icon: Images, span: styles.mid },
-    { href: '/stats', Icon: BarChart3, span: styles.mid },
-    { href: '/transfers', Icon: ArrowLeftRight, span: styles.mid },
-    { href: '/compare-players', Icon: Users, span: styles.wide },
-    { href: '/leaderboard', Icon: Scale, span: styles.wide },
-  ] as const;
-
-  const dailyHrefs = new Set<string>(daily.map((item) => item.href));
-  const legal = doors.filter((door) => !dailyHrefs.has(door.href));
-
   return (
     <section className={`${shell.band} ${styles.tone}`}>
-      <div className={`${shell.inner} ${styles.stage}`}>
+      <div className={shell.inner}>
         <FrontMark num={t('ch12')} title={t('ch12_title')} />
-        <nav className={styles.atlas} aria-label={t('ch12_title')}>
-          {daily.map((item) => {
-            const door = doors.find((entry) => entry.href === item.href);
-            if (!door) return null;
-            return (
-              <Link key={door.href} href={door.href} className={`${styles.door} ${item.span}`}>
-                <span className={styles.icon} aria-hidden>
-                  <item.Icon size={28} strokeWidth={1.4} />
-                </span>
-                <strong>{door.label}</strong>
-              </Link>
-            );
-          })}
-        </nav>
-        <nav className={styles.legal} aria-label={t('ch12_title')}>
-          {legal.map((door) => (
+        <nav className={styles.nav}>
+          {doors.map((door) => (
             <Link key={door.href} href={door.href}>
               {door.label}
             </Link>
