@@ -2,25 +2,44 @@ import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import {getLocale} from 'next-intl/server';
 import {pick} from '@/i18n/pick';
+import {Link} from '@/i18n/navigation';
+
+function monthCursor(value: string | undefined, now: Date): Date {
+  if (!value || !/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) return startOfMonth(now);
+  const [year, month] = value.split('-').map(Number);
+  return startOfMonth(new Date(year, month - 1, 1));
+}
+
+function monthQuery(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
 
 /**
  * EditorialCalendar - Visualizes scheduled news publishing.
  */
-export default async function EditorialCalendarPage() {
+export default async function EditorialCalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   const locale = await getLocale();
   const session = await auth();
   if (!session) redirect('/api/auth/signin');
 
+  const { month } = await searchParams;
   const now = new Date();
-  const start = startOfMonth(now);
-  const end = endOfMonth(now);
+  const cursor = monthCursor(month, now);
+  const start = startOfMonth(cursor);
+  const end = endOfMonth(cursor);
   const days = eachDayOfInterval({ start, end });
+  const previous = `/admin/news/calendar?month=${monthQuery(addMonths(cursor, -1))}`;
+  const next = `/admin/news/calendar?month=${monthQuery(addMonths(cursor, 1))}`;
 
   const scheduledNews = await prisma.news.findMany({
     where: {
@@ -45,9 +64,9 @@ export default async function EditorialCalendarPage() {
           {pick(locale, 'التقويم التحريري', 'Editorial calendar')}
         </h2>
         <div className="flex items-center gap-4 bg-card dark:bg-muted p-2 rounded-2xl shadow-sm">
-           <button className="p-2 hover:bg-muted dark:hover:bg-slate-700 rounded-xl"><ChevronRight className="w-5 h-5" /></button>
-           <span className="font-black text-sm px-4">{format(now, 'MMMM yyyy', { locale: locale === 'ar' ? ar : enUS })}</span>
-           <button className="p-2 hover:bg-muted dark:hover:bg-slate-700 rounded-xl"><ChevronLeft className="w-5 h-5" /></button>
+           <Link href={next} aria-label={pick(locale, 'الشهر التالي', 'Next month')} className="p-2 hover:bg-muted dark:hover:bg-slate-700 rounded-xl"><ChevronRight className="w-5 h-5" /></Link>
+           <span className="font-black text-sm px-4">{format(cursor, 'MMMM yyyy', { locale: locale === 'ar' ? ar : enUS })}</span>
+           <Link href={previous} aria-label={pick(locale, 'الشهر السابق', 'Previous month')} className="p-2 hover:bg-muted dark:hover:bg-slate-700 rounded-xl"><ChevronLeft className="w-5 h-5" /></Link>
         </div>
       </div>
 
