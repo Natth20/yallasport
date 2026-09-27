@@ -1,6 +1,4 @@
 import { ClientTime } from '@/components/datetime/ClientTime';
-import { BrandMark } from '@/components/brand/BrandMark';
-import { HeroEnter, Reveal } from '@/components/motion/PageMotion';
 import { Link } from '@/i18n/navigation';
 import type { Prisma } from '@/generated/prisma';
 import { localizeEntityMap, newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
@@ -8,6 +6,11 @@ import { prisma } from '@/lib/prisma';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { SearchTicket } from './SearchTicket';
 import { canShowScore, clampSeekQuery, parseSeekKind, seekHref, type SeekKind } from './seek';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { Tooltip } from '@/components/ui/Tooltip';
 import {
   Search as SearchIcon,
   Trophy,
@@ -18,6 +21,7 @@ import {
   Sparkles,
   Flame,
 } from 'lucide-react';
+import styles from './search.module.css';
 
 function newsSeekWhere(locale: string, q: string): Prisma.NewsWhereInput {
   const contains = { contains: q, mode: 'insensitive' as const };
@@ -238,401 +242,268 @@ export async function SearchHouse({
   ].slice(0, 6);
 
   return (
-    <div className="salon-stage salon-seek is-wide search-ticket relative min-h-screen overflow-hidden pb-16">
-      {/* Background Ambience */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-96 w-full max-w-7xl rounded-full bg-gradient-to-b from-primary/15 via-emerald-500/10 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl" />
+    <SalonStage
+      tone="seek"
+      wide
+      kicker={t('kicker')}
+      title={t('title')}
+      lead={t('standfirst')}
+      aside={
+        <Badge variant={liveMatches > 0 ? 'live' : 'outline'} size="sm">
+          {liveMatches} {t('tally_live_short')}
+        </Badge>
+      }
+    >
+      <div className={styles.stack}>
+        <SearchTicket initialQuery={query} kind={kind} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 pt-8">
-        {/* ——— Search Command Center Hero ——— */}
-        <header className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-b from-card/90 via-card/60 to-card/30 p-6 md:p-10 backdrop-blur-2xl shadow-2xl">
-          <HeroEnter className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
-              <div className="flex items-center gap-3">
-                <BrandMark size={44} priority />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold tracking-wider text-primary uppercase border border-primary/20">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                      {t('kicker')}
-                    </span>
-                    <span className="text-xs text-muted-foreground">·</span>
-                    <span className="text-xs font-mono text-emerald-400">
-                      {liveMatches} {t('tally_live_short')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs text-muted-foreground font-mono">
-                {t('house')}
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
-                {t('title')}
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-                {t('standfirst')}
+        {!query ? (
+          <div className={styles.chips}>
+            <span className={styles.chipsLabel}>
+              <Flame aria-hidden="true" />
+              <span>{isAr ? 'أكثر بحثاً:' : 'Trending Seek:'}</span>
+            </span>
+            {suggestions.map((chip) => (
+              <Tooltip key={chip} content={chip} position="bottom">
+                <Link href={`/search?q=${encodeURIComponent(chip)}`} className={styles.chip}>
+                  {chip}
+                </Link>
+              </Tooltip>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.stack}>
+            <div className={styles.meta}>
+              <p>
+                {t('written')} <strong>&ldquo;{query}&rdquo;</strong>
               </p>
+              <Badge variant="accent" size="sm">{t('hits', { n: String(visible) })}</Badge>
             </div>
-
-            {/* Omnibox Search Input */}
-            <div className="mt-4">
-              <SearchTicket initialQuery={query} kind={kind} />
-            </div>
-
-            {/* Quick popular search chips when no query */}
-            {!query && (
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-primary" />
-                  <span>{isAr ? 'أكثر بحثاً:' : 'Trending Seek:'}</span>
-                </span>
-                {suggestions.map((chip) => (
+            <nav className={styles.kinds} aria-label={t('kinds_label')}>
+              {kinds.map((item) => {
+                const active = kind === item.id;
+                const Icon = item.icon;
+                return (
                   <Link
-                    key={chip}
-                    href={`/search?q=${encodeURIComponent(chip)}`}
-                    className="rounded-xl border border-border bg-card/80 px-3 py-1 text-xs font-medium text-foreground transition hover:border-primary/50 hover:bg-primary/10 shadow-sm"
+                    key={item.id}
+                    href={seekHref(query, item.id)}
+                    className={active ? `${styles.kind} ${styles.kindOn}` : styles.kind}
                   >
-                    {chip}
+                    <Icon aria-hidden="true" />
+                    <span>{item.label}</span>
+                    <Badge variant={active ? 'outline' : 'default'} size="sm">{item.n}</Badge>
                   </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Search Metadata & Category Pills when query is active */}
-            {query && (
-              <div className="space-y-4 pt-2">
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground border-t border-border pt-4">
-                  <p>
-                    {t('written')} <strong className="text-foreground font-bold">"{query}"</strong>
-                  </p>
-                  <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-0.5 rounded-full">
-                    {t('hits', { n: String(visible) })}
-                  </span>
-                </div>
-
-                {/* Filter Tabs */}
-                <nav className="flex flex-wrap gap-2" aria-label={t('kinds_label')}>
-                  {kinds.map((item) => {
-                    const active = kind === item.id;
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.id}
-                        href={seekHref(query, item.id)}
-                        className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
-                          active
-                            ? 'border-primary bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                            : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                        <span>{item.label}</span>
-                        <span className={`font-mono text-[11px] rounded px-1.5 py-0.2 ${active ? 'bg-black/20 text-white' : 'bg-muted text-muted-foreground'}`}>
-                          {item.n}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </nav>
-              </div>
-            )}
-          </HeroEnter>
-        </header>
-
-        {/* ——— Results Stage (when query exists) ——— */}
-        {query && (
-          <Reveal>
-            <div className="space-y-10">
-              {visible === 0 && (
-                <div className="rounded-3xl border border-border bg-card/40 p-12 text-center backdrop-blur-xl">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mx-auto mb-3">
-                    <SearchIcon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">{t('empty_title')}</h3>
-                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                    {kind === 'all' ? t('empty_body') : t('empty_drawer')}
-                  </p>
-                </div>
-              )}
-
-              {/* Matches Group */}
-              {show('matches') && found.matches.length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                      {t('kind_matches')} ({found.matches.length})
-                    </h2>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {found.matches.map((row) => {
-                      const isLive = row.status === 'LIVE';
-                      const homeName = nameOf(names, 'TEAM', row.homeTeam.id, row.homeTeam.name);
-                      const awayName = nameOf(names, 'TEAM', row.awayTeam.id, row.awayTeam.name);
-                      const leagueName = nameOf(names, 'LEAGUE', row.league.id, row.league.name);
-                      return (
-                        <Link
-                          key={row.id}
-                          href={`/match/${row.id}`}
-                          className="group rounded-2xl border border-border bg-card/60 p-4 transition-all hover:border-primary/50 hover:bg-card/90 shadow-sm"
-                        >
-                          <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-3 text-[11px]">
-                            <span className="text-muted-foreground truncate font-medium">{leagueName}</span>
-                            {isLive ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                {row.minute ? `${row.minute}′` : 'LIVE'}
-                              </span>
-                            ) : (
-                              <ClientTime value={row.kickoffAt} className="font-mono text-muted-foreground" />
-                            )}
-                          </div>
-
-                          <div className="space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5 truncate">
-                                {row.homeTeam.logoUrl ? (
-                                  <img src={row.homeTeam.logoUrl} alt="" className="h-6 w-6 object-contain" />
-                                ) : (
-                                  <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
-                                    {homeName.charAt(0)}
-                                  </div>
-                                )}
-                                <span className="text-xs font-bold text-foreground truncate">{homeName}</span>
-                              </div>
-                              {canShowScore(row.status, row.homeScore, row.awayScore) && (
-                                <span className="font-mono text-xs font-black text-foreground ps-2 bg-secondary/80 px-2 py-0.5 rounded">
-                                  {row.homeScore}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5 truncate">
-                                {row.awayTeam.logoUrl ? (
-                                  <img src={row.awayTeam.logoUrl} alt="" className="h-6 w-6 object-contain" />
-                                ) : (
-                                  <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
-                                    {awayName.charAt(0)}
-                                  </div>
-                                )}
-                                <span className="text-xs font-bold text-foreground truncate">{awayName}</span>
-                              </div>
-                              {canShowScore(row.status, row.homeScore, row.awayScore) && (
-                                <span className="font-mono text-xs font-black text-foreground ps-2 bg-secondary/80 px-2 py-0.5 rounded">
-                                  {row.awayScore}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </section>
-              )}
-
-              {/* Teams Group */}
-              {show('teams') && found.teams.length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <Shield className="w-4 h-4 text-cyan-400" />
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                      {t('kind_teams')} ({found.teams.length})
-                    </h2>
-                  </div>
-
-                  <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-                    {found.teams.map((row) => (
-                      <Link
-                        key={row.id}
-                        href={`/team/${row.slug}`}
-                        className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-card/60 p-4 text-center transition-all hover:border-cyan-400/50 hover:bg-card/90 shadow-sm"
-                      >
-                        <div className="flex h-14 w-14 items-center justify-center mb-2.5 p-2 rounded-2xl bg-secondary/40 group-hover:scale-105 transition-transform">
-                          {row.logoUrl ? (
-                            <img src={row.logoUrl} alt="" className="h-10 w-10 object-contain" />
-                          ) : (
-                            <span className="font-bold text-base text-cyan-400">
-                              {nameOf(names, 'TEAM', row.id, row.name).charAt(0)}
-                            </span>
-                          )}
-                        </div>
-                        <strong className="text-xs font-bold text-foreground truncate w-full group-hover:text-cyan-400 transition-colors">
-                          {nameOf(names, 'TEAM', row.id, row.name)}
-                        </strong>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Leagues Group */}
-              {show('leagues') && found.leagues.length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <Trophy className="w-4 h-4 text-amber-400" />
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                      {t('kind_leagues')} ({found.leagues.length})
-                    </h2>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    {found.leagues.map((row) => (
-                      <Link
-                        key={row.id}
-                        href={`/league/${row.slug}`}
-                        className="group flex items-center gap-3 rounded-2xl border border-border bg-card/60 p-3.5 transition-all hover:border-amber-400/50 hover:bg-card/90 shadow-sm"
-                      >
-                        {row.logoUrl ? (
-                          <img src={row.logoUrl} alt="" className="h-9 w-9 object-contain flex-shrink-0" />
-                        ) : (
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 font-bold text-xs flex-shrink-0">
-                            {nameOf(names, 'LEAGUE', row.id, row.name).charAt(0)}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <strong className="text-xs font-bold text-foreground block truncate group-hover:text-amber-400 transition-colors">
-                            {nameOf(names, 'LEAGUE', row.id, row.name)}
-                          </strong>
-                          <span className="text-[11px] text-muted-foreground">{row.country || t('type_league')}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Players Group */}
-              {show('players') && found.players.length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <Users className="w-4 h-4 text-emerald-400" />
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                      {t('kind_players')} ({found.players.length})
-                    </h2>
-                  </div>
-
-                  <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-                    {found.players.map((row) => (
-                      <Link
-                        key={row.id}
-                        href={`/player/${row.slug}`}
-                        className="group flex flex-col items-center justify-center rounded-2xl border border-border bg-card/60 p-4 text-center transition-all hover:border-emerald-400/50 hover:bg-card/90 shadow-sm"
-                      >
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary/50 mb-2 overflow-hidden border border-border group-hover:border-emerald-400 transition-colors">
-                          {row.photoUrl ? (
-                            <img src={row.photoUrl} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="font-bold text-xs text-foreground">
-                              {nameOf(names, 'PLAYER', row.id, row.name).charAt(0)}
-                            </span>
-                          )}
-                        </div>
-                        <strong className="text-xs font-bold text-foreground truncate w-full group-hover:text-emerald-400 transition-colors">
-                          {nameOf(names, 'PLAYER', row.id, row.name)}
-                        </strong>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">{row.position || t('type_player')}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* News Group */}
-              {show('news') && news.length > 0 && (
-                <section className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-border pb-3">
-                    <Newspaper className="w-4 h-4 text-rose-400" />
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                      {t('kind_news')} ({news.length})
-                    </h2>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {news.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={`/news/${encodeURIComponent(item.slug)}`}
-                        className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card/60 transition-all hover:border-rose-400/50 hover:bg-card/90 shadow-sm"
-                      >
-                        {item.featuredImage && (
-                          <div className="h-44 w-full overflow-hidden bg-muted">
-                            <img
-                              src={item.featuredImage}
-                              alt=""
-                              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                        )}
-                        <div className="p-4 space-y-2">
-                          <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">
-                            {item.category}
-                          </span>
-                          <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                            {item.title}
-                          </h3>
-                          {item.excerpt && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                              {item.excerpt}
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </div>
-          </Reveal>
+                );
+              })}
+            </nav>
+          </div>
         )}
 
-        {/* ——— Platform Radar Index (When no query or at the bottom) ——— */}
-        <section className="rounded-3xl border border-border bg-card/40 p-6 sm:p-8 backdrop-blur-xl">
-          <div className="border-b border-border pb-4 mb-6">
-            <h2 className="text-lg sm:text-xl font-black text-foreground">{t('drawers_title')}</h2>
-            <p className="text-xs text-muted-foreground mt-1">{t('drawers_note')}</p>
-          </div>
+        {query && visible === 0 ? (
+          <Card variant="bordered" padding="lg" className={styles.empty}>
+            <SearchIcon aria-hidden="true" />
+            <h2>{t('empty_title')}</h2>
+            <p>{kind === 'all' ? t('empty_body') : t('empty_drawer')}</p>
+          </Card>
+        ) : null}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {drawers.map((d) => {
-              const Icon = d.icon;
-              return (
-                <div
-                  key={d.no}
-                  className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-between transition hover:border-primary/40 shadow-sm"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-mono text-xs font-bold text-primary">{d.no}</span>
-                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                        <Icon className="w-3.5 h-3.5" />
+        {query && show('matches') && found.matches.length > 0 ? (
+          <section>
+            <h2 className={styles.head}>
+              <Calendar aria-hidden="true" />
+              {t('kind_matches')} ({found.matches.length})
+            </h2>
+            <div className={styles.matches}>
+              {found.matches.map((row) => {
+                const isLive = row.status === 'LIVE';
+                const homeName = nameOf(names, 'TEAM', row.homeTeam.id, row.homeTeam.name);
+                const awayName = nameOf(names, 'TEAM', row.awayTeam.id, row.awayTeam.name);
+                const leagueName = nameOf(names, 'LEAGUE', row.league.id, row.league.name);
+                const scored = canShowScore(row.status, row.homeScore, row.awayScore);
+                return (
+                  <Link key={row.id} href={`/match/${row.id}`} className={styles.hit}>
+                    <Card variant="interactive" padding="sm">
+                      <div className={styles.matchTop}>
+                        <span className={styles.leagueName}>{leagueName}</span>
+                        {isLive ? (
+                          <Badge variant="live" size="sm">{row.minute ? `${row.minute}′` : 'LIVE'}</Badge>
+                        ) : (
+                          <ClientTime value={row.kickoffAt} className={styles.detail} />
+                        )}
                       </div>
-                    </div>
-                    <span className="font-mono text-2xl font-black text-foreground block mb-1">{d.n}</span>
-                    <h3 className="text-sm font-bold text-foreground mb-1">{d.title}</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{d.body}</p>
-                  </div>
+                      <div className={styles.side}>
+                        <span className={styles.who}>
+                          {row.homeTeam.logoUrl ? (
+                            <img src={row.homeTeam.logoUrl} alt="" className={styles.crest} />
+                          ) : (
+                            <span className={styles.mark}>{homeName.charAt(0)}</span>
+                          )}
+                          <span className={styles.name}>{homeName}</span>
+                        </span>
+                        {scored ? <span className={styles.score}>{row.homeScore}</span> : null}
+                      </div>
+                      <div className={styles.side}>
+                        <span className={styles.who}>
+                          {row.awayTeam.logoUrl ? (
+                            <img src={row.awayTeam.logoUrl} alt="" className={styles.crest} />
+                          ) : (
+                            <span className={styles.mark}>{awayName.charAt(0)}</span>
+                          )}
+                          <span className={styles.name}>{awayName}</span>
+                        </span>
+                        {scored ? <span className={styles.score}>{row.awayScore}</span> : null}
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
-                  {d.href && (
-                    <Link
-                      href={d.href}
-                      className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                    >
-                      <span>{isAr ? 'استكشف' : 'Explore'}</span>
-                      <span>→</span>
-                    </Link>
-                  )}
-                </div>
+        {query && show('teams') && found.teams.length > 0 ? (
+          <section>
+            <h2 className={styles.head}>
+              <Shield aria-hidden="true" />
+              {t('kind_teams')} ({found.teams.length})
+            </h2>
+            <div className={styles.teams}>
+              {found.teams.map((row) => {
+                const name = nameOf(names, 'TEAM', row.id, row.name);
+                return (
+                  <Link key={row.id} href={`/team/${row.slug}`} className={styles.hit}>
+                    <Card variant="interactive" padding="sm" className={styles.portrait}>
+                      {row.logoUrl ? (
+                        <img src={row.logoUrl} alt="" className={styles.face} />
+                      ) : (
+                        <span className={styles.letter}>{name.charAt(0)}</span>
+                      )}
+                      <strong className={styles.name}>{name}</strong>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {query && show('leagues') && found.leagues.length > 0 ? (
+          <section>
+            <h2 className={styles.head}>
+              <Trophy aria-hidden="true" />
+              {t('kind_leagues')} ({found.leagues.length})
+            </h2>
+            <div className={styles.leagues}>
+              {found.leagues.map((row) => {
+                const name = nameOf(names, 'LEAGUE', row.id, row.name);
+                return (
+                  <Link key={row.id} href={`/league/${row.slug}`} className={styles.hit}>
+                    <Card variant="interactive" padding="sm" className={styles.club}>
+                      {row.logoUrl ? (
+                        <img src={row.logoUrl} alt="" className={styles.clubCrest} />
+                      ) : (
+                        <span className={styles.letter}>{name.charAt(0)}</span>
+                      )}
+                      <span>
+                        <strong className={styles.name}>{name}</strong>
+                        <span className={styles.detail}>{row.country || t('type_league')}</span>
+                      </span>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {query && show('players') && found.players.length > 0 ? (
+          <section>
+            <h2 className={styles.head}>
+              <Users aria-hidden="true" />
+              {t('kind_players')} ({found.players.length})
+            </h2>
+            <div className={styles.players}>
+              {found.players.map((row) => {
+                const name = nameOf(names, 'PLAYER', row.id, row.name);
+                return (
+                  <Link key={row.id} href={`/player/${row.slug}`} className={styles.hit}>
+                    <Card variant="interactive" padding="sm" className={styles.portrait}>
+                      {row.photoUrl ? (
+                        <img src={row.photoUrl} alt="" className={styles.photo} />
+                      ) : (
+                        <span className={styles.letter}>{name.charAt(0)}</span>
+                      )}
+                      <strong className={styles.name}>{name}</strong>
+                      <span className={styles.detail}>{row.position || t('type_player')}</span>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {query && show('news') && news.length > 0 ? (
+          <section>
+            <h2 className={styles.head}>
+              <Newspaper aria-hidden="true" />
+              {t('kind_news')} ({news.length})
+            </h2>
+            <div className={styles.news}>
+              {news.map((item) => (
+                <Link key={item.id} href={`/news/${encodeURIComponent(item.slug)}`} className={styles.hit}>
+                  <Card variant="interactive" padding="none" className={styles.newsCard}>
+                    {item.featuredImage ? (
+                      <img src={item.featuredImage} alt="" className={styles.newsImg} />
+                    ) : null}
+                    <CardContent>
+                      <Badge variant="accent" size="sm">{item.category}</Badge>
+                      <h3 className={styles.newsTitle}>{item.title}</h3>
+                      {item.excerpt ? <p className={styles.excerpt}>{item.excerpt}</p> : null}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <section>
+          <div className={styles.drawerHead}>
+            <h2>{t('drawers_title')}</h2>
+            <p>{t('drawers_note')}</p>
+          </div>
+          <div className={styles.drawers}>
+            {drawers.map((drawer) => {
+              const Icon = drawer.icon;
+              return (
+                <Card key={drawer.no} variant="bordered" padding="md" className={styles.drawer}>
+                  <div className={styles.matchTop}>
+                    <span className={styles.drawerNo}>{drawer.no}</span>
+                    <Icon aria-hidden="true" />
+                  </div>
+                  <span className={styles.drawerCount}>{drawer.n}</span>
+                  <h3>{drawer.title}</h3>
+                  <p>{drawer.body}</p>
+                  <Link href={drawer.href} className={styles.explore}>
+                    {isAr ? 'استكشف' : 'Explore'}
+                  </Link>
+                </Card>
               );
             })}
           </div>
         </section>
       </div>
+    </SalonStage>
+  );
+}
+
+export function SearchFallback() {
+  return (
+    <div className={styles.fallback}>
+      <Skeleton variant="text" width="14rem" height="2rem" />
+      <Skeleton variant="match-card" />
+      <Skeleton variant="news-card" />
     </div>
   );
 }

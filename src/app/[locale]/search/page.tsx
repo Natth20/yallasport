@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
-import { SearchHouse } from '@/components/search/SearchHouse';
-import { FrontSkeleton } from '@/components/front/FrontMark';
+import { SearchFallback, SearchHouse } from '@/components/search/SearchHouse';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { getLocale } from 'next-intl/server';
@@ -33,7 +32,7 @@ export default function SearchPage({
   searchParams: Promise<{ q?: string; kind?: string }>;
 }) {
   return (
-    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+    <Suspense fallback={<SearchFallback />}>
       <SearchPageBody searchParams={searchParams} />
     </Suspense>
   );

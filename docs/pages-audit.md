@@ -23,9 +23,9 @@
 
 | التصنيف | العدد | الصفحات |
 |---|---|---|
-| 🟢 GOOD | 44 | السابق + `/copyright` و`/report` و`/settings/notifications` بعد الدفعة A |
+| 🟢 GOOD | 45 | السابق + `/search` بعد الدفعة B |
 | 🟡 PARTIAL | 0 | الدفعة A أغلقت الثلاثة: copyright، report، notifications |
-| 🔴 BROKEN | 5 | `/compare`، `/search`، `/profile`، `/profile/edit`، `/settings` |
+| 🔴 BROKEN | 4 | `/compare`، `/profile`، `/profile/edit`، `/settings` |
 
 `/settings` يعيد تصدير صفحة التنبيهات: المسار العام 🔴 (غلاف إعدادات ناقص)، ومحتوى التنبيهات 🟡.
 
@@ -347,7 +347,7 @@
 ## 37. `/search`
 
 **المكوّن:** `SearchHouse` — Prisma counts + findMany؛ شرائح «الأكثر بحثاً» من آخر مباريات حقيقية  
-**التصنيف:** 🔴 BROKEN (تصميم: cyan/emerald glow، بدون module صالون مكتمل)
+**التصنيف:** 🟢 GOOD — الدفعة B: صالون `seek` + `search.module.css` بألوان YS. الاستعلامات لم تتغير.
 
 | القسم | مصدر | حقيقي؟ | الإجراء |
 |---|---|---|---|

@@ -1,18 +1,14 @@
 'use client';
 import { reportCaughtError } from '@/lib/ops/caught';
 
+
 import { useDebounce } from '@/lib/hooks/use-debounce';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Search as SearchIcon } from 'lucide-react';
+import { Loader2, Search as SearchIcon, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { seekHref, type SeekKind } from './seek';
 import { VoiceSearch } from '@/components/layout/VoiceSearch';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { Tooltip } from '@/components/ui/Tooltip';
-import styles from './search.module.css';
 
 type Suggestion = {
   label: string;
@@ -89,21 +85,21 @@ export function SearchTicket({
   };
 
   return (
-    <div className={styles.ticket} ref={box}>
-      <form onSubmit={go} className={styles.ticketRow}>
-        <div className={styles.grow}>
-          <Input
+    <div className="search-ticket" ref={box}>
+      <span className="search-ticket-perf" aria-hidden="true" />
+      <form onSubmit={go} className="search-ticket-form">
+        <label className="search-ticket-label" htmlFor="seek-q">
+          {t('ticket_label')}
+        </label>
+        <div className="search-ticket-row">
+          <SearchIcon className="search-ticket-icon" aria-hidden="true" />
+          <input
             id="seek-q"
             name="q"
             type="search"
-            inputSize="lg"
-            label={t('ticket_label')}
             maxLength={80}
             value={query}
             autoComplete="off"
-            leftIcon={<SearchIcon aria-hidden="true" />}
-            isClearable
-            onClear={() => setQuery('')}
             onChange={(event) => {
               setQuery(event.target.value);
               setOpen(true);
@@ -111,8 +107,12 @@ export function SearchTicket({
             onFocus={() => setOpen(true)}
             placeholder={t('placeholder')}
           />
-        </div>
-        <div className={styles.actions}>
+          {isLoading ? <Loader2 className="search-ticket-spin" aria-hidden="true" /> : null}
+          {query ? (
+            <button type="button" className="search-ticket-clear" onClick={() => setQuery('')} aria-label={t('clear')}>
+              <X />
+            </button>
+          ) : null}
           <VoiceSearch
             onResult={(text) => {
               setQuery(text);
@@ -120,39 +120,31 @@ export function SearchTicket({
               router.push(seekHref(text, kind));
             }}
           />
-          <Tooltip content={t('submit')} position="bottom">
-            <button type="submit" className={styles.go}>
-              {t('submit')}
-            </button>
-          </Tooltip>
+          <button type="submit" className="search-ticket-go">
+            {t('submit')}
+          </button>
         </div>
       </form>
 
-      {open && isLoading ? (
-        <div className={styles.suggest}>
-          <Skeleton variant="text" count={2} />
-        </div>
-      ) : null}
-
-      {open && !isLoading && (suggestions.length > 0 || query.trim().length >= 2) ? (
-        <div className={styles.suggest} role="listbox">
+      {open && (suggestions.length > 0 || (query.trim().length >= 2 && !isLoading)) ? (
+        <div className="search-suggest" role="listbox">
           {suggestions.length > 0 ? (
             suggestions.map((item) => (
               <Link
                 key={`${item.typeKey}-${item.url}`}
                 href={item.url}
-                className={styles.suggestRow}
+                className="search-suggest-row"
                 onClick={() => setOpen(false)}
               >
-                <span className={styles.suggestLabel}>{item.label}</span>
-                <Badge variant="accent" size="sm">{typeLabel(item.typeKey)}</Badge>
+                <span>{item.label}</span>
+                <em>{typeLabel(item.typeKey)}</em>
               </Link>
             ))
           ) : (
-            <p className={styles.suggestEmpty}>{t('no_suggest', { q: query.trim() })}</p>
+            <p className="search-suggest-empty">{t('no_suggest', { q: query.trim() })}</p>
           )}
           {query.trim() ? (
-            <button type="button" className={styles.suggestAll} onClick={() => go()}>
+            <button type="button" className="search-suggest-all" onClick={() => go()}>
               {t('all_for', { q: query.trim() })}
             </button>
           ) : null}
