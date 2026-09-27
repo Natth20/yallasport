@@ -26,7 +26,7 @@ export function CopyrightMark({ locale }: { locale: string }) {
     { id: 'fair-use', label: pick(locale, 'الاستخدام العادل والمسموح', 'Permitted Fair Use') },
     { id: 'forbidden', label: pick(locale, 'الاستغلال غير المصرح به', 'Unlawful Infringements') },
     { id: 'dmca-notice', label: pick(locale, 'إجراءات إخطار DMCA', 'DMCA & Takedown Notices') },
-    { id: 'response-time', label: pick(locale, 'سرعة الاستجابة والتحقق', 'Response & Escalation SLA') },
+    { id: 'response-time', label: pick(locale, 'المراجعة عند الاستلام', 'Review on receipt') },
   ];
 
   const thirdPartyMarks = [
@@ -61,13 +61,13 @@ export function CopyrightMark({ locale }: { locale: string }) {
       lead={pick(
         locale,
         'تلتزم منصة يلا سبورت باحترام كامل لحقوق الملكية الفكرية والعلامات التجارية لجميع الأندية والاتحادات والوكالات الإعلامية. هذا الميثاق يوضح ملكية المحتوى وإجراءات الإبلاغ الفوري عن أي انتهاك.',
-        'Yalla Sport upholds rigorous standards of intellectual property and trademark respect across all football clubs, leagues, and media agencies. This charter defines content ownership boundaries and our rapid DMCA takedown protocol.'
+        'Yalla Sport upholds rigorous standards of intellectual property and trademark respect across all football clubs, leagues, and media agencies. This charter defines content ownership boundaries and how to file a notice.'
       )}
       date={date}
       seals={[
         pick(locale, 'حماية الشعار والتصميم والكود', 'Original Platform Assets Protected'),
         pick(locale, 'احترام كامل لعلامات الأندية', 'Club Trademarks Respected'),
-        pick(locale, 'استجابة سريعة للبلاغات خلال 24-48 ساعة', 'Rapid DMCA 24-48h Response'),
+        pick(locale, 'نراجع كل بلاغ عند استلامه', 'We review every notice when it arrives'),
       ]}
       rail={rail}
     >
@@ -108,12 +108,12 @@ export function CopyrightMark({ locale }: { locale: string }) {
 
         <LexHighlightCard
           icon={ShieldAlert}
-          badge={pick(locale, 'حماية فورية', 'DMCA SLA')}
-          title={pick(locale, 'مسار إبلاغ سريع للبلاغات', 'Rapid DMCA Takedown')}
+          badge={pick(locale, 'بلاغ الحقوق', 'Notice')}
+          title={pick(locale, 'مسار إبلاغ للبلاغات', 'Copyright notice')}
           body={pick(
             locale,
-            'إذا كنت صاحب حق وترى محتوى مخالفاً، يمكنك مراسلتنا لإزالته فوراً خلال 24 إلى 48 ساعة.',
-            'Rights holders can submit a swift takedown notice with verified resolution within 24 to 48 hours.'
+            'إذا كنت صاحب حق وترى محتوى مخالفاً، أرسل بلاغاً. نراجع كل بلاغ عند استلامه.',
+            'If you hold the rights and believe material infringes them, send a notice. We review every filing when it arrives.'
           )}
         />
       </LexHighlightsGrid>
@@ -253,13 +253,13 @@ export function CopyrightMark({ locale }: { locale: string }) {
         id="response-time"
         index="06"
         kicker={pick(locale, 'التنفيذ والمتابعة', 'Resolution')}
-        title={pick(locale, 'سرعة الاستجابة والتحقق الفوري (24-48 ساعة)', 'Rapid Response SLA & Investigation')}
+        title={pick(locale, 'نراجع كل بلاغ عند استلامه', 'We review every notice when it arrives')}
       >
         <p>
           {pick(
             locale,
-            'يتعامل فريق الشؤون القانونية والتقنية في يلا سبورت مع بلاغات حقوق النشر بأعلى درجات الجدية. نقوم بمراجعة البلاغ فور استلامه وحجب أو إزالة المحتوى المخالف في غضون 24 إلى 48 ساعة عمل.',
-            'Our legal and operations desk processes copyright notices with paramount urgency. Valid takedown notices are audited and acted upon, with offending assets removed within 24 to 48 business hours.'
+            'يتعامل مكتب العمليات في يلا سبورت مع بلاغات حقوق النشر بجدية. نراجع كل بلاغ عند استلامه. ما في مهلة زمنية معلنة هنا لأننا لا نربط الإزالة بعدّاد ساعات غير مضمون.',
+            'The Yalla Sport operations desk treats copyright notices seriously. We review every filing when it arrives. This page does not state a takedown clock, because we do not bind removal to an unenforced hour count.'
           )}
         </p>
       </LexSection>
