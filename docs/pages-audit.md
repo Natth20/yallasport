@@ -23,9 +23,9 @@
 
 | التصنيف | العدد | الصفحات |
 |---|---|---|
-| 🟢 GOOD | 45 | السابق + `/search` بعد الدفعة B |
+| 🟢 GOOD | 47 | السابق + `/profile` و`/profile/edit` بعد الدفعة C |
 | 🟡 PARTIAL | 0 | الدفعة A أغلقت الثلاثة: copyright، report، notifications |
-| 🔴 BROKEN | 4 | `/compare`، `/profile`، `/profile/edit`، `/settings` |
+| 🔴 BROKEN | 2 | `/compare`، `/settings` |
 
 `/settings` يعيد تصدير صفحة التنبيهات: المسار العام 🔴 (غلاف إعدادات ناقص)، ومحتوى التنبيهات 🟡.
 
@@ -361,24 +361,24 @@
 
 ## 38. `/profile`
 
-**المكوّن:** Prisma `User` + favorites + notifications — تخطيط Tailwind قديم (`rounded-[3rem]`, `text-brand-green`)  
-**التصنيف:** 🔴 BROKEN
+**المكوّن:** Prisma `User` + favorites + notifications داخل `SalonStage`  
+**التصنيف:** 🟢 GOOD — الدفعة C: زر القلب أُزيل. التنبيه يُعرض من `payload.title` / `payload.body` فقط، والقسم يختفي إن لم يوجدا.
 
 | القسم | مصدر | حقيقي؟ | الإجراء |
 |---|---|---|---|
 | الاسم / الدور / النقاط / الاشتراك | Prisma User + `PAYMENTS_ENABLED` | ✅ النقاط حقل المستخدم | لا تغيير API |
 | المفضلات | `userFavorite` + join | ✅ | لا شيء للمنطق |
-| زر القلب في البطاقة | `<button>` بلا action | ❌ واجهة ميتة | إزالة أو ربط بعد الموافقة |
-| نص التنبيه | «لقد تلقيت تنبيهاً بخصوص {entityType}» — **ليس** جسم الإشعار من DB | ❌ وهمي فوق سجل حقيقي | عرض الحقول الحقيقية أو إخفاء |
-| عناوين عربية ثابتة | «مفضلاتي» بدون `pick` | ⚠️ نسخ | ترجمة |
-| تصميم | ظل مسرحي / أخضر brand | ❌ | إعادة بناء بصالون الحساب |
+| زر القلب في البطاقة | غير موجود | ✅ أُزيل | تم في الدفعة C |
+| نص التنبيه | `Notification.payload.title` و`payload.body` | ✅ القسم يُخفى إن غابا | تم في الدفعة C |
+| العناوين | `pick` | ✅ | تم في الدفعة C |
+| تصميم | صالون `vault` + `profile.module.css` | ✅ | تم في الدفعة C |
 
 ---
 
 ## 39. `/profile/edit`
 
-**المكوّن:** `ProfileEditForm` — Prisma name/email  
-**التصنيف:** 🔴 BROKEN (تصميم صفحة يتيمة مقارنة بـ AuthGate/Salon)
+**المكوّن:** `ProfileEditForm` داخل `SalonStage` — Prisma name/email  
+**التصنيف:** 🟢 GOOD — الدفعة C: واجهة فقط. الاسم يُحفظ كما كان، والبريد يبقى مقفلاً.
 
 | القسم | مصدر | حقيقي؟ | الإجراء |
 |---|---|---|---|
