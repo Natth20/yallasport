@@ -1,13 +1,13 @@
 import Image from 'next/image';
 import styles from './metal-mark.module.css';
 
-const PX = { sm: 40, md: 68, lg: 120 } as const;
+const PX = { sm: 40, md: 68, lg: 120, xl: 220 } as const;
 
 export function MetalMark({
   size = 'md',
   priority = false,
 }: {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   priority?: boolean;
 }) {
   const px = PX[size];

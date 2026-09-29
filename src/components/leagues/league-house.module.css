@@ -47,3 +47,752 @@
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
 }
+
+.folio {
+  color: var(--foreground);
+  padding-bottom: 3rem;
+}
+
+.folio :global(a) {
+  -webkit-text-fill-color: currentColor;
+}
+
+.folio :global(a[class*='bg-foreground']),
+.folio :global(a[class*='bg-foreground']:hover) {
+  color: var(--background);
+  -webkit-text-fill-color: var(--background);
+}
+
+.folio :global(.league-hero-grid),
+.folio :global(.league-hero-foil),
+.folio :global(.league-hero-wash),
+.folio :global(.league-hero-ghost),
+.folio :global(.league-hero-vignette) {
+  display: none;
+}
+
+.folio :global(.league-hero) {
+  position: relative;
+  margin: 1rem auto 0;
+  width: min(1240px, calc(100% - 1.5rem));
+  overflow: hidden;
+  border-radius: 1.65rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 30%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+    0 24px 52px color-mix(in srgb, var(--ys-orange) 10%, transparent);
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 42%),
+    var(--card);
+}
+
+.folio :global(.league-corner) {
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 45%, transparent);
+  pointer-events: none;
+}
+
+.folio :global(.league-corner.is-tl) {
+  top: 0.55rem;
+  inset-inline-start: 0.55rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.folio :global(.league-corner.is-tr) {
+  top: 0.55rem;
+  inset-inline-end: 0.55rem;
+  border-inline-start: 0;
+  border-bottom: 0;
+}
+
+.folio :global(.league-corner.is-bl) {
+  bottom: 0.55rem;
+  inset-inline-start: 0.55rem;
+  border-inline-end: 0;
+  border-top: 0;
+}
+
+.folio :global(.league-corner.is-br) {
+  bottom: 0.55rem;
+  inset-inline-end: 0.55rem;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+.folio :global(.league-back-link) {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+  text-decoration: none;
+}
+
+.folio :global(.league-mast) {
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 760px) {
+  .folio :global(.league-mast) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+.folio :global(.league-crest-plate) {
+  display: grid;
+  place-items: center;
+  width: 6.4rem;
+  height: 6.4rem;
+  padding: 0.85rem;
+  border-radius: 1.4rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+}
+
+.folio :global(.league-kicker) {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.folio :global(.league-meta-chip) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.folio :global(.league-wordmark) {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.folio :global(.league-meta-row) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  margin-top: 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--foreground) 68%, transparent);
+}
+
+.folio :global(.league-meta-row em) {
+  margin-inline-start: 0.3rem;
+  font-style: normal;
+  color: var(--ys-orange);
+}
+
+.folio :global(.league-season-switch) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.folio :global(.league-season-switch a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.folio :global(.league-season-switch a.is-active) {
+  background: var(--ys-orange);
+  border-color: var(--ys-orange);
+  color: #14110e;
+  -webkit-text-fill-color: #14110e;
+}
+
+.folio :global(.league-signature) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr));
+  gap: 0.55rem;
+}
+
+.folio :global(.league-signature-tile) {
+  padding: 0.8rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+}
+
+.folio :global(.league-signature-tile strong) {
+  display: block;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.folio :global(.league-signature-tile span) {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.folio :global(.league-body-grid) {
+  display: grid;
+  gap: 1.1rem;
+  align-items: start;
+}
+
+@media (min-width: 1080px) {
+  .folio :global(.league-body-grid) {
+    grid-template-columns: minmax(0, 1fr) 20.5rem;
+  }
+}
+
+.folio :global(.league-folio-nav) {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+
+.folio :global(.league-folio-nav-link) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.folio :global(.league-folio-nav-link em) {
+  font-style: normal;
+  color: var(--ys-orange);
+}
+
+.folio :global(.league-plate),
+.folio :global(.league-feature-card),
+.folio :global(.league-table-plate),
+.folio :global(.league-chapter-card) {
+  display: block;
+  padding: 1rem;
+  border-radius: 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.folio :global(.league-section-kicker) {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.folio :global(.league-section-title) {
+  margin: 0.25rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.folio :global(.league-folio-mark) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.7rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 16%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.folio :global(.league-feature-grid),
+.folio :global(.league-live-teams),
+.folio :global(.league-fixture-duel),
+.folio :global(.league-result-duel) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.folio :global(.league-feature-side),
+.folio :global(.league-live-teams span),
+.folio :global(.league-fixture-duel span),
+.folio :global(.league-result-duel span) {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.folio :global(.league-feature-side.is-away),
+.folio :global(.league-live-teams span:last-child),
+.folio :global(.league-fixture-duel span:last-child) {
+  justify-content: flex-end;
+  text-align: end;
+}
+
+.folio :global(.league-feature-score),
+.folio :global(.league-live-score),
+.folio :global(.league-result-duel strong) {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.folio :global(.league-live-stack),
+.folio :global(.league-fixture-stack),
+.folio :global(.league-result-stack),
+.folio :global(.league-scorer-stack),
+.folio :global(.league-tv-stack) {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.folio :global(.league-live-card),
+.folio :global(.league-fixture-card),
+.folio :global(.league-result-card),
+.folio :global(.league-scorer-card),
+.folio :global(.league-tv-row) {
+  display: grid;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 45%, transparent);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.folio :global(.league-scorer-card) {
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+}
+
+.folio :global(.league-scorer-photo) {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.folio :global(.league-scorer-photo.is-empty) {
+  display: grid;
+  place-items: center;
+  background: #111;
+  color: var(--ys-orange);
+  font-weight: 800;
+}
+
+.folio :global(.league-scorer-rank) {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.folio :global(.league-scorer-goals) {
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.folio :global(.league-scorer-card em),
+.folio :global(.league-fixture-meta),
+.folio :global(.league-tv-row span) {
+  display: block;
+  font-style: normal;
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.folio :global(.league-clubs-grid) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.folio :global(.league-club-chip) {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 3rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.folio :global(.league-table-plate) {
+  background: #14110e;
+  color: #f6f1ea;
+  border-color: color-mix(in srgb, var(--ys-orange) 32%, #14110e);
+}
+
+.folio :global(.league-table-plate h2),
+.folio :global(.league-table-plate a),
+.folio :global(.league-table-row) {
+  color: #f6f1ea;
+  -webkit-text-fill-color: #f6f1ea;
+}
+
+.folio :global(.league-table-head),
+.folio :global(.league-table-row) {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) 1.6rem 2.2rem 1.8rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.folio :global(.league-table-head) {
+  padding: 0 0.35rem 0.35rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.folio :global(.league-table-club) {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.folio :global(.league-table-club strong) {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.folio :global(.league-form-pips) {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.folio :global(.league-form-pips em) {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.2rem;
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.folio :global(.league-form-pips .is-w) {
+  background: color-mix(in srgb, #16a34a 22%, transparent);
+  color: #166534;
+}
+
+.folio :global(.league-form-pips .is-d) {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.folio :global(.league-form-pips .is-l) {
+  background: color-mix(in srgb, #e11d48 18%, transparent);
+  color: #9f1239;
+}
+
+.folio :global(.league-chapter-rail) {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.folio :global(.league-chapter-card strong) {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.folio :global(.league-chapter-card span) {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.folio :global(.league-inline-link) {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+  text-decoration: none;
+}
+
+.folio :global(.league-reports-grid) {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.folio :global(.league-report-lead),
+.folio :global(.league-report-card) {
+  display: grid;
+  gap: 0.55rem;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.folio :global(.league-report-lead img) {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0.9rem;
+}
+
+.folio :global(.league-report-lead h3),
+.folio :global(.league-report-card h3) {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.chapterLede {
+  max-width: 40rem;
+  margin: 0.55rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--foreground) 68%, transparent);
+}
+
+.folio :global(.lch-table-scroll) {
+  overflow-x: auto;
+}
+
+.folio :global(.lch-table-head),
+.folio :global(.lch-table-row) {
+  display: grid;
+  grid-template-columns: 2rem minmax(11rem, 1.6fr) repeat(9, minmax(2.2rem, 0.45fr));
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 52rem;
+}
+
+.folio :global(.lch-table-head) {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--foreground) 52%, transparent);
+}
+
+.folio :global(.lch-table-row) {
+  padding: 0.55rem 0.85rem;
+  border-top: 1px solid var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.folio :global(.lch-table-row.is-lead) {
+  background: color-mix(in srgb, var(--ys-orange) 8%, transparent);
+}
+
+.folio :global(.lch-table-club) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.folio :global(.lch-table-club strong) {
+  display: block;
+  font-size: 0.84rem;
+}
+
+.folio :global(.lch-table-pts) {
+  font-size: 1rem;
+  color: var(--ys-orange);
+}
+
+.folio :global(.lch-table-zone) {
+  display: block;
+  font-style: normal;
+  font-size: 0.66rem;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.folio :global(.lch-podium) {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+}
+
+.folio :global(.lch-podium-card),
+.folio :global(.lch-scorer-podium-card),
+.folio :global(.lch-archive-card),
+.folio :global(.lch-match-row) {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: var(--card);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.folio :global(.lch-podium-card.is-lead),
+.folio :global(.lch-scorer-podium-card.is-lead),
+.folio :global(.lch-archive-card.is-active) {
+  border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
+}
+
+.folio :global(.lch-match-row) {
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1.6fr) minmax(7rem, 0.7fr);
+  align-items: center;
+}
+
+@media (max-width: 800px) {
+  .folio :global(.lch-match-row) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.folio :global(.lch-match-duel) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.folio :global(.lch-match-side) {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  font-weight: 800;
+}
+
+.folio :global(.lch-match-side.is-away) {
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
+.folio :global(.lch-match-score strong) {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.folio :global(.lch-match-when),
+.folio :global(.lch-match-meta) {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.74rem;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.folio :global(.lch-match-row.is-live) {
+  border-color: color-mix(in srgb, #e11d48 35%, var(--border));
+}
+
+.folio :global(.lch-live-badge) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 800;
+  color: #e11d48;
+}
+
+.folio :global(.lch-scorers-grid),
+.folio :global(.lch-scorer-podium) {
+  display: grid;
+  gap: 0.7rem;
+}
+
+@media (min-width: 900px) {
+  .folio :global(.lch-scorers-grid) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .folio :global(.lch-scorer-podium) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.folio :global(.lch-scorer-face) {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.folio :global(.lch-scorer-face.is-empty) {
+  display: grid;
+  place-items: center;
+  background: #111;
+  color: var(--ys-orange);
+  font-weight: 800;
+}
+
+.folio :global(.lch-podium-rank) {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.folio :global(.lch-archive-timeline) {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.folio :global(.lch-archive-card) {
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.folio :global(.lch-round-label) {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.folio :global(.lch-card-y),
+.folio :global(.lch-card-r) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.3rem;
+  height: 1.15rem;
+  margin-inline-end: 0.2rem;
+  border-radius: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.folio :global(.lch-card-y) {
+  background: #eab308;
+  color: #14110e;
+}
+
+.folio :global(.lch-card-r) {
+  background: #e11d48;
+  color: #fff;
+}

@@ -11,6 +11,7 @@ import React, {
   type HTMLAttributes,
   type ButtonHTMLAttributes,
 } from 'react';
+import { Link } from '@/i18n/navigation';
 import styles from './dropdown.module.css';
 
 interface DropdownContextValue {
@@ -183,6 +184,21 @@ export const DropdownItem = forwardRef<HTMLButtonElement, DropdownItemProps>(
   }
 );
 DropdownItem.displayName = 'DropdownItem';
+
+export interface DropdownLinkProps {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}
+
+export const DropdownLink = ({ href, children, className }: DropdownLinkProps) => {
+  const { close } = useDropdownContext();
+  return (
+    <Link href={href} role="menuitem" className={`${styles.item} ${className || ''}`} onClick={() => close()}>
+      {children}
+    </Link>
+  );
+};
 
 export interface DropdownGroupProps extends HTMLAttributes<HTMLDivElement> {
   label?: string;

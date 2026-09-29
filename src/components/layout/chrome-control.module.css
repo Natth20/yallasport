@@ -1,0 +1,44 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  padding: 0.35rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.btn:hover {
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+.btnOn {
+  color: var(--primary-foreground);
+  background: var(--ys-orange);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--ys-orange) 28%, transparent);
+}
+
+.btnOn:hover {
+  color: var(--primary-foreground);
+  background: var(--ys-orange-hover);
+}
+
+.lang {
+  gap: 0.35rem;
+  padding: 0 0.7rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}

@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { sportsData } from '@/lib/sports-data';
+import { apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
   let lastError: unknown;
@@ -204,6 +205,35 @@ export type PlayerDossierData = {
     readingTime?: number;
     sourceName?: string;
   }>;
+  teammates: Array<{
+    slug: string;
+    name: string;
+    photoUrl: string | null;
+    position: string | null;
+    shirtNumber: number | null;
+  }>;
+  clubFixtures: {
+    upcoming: Array<{
+      id: string;
+      status: string;
+      kickoffAt: Date;
+      homeScore: number | null;
+      awayScore: number | null;
+      homeTeam: { name: string; logoUrl: string | null };
+      awayTeam: { name: string; logoUrl: string | null };
+      league: { name: string };
+    }>;
+    recent: Array<{
+      id: string;
+      status: string;
+      kickoffAt: Date;
+      homeScore: number | null;
+      awayScore: number | null;
+      homeTeam: { name: string; logoUrl: string | null };
+      awayTeam: { name: string; logoUrl: string | null };
+      league: { name: string };
+    }>;
+  };
 };
 
 type ApiPlayerPayload = {
@@ -544,41 +574,92 @@ function buildProfileBars(totals: PlayerSeasonTotals): PlayerProfileBar[] {
   return candidates.filter((row) => row.value > 0);
 }
 
-export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: string): Promise<PlayerDossierData | null> {
-  const playerRow = await soft(
+const playerRowSelect = {
+  id: true,
+  externalId: true,
+  name: true,
+  slug: true,
+  photoUrl: true,
+  position: true,
+  nationality: true,
+  birthDate: true,
+} as const;
+
+export async function findPlayerRowBySlug(slug: string) {
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(slug).trim();
+    } catch {
+      return slug.trim();
+    }
+  })();
+  if (!decoded) return null;
+  const tail = decoded.match(/(\d{3,})$/)?.[1] ?? null;
+  const nameGuess = decoded.replace(/-\d+$/, '').replace(/-/g, ' ').trim();
+
+  const exact = await soft(
     () =>
-      prisma.player.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          externalId: true,
-          name: true,
-          slug: true,
-          photoUrl: true,
-          position: true,
-          nationality: true,
-          birthDate: true,
+      prisma.player.findFirst({
+        where: {
+          OR: [
+            { slug: decoded },
+            { slug },
+            ...(tail ? [{ externalId: tail }, { slug: { endsWith: `-${tail}` } }] : []),
+          ],
         },
+        select: playerRowSelect,
       }),
     null
   );
+  if (exact) return exact;
+
+  const candidates = await soft(
+    () =>
+      prisma.player.findMany({
+        where: {
+          OR: [
+            { slug: { startsWith: `${decoded}-`, mode: 'insensitive' } },
+            { slug: { startsWith: `${nameGuess.replace(/\s+/g, '-')}-`, mode: 'insensitive' } },
+            { name: { equals: nameGuess, mode: 'insensitive' } },
+            { name: { contains: nameGuess, mode: 'insensitive' } },
+          ],
+        },
+        take: 12,
+        select: playerRowSelect,
+      }),
+    []
+  );
+  if (candidates.length === 0) return null;
+  const named = candidates.find((row) => row.name.toLowerCase() === nameGuess.toLowerCase());
+  if (named) return named;
+  return [...candidates].sort((a, b) => a.slug.length - b.slug.length)[0] ?? null;
+}
+
+export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: string): Promise<PlayerDossierData | null> {
+  const playerRow = await findPlayerRowBySlug(slug);
 
   if (!playerRow) return null;
 
   const season = footballSeason();
   const ext = encodeURIComponent(playerRow.externalId);
+  const apiTeamsEarly = await soft(() => sportsData.getRaw<ApiTeamsPayload>(`/players/teams?player=${ext}`), null);
+  const discoveredSeasons = [
+    ...new Set(
+      (apiTeamsEarly?.response || []).flatMap((row) => (Array.isArray(row.seasons) ? row.seasons : [])),
+    ),
+  ]
+    .filter((value): value is number => typeof value === 'number')
+    .sort((a, b) => b - a);
+  const seasonsToLoad = (discoveredSeasons.length > 0 ? discoveredSeasons : [season, season - 1, season - 2, season - 3]).slice(0, 4);
 
   const [
     teams,
     events,
     transfersDb,
     newsRows,
-    apiPlayer,
-    apiPlayerPrev,
-    apiPlayerOlder,
+    seasonPayloads,
     apiTransfers,
     apiTrophies,
-    apiTeams,
     apiSidelined,
   ] = await wave([
     () =>
@@ -673,41 +754,33 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
           }),
         []
       ),
-    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season}`), null),
-    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 1}`), null),
-    () => soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${season - 2}`), null),
+    () =>
+      Promise.all(
+        seasonsToLoad.map((year) =>
+          soft(() => sportsData.getRaw<ApiPlayerPayload>(`/players?id=${ext}&season=${year}`), null),
+        ),
+      ),
     () => soft(() => sportsData.getRaw<ApiTransferPayload>(`/transfers?player=${ext}`), null),
     () => soft(() => sportsData.getRaw<ApiTrophyPayload>(`/trophies?player=${ext}`), null),
-    () => soft(() => sportsData.getRaw<ApiTeamsPayload>(`/players/teams?player=${ext}`), null),
     () => soft(() => sportsData.getRaw<ApiSidelinedPayload>(`/sidelined?player=${ext}`), null),
   ]);
 
-  const currentBlocks = (apiPlayer?.response?.[0]?.statistics || [])
-    .map((row) => mapSeasonBlock(row))
-    .filter(Boolean) as PlayerSeasonBlock[];
-  const prevBlocks = (apiPlayerPrev?.response?.[0]?.statistics || [])
-    .map((row) => mapSeasonBlock(row))
-    .filter(Boolean) as PlayerSeasonBlock[];
-  const olderBlocks = (apiPlayerOlder?.response?.[0]?.statistics || [])
-    .map((row) => mapSeasonBlock(row))
-    .filter(Boolean) as PlayerSeasonBlock[];
+  const apiTeams = apiTeamsEarly;
+  const blocksBySeason = seasonPayloads.map((payload, index) => ({
+    season: seasonsToLoad[index] ?? null,
+    blocks: (payload?.response?.[0]?.statistics || []).map((row) => mapSeasonBlock(row)).filter(Boolean) as PlayerSeasonBlock[],
+    player: payload?.response?.[0]?.player,
+  }));
+  const seasonBlocks = blocksBySeason
+    .flatMap((row) => row.blocks)
+    .filter((block) => (block.games.appearances || 0) > 0 || (block.goals.total || 0) > 0 || (block.games.minutes || 0) > 0)
+    .sort((a, b) => {
+      const seasonDiff = (b.league.season || 0) - (a.league.season || 0);
+      if (seasonDiff !== 0) return seasonDiff;
+      return (b.games.appearances || 0) - (a.games.appearances || 0);
+    });
 
-  // Prefer current season for profile, but keep previous competition cards when current is thin.
-  const seasonBlocks = (
-    currentBlocks.length > 0
-      ? [
-          ...currentBlocks,
-          ...prevBlocks.filter((b) => b.league.season !== season),
-          ...olderBlocks.filter((b) => b.league.season !== season && b.league.season !== season - 1),
-        ]
-      : [...prevBlocks, ...olderBlocks]
-  ).sort((a, b) => {
-    const seasonDiff = (b.league.season || 0) - (a.league.season || 0);
-    if (seasonDiff !== 0) return seasonDiff;
-    return (b.games.appearances || 0) - (a.games.appearances || 0);
-  });
-
-  const apiProfile = apiPlayer?.response?.[0]?.player || apiPlayerPrev?.response?.[0]?.player;
+  const apiProfile = blocksBySeason.find((row) => row.player?.name)?.player;
 
   const birthDate =
     playerRow.birthDate ||
@@ -780,18 +853,22 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
     if (event.type === 'RED_CARD') red += 1;
   }
 
-  const focusBlocks = currentBlocks.length > 0 ? currentBlocks : prevBlocks;
-  const focusSeason =
-    focusBlocks[0]?.league.season ?? (currentBlocks.length > 0 ? season : season - 1);
-  const seasonTotals = sumSeason(focusBlocks, focusSeason);
+  const rankedSeasons = [
+    ...new Set(seasonBlocks.map((block) => block.league.season).filter((value): value is number => typeof value === 'number')),
+  ].sort((a, b) => b - a);
+  const focusSeason = rankedSeasons[0] ?? seasonsToLoad[0] ?? season;
+  const seasonTotals = sumSeason(
+    seasonBlocks.filter((block) => block.league.season === focusSeason),
+    focusSeason
+  );
   const prevSeasonTotals =
-    currentBlocks.length > 0 && prevBlocks.length > 0
-      ? sumSeason(prevBlocks, season - 1)
-      : currentBlocks.length === 0 && prevBlocks.length > 0 && olderBlocks.length > 0
-        ? sumSeason(olderBlocks, season - 2)
-        : null;
+    rankedSeasons[1] != null
+      ? sumSeason(seasonBlocks.filter((block) => block.league.season === rankedSeasons[1]), rankedSeasons[1])
+      : null;
   const olderSeasonTotals =
-    currentBlocks.length > 0 && olderBlocks.length > 0 ? sumSeason(olderBlocks, season - 2) : null;
+    rankedSeasons[2] != null
+      ? sumSeason(seasonBlocks.filter((block) => block.league.season === rankedSeasons[2]), rankedSeasons[2])
+      : null;
   const rates = seasonTotals ? buildRates(seasonTotals) : null;
 
   const assists = seasonTotals?.assists || 0;
@@ -803,7 +880,7 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
   }
 
   const profileBars = seasonTotals ? buildProfileBars(seasonTotals) : [];
-  const shirtFromApi = focusBlocks.find((b) => b.games.number != null)?.games.number ?? null;
+  const shirtFromApi = seasonBlocks.find((b) => b.games.number != null)?.games.number ?? null;
 
   const trophies =
     apiTrophies?.response
@@ -851,18 +928,85 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
   const transfers = (
     apiTransferRows.length > 0
       ? apiTransferRows.map((row) => {
-          const key = `${row.date.toISOString().slice(0, 10)}|${row.fromTeam || ''}|${row.toTeam || ''}`;
-          return { ...row, fee: row.fee || feeByKey.get(key) || null };
-        })
+        const key = `${row.date.toISOString().slice(0, 10)}|${row.fromTeam || ''}|${row.toTeam || ''}`;
+        return { ...row, fee: row.fee || feeByKey.get(key) || null };
+      })
       : transfersDb.map((row) => ({
-          id: row.id,
-          date: row.date,
-          fee: row.fee,
-          type: null as string | null,
-          fromTeam: row.fromTeam,
-          toTeam: row.toTeam,
-        }))
+        id: row.id,
+        date: row.date,
+        fee: row.fee,
+        type: null as string | null,
+        fromTeam: row.fromTeam,
+        toTeam: row.toTeam,
+      }))
   ).filter((row) => !Number.isNaN(row.date.getTime()) && row.date.getTime() > 0);
+
+  const clubId = current?.team.id;
+  const matchLite = {
+    id: true,
+    status: true,
+    kickoffAt: true,
+    homeScore: true,
+    awayScore: true,
+    homeTeam: { select: { name: true, logoUrl: true } },
+    awayTeam: { select: { name: true, logoUrl: true } },
+    league: { select: { name: true } },
+  } as const;
+  const [teammateRows, upcomingClub, recentClub] = clubId
+    ? await wave([
+      () =>
+        soft(
+          () =>
+            prisma.playerTeam.findMany({
+              where: { teamId: clubId, to: null, playerId: { not: playerRow.id } },
+              take: 16,
+              orderBy: [{ shirtNumber: 'asc' }],
+              select: {
+                shirtNumber: true,
+                player: { select: { slug: true, name: true, photoUrl: true, position: true, externalId: true } },
+              },
+            }),
+          []
+        ),
+      () =>
+        soft(
+          () =>
+            prisma.match.findMany({
+              where: {
+                OR: [{ homeTeamId: clubId }, { awayTeamId: clubId }],
+                status: { in: ['NOT_STARTED', 'LIVE', 'HALFTIME'] },
+              },
+              orderBy: { kickoffAt: 'asc' },
+              take: 4,
+              select: matchLite,
+            }),
+          []
+        ),
+      () =>
+        soft(
+          () =>
+            prisma.match.findMany({
+              where: {
+                OR: [{ homeTeamId: clubId }, { awayTeamId: clubId }],
+                status: 'FINISHED',
+              },
+              orderBy: { kickoffAt: 'desc' },
+              take: 6,
+              select: matchLite,
+            }),
+          []
+        ),
+    ])
+    : [[], [], []];
+
+  const teammates = teammateRows.map((row) => ({
+    slug: row.player.slug,
+    name: row.player.name,
+    photoUrl: apiSportsPlayerPhoto(row.player.externalId, row.player.photoUrl),
+    position: row.player.position,
+    shirtNumber: row.shirtNumber,
+  }));
+  const clubFixtures = { upcoming: upcomingClub, recent: recentClub };
 
   const news = newsRows
     .filter((row): row is typeof row & { publishedAt: Date } => Boolean(row.publishedAt))
@@ -887,7 +1031,7 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       slug: playerRow.slug,
       firstName: apiProfile?.firstname || null,
       lastName: apiProfile?.lastname || null,
-      photoUrl: playerRow.photoUrl || apiProfile?.photo || null,
+      photoUrl: apiSportsPlayerPhoto(playerRow.externalId, playerRow.photoUrl || apiProfile?.photo || null),
       position: playerRow.position || seasonBlocks[0]?.games.position || null,
       nationality: playerRow.nationality || apiProfile?.nationality || null,
       birthDate,
@@ -937,6 +1081,8 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
     })),
     transfers,
     news,
+    teammates,
+    clubFixtures,
   };
 });
 
@@ -960,23 +1106,7 @@ export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
   slug: string,
   seasonYear?: number,
 ): Promise<PlayerCompareCard | null> {
-  const playerRow = await soft(
-    () =>
-      prisma.player.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          externalId: true,
-          name: true,
-          slug: true,
-          photoUrl: true,
-          position: true,
-          nationality: true,
-          birthDate: true,
-        },
-      }),
-    null,
-  );
+  const playerRow = await findPlayerRowBySlug(slug);
   if (!playerRow) return null;
 
   const season = seasonYear ?? footballSeason();

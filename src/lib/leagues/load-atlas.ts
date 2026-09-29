@@ -1,8 +1,10 @@
 import { reportCaughtError } from '@/lib/ops/caught';
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { sportsData } from '@/lib/sports-data';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { persistNormalizedMatch } from '@/lib/sports-data/persistence';
+import { liveKickoffFloor } from '@/lib/sports-data/match-window';
 
 const GOAL_TYPES = ['GOAL', 'PENALTY', 'OWN_GOAL'] as const;
 
@@ -37,7 +39,7 @@ async function wave<T extends readonly unknown[]>(
   return out as { [K in keyof T]: T[K] };
 }
 
-export async function loadLeaguesAtlasData(input: {
+export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(input: {
   now: Date;
   dayStart: Date;
   dayEnd: Date;
@@ -60,7 +62,7 @@ export async function loadLeaguesAtlasData(input: {
       soft(
         () =>
           prisma.match.findMany({
-            where: { status: { in: ['LIVE', 'HALFTIME'] } },
+            where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor(now) } },
             orderBy: { kickoffAt: 'asc' },
             select: {
               id: true,
@@ -92,13 +94,13 @@ export async function loadLeaguesAtlasData(input: {
     () =>
       userId
         ? soft(
-            () =>
-              prisma.userFavorite.findMany({
-                where: { userId, entityType: 'LEAGUE' },
-                select: { entityId: true },
-              }),
-            []
-          )
+          () =>
+            prisma.userFavorite.findMany({
+              where: { userId, entityType: 'LEAGUE' },
+              select: { entityId: true },
+            }),
+          []
+        )
         : Promise.resolve([] as { entityId: string }[]),
   ]);
 
@@ -119,7 +121,7 @@ export async function loadLeaguesAtlasData(input: {
       liveMatches = await soft(
         () =>
           prisma.match.findMany({
-            where: { status: { in: ['LIVE', 'HALFTIME'] } },
+            where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor(now) } },
             orderBy: { kickoffAt: 'asc' },
             select: {
               id: true,
@@ -201,53 +203,53 @@ export async function loadLeaguesAtlasData(input: {
     () =>
       nextPairs.length
         ? soft(
-            () =>
-              prisma.match.findMany({
-                where: {
-                  status: 'NOT_STARTED',
-                  OR: nextPairs.map((row) => ({ leagueId: row.leagueId, kickoffAt: row.kickoffAt })),
-                },
-                select: {
-                  id: true,
-                  leagueId: true,
-                  kickoffAt: true,
-                  lastSyncedAt: true,
-                  seasonId: true,
-                  round: true,
-                  venue: { select: { name: true, city: true } },
-                  homeTeam: { select: { name: true, logoUrl: true } },
-                  awayTeam: { select: { name: true, logoUrl: true } },
-                  league: { select: { name: true, slug: true, logoUrl: true } },
-                },
-              }),
-            []
-          )
+          () =>
+            prisma.match.findMany({
+              where: {
+                status: 'NOT_STARTED',
+                OR: nextPairs.map((row) => ({ leagueId: row.leagueId, kickoffAt: row.kickoffAt })),
+              },
+              select: {
+                id: true,
+                leagueId: true,
+                kickoffAt: true,
+                lastSyncedAt: true,
+                seasonId: true,
+                round: true,
+                venue: { select: { name: true, city: true } },
+                homeTeam: { select: { name: true, logoUrl: true } },
+                awayTeam: { select: { name: true, logoUrl: true } },
+                league: { select: { name: true, slug: true, logoUrl: true } },
+              },
+            }),
+          []
+        )
         : Promise.resolve([]),
     () =>
       lastPairs.length
         ? soft(
-            () =>
-              prisma.match.findMany({
-                where: {
-                  status: 'FINISHED',
-                  OR: lastPairs.map((row) => ({ leagueId: row.leagueId, kickoffAt: row.kickoffAt })),
-                },
-                select: {
-                  id: true,
-                  leagueId: true,
-                  kickoffAt: true,
-                  lastSyncedAt: true,
-                  seasonId: true,
-                  round: true,
-                  homeScore: true,
-                  awayScore: true,
-                  homeTeam: { select: { name: true, logoUrl: true } },
-                  awayTeam: { select: { name: true, logoUrl: true } },
-                  league: { select: { name: true, slug: true } },
-                },
-              }),
-            []
-          )
+          () =>
+            prisma.match.findMany({
+              where: {
+                status: 'FINISHED',
+                OR: lastPairs.map((row) => ({ leagueId: row.leagueId, kickoffAt: row.kickoffAt })),
+              },
+              select: {
+                id: true,
+                leagueId: true,
+                kickoffAt: true,
+                lastSyncedAt: true,
+                seasonId: true,
+                round: true,
+                homeScore: true,
+                awayScore: true,
+                homeTeam: { select: { name: true, logoUrl: true } },
+                awayTeam: { select: { name: true, logoUrl: true } },
+                league: { select: { name: true, slug: true } },
+              },
+            }),
+          []
+        )
         : Promise.resolve([]),
     () =>
       soft(
@@ -280,22 +282,22 @@ export async function loadLeaguesAtlasData(input: {
     () =>
       liveMatchIds.length
         ? soft(
-            () =>
-              prisma.matchEvent.findMany({
-                where: { matchId: { in: liveMatchIds }, type: { in: [...GOAL_TYPES] } },
-                orderBy: [{ minute: 'desc' }, { extraMinute: 'desc' }],
-                take: 48,
-                select: {
-                  id: true,
-                  matchId: true,
-                  minute: true,
-                  extraMinute: true,
-                  playerName: true,
-                  player: { select: { name: true } },
-                },
-              }),
-            []
-          )
+          () =>
+            prisma.matchEvent.findMany({
+              where: { matchId: { in: liveMatchIds }, type: { in: [...GOAL_TYPES] } },
+              orderBy: [{ minute: 'desc' }, { extraMinute: 'desc' }],
+              take: 48,
+              select: {
+                id: true,
+                matchId: true,
+                minute: true,
+                extraMinute: true,
+                playerName: true,
+                player: { select: { name: true } },
+              },
+            }),
+          []
+        )
         : Promise.resolve([]),
     () =>
       soft(
@@ -323,43 +325,43 @@ export async function loadLeaguesAtlasData(input: {
     () =>
       scorerPlayerIds.length
         ? soft(
-            () =>
-              prisma.player.findMany({
-                where: { id: { in: scorerPlayerIds } },
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  photoUrl: true,
-                  teams: {
-                    where: { to: null },
-                    take: 1,
-                    select: { team: { select: { name: true } } },
-                  },
+          () =>
+            prisma.player.findMany({
+              where: { id: { in: scorerPlayerIds } },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                photoUrl: true,
+                teams: {
+                  where: { to: null },
+                  take: 1,
+                  select: { team: { select: { name: true } } },
                 },
-              }),
-            []
-          )
+              },
+            }),
+          []
+        )
         : Promise.resolve([]),
     () =>
       scorerPlayerIds.length
         ? soft(
-            () =>
-              prisma.matchEvent.findMany({
-                where: {
-                  playerId: { in: scorerPlayerIds },
-                  type: { in: ['GOAL', 'PENALTY'] },
-                  match: { kickoffAt: { gte: scorersSince } },
-                },
-                orderBy: { id: 'desc' },
-                take: 80,
-                select: {
-                  playerId: true,
-                  match: { select: { league: { select: { name: true, slug: true } } } },
-                },
-              }),
-            []
-          )
+          () =>
+            prisma.matchEvent.findMany({
+              where: {
+                playerId: { in: scorerPlayerIds },
+                type: { in: ['GOAL', 'PENALTY'] },
+                match: { kickoffAt: { gte: scorersSince } },
+              },
+              orderBy: { id: 'desc' },
+              take: 80,
+              select: {
+                playerId: true,
+                match: { select: { league: { select: { name: true, slug: true } } } },
+              },
+            }),
+          []
+        )
         : Promise.resolve([]),
   ]);
 
@@ -380,7 +382,7 @@ export async function loadLeaguesAtlasData(input: {
     scorerPlayers,
     scorerLeagueRows,
   };
-}
+});
 
 export async function loadSpotlightPodium(leagueId: string) {
   return soft(

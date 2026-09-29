@@ -9,7 +9,9 @@ import { Card } from '@/components/ui/Card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { LanguageToggle } from '@/components/layout/LanguageToggle';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { DataSaverToggle } from '@/components/layout/DataSaverToggle';
 import { useTheme } from '@/components/layout/ThemeProvider';
+import { useSettings } from '@/lib/context/SettingsContext';
 import { NotificationSettings } from '../profile/NotificationSettings';
 import styles from './settings.module.css';
 
@@ -45,6 +47,7 @@ export function SettingsDesk({
   const pathname = usePathname();
   const currentLocale = useLocale();
   const { theme } = useTheme();
+  const { dataSaver } = useSettings();
   const [tab, setTab] = useState<SettingsTab>(initialTab);
 
   const select = (value: string) => {
@@ -130,22 +133,41 @@ export function SettingsDesk({
 
       <div role="tabpanel" hidden={tab !== 'appearance'}>
         <Card variant="bordered" padding="md">
-          <div className={styles.switchRow}>
-            <div className={styles.switchCopy}>
-              <strong>
-                {theme === 'light'
-                  ? pick(locale, 'الوضع الفاتح', 'Light mode')
-                  : pick(locale, 'الوضع الداكن', 'Dark mode')}
-              </strong>
-              <p className={styles.note}>
-                {pick(
-                  locale,
-                  'نفس مفتاح الترويسة. يُحفظ في هذا المتصفح، لا في حسابك.',
-                  'The same header switch. It is stored in this browser, not on your account.',
-                )}
-              </p>
+          <div className={styles.stack}>
+            <div className={styles.switchRow}>
+              <div className={styles.switchCopy}>
+                <strong>
+                  {theme === 'light'
+                    ? pick(locale, 'الوضع الفاتح', 'Light mode')
+                    : pick(locale, 'الوضع الداكن', 'Dark mode')}
+                </strong>
+                <p className={styles.note}>
+                  {pick(
+                    locale,
+                    'نفس مفتاح الترويسة. يُحفظ في هذا المتصفح، لا في حسابك.',
+                    'The same header switch. It is stored in this browser, not on your account.',
+                  )}
+                </p>
+              </div>
+              <ThemeToggle />
             </div>
-            <ThemeToggle />
+            <div className={styles.switchRow}>
+              <div className={styles.switchCopy}>
+                <strong>
+                  {dataSaver
+                    ? pick(locale, 'وضع توفير الطاقة مفعل', 'Energy saver is on')
+                    : pick(locale, 'وضع توفير الطاقة', 'Energy saver')}
+                </strong>
+                <p className={styles.note}>
+                  {pick(
+                    locale,
+                    'نفس مفتاح الترويسة. يقلل تحديثات المباشر وحركة الصفحة في هذا المتصفح.',
+                    'The same header switch. It slows live updates and page motion in this browser.',
+                  )}
+                </p>
+              </div>
+              <DataSaverToggle />
+            </div>
           </div>
         </Card>
       </div>

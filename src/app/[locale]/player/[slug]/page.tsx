@@ -5,13 +5,15 @@ import { getLocale } from 'next-intl/server';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { PlayerDossier } from '@/components/players/PlayerDossier';
 import { pick } from '@/i18n/pick';
-import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 import { loadPlayerDossier } from '@/lib/players/load-dossier';
 import { walkLocalizeNames, localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { FrontSkeleton } from '@/components/front/FrontMark';
+import { HallFoyer } from '@/components/salon/HallFoyer';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { CalendarDays, Radio, Shield, Trophy } from 'lucide-react';
 
-export const revalidate = 3600;
+export const revalidate = 180;
 
 export async function generateMetadata({
   params,
@@ -20,10 +22,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = await getLocale();
   const { slug } = await params;
-  const player = await prisma.player.findUnique({
-    where: { slug },
-    select: { name: true, photoUrl: true, position: true, nationality: true },
-  });
+  const dossier = await loadPlayerDossier(slug);
+  const player = dossier?.player;
   if (!player) {
     return pageMetadata({
       locale,
@@ -43,15 +43,15 @@ export async function generateMetadata({
     title: displayName,
     description: bits
       ? pick(
-          locale,
-          `${displayName} — ${bits}. ملف اللاعب في يلا سبورت من بيانات المباريات الحقيقية.`,
-          `${displayName} — ${bits}. Player profile on Yalla Sport from real match data.`
-        )
+        locale,
+        `${displayName} — ${bits}. ملف اللاعب في يلا سبورت من بيانات المباريات الحقيقية.`,
+        `${displayName} — ${bits}. Player profile on Yalla Sport from real match data.`
+      )
       : pick(
-          locale,
-          `ملف ${displayName} في يلا سبورت: الأهداف، البطاقات، والانتقالات المسجّلة.`,
-          `${displayName} on Yalla Sport: goals, cards, and recorded transfers.`
-        ),
+        locale,
+        `ملف ${displayName} في يلا سبورت: الأهداف، البطاقات، والانتقالات المسجّلة.`,
+        `${displayName} on Yalla Sport: goals, cards, and recorded transfers.`
+      ),
     path: `/player/${slug}`,
     images: [player.photoUrl],
   });
@@ -81,18 +81,49 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
     image: dossier.player.photoUrl,
     ...(dossier.currentClub
       ? {
-          memberOf: {
-            '@type': 'SportsTeam',
-            name: dossier.currentClub.name,
-          },
-        }
+        memberOf: {
+          '@type': 'SportsTeam',
+          name: dossier.currentClub.name,
+        },
+      }
       : {}),
   };
 
   return (
     <>
       <JsonLd data={playerSchema} />
-      <PlayerDossier locale={locale} now={new Date()} dossier={dossier} />
+      <SalonStage
+        tone="podium"
+        wide
+        compact
+        kicker={pick(locale, 'منصة اللاعب', 'Player podium')}
+        title={localizePlainName(locale, dossier.player.name)}
+        lead={pick(
+          locale,
+          'الإطار على الشاشة، والزملاء في قائمة العرض، والإحصاءات والجدران من المصدر فقط.',
+          'The frame sits on the screen, teammates sit in the programme, and the walls hold source numbers only.',
+        )}
+        aside={dossier.currentClub?.name || dossier.player.position || undefined}
+        tools={
+          <HallFoyer
+            label={pick(locale, 'جناح اللاعب', 'Player suite')}
+            items={[
+              { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
+              { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
+              { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
+              {
+                href: dossier.currentClub?.slug ? `/team/${dossier.currentClub.slug}` : '/leagues',
+                label: dossier.currentClub?.name
+                  ? localizePlainName(locale, dossier.currentClub.name)
+                  : pick(locale, 'النادي', 'Club'),
+                icon: Shield,
+              },
+            ]}
+          />
+        }
+      >
+        <PlayerDossier locale={locale} dossier={dossier} />
+      </SalonStage>
     </>
   );
 }

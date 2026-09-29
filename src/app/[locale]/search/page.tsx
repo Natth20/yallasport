@@ -5,6 +5,8 @@ import { pageMetadata } from '@/lib/seo/site';
 import { getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   searchParams,
 }: {

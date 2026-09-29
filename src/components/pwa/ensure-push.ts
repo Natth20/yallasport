@@ -6,7 +6,7 @@ const toBytes = (value: string) => {
 };
 
 export async function ensurePushSubscription() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || typeof Notification === 'undefined') {
     throw new Error('Push is not supported');
   }
 
@@ -14,7 +14,11 @@ export async function ensurePushSubscription() {
     Notification.permission === 'default' ? await Notification.requestPermission() : Notification.permission;
   if (permission !== 'granted') throw new Error('Notification permission denied');
 
-  const registration = await navigator.serviceWorker.ready;
+  let registration = await navigator.serviceWorker.getRegistration();
+  if (!registration) {
+    registration = await navigator.serviceWorker.register('/sw.js');
+  }
+  registration = await navigator.serviceWorker.ready;
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
     const keyResponse = await fetch('/api/user/push/subscribe');

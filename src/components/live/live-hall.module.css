@@ -7,21 +7,21 @@
 .liveHall {
   position: relative;
   isolation: isolate;
-  min-height: 100vh;
-  padding-bottom: 6rem;
+  min-height: 0;
+  padding-bottom: 2.4rem;
   background:
-    radial-gradient(75% 45% at 50% 0%, color-mix(in srgb, #ef4444 8%, transparent), transparent 60%),
-    var(--background);
+    radial-gradient(75% 42% at 50% 0%, color-mix(in srgb, #ef4444 10%, transparent), transparent 62%),
+    transparent;
   color: var(--foreground);
 }
 
 .inner {
-  width: min(1280px, calc(100% - 2rem));
+  width: 100%;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
-  padding-top: 1.5rem;
+  gap: 2.2rem;
+  padding-top: 0.15rem;
 }
 
 /* ==========================================================================
@@ -29,18 +29,21 @@
    ========================================================================== */
 
 .mast {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 1.75rem;
-  padding: 2rem 2.25rem;
-  border-radius: 1.75rem;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--card) 75%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--foreground) 5%, transparent);
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, #ef4444 26%, var(--border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, #ef4444 16%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card) 86%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+    0 16px 36px color-mix(in srgb, #ef4444 8%, transparent);
 }
 
 .mastBrand {
@@ -143,15 +146,47 @@
 .featuredScreen {
   position: relative;
   overflow: hidden;
-  border-radius: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.15rem 1.85rem 1.15rem 1.85rem;
+  border: 1px solid color-mix(in srgb, #ef4444 34%, rgba(255, 255, 255, 0.12));
   background:
-    radial-gradient(70% 60% at 85% 15%, rgba(239, 68, 68, 0.25), transparent 60%),
-    radial-gradient(60% 60% at 15% 85%, rgba(16, 185, 129, 0.2), transparent 60%),
-    linear-gradient(180deg, #090e17 0%, #03060c 100%);
+    repeating-linear-gradient(180deg,
+      transparent 0,
+      transparent 2px,
+      rgba(239, 68, 68, 0.03) 3px,
+      transparent 4px),
+    radial-gradient(85% 65% at 85% 15%, color-mix(in srgb, #ef4444 22%, transparent), transparent 60%),
+    radial-gradient(60% 60% at 15% 85%, rgba(16, 185, 129, 0.12), transparent 60%),
+    linear-gradient(175deg, #140808 0%, #070505 100%);
   color: #fff;
-  padding: 2.25rem;
-  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
+  padding: 2.1rem;
+  box-shadow:
+    0 28px 70px -25px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.featuredScreen::before,
+.featuredScreen::after {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  border: 2px solid var(--ys-orange);
+  z-index: 5;
+}
+
+.featuredScreen::before {
+  top: 1rem;
+  inset-inline-start: 1rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.featuredScreen::after {
+  bottom: 1rem;
+  inset-inline-end: 1rem;
+  border-inline-start: 0;
+  border-top: 0;
 }
 
 .stageTop {
@@ -195,8 +230,13 @@
 }
 
 @keyframes liveDotPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-  100% { box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0);
+  }
 }
 
 .stageDuel {
@@ -296,6 +336,8 @@
 
 .ctaWatch:hover {
   background: #dc2626;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 6px 22px -4px rgba(239, 68, 68, 0.75);
 }
@@ -318,6 +360,8 @@
 .ctaGhost:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
 }
 
 /* ==========================================================================
@@ -426,6 +470,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.25rem;
+}
+
+.channelsGrid> :only-child {
+  max-width: 24rem;
 }
 
 .channelCard {
@@ -551,6 +599,10 @@
   gap: 1rem;
 }
 
+.programsGrid> :only-child {
+  max-width: 22rem;
+}
+
 .programCard {
   display: flex;
   flex-direction: column;
@@ -589,6 +641,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.75rem;
+}
+
+.linearGrid> :only-child {
+  max-width: 16rem;
 }
 
 .linearCard {
@@ -681,4 +737,58 @@
   color: var(--muted-foreground);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.licenseBay {
+  display: grid;
+  gap: 1rem;
+  padding: 1.3rem 1.4rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 50%),
+    color-mix(in srgb, var(--card) 86%, transparent);
+}
+
+@media (min-width: 860px) {
+  .licenseBay {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.licenseMark {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--ys-orange) 28%, transparent), transparent 58%),
+    var(--background);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ys-orange) 36%, transparent);
+}
+
+.licenseBay h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.licenseBay p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted-foreground);
+}
+
+.licenseBay ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.licenseBay li::before {
+  content: '— ';
+  color: var(--ys-orange);
 }

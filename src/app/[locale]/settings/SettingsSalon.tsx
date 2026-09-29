@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getLocale } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { SalonStage } from '@/components/salon/SalonStage';
+import { HallFoyer } from '@/components/salon/HallFoyer';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { SettingsDesk, type SettingsTab } from './SettingsDesk';
 import styles from './settings.module.css';
@@ -56,16 +57,17 @@ async function SettingsSalonBody({ initialTab }: { initialTab: SettingsTab }) {
   const session = await auth();
   const user = session?.user?.id
     ? await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { name: true, email: true, role: true, points: true, notificationPrefs: true },
-      })
+      where: { id: session.user.id },
+      select: { name: true, email: true, role: true, points: true, notificationPrefs: true },
+    })
     : null;
   const stored = readStoredPrefs(user?.notificationPrefs);
 
   return (
     <SalonStage
-      tone="vault"
+      tone="dial"
       wide
+      compact
       kicker={pick(locale, 'الحساب', 'Account')}
       title={pick(locale, 'الإعدادات', 'Settings')}
       lead={pick(
@@ -73,6 +75,17 @@ async function SettingsSalonBody({ initialTab }: { initialTab: SettingsTab }) {
         'الحساب والتنبيهات من سجلك. المظهر واللغة هما نفس المفتاحين في الترويسة.',
         'Account and alerts come from your record. Theme and language are the same switches as the header.',
       )}
+      aside={user?.email || pick(locale, 'ضيف', 'Guest')}
+      tools={
+        <HallFoyer
+          label={pick(locale, 'جناح الحساب', 'Account suite')}
+          items={[
+            { href: '/settings', label: pick(locale, 'الإعدادات', 'Settings'), current: true },
+            { href: '/profile', label: pick(locale, 'الملف', 'Profile') },
+            { href: '/favorites', label: pick(locale, 'المفضلة', 'Favorites') },
+          ]}
+        />
+      }
     >
       <SettingsDesk
         locale={locale}

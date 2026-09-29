@@ -6,6 +6,8 @@ import { CopyrightMark } from '@/components/legal/CopyrightMark';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 
+export const revalidate = 86400;
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   return pageMetadata({

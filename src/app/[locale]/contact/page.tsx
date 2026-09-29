@@ -5,6 +5,8 @@ import { pageMetadata } from '@/lib/seo/site';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 
+export const revalidate = 3600;
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const t = await getTranslations('post');

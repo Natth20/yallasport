@@ -1,14 +1,23 @@
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
+import { loadStatsDesk } from '@/lib/stats/load-desk';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import type { FrontScorer } from './types';
 
 const WINDOW_DAYS = 7;
 
-export async function loadFrontScorers(locale: string): Promise<{ goals: FrontScorer[]; assists: FrontScorer[]; days: number }> {
+function paint(locale: string, rows: FrontScorer[]) {
+  return rows.map((row) => ({ ...row, name: localizePlainName(locale, row.name) }));
+}
+
+export async function loadFrontScorers(locale: string): Promise<{
+  goals: FrontScorer[];
+  assists: FrontScorer[];
+  days: number;
+}> {
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
-  const packed = await cachedJson('front:scorers:7d:v1', 300, async () => {
+  const packed = await cachedJson('front:scorers:7d:v3', 90, async () => {
     const [goalGroups, assistGroups] = await Promise.all([
       prisma.matchEvent
         .groupBy({
@@ -20,7 +29,7 @@ export async function loadFrontScorers(locale: string): Promise<{ goals: FrontSc
           },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
-          take: 8,
+          take: 10,
         })
         .catch(swallow('front.scorers.goals', [])),
       prisma.matchEvent
@@ -33,7 +42,7 @@ export async function loadFrontScorers(locale: string): Promise<{ goals: FrontSc
           },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
-          take: 8,
+          take: 10,
         })
         .catch(swallow('front.scorers.assists', [])),
     ]);
@@ -42,19 +51,19 @@ export async function loadFrontScorers(locale: string): Promise<{ goals: FrontSc
     const assistNames = assistGroups.map((row) => row.assistName).filter((name): name is string => Boolean(name));
     const players = playerIds.length
       ? await prisma.player
-          .findMany({
-            where: { id: { in: playerIds } },
-            select: { id: true, name: true, slug: true, photoUrl: true },
-          })
-          .catch(swallow('front.scorers.players', []))
+        .findMany({
+          where: { id: { in: playerIds } },
+          select: { id: true, name: true, slug: true, photoUrl: true },
+        })
+        .catch(swallow('front.scorers.players', []))
       : [];
     const assistPlayers = assistNames.length
       ? await prisma.player
-          .findMany({
-            where: { name: { in: assistNames } },
-            select: { name: true, slug: true, photoUrl: true },
-          })
-          .catch(swallow('front.scorers.assistPlayers', []))
+        .findMany({
+          where: { name: { in: assistNames } },
+          select: { name: true, slug: true, photoUrl: true },
+        })
+        .catch(swallow('front.scorers.assistPlayers', []))
       : [];
     const byId = new Map(players.map((player) => [player.id, player]));
     const byName = new Map(assistPlayers.map((player) => [player.name, player]));
@@ -84,9 +93,41 @@ export async function loadFrontScorers(locale: string): Promise<{ goals: FrontSc
     return { goals, assists };
   });
 
+  if (packed.goals.length > 0 && packed.assists.length > 0) {
+    return {
+      days: WINDOW_DAYS,
+      goals: paint(locale, packed.goals),
+      assists: paint(locale, packed.assists),
+    };
+  }
+
+  const [goalDesk, assistDesk] = await Promise.all([
+    packed.goals.length === 0 ? loadStatsDesk('39', 'goals') : Promise.resolve(null),
+    packed.assists.length === 0 ? loadStatsDesk('39', 'assists') : Promise.resolve(null),
+  ]);
   return {
-    days: WINDOW_DAYS,
-    goals: packed.goals.map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
-    assists: packed.assists.map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
+    days: packed.goals.length === 0 && packed.assists.length === 0 ? 0 : WINDOW_DAYS,
+    goals: paint(
+      locale,
+      packed.goals.length > 0
+        ? packed.goals
+        : (goalDesk?.rows.slice(0, 5).map((row) => ({
+          name: row.name,
+          slug: row.slug,
+          photoUrl: row.photoUrl,
+          value: row.value,
+        })) ?? []),
+    ),
+    assists: paint(
+      locale,
+      packed.assists.length > 0
+        ? packed.assists
+        : (assistDesk?.rows.slice(0, 5).map((row) => ({
+          name: row.name,
+          slug: row.slug,
+          photoUrl: row.photoUrl,
+          value: row.value,
+        })) ?? []),
+    ),
   };
 }

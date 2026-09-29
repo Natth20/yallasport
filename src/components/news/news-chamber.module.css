@@ -1,9 +1,33 @@
 .nk-hall {
   position: relative;
   isolation: isolate;
-  min-height: calc(100dvh - 4.65rem);
-  padding-bottom: 4rem;
+  min-width: 0;
+  max-width: 100%;
+  padding-bottom: 1rem;
   color: var(--foreground);
+}
+
+.nk-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2.15rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.nk-brief {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.2rem 1.25rem 1.25rem;
+  border-radius: 0.45rem;
+  border: 1px solid color-mix(in srgb, #8b7355 28%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #d6c4a3 8%, transparent), transparent 70%),
+    color-mix(in srgb, var(--card) 90%, transparent);
 }
 
 .nk-aura,
@@ -25,17 +49,537 @@
   background-size: 3px 3px;
 }
 
-.nk-inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
+.nk-brief>p {
   margin: 0;
-  padding: 1.15rem 1.1rem 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.nk-brief .nk-meters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.nk-brief .nk-meters>div {
+  padding: 0.75rem 0.85rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: color-mix(in srgb, var(--background) 55%, var(--card));
+}
+
+.nk-brief .nk-meters dd {
+  font-size: 1.35rem;
+}
+
+.nk-console {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  align-items: stretch;
 }
 
 @media (min-width: 720px) {
-  .nk-inner {
-    padding: 1.5rem 1.6rem 0;
+  .nk-console {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+
+  .nk-cover {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .nk-queue {
+    flex: 0 0 min(22rem, 34%);
+    width: min(22rem, 34%);
+    max-width: 22rem;
+    align-self: stretch;
+    min-height: 0;
+    position: sticky;
+    top: 5.4rem;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .nk-queue-list {
+    overflow: auto;
+    min-height: 0;
+    padding-inline-end: 0.15rem;
+  }
+
+  .nk-cover .nk-chassis {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+}
+
+.nk-cover {
+  min-width: 0;
+}
+
+.nk-chassis {
+  overflow: hidden;
+  border-radius: 1.45rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, #222);
+  background: #060606;
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.42);
+}
+
+.nk-bezel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.62rem 1.1rem;
+  background: linear-gradient(180deg, #181818, #0d0d0d);
+  border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+}
+
+.nk-bezel-left,
+.nk-bezel-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.nk-bezel-right em {
+  font-style: normal;
+  padding: 0.12rem 0.4rem;
+  border-radius: 0.28rem;
+  border: 1px solid var(--ys-orange);
+  color: var(--ys-orange);
+  font-size: 0.6rem;
+}
+
+.nk-bezel-right b {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nk-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.18rem;
+  height: 0.85rem;
+}
+
+.nk-eq span {
+  width: 2px;
+  border-radius: 2px;
+  background: var(--ys-orange);
+  animation: nkEq 1.4s ease-in-out infinite alternate;
+}
+
+.nk-eq span:nth-child(1) {
+  height: 40%;
+}
+
+.nk-eq span:nth-child(2) {
+  height: 90%;
+  animation-delay: 0.25s;
+}
+
+.nk-eq span:nth-child(3) {
+  height: 60%;
+  animation-delay: 0.12s;
+}
+
+@keyframes nkEq {
+  from {
+    height: 25%;
+  }
+
+  to {
+    height: 100%;
+  }
+}
+
+.nk-chassis .nk-front {
+  border: 0;
+  border-radius: 0;
+  background: #080808;
+  min-height: 0;
+  height: 100%;
+  grid-template-rows: minmax(14rem, 1fr) auto;
+}
+
+@media (min-width: 860px) {
+  .nk-chassis .nk-front-media {
+    aspect-ratio: auto;
+    min-height: 16rem;
+  }
+}
+
+.nk-chassis .nk-front-media {
+  border-radius: 0;
+}
+
+.nk-chassis .nk-front-copy {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, transparent), color-mix(in srgb, var(--background) 88%, transparent));
+}
+
+.nk-queue {
+  isolation: isolate;
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1rem 1.05rem 1.1rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 46%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.nk-queue-head p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.nk-queue-head h3 {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.nk-queue-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nk-queue-item {
+  display: grid;
+  grid-template-columns: 1.5rem 4.4rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 0.95rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-queue-item:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+}
+
+.nk-queue-num {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.nk-queue-thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.55rem;
+  background: #0b0b0b;
+}
+
+.nk-queue-thumb :global(img) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nk-queue-copy {
+  min-width: 0;
+}
+
+.nk-queue-copy b {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.nk-queue-copy small {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+}
+
+.nk-wall {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.nk-wall-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nk-wall-head p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.nk-wall-head h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.nk-wall-head>p:last-child {
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted-foreground);
+}
+
+.nk-wall-head a {
+  color: var(--ys-orange);
+  text-decoration: none;
+}
+
+.nk-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 860px) {
+  .nk-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.15rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .nk-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.nk-grid> :only-child {
+  max-width: 22rem;
+}
+
+.nk-grid .nk-card {
+  grid-template-columns: 1fr;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+}
+
+.nk-grid .nk-card-media {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 0;
+}
+
+.nk-grid .nk-card-copy {
+  padding: 0.8rem 0.9rem 0.95rem;
+}
+
+.nk-floor {
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 0.4rem;
+}
+
+@media (min-width: 1100px) {
+  .nk-floor {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+  }
+}
+
+.nk-empty {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  padding: 2.4rem 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px dashed color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+}
+
+.nk-empty p {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.nk-empty strong {
+  font-size: 1.2rem;
+}
+
+.nk-empty em {
+  font-style: normal;
+  max-width: 36rem;
+  color: var(--muted-foreground);
+  line-height: 1.7;
+}
+
+.nk-empty div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.4rem;
+}
+
+.nk-empty a {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.nk-empty a:first-child {
+  border-color: rgba(255, 140, 0, 0.7);
+  background: linear-gradient(135deg, #ff7b00, #e05e00);
+  color: #0b0b0b;
+}
+
+.nk-lanes {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.nk-lane-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 860px) {
+  .nk-lane-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .nk-lane-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.nk-lane {
+  min-width: 0;
+  padding: 1rem 1.05rem 0.85rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+}
+
+.nk-lane>header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.nk-lane>header p {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.nk-lane>header a {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nk-lane ol {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nk-lane a {
+  display: grid;
+  gap: 0.2rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nk-lane strong {
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nk-lane small {
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+}
+
+.nk-stack {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.nk-more {
+  display: grid;
+  gap: 1.6rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.nk-context {
+  display: grid;
+  gap: 1.15rem;
+}
+
+@media (min-width: 1100px) {
+  .nk-context {
+    grid-template-columns: minmax(0, 1.15fr) minmax(17rem, 22rem);
+    align-items: start;
   }
 }
 
@@ -63,13 +607,43 @@
 }
 
 .nk-mast {
+  position: relative;
   display: grid;
   gap: 1.2rem;
-  padding: 1.2rem 1.3rem 1.25rem;
+  padding: 1.35rem 1.45rem 1.4rem;
   margin-bottom: 1.6rem;
-  border-radius: 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
-  background: color-mix(in srgb, var(--card) 55%, transparent);
+  border-radius: 1.55rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 26%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 46%),
+    color-mix(in srgb, var(--card) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+    0 22px 48px color-mix(in srgb, var(--ys-orange) 8%, transparent);
+}
+
+.nk-mast::before,
+.nk-mast::after {
+  content: '';
+  position: absolute;
+  width: 0.8rem;
+  height: 0.8rem;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 50%, transparent);
+}
+
+.nk-mast::before {
+  top: 0.55rem;
+  inset-inline-start: 0.55rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.nk-mast::after {
+  bottom: 0.55rem;
+  inset-inline-end: 0.55rem;
+  border-inline-start: 0;
+  border-top: 0;
 }
 
 @media (min-width: 900px) {
@@ -476,12 +1050,12 @@
 
 .nk-tools {
   display: grid;
-  gap: 1rem;
-  margin: 1.5rem 0 0;
-  padding: 1.2rem 1.3rem 1.25rem;
-  border-radius: 1.3rem;
-  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
-  background: color-mix(in srgb, var(--card) 52%, transparent);
+  gap: 0.85rem;
+  margin: 0;
+  padding: 1rem 1.1rem 1.05rem;
+  border-radius: 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 78%, transparent);
 }
 
 .nk-tool-row {
@@ -576,14 +1150,109 @@
   color: var(--primary);
 }
 
-.nk-index.is-source a {
+.nk-index.is-source,
+.nk-index.is-pills {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.nk-index.is-source::-webkit-scrollbar,
+.nk-index.is-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.nk-index.is-source a,
+.nk-index.is-pills a {
+  flex: 0 0 auto;
   min-width: 0;
+}
+
+.nk-index.is-pills {
+  gap: 0.45rem;
+}
+
+.nk-index.is-pills a {
+  align-items: center;
+  padding: 0.42rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.nk-index.is-pills a.is-on {
+  box-shadow: none;
+  border-color: rgba(255, 140, 0, 0.7);
+  background: linear-gradient(135deg, #ff7b00, #e05e00);
+}
+
+.nk-index.is-pills a.is-on em,
+.nk-index.is-pills a.is-on b {
+  color: #0b0b0b;
+}
+
+.nk-folio-count {
+  margin: -0.35rem 0 1.1rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.nk-folio-count a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.nk-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 1.6rem;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.nk-pager a {
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.nk-pager a.is-next {
+  background: linear-gradient(135deg, #ff7b00 0%, #e05e00 100%);
+  border-color: rgba(255, 140, 0, 0.7);
+  color: #0b0b0b;
 }
 
 .nk-stage {
   display: grid;
-  gap: 1.5rem;
-  margin-bottom: 0.4rem;
+  gap: 1.15rem;
+  margin-bottom: 0.2rem;
+}
+
+@media (min-width: 980px) {
+  .nk-stage {
+    grid-template-columns: minmax(0, 1.65fr) minmax(16.5rem, 21rem);
+    align-items: stretch;
+    gap: 1.15rem;
+  }
+
+  .nk-stage .nk-front {
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .nk-stage .nk-front-media {
+    min-height: 18rem;
+    aspect-ratio: auto;
+  }
 }
 
 .nk-front {
@@ -658,7 +1327,7 @@
 .nk-front-copy {
   display: grid;
   gap: 0.55rem;
-  padding: 1.25rem 0.15rem 0.2rem;
+  padding: 1.05rem 1.05rem 1.15rem;
 }
 
 .nk-front-copy em,
@@ -720,27 +1389,44 @@
 
 .nk-side {
   display: grid;
-  gap: 1.35rem;
+  gap: 0.75rem;
 }
 
-@media (min-width: 760px) {
+@media (min-width: 760px) and (max-width: 979px) {
   .nk-side {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .nk-side .nk-card {
     grid-template-columns: 1fr;
-    padding: 0.15rem 0.15rem 0.7rem;
+    padding: 0;
   }
 
   .nk-side .nk-card-media {
     aspect-ratio: 16 / 10;
     width: 100%;
   }
+}
+
+@media (min-width: 980px) {
+  .nk-side {
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+
+  .nk-side .nk-card {
+    grid-template-columns: 5.4rem minmax(0, 1fr);
+    padding: 0.55rem;
+  }
+
+  .nk-side .nk-card-media {
+    aspect-ratio: 1;
+    width: 100%;
+  }
 
   .nk-side .nk-card-copy strong {
-    -webkit-line-clamp: 2;
-    min-height: 2.8em;
+    -webkit-line-clamp: 3;
+    min-height: 0;
   }
 }
 
@@ -802,6 +1488,10 @@
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem 1.4rem;
   }
+}
+
+.nk-log> :only-child {
+  max-width: 28rem;
 }
 
 .nk-folio {

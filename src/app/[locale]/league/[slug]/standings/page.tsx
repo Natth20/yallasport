@@ -12,7 +12,7 @@ import { loadLeagueDossier, type StandingZone } from '@/lib/leagues/load-dossier
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 
-export const revalidate = 300;
+export const revalidate = 90;
 
 export async function generateMetadata({
   params,
@@ -114,11 +114,11 @@ async function StandingsPageBody({
       : null,
     leader
       ? {
-          value: leader.goalsFor - leader.goalsAgainst > 0
-            ? `+${leader.goalsFor - leader.goalsAgainst}`
-            : leader.goalsFor - leader.goalsAgainst,
-          label: pick(locale, 'فارق المتصدر', 'Leader GD'),
-        }
+        value: leader.goalsFor - leader.goalsAgainst > 0
+          ? `+${leader.goalsFor - leader.goalsAgainst}`
+          : leader.goalsFor - leader.goalsAgainst,
+        label: pick(locale, 'فارق المتصدر', 'Leader GD'),
+      }
       : null,
     seasonId ? { value: seasonId, label: pick(locale, 'الموسم', 'Season') } : null,
   ].filter(Boolean) as Array<{ value: string | number; label: string }>;
@@ -226,11 +226,9 @@ async function StandingsPageBody({
                     <Link
                       key={row.id}
                       href={row.team.slug ? `/team/${row.team.slug}` : `/league/${slug}/standings`}
-                      className={`lch-table-row${row.rank === 1 ? ' is-lead' : ''}${
-                        zone === 'direct' || zone === 'cl' ? ' is-direct' : ''
-                      }${zone === 'playoff' || zone === 'el' ? ' is-playoff' : ''}${
-                        zone === 'out' ? ' is-out' : ''
-                      }${zone === 'rel' ? ' is-rel' : ''}`}
+                      className={`lch-table-row${row.rank === 1 ? ' is-lead' : ''}${zone === 'direct' || zone === 'cl' ? ' is-direct' : ''
+                        }${zone === 'playoff' || zone === 'el' ? ' is-playoff' : ''}${zone === 'out' ? ' is-out' : ''
+                        }${zone === 'rel' ? ' is-rel' : ''}`}
                       title={zoneLabel(locale, zone) || undefined}
                     >
                       <span className="lch-table-rank">{row.rank}</span>

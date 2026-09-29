@@ -1,9 +1,9 @@
 'use client';
-import { reportCaughtError } from '@/lib/ops/caught';
 
+import { reportCaughtError } from '@/lib/ops/caught';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Copy, Share2 } from 'lucide-react';
+import { Check, Copy, Share2, Smartphone } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { pick } from '@/i18n/pick';
 import { copyText } from '@/lib/clipboard';
@@ -35,7 +35,7 @@ export function NewsShareMenu({ title }: { title: string }) {
       const button = buttonRef.current;
       if (!button) return;
       const rect = button.getBoundingClientRect();
-      const panelWidth = panelRef.current?.offsetWidth ?? 192;
+      const panelWidth = panelRef.current?.offsetWidth ?? 210;
       const gutter = 12;
       const rtl = getComputedStyle(document.documentElement).direction === 'rtl';
       let left = rtl ? rect.right - panelWidth : rect.left;
@@ -91,7 +91,10 @@ export function NewsShareMenu({ title }: { title: string }) {
     const ok = await copyText(url);
     if (!ok) return;
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    window.setTimeout(() => {
+      setCopied(false);
+      setOpen(false);
+    }, 1200);
   };
 
   const nativeShare = async () => {
@@ -104,8 +107,7 @@ export function NewsShareMenu({ title }: { title: string }) {
         return;
       }
     } catch (error) {
-      reportCaughtError("src/components/news/NewsShareMenu.tsx:118", error, { persist: false });
-      // cancelled or unsupported — fall through to copy
+      reportCaughtError('src/components/news/NewsShareMenu.tsx:118', error, { persist: false });
     }
     await copy();
   };
@@ -129,51 +131,85 @@ export function NewsShareMenu({ title }: { title: string }) {
   const panel =
     open && mounted && coords
       ? createPortal(
-        <div
-          id={menuId}
-          ref={panelRef}
-          className="news-share-panel"
-          role="menu"
-          style={{
-            position: 'fixed',
-            top: coords.top,
-            left: coords.left,
-            right: 'auto',
-            insetInlineStart: 'auto',
-          }}
-        >
-          <button type="button" role="menuitem" onClick={openWhatsApp}>
-            WhatsApp
-          </button>
-          <button type="button" role="menuitem" onClick={openX}>
-            X
-          </button>
-          <button type="button" role="menuitem" onClick={() => void copy()}>
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied
-              ? pick(locale, 'تم النسخ', 'Copied')
-              : pick(locale, 'نسخ الرابط', 'Copy link')}
-          </button>
-          <button type="button" role="menuitem" onClick={() => void nativeShare()}>
-            {pick(locale, 'مشاركة الجهاز', 'Device share')}
-          </button>
-        </div>,
-        document.body
-      )
+          <div
+            id={menuId}
+            ref={panelRef}
+            className="z-50 min-w-[13rem] overflow-hidden rounded-2xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+            role="menu"
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              left: coords.left,
+            }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={openWhatsApp}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-emerald-500/10 hover:text-emerald-500"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-500">
+                W
+              </span>
+              <span>واتساب (WhatsApp)</span>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={openX}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-sky-500/10 hover:text-sky-400"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400">
+                X
+              </span>
+              <span>منصة إكس (X)</span>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => void copy()}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-foreground/80">
+                {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+              </span>
+              <span>{copied ? pick(locale, 'تم النسخ!', 'Copied!') : pick(locale, 'نسخ الرابط', 'Copy link')}</span>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => void nativeShare()}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted/80"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <Smartphone className="h-3.5 w-3.5" />
+              </span>
+              <span>{pick(locale, 'مشاركة الجهاز', 'Device share')}</span>
+            </button>
+          </div>,
+          document.body
+        )
       : null;
 
   return (
-    <div className="news-share-menu" ref={rootRef}>
+    <div className="relative inline-flex" ref={rootRef}>
       <button
         ref={buttonRef}
         type="button"
-        className="news-share-btn"
+        className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-200 ${
+          open
+            ? 'border border-primary/40 bg-primary/15 text-primary'
+            : 'border border-border/80 bg-card/80 text-foreground/80 hover:border-primary/40 hover:bg-card hover:text-primary'
+        }`}
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
       >
         <Share2 className="h-3.5 w-3.5" />
-        {pick(locale, 'مشاركة', 'Share')}
+        <span>{pick(locale, 'مشاركة', 'Share')}</span>
       </button>
       {panel}
     </div>

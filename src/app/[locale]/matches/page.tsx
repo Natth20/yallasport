@@ -1,7 +1,6 @@
 import { swallow, reportCaughtError } from '@/lib/ops/caught';
 import React, { Suspense } from 'react';
 import { MatchCard } from '@/components/sports/MatchCard';
-import { MatchQuickActions } from '@/components/sports/MatchQuickActions';
 import { KickoffTimeline, type KickoffSlot } from '@/components/matches/KickoffTimeline';
 import { LiveNowBoard } from '@/components/matches/LiveNowBoard';
 import { PinnedMatchesBar } from '@/components/matches/PinnedMatchesBar';
@@ -20,22 +19,21 @@ import {
 } from '@/lib/datetime/format';
 import { toNormalizedMatch } from '@/lib/sports-data/from-db';
 import { sportsData } from '@/lib/sports-data';
-import { belongsOnTodayBoard, todayOrLiveWhere } from '@/lib/sports-data/match-window';
+import { belongsOnTodayBoard, liveKickoffFloor, todayOrLiveWhere } from '@/lib/sports-data/match-window';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LiveDataStatus } from '@/components/sports/LiveDataStatus';
 import { TimezoneSelector } from '@/components/layout/TimezoneSelector';
-import { MatchCountdown } from '@/components/sports/MatchCountdown';
 import {
+  ArrowLeftRight,
+  BarChart3,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock3,
   Heart,
-  MapPin,
   Radio,
   Search,
-  Shield,
-  Tv,
-  Users,
+  Trophy,
 } from 'lucide-react';
 import { addDays, format, isValid, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -47,11 +45,16 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { localizeEntityMap } from '@/lib/i18n/localized-content';
 import { STREAMING_ENABLED } from '@/lib/streaming';
-import { isMajorLeague, leagueTier, matchdayWeight } from '@/lib/sports-data/matchday-weight';
+import { compareMatchdayGroups, isMajorLeague, leagueTier, matchdayWeight } from '@/lib/sports-data/matchday-weight';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
+import { HallFoyer } from '@/components/salon/HallFoyer';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { MatchdayConsole, type MatchdayReelItem } from '@/components/matches/MatchdayConsole';
 import styles from '@/components/matches/matches-hall.module.css';
+
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -133,34 +136,6 @@ function lineupStarters(payload: unknown) {
     .filter((player) => player.name);
 }
 
-function StatMeter({
-  home,
-  away,
-  label,
-  asPercent,
-}: {
-  home: number;
-  away: number;
-  label: string;
-  asPercent?: boolean;
-}) {
-  const total = asPercent ? 100 : home + away;
-  const homeShare = total > 0 ? (home / total) * 100 : 50;
-  return (
-    <div className="min-w-[7.5rem] flex-1">
-      <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px] font-black tabular-nums">
-        <span className="text-emerald-300">{asPercent ? `${home}%` : home}</span>
-        <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-emerald-100/45">{label}</span>
-        <span className="text-orange-300">{asPercent ? `${away}%` : away}</span>
-      </div>
-      <div className="flex h-1.5 overflow-hidden rounded-full bg-black/40">
-        <span className="ys-grow-x bg-emerald-400" style={{ width: `${Math.max(0, Math.min(100, homeShare))}%` }} />
-        <span className="flex-1 bg-orange-400" />
-      </div>
-    </div>
-  );
-}
-
 function resultLetter(forHome: boolean, homeScore: number, awayScore: number): FormLetter {
   if (homeScore === awayScore) return 'D';
   const homeWon = homeScore > awayScore;
@@ -183,10 +158,10 @@ function FormPips({ letters }: { letters: FormLetter[] }) {
         <span
           key={`${letter}-${index}`}
           className={`flex h-4 w-4 items-center justify-center rounded-[4px] text-[8px] font-black ${letter === 'W'
-              ? 'bg-emerald-500 text-white'
-              : letter === 'L'
-                ? 'bg-red-500 text-white'
-                : 'bg-slate-400 text-white'
+            ? 'bg-emerald-500 text-white'
+            : letter === 'L'
+              ? 'bg-red-500 text-white'
+              : 'bg-slate-400 text-white'
             }`}
         >
           {letter}
@@ -201,6 +176,37 @@ const EVENT_LABEL_KEYS = {
   RED_CARD: 'red_card', SUBSTITUTION: 'substitution', VAR: 'var'
 };
 
+function toReelItem(match: DayMatch): MatchdayReelItem {
+  return {
+    id: match.id,
+    status: match.status,
+    minute: match.minute,
+    homeScore: match.homeScore ?? null,
+    awayScore: match.awayScore ?? null,
+    kickoffAt: new Date(match.kickoffAt).toISOString(),
+    venue: match.venue,
+    venueCity: match.venueCity,
+    round: match.round,
+    homeFormation: match.homeFormation,
+    awayFormation: match.awayFormation,
+    homeCoach: match.homeCoach,
+    awayCoach: match.awayCoach,
+    hasLicensedStream: match.hasLicensedStream,
+    channels: match.channels.map((channel) => ({ name: channel.name })),
+    homeTeam: {
+      name: match.homeTeam.name,
+      slug: match.homeTeam.slug,
+      logoUrl: match.homeTeam.logoUrl,
+    },
+    awayTeam: {
+      name: match.awayTeam.name,
+      slug: match.awayTeam.slug,
+      logoUrl: match.awayTeam.logoUrl,
+    },
+    league: { name: match.league.name, slug: match.league.slug },
+  };
+}
+
 function CompactFixture({
   match,
   followed,
@@ -213,45 +219,33 @@ function CompactFixture({
   return (
     <Link
       href={`/match/${match.id}`}
-      className={`fixture-card !p-2.5 ${live ? 'is-live' : match.status === 'FINISHED' ? 'is-ft' : 'is-soon'}`}
+      className={`${styles.fixtureCard} ${live ? styles.fixtureLive : match.status === 'FINISHED' ? styles.fixtureFt : ''}`}
     >
-      <div className="fixture-card-body !gap-2">
-        <div className="fixture-clock !pe-2">
+      <div className={styles.fixtureBody}>
+        <div className={styles.fixtureClock}>
           {live ? (
-            <>
-              <em>{match.minute ? `${match.minute}'` : 'LIVE'}</em>
-            </>
+            <em>{match.minute ? `${match.minute}'` : 'LIVE'}</em>
           ) : match.status === 'FINISHED' ? (
-            <span className="is-status" dir="ltr">
-              {hasScore ? `${match.homeScore}–${match.awayScore}` : '–'}
-            </span>
+            <span dir="ltr">{hasScore ? `${match.homeScore}–${match.awayScore}` : '–'}</span>
           ) : (
-            <span>
-              <ClientTime value={match.kickoffAt} />
-            </span>
+            <ClientTime value={match.kickoffAt} />
           )}
         </div>
-        <div className="fixture-teams !gap-1">
-          <div className="fixture-team">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+        <div className={styles.fixtureTeams}>
+          <div className={styles.fixtureTeam}>
             <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-7 w-7" />
-            <div className="min-w-0">
-              <strong>{match.homeTeam.name}</strong>
-            </div>
-            {live && hasScore ? <b className="fixture-score-n is-live">{match.homeScore}</b> : null}
+            <strong>{match.homeTeam.name}</strong>
+            {live && hasScore ? <b>{match.homeScore}</b> : null}
           </div>
-          <div className="fixture-team">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+          <div className={styles.fixtureTeam}>
             <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-7 w-7" />
-            <div className="min-w-0">
-              <strong>{match.awayTeam.name}</strong>
-            </div>
-            {live && hasScore ? <b className="fixture-score-n is-live">{match.awayScore}</b> : null}
+            <strong>{match.awayTeam.name}</strong>
+            {live && hasScore ? <b>{match.awayScore}</b> : null}
           </div>
         </div>
       </div>
       {followed ? (
-        <span className="fixture-followed">
+        <span className={styles.fixtureFollowed}>
           <Heart className="h-2.5 w-2.5 fill-current" />
         </span>
       ) : null}
@@ -351,7 +345,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       where: {
         OR: [
           { kickoffAt: { gte: weekStart, lt: weekEnd } },
-          { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: new Date(Date.now() - 12 * 60 * 60 * 1000) } },
+          { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
         ],
       },
       select: { kickoffAt: true, status: true },
@@ -895,14 +889,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       },
       new Map<string, { league: DayMatch['league']; country?: string; matches: DayMatch[] }>()
     ).values()
-  ).sort((first, second) => {
-    const liveScore = (matches: DayMatch[]) => matches.filter((match) => isLiveStatus(match.status)).length;
-    return (
-      leagueTier(second.league) - leagueTier(first.league) ||
-      liveScore(second.matches) - liveScore(first.matches) ||
-      second.matches.length - first.matches.length
-    );
-  }).map((group) => ({
+  ).sort(compareMatchdayGroups).map((group) => ({
     ...group,
     rounds: [...new Set(group.matches.map((match) => match.round).filter((value): value is string => Boolean(value)))],
     matches: [...group.matches].sort((first, second) => {
@@ -1018,16 +1005,17 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   });
 
   const nowMs = Date.now();
-  const soonMatches = isToday
+  const soonDayMatches = isToday
     ? queryMatches
       .filter((match) => {
         if (match.status !== 'NOT_STARTED') return false;
         const kickoff = new Date(match.kickoffAt).getTime();
         return kickoff >= nowMs && kickoff <= nowMs + 2 * 60 * 60 * 1000;
       })
+      .sort((first, second) => new Date(first.kickoffAt).getTime() - new Date(second.kickoffAt).getTime())
       .slice(0, 6)
-      .map(toDeskMatch)
     : [];
+  const soonMatches = soonDayMatches.map(toDeskMatch);
 
   const reminderMatches = queryMatches
     .filter((match) => reminderIds.has(match.id))
@@ -1190,54 +1178,61 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   const leagueBoard = (
     group: (typeof leagueGroups)[number],
     compact?: boolean,
+    index?: number,
   ) => {
     const liveInLeague = group.matches.filter((match) => isLiveStatus(match.status)).length;
+    const upcomingInLeague = group.matches.filter((match) => match.status === 'NOT_STARTED').length;
+    const roundLabel = group.rounds[0]
+      ? t('round_label', {
+        round: group.rounds.length === 1 ? group.rounds[0] : group.rounds.join(' · '),
+      })
+      : '';
     return (
       <section
         key={group.league.id}
         id={`league-${group.league.slug}`}
-        className="fixture-board scroll-mt-64 overflow-hidden"
+        className={styles.leagueBoard}
       >
-        <div className="matchday-league-head">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-card dark:bg-muted/10 p-1.5 border border-border/60 dark:border-transparent">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={group.league.logoUrl || '/placeholder.png'} alt="" className="h-full w-full object-contain" />
+        <div className={styles.leagueHead}>
+          <div className={styles.leagueHeadCopy}>
+            {typeof index === 'number' ? (
+              <span className={styles.leagueOrdinal} aria-hidden>
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            ) : null}
+            <div className={styles.leagueCrest}>
+              <img src={group.league.logoUrl || '/placeholder.png'} alt="" />
             </div>
-            <div className="min-w-0">
-              <Link
-                href={`/league/${group.league.slug}`}
-                className="block truncate text-sm font-bold text-foreground transition-colors hover:text-orange-600 dark:text-orange-50 dark:hover:text-orange-300"
-              >
+            <div className={styles.leagueMeta}>
+              <Link href={`/league/${group.league.slug}`} className={styles.leagueTitle}>
                 {group.league.name}
               </Link>
-              <span className="mt-0.5 block truncate text-[9px] font-medium text-muted-foreground dark:text-foreground/45">
-                {[
-                  group.country,
-                  group.rounds[0]
-                    ? t('round_label', {
-                      round: group.rounds.length === 1 ? group.rounds[0] : group.rounds.join(' · '),
-                    })
-                    : '',
-                  `${group.matches.length} ${pick(locale, group.matches.length === 1 ? 'مباراة' : 'مباريات', group.matches.length === 1 ? 'match' : 'matches')}`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+              <span>
+                {[group.country, roundLabel].filter(Boolean).join(' · ')}
               </span>
             </div>
           </div>
-          {liveInLeague > 0 ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-red-500/20 px-2.5 py-1 text-[8px] font-bold text-red-200">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-              {liveInLeague} {t('live')}
+          <div className={styles.leagueHeadAside}>
+            {liveInLeague > 0 ? (
+              <span className={styles.liveChip}>
+                <span className={styles.livePulse} />
+                {liveInLeague} {t('live')}
+              </span>
+            ) : upcomingInLeague > 0 ? (
+              <span className={styles.stateChip}>
+                {upcomingInLeague} {pick(locale, 'قادمة', 'upcoming')}
+              </span>
+            ) : (
+              <span className={styles.stateChip}>
+                {pick(locale, 'منتهية', 'Finished')}
+              </span>
+            )}
+            <span className={styles.countChip}>
+              {group.matches.length}
             </span>
-          ) : (
-            <span className="matchday-folio-mark is-light" aria-hidden>
-              YS
-            </span>
-          )}
+          </div>
         </div>
-        <div className={`space-y-1 p-2.5 ${liveInLeague > 0 ? 'bg-red-50/40 dark:bg-red-500/[0.06]' : ''}`}>
+        <div className={`${styles.leagueBody} ${liveInLeague > 0 ? styles.leagueBodyLive : ''}`}>
           {compact
             ? group.matches.map((match) => (
               <CompactFixture key={match.id} match={match} followed={isFollowedMatch(match)} />
@@ -1248,6 +1243,19 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     );
   };
 
+  const reelItems: MatchdayReelItem[] = [];
+  const seenReel = new Set<string>();
+  const pushReel = (match?: DayMatch) => {
+    if (!match || seenReel.has(match.id)) return;
+    seenReel.add(match.id);
+    reelItems.push(toReelItem(match));
+  };
+  liveBoard.forEach(pushReel);
+  pushReel(spotlightMatch);
+  soonDayMatches.forEach(pushReel);
+  (programmeScope === 'major' ? majorScoped : scopedMatches).slice(0, 8).forEach(pushReel);
+  const dateLabel = format(selectedDate, 'EEEE d MMMM', { locale: locale === 'ar' ? ar : enUS });
+
   const dayCensus = [
     ...(totalGoals > 0 ? [{ value: totalGoals, label: t('goal') }] : []),
     ...(eventCount('YELLOW_CARD') > 0 ? [{ value: eventCount('YELLOW_CARD'), label: t('yellow_card') }] : []),
@@ -1256,469 +1264,50 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   ];
 
   return (
-    <div className={`${styles.matchdayBoard} matchday-board pb-32`}>
-      <section className={`${styles.floodlightHero} floodlight-hero`}>
-        <span className="flood-beam pointer-events-none absolute -left-10 -top-16 h-40 w-40 rounded-full bg-orange-400/20 blur-3xl" />
-        <span
-          className="flood-beam pointer-events-none absolute -right-8 -top-12 h-36 w-36 rounded-full bg-orange-500/14 blur-3xl"
-          style={{ animationDelay: '2.4s' }}
+    <SalonStage
+      tone="wire"
+      wide
+      compact
+      kicker={pick(locale, 'صالة الملعب', 'Stadium hall')}
+      title={pick(locale, 'المباريات', 'Matches')}
+      lead={pick(
+        locale,
+        'النتائج والمواعيد من المصدر الحي فقط. لا أرقام مخترعة — المباشر يظهر إن وصلت الحالة من المكتب.',
+        'Scores and kickoffs from the live source only. No invented numbers — live appears when the desk files the status.',
+      )}
+      aside={
+        liveCount > 0
+          ? pick(locale, `${liveCount} مباشرة`, `${liveCount} live`)
+          : pick(locale, 'من المصدر', 'From source')
+      }
+      tools={
+        <HallFoyer
+          label={pick(locale, 'جناح الملعب', 'Pitch suite')}
+          items={[
+            { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays, current: true },
+            { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
+            { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
+            { href: '/transfers', label: pick(locale, 'الانتقالات', 'Transfers'), icon: ArrowLeftRight },
+            { href: '/stats', label: pick(locale, 'إحصائيات', 'Stats'), icon: BarChart3 },
+          ]}
         />
-        <span
-          className="pointer-events-none absolute inset-inline-end-[4%] top-[12%] text-[clamp(5rem,16vw,11rem)] font-black leading-none tracking-[-0.08em] text-transparent select-none"
-          style={{
-            background: 'linear-gradient(180deg, rgba(249,115,22,0.18), rgba(249,115,22,0.02))',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-          }}
-          aria-hidden
-        >
-          {liveCount > 0 ? liveCount : queryMatches.length || '—'}
-        </span>
-        <div className="relative z-10 mx-auto max-w-7xl px-5 pb-6 pt-4 sm:px-6 lg:px-8">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0">
-              <div className="matchday-section-kicker">
-                <span className="matchday-folio-mark is-light" aria-hidden>
-                  01
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.32em] text-orange-400">
-                  {pick(locale, 'برنامج اليوم', "Today's fixtures")}
-                </span>
-              </div>
-              <h1 className="matchday-wordmark mt-2">
-                {format(selectedDate, 'EEEE d MMMM', { locale: locale === 'ar' ? ar : enUS })}
-              </h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="matchday-status-chip">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${liveCount > 0 ? 'animate-pulse bg-red-500' : 'bg-orange-400'}`}
-                />
-                {liveCount > 0
-                  ? pick(locale, `${liveCount} مباشرة`, `${liveCount} live`)
-                  : pick(locale, 'من المصدر الحي', 'From the live source')}
-              </span>
-              <LiveDataStatus />
-              <div className="hidden sm:block">
-                <TimezoneSelector />
-              </div>
-            </div>
-          </div>
-
-          {heroStats.length > 0 ? (
-            <div className="matchday-signature">
-              {heroStats.slice(0, 6).map((stat, index) => (
-                <div
-                  key={stat.label}
-                  className={`matchday-signature-tile${index === 0 ? ' is-lead' : ''}`}
-                  style={{ animationDelay: `${index * 55}ms` }}
-                >
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <main className="matchday-main mx-auto max-w-7xl space-y-6 px-5 pb-8 pt-5 sm:px-6 lg:px-8">
-        <MatchdayLenses
-          leagues={leagueLenses}
-          channels={channelLenses}
-          hours={hourLenses}
-          clearHref={pageHref({ league: undefined, channel: undefined, hour: undefined })}
-        />
-
-        <KickoffTimeline
-          slots={timelineSlots}
-          activeHour={selectedHour}
-          hrefForHour={(hour) => pageHref({ hour: selectedHour === hour ? undefined : String(hour) })}
-        />
-
-        <MatchdayDesk
-          soon={soonMatches}
-          reminders={reminderMatches}
-          clashes={clashPairs}
-          onAir={onAirMatches}
-        />
-
-        <LiveNowBoard seed={liveBoard} dayIds={dayIds} lastEvents={lastEvents} />
-
-        <PinnedMatchesBar allMatches={pinnedMatchesData} locale={locale} />
-
-        {spotlightMatch ? (
-          <article
-            className={`jumbotron matchday-spotlight relative overflow-hidden rounded-[1.85rem] text-white ${isLiveStatus(spotlightMatch.status)
-                ? 'jumbotron-live'
-                : spotlightMatch.status === 'FINISHED'
-                  ? 'jumbotron-ft'
-                  : ''
-              }`}
-          >
-            <div className="matchday-spotlight-glow" aria-hidden />
-            <div className="relative p-5 sm:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex min-w-0 flex-wrap items-center gap-2 text-[10px] font-medium text-white/65">
-                  <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-orange-200">
-                    {pick(locale, 'المباراة المختارة', 'Selected match')}
-                  </span>
-                  <Link href={`/league/${spotlightMatch.league.slug}`} className="hover:text-orange-300">
-                    {spotlightMatch.league.name}
-                  </Link>
-                  {spotlightMatch.leagueCountry ? (
-                    <span className="text-white/35">· {spotlightMatch.leagueCountry}</span>
-                  ) : null}
-                  {spotlightMatch.round ? (
-                    <span className="text-orange-200/80">
-                      · {t('round_label', { round: spotlightMatch.round })}
-                    </span>
-                  ) : null}
-                  {spotlightMatch.hasLicensedStream && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-400/15 px-2 py-0.5 text-[8px] font-bold text-orange-200">
-                      <Radio className="h-3 w-3" />
-                      {t('licensed_feed')}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {isLiveStatus(spotlightMatch.status) ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 px-2.5 py-1 text-[8px] font-bold text-red-200">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-                      {spotlightMatch.status === 'HALFTIME'
-                        ? t('halftime')
-                        : spotlightMatch.minute
-                          ? `${t('live')} ${spotlightMatch.minute}'`
-                          : t('live')}
-                    </span>
-                  ) : (
-                    <ClientTime
-                      value={spotlightMatch.kickoffAt}
-                      className="text-[11px] font-bold text-orange-300"
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="matchday-spotlight-grid relative mt-7">
-                <div className="matchday-spotlight-side is-home">
-                  <div className="matchday-crest-stage">
-                    <span className="matchday-crest-glow" aria-hidden />
-                    <div className="matchday-crest">
-                      <LeagueCrest name={spotlightMatch.homeTeam.name} logoUrl={spotlightMatch.homeTeam.logoUrl} className="h-full w-full" />
-                    </div>
-                  </div>
-                  <strong className="matchday-spotlight-name">{spotlightMatch.homeTeam.name}</strong>
-                  <div className="matchday-spotlight-meta">
-                    {(formByTeam.get(spotlightMatch.homeTeam.id)?.length ?? 0) > 0 && (
-                      <FormPips letters={formByTeam.get(spotlightMatch.homeTeam.id) ?? []} />
-                    )}
-                    {spotlightMatch.homeFormation ? (
-                      <span className="text-orange-300">{spotlightMatch.homeFormation}</span>
-                    ) : null}
-                  </div>
-                  {spotlightMatch.homeCoach ? (
-                    <span className="text-[9px] font-medium text-white/40">
-                      {pick(locale, 'المدرب', 'Coach')} · {spotlightMatch.homeCoach}
-                    </span>
-                  ) : null}
-                  {spotlightGoals.filter((event) =>
-                    belongsToTeam(event.teamId, spotlightMatch.homeTeam)
-                  ).length > 0 ? (
-                    <p className="matchday-spotlight-scorers">
-                      {spotlightGoals
-                        .filter((event) => belongsToTeam(event.teamId, spotlightMatch.homeTeam))
-                        .map(
-                          (event) =>
-                            `${namedActor(event.playerName) ? `${namedActor(event.playerName)} ` : ''}${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}'`
-                        )
-                        .join('  ·  ')}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="matchday-spotlight-score">
-                  {spotlightMatch.status === 'NOT_STARTED' ? (
-                    <div className="space-y-3">
-                      <div className="led-stat text-3xl font-black tabular-nums sm:text-5xl">
-                        <ClientTime value={spotlightMatch.kickoffAt} />
-                      </div>
-                      <MatchCountdown kickoffAt={new Date(spotlightMatch.kickoffAt)} tone="dark" />
-                    </div>
-                  ) : (
-                    <div
-                      className={`matchday-score-ring${isLiveStatus(spotlightMatch.status) ? ' is-live' : ''}`}
-                      dir="ltr"
-                    >
-                      <strong className="led-stat text-5xl font-black tabular-nums sm:text-6xl">
-                        {typeof spotlightMatch.homeScore === 'number' &&
-                          typeof spotlightMatch.awayScore === 'number' ? (
-                          <>
-                            {spotlightMatch.homeScore}
-                            <span className="mx-2 text-orange-400/70">:</span>
-                            {spotlightMatch.awayScore}
-                          </>
-                        ) : (
-                          '–'
-                        )}
-                      </strong>
-                    </div>
-                  )}
-                  <span className="mt-3 block text-[9px] font-bold uppercase tracking-[0.2em] text-orange-300/80">
-                    {spotlightMatch.status === 'FINISHED'
-                      ? t('finished')
-                      : spotlightMatch.status === 'NOT_STARTED'
-                        ? pick(locale, 'تبدأ الساعة', 'Starts at')
-                        : t('score_now')}
-                  </span>
-                </div>
-
-                <div className="matchday-spotlight-side is-away">
-                  <div className="matchday-crest-stage">
-                    <span className="matchday-crest-glow" aria-hidden />
-                    <div className="matchday-crest">
-                      <LeagueCrest name={spotlightMatch.awayTeam.name} logoUrl={spotlightMatch.awayTeam.logoUrl} className="h-full w-full" />
-                    </div>
-                  </div>
-                  <strong className="matchday-spotlight-name">{spotlightMatch.awayTeam.name}</strong>
-                  <div className="matchday-spotlight-meta">
-                    {(formByTeam.get(spotlightMatch.awayTeam.id)?.length ?? 0) > 0 && (
-                      <FormPips letters={formByTeam.get(spotlightMatch.awayTeam.id) ?? []} />
-                    )}
-                    {spotlightMatch.awayFormation ? (
-                      <span className="text-orange-300">{spotlightMatch.awayFormation}</span>
-                    ) : null}
-                  </div>
-                  {spotlightMatch.awayCoach ? (
-                    <span className="text-[9px] font-medium text-white/40">
-                      {pick(locale, 'المدرب', 'Coach')} · {spotlightMatch.awayCoach}
-                    </span>
-                  ) : null}
-                  {spotlightGoals.filter((event) =>
-                    belongsToTeam(event.teamId, spotlightMatch.awayTeam)
-                  ).length > 0 ? (
-                    <p className="matchday-spotlight-scorers">
-                      {spotlightGoals
-                        .filter((event) => belongsToTeam(event.teamId, spotlightMatch.awayTeam))
-                        .map(
-                          (event) =>
-                            `${namedActor(event.playerName) ? `${namedActor(event.playerName)} ` : ''}${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}'`
-                        )
-                        .join('  ·  ')}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-
-              {(spotlightMatch.homePossession != null && spotlightMatch.awayPossession != null) ||
-                (spotlightMatch.homeShotsOn != null && spotlightMatch.awayShotsOn != null) ||
-                (spotlightMatch.homeShotsOff != null && spotlightMatch.awayShotsOff != null) ||
-                (spotlightMatch.homeCorners != null && spotlightMatch.awayCorners != null) ||
-                (spotlightMatch.homeFouls != null && spotlightMatch.awayFouls != null) ||
-                (spotlightMatch.homeOffsides != null && spotlightMatch.awayOffsides != null) ? (
-                <div className="relative mt-4 flex flex-wrap justify-center gap-x-5 gap-y-4 rounded-2xl bg-black/25 px-4 py-4">
-                  {spotlightMatch.homePossession != null && spotlightMatch.awayPossession != null && (
-                    <StatMeter home={spotlightMatch.homePossession} away={spotlightMatch.awayPossession} label={t('possession')} asPercent />
-                  )}
-                  {spotlightMatch.homeShotsOn != null && spotlightMatch.awayShotsOn != null && (
-                    <StatMeter home={spotlightMatch.homeShotsOn} away={spotlightMatch.awayShotsOn} label={t('shots_on_target')} />
-                  )}
-                  {spotlightMatch.homeShotsOff != null && spotlightMatch.awayShotsOff != null && (
-                    <StatMeter home={spotlightMatch.homeShotsOff} away={spotlightMatch.awayShotsOff} label={t('shots_off_target')} />
-                  )}
-                  {spotlightMatch.homeCorners != null && spotlightMatch.awayCorners != null && (
-                    <StatMeter home={spotlightMatch.homeCorners} away={spotlightMatch.awayCorners} label={t('corners')} />
-                  )}
-                  {spotlightMatch.homeFouls != null && spotlightMatch.awayFouls != null && (
-                    <StatMeter home={spotlightMatch.homeFouls} away={spotlightMatch.awayFouls} label={t('fouls')} />
-                  )}
-                  {spotlightMatch.homeOffsides != null && spotlightMatch.awayOffsides != null && (
-                    <StatMeter home={spotlightMatch.homeOffsides} away={spotlightMatch.awayOffsides} label={t('offsides')} />
-                  )}
-                </div>
-              ) : null}
-
-              {(spotlightYellow > 0 || spotlightRed > 0) && (
-                <div className="relative mt-3 flex justify-center gap-4 text-[10px] font-bold">
-                  {spotlightYellow > 0 && (
-                    <span className="rounded-full bg-amber-400/15 px-3 py-1 text-amber-200">{t('yellow_cards', { count: spotlightYellow })}</span>
-                  )}
-                  {spotlightRed > 0 && (
-                    <span className="rounded-full bg-red-500/15 px-3 py-1 text-red-300">{t('red_cards', { count: spotlightRed })}</span>
-                  )}
-                </div>
-              )}
-
-              {(spotlightMatch.homeStarters?.length || spotlightMatch.awayStarters?.length) ? (
-                <div className="relative mt-4 grid gap-3 sm:grid-cols-2">
-                  {spotlightMatch.homeStarters?.length ? (
-                    <div className="rounded-2xl bg-black/20 px-3 py-3">
-                      <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-orange-200">
-                        {t('starting_xi')}
-                      </span>
-                      <p className="mt-2 text-[10px] font-medium leading-5 text-white/75">
-                        {spotlightMatch.homeStarters.map((player) =>
-                          player.number != null ? `${player.number} ${player.name}` : player.name
-                        ).join(' · ')}
-                      </p>
-                    </div>
-                  ) : null}
-                  {spotlightMatch.awayStarters?.length ? (
-                    <div className="rounded-2xl bg-black/20 px-3 py-3">
-                      <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-orange-300">
-                        {t('starting_xi')}
-                      </span>
-                      <p className="mt-2 text-[10px] font-medium leading-5 text-white/75">
-                        {spotlightMatch.awayStarters.map((player) =>
-                          player.number != null ? `${player.number} ${player.name}` : player.name
-                        ).join(' · ')}
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {spotlightTimeline.length > 0 && (
-                <ol className="relative mt-4 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                  {spotlightTimeline.map((event) => (
-                    <li
-                      key={event.id}
-                      className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[9px] font-semibold text-emerald-50"
-                    >
-                      <span className="text-orange-300">
-                        {event.minute}{event.extraMinute ? `+${event.extraMinute}` : ''}&prime;
-                      </span>
-                      {' '}
-                      {eventLabel(event.type)}
-                      {event.playerName ? ` · ${event.playerName}` : ''}
-                    </li>
-                  ))}
-                </ol>
-              )}
-
-              {(spotlightHomeStanding || spotlightAwayStanding) && (
-                <div className="relative mt-3 flex justify-between gap-4 text-[9px] font-semibold text-emerald-100/50">
-                  <span>
-                    {spotlightHomeStanding
-                      ? pick(locale, `المركز ${spotlightHomeStanding.rank} · ${spotlightHomeStanding.played} لعب · ${spotlightHomeStanding.won}ف ${spotlightHomeStanding.drawn}ت ${spotlightHomeStanding.lost}خ · ${spotlightHomeStanding.goalsFor}:${spotlightHomeStanding.goalsAgainst} · ${spotlightHomeStanding.points} نقطة`, `Rank ${spotlightHomeStanding.rank} · ${spotlightHomeStanding.played} played · ${spotlightHomeStanding.won}W ${spotlightHomeStanding.drawn}D ${spotlightHomeStanding.lost}L · ${spotlightHomeStanding.goalsFor}:${spotlightHomeStanding.goalsAgainst} · ${spotlightHomeStanding.points} points`)
-                      : ''}
-                  </span>
-                  <span className="text-left">
-                    {spotlightAwayStanding
-                      ? pick(locale, `المركز ${spotlightAwayStanding.rank} · ${spotlightAwayStanding.played} لعب · ${spotlightAwayStanding.won}ف ${spotlightAwayStanding.drawn}ت ${spotlightAwayStanding.lost}خ · ${spotlightAwayStanding.goalsFor}:${spotlightAwayStanding.goalsAgainst} · ${spotlightAwayStanding.points} نقطة`, `Rank ${spotlightAwayStanding.rank} · ${spotlightAwayStanding.played} played · ${spotlightAwayStanding.won}W ${spotlightAwayStanding.drawn}D ${spotlightAwayStanding.lost}L · ${spotlightAwayStanding.goalsFor}:${spotlightAwayStanding.goalsAgainst} · ${spotlightAwayStanding.points} points`)
-                      : ''}
-                  </span>
-                </div>
-              )}
-
-              {spotlightH2h.length > 0 && (
-                <div className="relative mt-4 rounded-2xl bg-black/20 px-3 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[8px] font-bold uppercase tracking-[0.18em] text-orange-300">{t('previous_meetings')}</span>
-                    <span className="text-[10px] font-black tabular-nums text-emerald-50">
-                      <span className="text-emerald-300">{spotlightH2hRecord.homeWins}{t('win_short')}</span>
-                      <span className="mx-1.5 text-muted-foreground">{spotlightH2hRecord.draws}{t('draw_short')}</span>
-                      <span className="text-orange-300">{spotlightH2hRecord.awayWins}{t('win_short')}</span>
-                    </span>
-                  </div>
-                  <div className="mt-2 flex gap-2 overflow-x-auto no-scrollbar">
-                    {spotlightH2h.map((meeting) => {
-                      const homeWonMeeting = meeting.homeScore != null && meeting.awayScore != null && meeting.homeScore > meeting.awayScore;
-                      const awayWonMeeting = meeting.homeScore != null && meeting.awayScore != null && meeting.awayScore > meeting.homeScore;
-                      return (
-                        <Link
-                          key={meeting.id}
-                          href={`/match/${meeting.id}`}
-                          className="shrink-0 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-[9px] font-semibold text-emerald-50 hover:border-orange-400/40"
-                        >
-                          <span className="block text-emerald-100/45">{format(meeting.kickoffAt, 'yyyy-MM-dd')}</span>
-                          <span className="mt-0.5 block tabular-nums">
-                            <span className={homeWonMeeting ? 'text-emerald-300' : awayWonMeeting ? 'text-white/40' : ''}>
-                              {meeting.homeTeam.name} {meeting.homeScore ?? '–'}
-                            </span>
-                            –
-                            <span className={awayWonMeeting ? 'text-orange-300' : homeWonMeeting ? 'text-white/40' : ''}>
-                              {meeting.awayScore ?? '–'} {meeting.awayTeam.name}
-                            </span>
-                          </span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="relative mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-medium text-emerald-100/60">
-                  {spotlightMatch.venue && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-orange-500" />
-                      {spotlightMatch.venue}
-                      {spotlightMatch.venueCity ? ` · ${spotlightMatch.venueCity}` : ''}
-                      {spotlightMatch.venueCapacity ? ` · ${t('seats', { count: spotlightMatch.venueCapacity.toLocaleString(locale) })}` : ''}
-                    </span>
-                  )}
-                  {spotlightMatch.channels[0] && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Tv className="h-3.5 w-3.5 text-orange-500" />
-                      {spotlightMatch.channels.map((channel) => channel.name).join(' · ')}
-                    </span>
-                  )}
-                  {spotlightMatch.refereeName && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Shield className="h-3.5 w-3.5 text-orange-500" />
-                      {t('referee', { name: spotlightMatch.refereeName })}
-                    </span>
-                  )}
-                  {spotlightMatch.commentators.length > 0 && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-orange-500" />
-                      {spotlightMatch.commentators.map((commentator) =>
-                        [commentator.name, commentator.language].filter(Boolean).join(' · ')
-                      ).join(' · ')}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {showProgrammeSplit && programmeScope === 'major' && restScoped.length > 0 ? (
-                    <Link
-                      href="#rest"
-                      className="inline-flex h-11 items-center rounded-xl border border-white/15 bg-black/20 px-4 text-[10px] font-bold text-emerald-100/80 transition-colors hover:border-orange-400/40 hover:text-white"
-                    >
-                      {pick(
-                        locale,
-                        `عرض ${restScoped.length} مباراة أخرى`,
-                        `Show ${restScoped.length} more matches`
-                      )}
-                    </Link>
-                  ) : null}
-                  <MatchQuickActions
-                    matchId={spotlightMatch.id}
-                    title={t('versus', { home: spotlightMatch.homeTeam.name, away: spotlightMatch.awayTeam.name })}
-                    kickoffAt={new Date(spotlightMatch.kickoffAt).toISOString()}
-                    venue={spotlightMatch.venue}
-                    isLoggedIn={Boolean(session?.user)}
-                    initialReminder={Boolean(spotlightReminder)}
-                  />
-                  <Link
-                    href={`/match/${spotlightMatch.id}`}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-[10px] font-black text-primary-foreground transition-colors hover:bg-orange-400"
-                  >
-                    {pick(locale, 'فتح مركز المباراة', 'Open match center')}
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </article>
+      }
+    >
+      <div className={styles.matchdayBoard}>
+        {reelItems.length > 0 ? (
+          <MatchdayConsole locale={locale} items={reelItems} dateLabel={dateLabel} />
         ) : null}
 
-        <div className="matchday-dock space-y-3 p-3 sm:p-4">
-          <div className="flex items-stretch gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className={styles.dock}>
+          <div className={styles.dockMeta}>
+            <LiveDataStatus />
+            <TimezoneSelector />
+          </div>
+          <div className={styles.dateStrip}>
             <Link
               href={pageHref({ date: format(addDays(selectedDate, -1), 'yyyy-MM-dd') })}
               aria-label={pick(locale, 'اليوم السابق', 'Previous day')}
-              className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-orange-400/40 hover:text-orange-500 dark:border-border dark:bg-muted dark:text-foreground/70"
+              className={styles.navArrow}
             >
               <ChevronRight className="h-4 w-4" />
             </Link>
@@ -1728,110 +1317,82 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                 <Link
                   key={date.value}
                   href={pageHref({ date: date.value })}
-                  className={`matchday-date-chip${active ? ' is-active' : ''}${date.live > 0 && !active ? ' is-live' : ''}`}
+                  className={`${active ? styles.dateChipActive : styles.dateChip}${date.live > 0 && !active ? ` ${styles.dateChipLive}` : ''}`}
                 >
-                  {date.live > 0 && !active ? (
-                    <span className="absolute left-2 top-2 h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-                  ) : null}
-                  <span className={`text-[8px] font-semibold ${active ? 'text-white/80' : 'opacity-55'}`}>
-                    {date.dayName}
-                  </span>
-                  <span className="text-base font-black tabular-nums">{date.dayNumber}</span>
-                  {date.fixtures > 0 ? (
-                    <span className={`text-[8px] font-bold tabular-nums ${active ? 'text-white/80' : 'text-orange-500'}`}>
-                      {date.fixtures}
-                    </span>
-                  ) : (
-                    <span className="text-[8px] font-medium opacity-40">—</span>
-                  )}
+                  {date.live > 0 && !active ? <span className={styles.dateLiveDot} /> : null}
+                  <span className={styles.chipDay}>{date.dayName}</span>
+                  <span className={styles.chipNumber}>{date.dayNumber}</span>
+                  <span className={styles.chipCount}>{date.fixtures > 0 ? date.fixtures : '—'}</span>
                 </Link>
               );
             })}
             <Link
               href={pageHref({ date: format(addDays(selectedDate, 1), 'yyyy-MM-dd') })}
               aria-label={pick(locale, 'اليوم التالي', 'Next day')}
-              className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-orange-400/40 hover:text-orange-500 dark:border-border dark:bg-muted dark:text-foreground/70"
+              className={styles.navArrow}
             >
               <ChevronLeft className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex w-fit flex-wrap items-center gap-1 rounded-xl border border-border bg-card/90 p-1 dark:border-border dark:bg-muted">
+          <div className={styles.controlsRow}>
+            <div className={styles.filterPills}>
               {statusFilters.map((filter) => {
                 const active = filter.value === statusFilter;
                 return (
                   <Link
                     key={filter.value}
                     href={pageHref({ status: filter.value })}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${active
+                    className={
+                      active
                         ? filter.value === 'live'
-                          ? 'bg-red-600 text-white shadow-sm'
-                          : 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
-                        : filter.value === 'live' && filter.count > 0
-                          ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted dark:hover:text-foreground'
-                      }`}
+                          ? styles.filterBtnActiveLive
+                          : styles.filterBtnActive
+                        : styles.filterBtn
+                    }
                   >
-                    {filter.value === 'live' && filter.count > 0 ? (
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
-                    ) : null}
                     {filter.label}
-                    <span className={`text-[9px] tabular-nums ${active
-                        ? filter.value === 'live' ? 'text-red-100' : 'text-orange-400'
-                        : filter.value === 'live' && filter.count > 0 ? 'text-red-400' : 'text-muted-foreground dark:text-foreground'
-                      }`}>
-                      {filter.count}
-                    </span>
+                    <span className={styles.filterCount}>{filter.count}</span>
                   </Link>
                 );
               })}
-              <span className="mx-1 h-5 w-px bg-[rgba(15,23,42,0.08)] dark:bg-muted/10" />
+              <span className={styles.filterDivider} />
               <Link
                 href={favoritesHref}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${favoritesOnly
-                    ? 'bg-orange-500 text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-500/10'
-                  }`}
+                className={favoritesOnly ? styles.filterBtnActive : styles.filterBtn}
               >
                 <Heart className={`h-3.5 w-3.5 ${favoritesOnly ? 'fill-current' : ''}`} />
                 {pick(locale, 'فرقي', 'My teams')}
               </Link>
               {hasProgrammeSplit ? (
                 <>
-                  <span className="mx-1 h-5 w-px bg-[rgba(15,23,42,0.08)] dark:bg-muted/10" />
+                  <span className={styles.filterDivider} />
                   <Link
                     href={pageHref({ scope: undefined })}
-                    className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${programmeScope === 'major'
-                        ? 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
-                        : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-muted'
-                      }`}
+                    className={programmeScope === 'major' ? styles.filterBtnActive : styles.filterBtn}
                   >
                     {pick(locale, 'كبرى', 'Majors')}
-                    <span className="ms-1.5 text-[9px] tabular-nums opacity-80">{majorScoped.length}</span>
+                    <span className={styles.filterCount}>{majorScoped.length}</span>
                   </Link>
                   <Link
                     href={pageHref({ scope: 'all' })}
-                    className={`rounded-lg px-3 py-2 text-[11px] font-semibold transition-all ${programmeScope === 'all'
-                        ? 'bg-foreground text-white shadow-sm dark:bg-card dark:text-foreground'
-                        : 'text-muted-foreground hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-muted'
-                      }`}
+                    className={programmeScope === 'all' ? styles.filterBtnActive : styles.filterBtn}
                   >
                     {pick(locale, 'البرنامج كامل', 'Full programme')}
-                    <span className="ms-1.5 text-[9px] tabular-nums opacity-80">{scopedMatches.length}</span>
+                    <span className={styles.filterCount}>{scopedMatches.length}</span>
                   </Link>
                 </>
               ) : null}
             </div>
 
-            <form className="relative w-full lg:w-80">
-              <Search className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <form className={styles.searchWrap}>
+              <Search className={styles.searchIcon} />
               <input
                 name="q"
                 type="search"
                 defaultValue={params.q}
                 placeholder={pick(locale, 'ابحث عن فريق أو بطولة', 'Search for a team or league')}
-                className="h-11 w-full rounded-xl border border-border bg-card pr-11 pl-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-orange-500/40 focus:ring-4 focus:ring-orange-500/5 dark:border-border dark:bg-muted dark:text-foreground"
+                className={styles.searchInput}
               />
               <input type="hidden" name="date" value={selectedDateStr} />
               {statusFilter !== 'all' && <input type="hidden" name="status" value={statusFilter} />}
@@ -1842,271 +1403,324 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
               {requestedScope === 'all' && <input type="hidden" name="scope" value="all" />}
             </form>
           </div>
+
+          {heroStats.length > 0 ? (
+            <ul className={styles.dockMeters}>
+              {heroStats.slice(0, 6).map((stat) => (
+                <li key={stat.label}>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
 
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="space-y-5">
-            {leagueGroups.length > 0 ? (
-              showProgrammeSplit ? (
-                <>
-                  <div id="desk" className="scroll-mt-[18rem] space-y-3">
-                    <div className="flex items-end justify-between gap-3 px-1">
-                      <div>
-                        <div className="matchday-section-kicker">
-                          <span className="matchday-folio-mark" aria-hidden>
-                            02
-                          </span>
-                          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                            {pick(locale, 'مكتب التحرير', 'Editorial desk')}
-                          </span>
+        <MatchdayLenses
+          leagues={leagueLenses}
+          channels={channelLenses}
+          hours={hourLenses}
+          clearHref={pageHref({ league: undefined, channel: undefined, hour: undefined })}
+        />
+
+        <LiveNowBoard seed={liveBoard} dayIds={dayIds} lastEvents={lastEvents} />
+
+        <main className={styles.matchdayMain}>
+          <section className={styles.fixtureProgramme} aria-labelledby="fixture-programme-title">
+            <div className={styles.fixtureProgrammeHead}>
+              <div>
+                <span className={styles.programmeEyebrow}>
+                  {pick(locale, 'قائمة المباريات', 'Fixture programme')}
+                </span>
+                <h2 id="fixture-programme-title">
+                  {pick(locale, 'مباريات اليوم مرتبة حسب البطولة', "Today's matches by competition")}
+                </h2>
+              </div>
+              <span className={styles.fixtureProgrammeCount}>
+                {filteredMatches.length}
+                <small>{pick(locale, 'مباراة', 'matches')}</small>
+              </span>
+            </div>
+
+            <div className={styles.contentGrid}>
+              <div className={styles.programmeCol}>
+                {leagueGroups.length > 0 ? (
+                  <>
+                    <nav className={styles.leagueJump} aria-label={pick(locale, 'البطولات في هذا اليوم', 'Competitions on this day')}>
+                      {(showProgrammeSplit ? [...deskGroups, ...restGroups] : leagueGroups).map((group) => {
+                        const liveInLeague = group.matches.filter((match) => isLiveStatus(match.status)).length;
+                        return (
+                          <a
+                            key={group.league.id}
+                            href={`#league-${group.league.slug}`}
+                            className={`${styles.leagueJumpChip} ${liveInLeague > 0 ? styles.leagueJumpLive : ''}`}
+                          >
+                            <img src={group.league.logoUrl || '/placeholder.png'} alt="" />
+                            <span>{group.league.name}</span>
+                            <b>{liveInLeague > 0 ? liveInLeague : group.matches.length}</b>
+                          </a>
+                        );
+                      })}
+                    </nav>
+                    {showProgrammeSplit ? (
+                      <>
+                        <div id="desk" className={`${styles.majorHall} scroll-mt-[18rem]`}>
+                          <div className={styles.majorHead}>
+                            <div>
+                              <span className={styles.majorKicker}>
+                                {pick(locale, 'قاعة الكبار', 'The hall')}
+                              </span>
+                              <h2>
+                                {pick(locale, 'البطولات الكبرى', 'Major competitions')}
+                              </h2>
+                              <p>
+                                {pick(
+                                  locale,
+                                  'مباشر أولاً، ثم أقرب ركلة، كما وصلت من المصدر.',
+                                  'Live first, then the next kickoff, as filed by the source.'
+                                )}
+                              </p>
+                            </div>
+                            <strong>
+                              {deskGroups.reduce((total, group) => total + group.matches.length, 0)}
+                              <span>{pick(locale, 'مباراة', 'matches')}</span>
+                            </strong>
+                          </div>
+                          <div className={styles.majorStack}>
+                            {deskGroups.map((group, index) => leagueBoard(group, false, index))}
+                          </div>
                         </div>
-                        <h2 className="mt-2 text-lg font-black text-foreground dark:text-foreground">
-                          {pick(locale, 'البطولات الكبرى', 'Major competitions')}
-                        </h2>
-                      </div>
-                      <span className="text-[10px] font-bold tabular-nums text-muted-foreground">
-                        {deskGroups.reduce((total, group) => total + group.matches.length, 0)}
+                        {restGroups.length > 0 ? (
+                          <div id="rest" className={`${styles.restHall} scroll-mt-[18rem]`}>
+                            <div className={styles.majorHead}>
+                              <div>
+                                <span className={styles.restKicker}>
+                                  {pick(locale, 'باقي اليوم', 'Rest of the day')}
+                                </span>
+                                <h2>
+                                  {pick(locale, 'باقي برنامج اليوم', "The rest of today's programme")}
+                                </h2>
+                                <p>
+                                  {pick(
+                                    locale,
+                                    'نفس الترتيب: مباشر، قادم، منتهٍ — في بطاقات أخف.',
+                                    'The same order: live, upcoming, finished — in lighter cards.'
+                                  )}
+                                </p>
+                              </div>
+                              <div className={styles.restTools}>
+                                <strong>
+                                  {restGroups.reduce((total, group) => total + group.matches.length, 0)}
+                                  <span>{pick(locale, 'مباراة', 'matches')}</span>
+                                </strong>
+                                {programmeScope === 'major' ? (
+                                  <Link href={`${pageHref({ scope: 'all' })}#rest`} className={styles.restExpand}>
+                                    {pick(locale, 'بطاقات كاملة', 'Full cards')}
+                                  </Link>
+                                ) : null}
+                              </div>
+                            </div>
+                            <div className={styles.majorStack}>
+                              {restGroups.map((group, index) => leagueBoard(group, programmeScope === 'major', deskGroups.length + index))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </>
+                    ) : (
+                      leagueGroups.map((group, index) => leagueBoard(group, false, index))
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded-[1.55rem] border border-dashed border-border bg-card/80 px-6 py-20 text-center dark:border-border dark:bg-muted">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted dark:bg-card/[0.04]">
+                      <Clock3 className="h-6 w-6 text-muted-foreground dark:text-foreground" />
+                    </div>
+                    <h3 className="mt-6 text-xl font-bold text-foreground dark:text-foreground">
+                      {lensesActive
+                        ? pick(locale, 'لا مباريات تحت هذه العدسة', 'No matches under this lens')
+                        : statusFilter === 'live'
+                          ? pick(locale, 'لا توجد مباريات مباشرة الآن', 'No live matches right now')
+                          : statusFilter === 'upcoming'
+                            ? pick(locale, 'لا مواعيد قادمة في هذا اليوم', 'No upcoming fixtures on this day')
+                            : statusFilter === 'finished'
+                              ? pick(locale, 'لا نتائج منتهية في هذا اليوم', 'No finished results on this day')
+                              : pick(locale, 'لا توجد مباريات في هذا اليوم', 'No matches on this day')}
+                    </h3>
+                    <p className="mt-2 text-sm font-medium text-muted-foreground">
+                      {lensesActive
+                        ? pick(locale, 'امسح البطولة أو القناة أو الساعة لعرض برنامج اليوم كاملاً.', 'Clear the competition, channel or hour to show the full day.')
+                        : statusFilter === 'all'
+                          ? pick(locale, 'جرّب يوماً آخر أو امسح عبارة البحث لعرض جميع المباريات.', 'Try another day or clear the search to show all matches.')
+                          : pick(locale, 'غيّر الفلتر أو اختر يوماً آخر من شريط التواريخ.', 'Change the filter or choose another day.')}
+                    </p>
+                    <Link
+                      href={lensesActive ? pageHref({ league: undefined, channel: undefined, hour: undefined }) : '/matches'}
+                      className="mt-6 inline-flex rounded-xl bg-foreground px-6 py-3 text-[11px] font-bold text-white transition-colors hover:bg-orange-500 dark:bg-card dark:text-foreground"
+                    >
+                      {lensesActive
+                        ? pick(locale, 'مسح العدسات', 'Clear lenses')
+                        : pick(locale, 'العودة إلى مباريات اليوم', "Back to today's matches")}
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <aside className={styles.rail}>
+                <section className={styles.plate}>
+                  <div className="matchday-section-kicker">
+                    <span className="matchday-folio-mark" aria-hidden>
+                      05
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
+                      {pick(locale, 'الموعد التالي', 'Next kickoff')}
+                    </span>
+                  </div>
+                  <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
+                    {pick(locale, 'الموعد التالي', 'Next fixture')}
+                  </h2>
+                  {nextMatch ? (
+                    <div className="mt-4 space-y-3">
+                      {nextMatches.map((match) => (
+                        <Link
+                          key={match.id}
+                          href={`/match/${match.id}`}
+                          className="block rounded-xl border border-border px-3 py-3 transition-colors hover:border-orange-500/30 dark:border-border"
+                        >
+                          <div className="flex items-center justify-between gap-2 text-[9px] font-semibold text-muted-foreground">
+                            <span className="truncate">{match.league.name}</span>
+                            <ClientTime value={match.kickoffAt} className="tabular-nums text-orange-500" />
+                          </div>
+                          <p className="mt-1.5 truncate text-[12px] font-bold text-foreground dark:text-foreground">
+                            {match.homeTeam.name} × {match.awayTeam.name}
+                          </p>
+                          {(formByTeam.get(match.homeTeam.id)?.length || formByTeam.get(match.awayTeam.id)?.length) ? (
+                            <p className="mt-1.5 flex items-center gap-2">
+                              <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
+                              <span className="text-slate-200 dark:text-foreground/10">/</span>
+                              <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
+                            </p>
+                          ) : null}
+                          {(match.venue || match.channels[0]) && (
+                            <p className="mt-1 truncate text-[9px] font-medium text-muted-foreground">
+                              {[match.venue, match.venueCity, match.channels[0]?.name].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-[12px] font-medium text-muted-foreground">
+                      {pick(locale, 'اكتمل جدول هذا اليوم.', "This day's schedule is complete.")}
+                    </p>
+                  )}
+                </section>
+
+                <div id="timeline" className={styles.railBlock}>
+                  <KickoffTimeline
+                    slots={timelineSlots}
+                    activeHour={selectedHour}
+                    hrefForHour={(hour) => pageHref({ hour: selectedHour === hour ? undefined : String(hour) })}
+                  />
+                </div>
+
+                <MatchdayDesk
+                  soon={soonMatches}
+                  reminders={reminderMatches}
+                  clashes={clashPairs}
+                  onAir={onAirMatches}
+                />
+
+                <div id="ledger" className={styles.ledgerStack}>
+                  <MatchdayLedger
+                    census={dayCensus.map((item) => ({
+                      label: item.label,
+                      value: item.value,
+                      tone: item.label === t('goal') ? 'goal' : item.label === t('yellow_card') ? 'yellow' : item.label === t('red_card') ? 'red' : undefined,
+                    }))}
+                    grounds={grounds}
+                    broadcasts={broadcasts}
+                    hrefForChannel={(name) => pageHref({ channel: selectedChannel === name ? undefined : name })}
+                    activeChannel={selectedChannel}
+                  />
+                </div>
+
+                <PinnedMatchesBar allMatches={pinnedMatchesData} locale={locale} />
+
+                {scorers.length > 0 ? (
+                  <section className={styles.plate}>
+                    <div className="matchday-section-kicker">
+                      <span className="matchday-folio-mark" aria-hidden>
+                        06
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
+                        {pick(locale, 'سجل الأهداف', 'Scoresheet')}
                       </span>
                     </div>
-                    {deskGroups.map((group) => leagueBoard(group))}
-                  </div>
-                  {restGroups.length > 0 ? (
-                    <div id="rest" className="scroll-mt-[18rem] space-y-3">
-                      <div className="flex flex-wrap items-end justify-between gap-3 px-1">
-                        <div>
-                          <div className="matchday-section-kicker">
-                            <span className="matchday-folio-mark" aria-hidden>
-                              03
-                            </span>
-                            <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
-                              {pick(locale, 'باقي اليوم', 'Rest of the day')}
-                            </span>
-                          </div>
-                          <h2 className="mt-2 text-lg font-black text-foreground dark:text-foreground">
-                            {pick(locale, 'باقي برنامج اليوم', "The rest of today's programme")}
-                          </h2>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold tabular-nums text-muted-foreground">
-                            {restGroups.reduce((total, group) => total + group.matches.length, 0)}
-                          </span>
-                          {programmeScope === 'major' ? (
-                            <Link
-                              href={`${pageHref({ scope: 'all' })}#rest`}
-                              className="rounded-full border border-emerald-900/10 bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground transition-colors hover:border-orange-500/40 hover:text-orange-600 dark:border-border dark:bg-muted"
-                            >
-                              {pick(locale, 'بطاقات كاملة', 'Full cards')}
-                            </Link>
-                          ) : null}
-                        </div>
-                      </div>
-                      {restGroups.map((group) => leagueBoard(group, programmeScope === 'major'))}
+                    <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
+                      {pick(locale, 'سجل أهداف اليوم', "Today's goals")}
+                    </h2>
+                    <ul className="mt-4 space-y-3">
+                      {scorers.map((scorer) => (
+                        <li key={scorer.id}>
+                          <Link href={`/match/${scorer.matchId}`} className="flex items-center gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <LeagueCrest name={scorer.teamName} logoUrl={scorer.teamLogo} className="h-7 w-7" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{scorer.player}</p>
+                              <p className="truncate text-[9px] font-medium text-muted-foreground">
+                                {scorer.teamName} · {scorer.leagueName}
+                                {scorer.type === 'PENALTY' ? ` · ${t('penalty')}` : scorer.type === 'OWN_GOAL' ? ` · ${t('own_goal')}` : ''}
+                                {scorer.assist ? t('assist_by', { player: scorer.assist }) : ''}
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-bold tabular-nums text-orange-500">{scorer.minute}&prime;</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
+                {discipline.length > 0 ? (
+                  <section className={styles.plate}>
+                    <div className="matchday-section-kicker">
+                      <span className="matchday-folio-mark" aria-hidden>
+                        07
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
+                        {pick(locale, 'الانضباط', 'Discipline')}
+                      </span>
                     </div>
-                  ) : null}
-                </>
-              ) : (
-                leagueGroups.map((group) => leagueBoard(group))
-              )
-            ) : (
-              <div className="rounded-[1.55rem] border border-dashed border-border bg-card/80 px-6 py-20 text-center dark:border-border dark:bg-muted">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted dark:bg-card/[0.04]">
-                  <Clock3 className="h-6 w-6 text-muted-foreground dark:text-foreground" />
-                </div>
-                <h3 className="mt-6 text-xl font-bold text-foreground dark:text-foreground">
-                  {lensesActive
-                    ? pick(locale, 'لا مباريات تحت هذه العدسة', 'No matches under this lens')
-                    : statusFilter === 'live'
-                      ? pick(locale, 'لا توجد مباريات مباشرة الآن', 'No live matches right now')
-                      : statusFilter === 'upcoming'
-                        ? pick(locale, 'لا مواعيد قادمة في هذا اليوم', 'No upcoming fixtures on this day')
-                        : statusFilter === 'finished'
-                          ? pick(locale, 'لا نتائج منتهية في هذا اليوم', 'No finished results on this day')
-                          : pick(locale, 'لا توجد مباريات في هذا اليوم', 'No matches on this day')}
-                </h3>
-                <p className="mt-2 text-sm font-medium text-muted-foreground">
-                  {lensesActive
-                    ? pick(locale, 'امسح البطولة أو القناة أو الساعة لعرض برنامج اليوم كاملاً.', 'Clear the competition, channel or hour to show the full day.')
-                    : statusFilter === 'all'
-                      ? pick(locale, 'جرّب يوماً آخر أو امسح عبارة البحث لعرض جميع المباريات.', 'Try another day or clear the search to show all matches.')
-                      : pick(locale, 'غيّر الفلتر أو اختر يوماً آخر من شريط التواريخ.', 'Change the filter or choose another day.')}
-                </p>
-                <Link
-                  href={lensesActive ? pageHref({ league: undefined, channel: undefined, hour: undefined }) : '/matches'}
-                  className="mt-6 inline-flex rounded-xl bg-foreground px-6 py-3 text-[11px] font-bold text-white transition-colors hover:bg-orange-500 dark:bg-card dark:text-foreground"
-                >
-                  {lensesActive
-                    ? pick(locale, 'مسح العدسات', 'Clear lenses')
-                    : pick(locale, 'العودة إلى مباريات اليوم', "Back to today's matches")}
-                </Link>
-              </div>
-            )}
-          </div>
+                    <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
+                      {pick(locale, 'بطاقات اليوم', "Today's cards")}
+                    </h2>
+                    <ul className="mt-4 space-y-3">
+                      {discipline.map((card) => (
+                        <li key={card.id}>
+                          <Link href={`/match/${card.matchId}`} className="flex items-center gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <LeagueCrest name={card.teamName} logoUrl={card.teamLogo} className="h-7 w-7" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{card.player}</p>
+                              <p className="truncate text-[9px] font-medium text-muted-foreground">
+                                {card.teamName} · {card.type === 'RED_CARD' ? t('red_card') : t('yellow_card')}
+                              </p>
+                            </div>
+                            <span className={`text-[11px] font-bold tabular-nums ${card.type === 'RED_CARD' ? 'text-red-500' : 'text-amber-500'}`}>
+                              {card.minute}&prime;
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
 
-          <aside className="space-y-4 xl:sticky xl:top-64">
-            {dayCensus.length > 0 ? (
-              <section className="matchday-plate">
-                <div className="matchday-section-kicker">
-                  <span className="matchday-folio-mark" aria-hidden>
-                    04
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                    {t('daily_tally')}
-                  </span>
-                </div>
-                <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                  {pick(locale, 'حصيلة اليوم', "Today's tally")}
-                </h2>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {dayCensus.map((stat) => (
-                    <span
-                      key={stat.label}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-orange-50/70 px-2.5 py-1 text-[10px] font-bold text-foreground dark:border-border dark:bg-card/[0.04] dark:text-orange-100"
-                    >
-                      <strong className="tabular-nums text-orange-500">{stat.value}</strong>
-                      {stat.label}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            <section className="matchday-plate">
-              <div className="matchday-section-kicker">
-                <span className="matchday-folio-mark" aria-hidden>
-                  05
-                </span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                  {pick(locale, 'الموعد التالي', 'Next kickoff')}
-                </span>
-              </div>
-              <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                {pick(locale, 'الموعد التالي', 'Next fixture')}
-              </h2>
-              {nextMatch ? (
-                <div className="mt-4 space-y-3">
-                  {nextMatches.map((match) => (
-                    <Link
-                      key={match.id}
-                      href={`/match/${match.id}`}
-                      className="block rounded-xl border border-border px-3 py-3 transition-colors hover:border-orange-500/30 dark:border-border"
-                    >
-                      <div className="flex items-center justify-between gap-2 text-[9px] font-semibold text-muted-foreground">
-                        <span className="truncate">{match.league.name}</span>
-                        <ClientTime value={match.kickoffAt} className="tabular-nums text-orange-500" />
-                      </div>
-                      <p className="mt-1.5 truncate text-[12px] font-bold text-foreground dark:text-foreground">
-                        {match.homeTeam.name} × {match.awayTeam.name}
-                      </p>
-                      {(formByTeam.get(match.homeTeam.id)?.length || formByTeam.get(match.awayTeam.id)?.length) ? (
-                        <p className="mt-1.5 flex items-center gap-2">
-                          <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
-                          <span className="text-slate-200 dark:text-foreground/10">/</span>
-                          <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
-                        </p>
-                      ) : null}
-                      {(match.venue || match.channels[0]) && (
-                        <p className="mt-1 truncate text-[9px] font-medium text-muted-foreground">
-                          {[match.venue, match.venueCity, match.channels[0]?.name].filter(Boolean).join(' · ')}
-                        </p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-4 text-[12px] font-medium text-muted-foreground">
-                  {pick(locale, 'اكتمل جدول هذا اليوم.', "This day's schedule is complete.")}
-                </p>
-              )}
-            </section>
-
-            {scorers.length > 0 ? (
-              <section className="matchday-plate">
-                <div className="matchday-section-kicker">
-                  <span className="matchday-folio-mark" aria-hidden>
-                    06
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                    {pick(locale, 'سجل الأهداف', 'Scoresheet')}
-                  </span>
-                </div>
-                <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                  {pick(locale, 'سجل أهداف اليوم', "Today's goals")}
-                </h2>
-                <ul className="mt-4 space-y-3">
-                  {scorers.map((scorer) => (
-                    <li key={scorer.id}>
-                      <Link href={`/match/${scorer.matchId}`} className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <LeagueCrest name={scorer.teamName} logoUrl={scorer.teamLogo} className="h-7 w-7" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{scorer.player}</p>
-                          <p className="truncate text-[9px] font-medium text-muted-foreground">
-                            {scorer.teamName} · {scorer.leagueName}
-                            {scorer.type === 'PENALTY' ? ` · ${t('penalty')}` : scorer.type === 'OWN_GOAL' ? ` · ${t('own_goal')}` : ''}
-                            {scorer.assist ? t('assist_by', { player: scorer.assist }) : ''}
-                          </p>
-                        </div>
-                        <span className="text-[11px] font-bold tabular-nums text-orange-500">{scorer.minute}&prime;</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            {discipline.length > 0 ? (
-              <section className="matchday-plate">
-                <div className="matchday-section-kicker">
-                  <span className="matchday-folio-mark" aria-hidden>
-                    07
-                  </span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                    {pick(locale, 'الانضباط', 'Discipline')}
-                  </span>
-                </div>
-                <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                  {pick(locale, 'بطاقات اليوم', "Today's cards")}
-                </h2>
-                <ul className="mt-4 space-y-3">
-                  {discipline.map((card) => (
-                    <li key={card.id}>
-                      <Link href={`/match/${card.matchId}`} className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <LeagueCrest name={card.teamName} logoUrl={card.teamLogo} className="h-7 w-7" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{card.player}</p>
-                          <p className="truncate text-[9px] font-medium text-muted-foreground">
-                            {card.teamName} · {card.type === 'RED_CARD' ? t('red_card') : t('yellow_card')}
-                          </p>
-                        </div>
-                        <span className={`text-[11px] font-bold tabular-nums ${card.type === 'RED_CARD' ? 'text-red-500' : 'text-amber-500'}`}>
-                          {card.minute}&prime;
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            <div className="matchday-plate">
-              <TimezoneSelector />
+              </aside>
             </div>
-          </aside>
-        </div>
-
-        <MatchdayLedger
-          census={dayCensus.map((item) => ({
-            label: item.label,
-            value: item.value,
-            tone: item.label === t('goal') ? 'goal' : item.label === t('yellow_card') ? 'yellow' : item.label === t('red_card') ? 'red' : undefined,
-          }))}
-          grounds={grounds}
-          broadcasts={broadcasts}
-          hrefForChannel={(name) => pageHref({ channel: selectedChannel === name ? undefined : name })}
-          activeChannel={selectedChannel}
-        />
-      </main>
-    </div>
+          </section>
+        </main>
+      </div>
+    </SalonStage>
   );
 }

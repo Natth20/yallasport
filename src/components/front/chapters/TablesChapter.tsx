@@ -34,7 +34,7 @@ export async function TablesChapter() {
       <div className={shell.inner}>
         <FrontMark num={t('ch03')} title={t('ch03_title')} note={t('ch03_note')} href="/leagues" cta={t('ch03_cta')} />
         <div className={styles.grid}>
-          {tables.map((table) => (
+          {tables.slice(0, 8).map((table) => (
             <article key={table.league.id} className={styles.table}>
               <Link href={`/league/${table.league.slug}`} className={styles.head}>
                 <LeagueCrest name={table.league.name} logoUrl={table.league.logoUrl} className="h-7 w-7" />
@@ -44,7 +44,7 @@ export async function TablesChapter() {
                 </span>
               </Link>
               <ol className={styles.rows}>
-                {table.rows.map((row) => {
+                {table.rows.slice(0, 8).map((row) => {
                   const zone = zoneKey(row.zone);
                   const gd = row.goalsFor - row.goalsAgainst;
                   const zoneClass = row.zone && ZONE_CLASS_MAP[row.zone] ? styles[ZONE_CLASS_MAP[row.zone] as keyof typeof styles] : undefined;

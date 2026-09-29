@@ -28,7 +28,7 @@ export async function PredictChapter() {
           <div>
             <h3 className={styles.h3}>{t('ch10_leaders')}</h3>
             <ol className={styles.list}>
-              {stats.leaders.map((row, index) => (
+              {stats.leaders.slice(0, 5).map((row, index) => (
                 <li key={`${row.name}-${index}`}>
                   <div>
                     <em className={styles.rank}>{String(index + 1).padStart(2, '0')}</em>

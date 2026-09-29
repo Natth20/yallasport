@@ -4,6 +4,8 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
+import { StaffDoor } from "@/components/layout/StaffDoor";
+import headerStyles from "@/components/layout/header.module.css";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { CookieConsent } from "@/components/layout/CookieConsent";
@@ -62,12 +64,16 @@ export async function generateMetadata({
     formatDetection: { telephone: false, email: false, address: false },
     icons: {
       icon: [
+        { url: "/images/logo.png", type: "image/png" },
+        { url: "/icon.png", type: "image/png" },
         { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
         { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
-        { url: "/icon.png", type: "image/png" },
       ],
-      apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
-      shortcut: "/icons/icon-192.png",
+      apple: [
+        { url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" },
+        { url: "/images/logo.png", type: "image/png" },
+      ],
+      shortcut: "/images/logo.png",
     },
     manifest: "/manifest.json",
     appleWebApp: {
@@ -157,7 +163,7 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              '(function(){try{var m=document.cookie.match(/(?:^|; )yalla-theme=(light|dark)/);var t=m&&m[1]?m[1]:null;if(!t){try{t=localStorage.getItem("yalla-theme");}catch(e){}}t=t==="light"?"light":"dark";var r=document.documentElement;r.classList.remove("light","dark");r.classList.add(t);r.style.colorScheme=t;}catch(e){}})();',
+              '(function(){try{var r=document.documentElement;var m=document.cookie.match(/(?:^|; )yalla-theme=(light|dark)/);var t=m&&m[1]?m[1]:null;if(!t){try{t=localStorage.getItem("yalla-theme");}catch(e){}}t=t==="light"?"light":"dark";r.classList.remove("light","dark");r.classList.add(t);r.setAttribute("data-theme",t);r.style.colorScheme=t;var s=document.cookie.match(/(?:^|; )yalla-data-saver=(1|0)/);if(s){r.dataset.dataSaver=s[1]==="1"?"on":"off";}else{try{r.dataset.dataSaver=JSON.parse(localStorage.getItem("yalla-data-saver")||"false")===true?"on":"off";}catch(e2){r.dataset.dataSaver="off";}}}catch(e){}})();',
           }}
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -171,8 +177,8 @@ export default async function RootLayout({
             <ThemeProvider initialTheme={theme}>
               <SettingsProvider>
                 <LiveStatusProvider>
-                  <Header />
-                  <main className="flex-grow pt-[4.65rem]">
+                  <Header desk={<StaffDoor className={headerStyles.staffButton} />} />
+                  <main className="flex-grow">
                     <PageShell>{children}</PageShell>
                   </main>
                   <Footer />

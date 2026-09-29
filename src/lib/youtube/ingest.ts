@@ -1,4 +1,5 @@
 import Parser from 'rss-parser';
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { swallow } from '@/lib/ops/caught';
 import {
@@ -213,12 +214,16 @@ export async function ingestYoutubeClips() {
 }
 
 function orderedRoster(locale?: string) {
-  const ar = FOOTBALL_YOUTUBE_CHANNELS.filter((channel) => channel.lang === 'ar');
-  const en = FOOTBALL_YOUTUBE_CHANNELS.filter((channel) => channel.lang === 'en');
-  return locale === 'en' ? [...en, ...ar] : [...ar, ...en];
+  const want = locale === 'en' ? 'en' : 'ar';
+  const match = FOOTBALL_YOUTUBE_CHANNELS.filter((channel) => channel.lang === want);
+  return match.length > 0 ? match : FOOTBALL_YOUTUBE_CHANNELS;
 }
 
-export async function listYoutubeShelf(kind: 'VIDEO' | 'SHORT', take: number, locale?: string) {
+export const listYoutubeShelf = cache(async function listYoutubeShelf(
+  kind: 'VIDEO' | 'SHORT',
+  take: number,
+  locale?: string,
+) {
   const roster = orderedRoster(locale);
   const per = YOUTUBE_KEEP[kind];
   const ids = roster.map((channel) => channel.id);
@@ -242,7 +247,7 @@ export async function listYoutubeShelf(kind: 'VIDEO' | 'SHORT', take: number, lo
     }
   }
   return mixed.slice(0, take);
-}
+});
 
 export function listYoutubeArchive(take = 48) {
   return prisma.youtubeClip.findMany({

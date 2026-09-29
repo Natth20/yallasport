@@ -11,13 +11,14 @@ export function BrandBuildScreen({ compact = false }: { compact?: boolean }) {
       aria-label={SITE_NAME_AR}
     >
       <div className={styles.center}>
-        <MetalMark size={compact ? 'md' : 'lg'} priority />
+        <MetalMark size={compact ? 'md' : 'xl'} priority />
         <div className={styles.word}>
           <strong>
             <span className={styles.accent}>يلا</span> سبورت
           </strong>
           <em>{SITE_NAME}</em>
         </div>
+        {compact ? null : <span className={styles.bar} aria-hidden><i /></span>}
       </div>
     </div>
   );

@@ -1,14 +1,28 @@
 /* Quiet luxury restyle for the leagues atlas */
+.leagueAtlas {
+  color: var(--foreground);
+}
+
+.leagueAtlas .mast {
+  display: none;
+}
+
 .atlasHero {
   position: relative;
+  padding-top: 0.2rem;
 }
 
 .atlasDesk {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
-  border-radius: 1.25rem;
-  background: color-mix(in srgb, var(--card) 94%, transparent);
-  box-shadow: var(--ys-elev-1, 0 12px 32px -24px color-mix(in srgb, var(--ys-ink, #0f172a) 45%, transparent));
+  border: 1px solid color-mix(in srgb, #6366f1 18%, var(--border));
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, #6366f1 8%, transparent), transparent 46%),
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, #c9a227 7%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent),
+    0 16px 36px color-mix(in srgb, #6366f1 6%, transparent);
 }
 
 .atlasDesk:global(.is-live) {
@@ -47,4 +61,465 @@
 .atlasHeroLede {
   max-width: 40rem;
   line-height: 1.65;
+}
+
+.leagueAtlas :global(a) {
+  -webkit-text-fill-color: currentColor;
+}
+
+.leagueAtlas :global(.atlas-flood) {
+  display: none;
+}
+
+.leagueAtlas :global(.atlas-mast-wordmark) {
+  margin: 0.2rem 0 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.leagueAtlas :global(.atlas-hero-meta) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.9rem;
+  margin-top: 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.leagueAtlas :global(.atlas-census) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+@media (min-width: 760px) {
+  .leagueAtlas :global(.atlas-census) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.leagueAtlas :global(.atlas-stat) {
+  padding: 0.85rem 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+}
+
+.leagueAtlas :global(.atlas-stat strong) {
+  display: block;
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.leagueAtlas :global(.atlas-stat span) {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.leagueAtlas :global(.atlas-stat[data-live='true']) {
+  border-color: color-mix(in srgb, #e11d48 35%, var(--border));
+}
+
+.leagueAtlas :global(.atlas-programme) {
+  overflow: hidden;
+  border-radius: 1.45rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background:
+    radial-gradient(80% 80% at 100% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 55%),
+    var(--card);
+}
+
+.leagueAtlas :global(.atlas-wire) {
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.leagueAtlas :global(.atlas-toolbar) {
+  border-block: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.leagueAtlas :global(.atlas-section-kicker) {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.leagueAtlas :global(.atlas-live-grid),
+.leagueAtlas :global(.atlas-directory),
+.leagueAtlas :global(.atlas-results-grid) {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 760px) {
+
+  .leagueAtlas :global(.atlas-live-grid),
+  .leagueAtlas :global(.atlas-directory),
+  .leagueAtlas :global(.atlas-results-grid) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1100px) {
+  .leagueAtlas :global(.atlas-directory) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.leagueAtlas :global(.atlas-live-grid) > :only-child,
+.leagueAtlas :global(.atlas-results-grid) > :only-child {
+  max-width: 32rem;
+}
+
+.leagueAtlas :global(.atlas-directory) > :only-child {
+  max-width: 22rem;
+}
+
+.leagueAtlas :global(.atlas-live-grid) {
+  padding: 0.85rem;
+}
+
+.leagueAtlas :global(.atlas-live-ticket),
+.leagueAtlas :global(.atlas-result-slip),
+.leagueAtlas :global(.league-desk-card) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-content: start;
+  min-height: 100%;
+  padding: 0.9rem 0.95rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+  text-decoration: none;
+}
+
+.leagueAtlas :global(.league-desk-card) {
+  position: relative;
+}
+
+.leagueAtlas :global(.atlas-live-ticket:hover),
+.leagueAtlas :global(.atlas-result-slip:hover) {
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.leagueAtlas :global(a[class*='bg-foreground']),
+.leagueAtlas :global(a[class*='bg-foreground']:hover),
+.leagueAtlas :global(a[class*='bg-rose-600']),
+.leagueAtlas :global(a[class*='bg-rose-600']:hover) {
+  color: var(--background);
+  -webkit-text-fill-color: var(--background);
+}
+
+.leagueAtlas :global(.league-desk-card.is-live) {
+  border-color: color-mix(in srgb, #e11d48 32%, var(--border));
+}
+
+.leagueAtlas :global(.league-desk-card.is-table) {
+  border-color: color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+}
+
+.leagueAtlas :global(.league-desk-card-top) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.leagueAtlas :global(.league-desk-follow) {
+  position: absolute;
+  top: 0.55rem;
+  inset-inline-end: 0.55rem;
+  z-index: 1;
+}
+
+.leagueAtlas :global(.league-desk-crest-orb) {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  padding: 0.35rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 70%, transparent);
+}
+
+.leagueAtlas :global(.league-desk-identity h3) {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.leagueAtlas :global(.league-desk-identity p),
+.leagueAtlas :global(.league-desk-race),
+.leagueAtlas :global(.league-desk-round) {
+  margin: 0.2rem 0 0;
+  font-size: 0.74rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.leagueAtlas :global(.league-desk-faceoff) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  text-decoration: none;
+}
+
+.leagueAtlas :global(.league-desk-side) {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.leagueAtlas :global(.league-desk-side.is-home) {
+  justify-content: flex-end;
+  text-align: end;
+}
+
+.leagueAtlas :global(.league-desk-badge) {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.leagueAtlas :global(.league-desk-score) {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.leagueAtlas :global(.league-desk-card-body) {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  flex: 1;
+}
+
+.leagueAtlas :global(.league-desk-card-foot) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+}
+
+.leagueAtlas :global(.league-desk-card-foot a) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.8rem;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+  text-decoration: none;
+}
+
+.leagueAtlas :global(.league-desk-card-foot a.is-primary),
+.leagueAtlas :global(.league-desk-card-foot a.is-primary:hover) {
+  background: var(--ys-orange);
+  border-color: var(--ys-orange);
+  color: #14110e;
+  -webkit-text-fill-color: #14110e;
+}
+
+.leagueAtlas :global(.league-desk-live-pill) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: #e11d48;
+}
+
+.leagueAtlas :global(.league-desk-live-pill i) {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: #e11d48;
+}
+
+.leagueAtlas :global(.atlas-medal) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.7rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.leagueAtlas :global(.atlas-medal-1) {
+  background: var(--ys-orange);
+  color: #14110e;
+  -webkit-text-fill-color: #14110e;
+}
+
+.leagueAtlas :global(.atlas-medal-2),
+.leagueAtlas :global(.atlas-medal-3) {
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.mast {
+  position: relative;
+  display: grid;
+  gap: 1.1rem;
+  margin-bottom: 1.15rem;
+  padding: 1.5rem 1.45rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  border-radius: 1.45rem;
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 42%),
+    var(--card);
+}
+
+.mast::before,
+.mast::after {
+  content: '';
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 45%, transparent);
+}
+
+.mast::before {
+  top: 0.5rem;
+  inset-inline-start: 0.5rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.mast::after {
+  bottom: 0.5rem;
+  inset-inline-end: 0.5rem;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+@media (min-width: 860px) {
+  .mast {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+}
+
+.mastMark {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.seal {
+  display: grid;
+  place-items: center;
+  width: 3.15rem;
+  height: 3.15rem;
+  border-radius: 999px;
+  background: #0b0b0b;
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ys-orange) 32%, transparent);
+}
+
+.kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.mastCopy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.mastCopy p {
+  max-width: 40rem;
+  margin: 0.55rem 0 0;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--foreground) 72%, transparent);
+}
+
+.leagueAtlas :global(.atlas-results h2),
+.leagueAtlas :global(.atlas-desk h2) {
+  margin: 0.2rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.leagueAtlas :global(.atlas-result-slip-body) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.leagueAtlas :global(.atlas-result-crest) {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.leagueAtlas :global(.atlas-result-score) {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.leagueAtlas :global(.atlas-chapter) {
+  scroll-margin-top: 6.5rem;
+}
+
+.leagueAtlas :global(.atlas-chapter + .atlas-chapter) {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.leagueAtlas :global(.atlas-chapter-head) {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
 }

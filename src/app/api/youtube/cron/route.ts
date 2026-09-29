@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAuthorizedCron } from '@/lib/security/cron';
 import { ingestYoutubeClips } from '@/lib/youtube/ingest';
+import { revalidateAfterYoutubeIngest } from '@/lib/cache/revalidate-public';
 import { logSystemAlert, AlertType, AlertSeverity } from '@/lib/monitoring';
 
 export async function GET(req: Request) {
@@ -10,6 +11,7 @@ export async function GET(req: Request) {
 
   try {
     const result = await ingestYoutubeClips();
+    revalidateAfterYoutubeIngest();
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'YouTube cron failed';

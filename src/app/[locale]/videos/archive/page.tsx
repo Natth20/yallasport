@@ -8,6 +8,7 @@ import { SalonStage } from '@/components/salon/SalonStage';
 import { YoutubeDesk } from '@/components/youtube/YoutubeDesk';
 import { YoutubeClipNav } from '@/components/youtube/YoutubeClipNav';
 import { YoutubeBrief } from '@/components/youtube/YoutubeBrief';
+import { YoutubeFoyer } from '@/components/youtube/YoutubeFoyer';
 import { swallow } from '@/lib/ops/caught';
 import { emptyYoutubeDeskStats, listYoutubeArchive, youtubeDeskStats } from '@/lib/youtube/ingest';
 import { toYoutubeCards, youtubeCopy } from '@/lib/youtube/present';
@@ -56,10 +57,10 @@ async function VideosArchivePageBody() {
       )}
       aside={pick(locale, `${stats.archived} مؤرشف`, `${stats.archived} archived`)}
       tools={
-        <>
+        <YoutubeFoyer>
           <YoutubeClipNav locale={locale} current="archive" />
           <YoutubeBrief locale={locale} stats={stats} />
-        </>
+        </YoutubeFoyer>
       }
     >
       <YoutubeDesk

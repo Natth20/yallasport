@@ -12,11 +12,21 @@
 }
 
 .titles em {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   font-style: normal;
-  font-size: var(--ys-font-small);
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.22em;
   color: var(--ys-text-muted);
+}
+
+.titles em::after {
+  content: "";
+  width: 2.25rem;
+  height: 1px;
+  background: var(--gradient-primary);
 }
 
 .titles h2 {
@@ -37,23 +47,28 @@
 
 .cta {
   justify-self: end;
-  padding: 0.45rem 0.8rem;
-  border: 1px solid var(--ys-divider);
-  border-radius: var(--ys-radius-ui);
-  background: var(--ys-bg-1);
-  box-shadow: var(--ys-elev-1);
+  align-self: end;
+  padding-block-end: 0.15rem;
+  border-bottom: 1px solid var(--ys-divider);
   font-size: var(--ys-font-small);
   font-weight: 500;
+  letter-spacing: 0.04em;
   color: var(--ys-text-secondary);
   text-decoration: none;
-  transition: border-color var(--ys-duration-fast) var(--ys-ease), box-shadow var(--ys-duration-fast) var(--ys-ease);
+}
+
+.cta::after {
+  content: " →";
 }
 
 .cta:hover {
   color: var(--ys-text);
   -webkit-text-fill-color: currentcolor;
-  border-color: color-mix(in srgb, var(--ys-text-muted) 50%, var(--ys-divider));
-  box-shadow: var(--ys-elev-2);
+  border-bottom-color: #f97316;
+}
+
+:global([dir='rtl']) .cta::after {
+  content: " ←";
 }
 
 @media (max-width: 640px) {

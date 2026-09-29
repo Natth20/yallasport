@@ -1,3 +1,5 @@
+import { isFriendlyLeague } from '@/lib/sports-data/friendly';
+
 export type WeightedLeague = {
   name: string;
   slug?: string;
@@ -13,7 +15,7 @@ export function leagueTier(league: WeightedLeague): number {
   const slug = String(league.slug || '').toLowerCase();
   const blob = `${name} ${slug} ${country}`;
 
-  if (YOUTH_OR_REGIONAL.test(blob)) return 0;
+  if (isFriendlyLeague(league) || YOUTH_OR_REGIONAL.test(blob)) return 0;
 
   if (/uefa champions|fifa club world|world cup|euro 20|copa america|afc champions|caf champions/.test(blob)) {
     return 6;
@@ -49,6 +51,38 @@ export const MAJOR_LEAGUE_TIER = 3;
 
 export function isMajorLeague(league: WeightedLeague): boolean {
   return leagueTier(league) >= MAJOR_LEAGUE_TIER;
+}
+
+function isLiveMatchStatus(status: string) {
+  return status === 'LIVE' || status === 'HALFTIME';
+}
+
+export function compareMatchdayGroups<T extends { league: WeightedLeague; matches: Array<{ status: string; kickoffAt: Date | string }> }>(
+  first: T,
+  second: T,
+) {
+  const liveOf = (group: T) => group.matches.filter((match) => isLiveMatchStatus(match.status)).length;
+  const liveDiff = liveOf(second) - liveOf(first);
+  if (liveDiff) return liveDiff;
+
+  const upcomingOf = (group: T) => group.matches.filter((match) => match.status === 'NOT_STARTED');
+  const upcomingDiff = Number(upcomingOf(second).length > 0) - Number(upcomingOf(first).length > 0);
+  if (upcomingDiff) return upcomingDiff;
+
+  const nextKick = (group: T) => {
+    const liveOrUp = group.matches.filter(
+      (match) => isLiveMatchStatus(match.status) || match.status === 'NOT_STARTED',
+    );
+    const pool = liveOrUp.length ? liveOrUp : group.matches;
+    return Math.min(...pool.map((match) => new Date(match.kickoffAt).getTime()));
+  };
+  const kickDiff = nextKick(first) - nextKick(second);
+  if (kickDiff) return kickDiff;
+
+  const tierDiff = leagueTier(second.league) - leagueTier(first.league);
+  if (tierDiff) return tierDiff;
+
+  return String(first.league.name).localeCompare(String(second.league.name), 'ar');
 }
 
 export function matchdayWeight(input: {

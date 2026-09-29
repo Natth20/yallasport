@@ -1,7 +1,17 @@
 import { prisma } from '@/lib/prisma';
+import { cache } from 'react';
 import { currentFootballSeason, footballSeasonStart, inFootballSeason } from '@/lib/sports-data/season';
 import { safeRedisGet } from '@/lib/redis';
 import { feeToNumber, mercatoWindow, splitTransferType, type TransferKind } from './fee';
+
+function sourcePlayerPhoto(photo: string | null | undefined, externalId: string | null | undefined) {
+  const saved = photo?.trim();
+  if (saved) return saved;
+  if (externalId && /^\d+$/.test(externalId)) {
+    return `https://media.api-sports.io/football/players/${externalId}.png`;
+  }
+  return null;
+}
 
 export type TransferMove = {
   id: string;
@@ -21,7 +31,7 @@ export type TransferMove = {
   window: 'summer' | 'winter' | 'other';
 };
 
-export async function loadTransferDesk(filters: {
+export const loadTransferDesk = cache(async function loadTransferDesk(filters: {
   club?: string;
   player?: string;
   season?: string;
@@ -37,7 +47,7 @@ export async function loadTransferDesk(filters: {
     orderBy: { date: 'desc' },
     take: 400,
     include: {
-      player: { select: { name: true, slug: true, photoUrl: true } },
+      player: { select: { name: true, slug: true, photoUrl: true, externalId: true } },
     },
   });
 
@@ -46,9 +56,9 @@ export async function loadTransferDesk(filters: {
   ];
   const teams = teamIds.length
     ? await prisma.team.findMany({
-        where: { id: { in: teamIds } },
-        select: { id: true, slug: true, logoUrl: true },
-      })
+      where: { id: { in: teamIds } },
+      select: { id: true, slug: true, logoUrl: true },
+    })
     : [];
   const teamById = new Map(teams.map((row) => [row.id, row]));
 
@@ -61,7 +71,7 @@ export async function loadTransferDesk(filters: {
       date: row.date,
       playerName: row.player.name,
       playerSlug: row.player.slug,
-      playerPhoto: row.player.photoUrl,
+      playerPhoto: sourcePlayerPhoto(row.player.photoUrl, row.player.externalId || row.playerExternalId),
       fromTeam: row.fromTeam,
       toTeam: row.toTeam,
       fromLogo: row.fromLogo || from?.logoUrl || null,
@@ -135,4 +145,4 @@ export async function loadTransferDesk(filters: {
     syncedAt: meta?.syncedAt || null,
     source: meta?.source || null,
   };
-}
+});

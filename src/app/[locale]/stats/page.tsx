@@ -7,11 +7,13 @@ import { pageMetadata } from '@/lib/seo/site';
 import { Link } from '@/i18n/navigation';
 import { loadStatsDesk, STAT_BOARDS, type StatKind } from '@/lib/stats/load-desk';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { Stagger, StaggerItem } from '@/components/motion/PageMotion';
+import { ArrowLeftRight, BarChart3, CalendarDays, Radio, Trophy } from 'lucide-react';
 
 
-export const revalidate = 300;
+export const revalidate = 90;
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -69,25 +71,37 @@ async function StatsPageBody({
 
   return (
     <SalonStage
-      tone="podium"
+      tone="ledger"
+      wide
+      compact
       kicker={pick(locale, 'منصة الأرقام', 'The board')}
       title={pick(locale, 'الإحصائيات', 'Statistics')}
       lead={
         desk.previousSeason
           ? pick(
-              locale,
-              `المصدر ما رجّع لوحة للموسم الحالي بعد. الأرقام من موسم ${desk.season}/${desk.season + 1} كما وصلت.`,
-              `The source has not returned a board for the live season yet. Figures are ${desk.season}/${desk.season + 1} as filed.`,
-            )
+            locale,
+            `المصدر ما رجّع لوحة للموسم الحالي بعد. الأرقام من موسم ${desk.season}/${desk.season + 1} كما وصلت.`,
+            `The source has not returned a board for the live season yet. Figures are ${desk.season}/${desk.season + 1} as filed.`,
+          )
           : pick(
-              locale,
-              `موسم ${desk.season}/${desk.season + 1} من المصدر. العداد يتغيّر مع الجولات، مو تقدير.`,
-              `${desk.season}/${desk.season + 1} from the source. The count moves with matchdays — not an estimate.`,
-            )
+            locale,
+            `موسم ${desk.season}/${desk.season + 1} من المصدر. العداد يتغيّر مع الجولات، مو تقدير.`,
+            `${desk.season}/${desk.season + 1} from the source. The count moves with matchdays — not an estimate.`,
+          )
       }
-      aside={locale === 'en' ? STAT_BOARDS.find((b) => b.id === leagueId)?.en : STAT_BOARDS.find((b) => b.id === leagueId)?.ar}
+      aside={`${desk.rows.length} · ${locale === 'en' ? STAT_BOARDS.find((b) => b.id === leagueId)?.en : STAT_BOARDS.find((b) => b.id === leagueId)?.ar}`}
       tools={
-        <div className="space-y-3">
+        <div className="salon-foyer">
+          <HallFoyer
+            label={pick(locale, 'جناح الملعب', 'Pitch suite')}
+            items={[
+              { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
+              { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
+              { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
+              { href: '/transfers', label: pick(locale, 'الانتقالات', 'Transfers'), icon: ArrowLeftRight },
+              { href: '/stats', label: pick(locale, 'إحصائيات', 'Stats'), icon: BarChart3, current: true },
+            ]}
+          />
           <nav className="salon-tabs" aria-label={pick(locale, 'البطولة', 'Competition')}>
             {STAT_BOARDS.map((board) => (
               <Link

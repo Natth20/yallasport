@@ -48,7 +48,15 @@ export async function sportsApiFetch<T>(path: string): Promise<T | null> {
     const response = await fetch(`${transport.baseUrl}${urlPath}`, {
       headers: transport.headers,
       cache: 'no-store',
-      signal: AbortSignal.timeout(/players\?search=/i.test(urlPath) ? 9000 : 4000),
+      signal: AbortSignal.timeout(
+        /players\?(search|id)=/i.test(urlPath) ||
+        /\/transfers\?/i.test(urlPath) ||
+        /\/players\/top/i.test(urlPath) ||
+        /\/fixtures\?id=/i.test(urlPath) ||
+        /\/fixtures\/(events|lineups|statistics)/i.test(urlPath)
+          ? 12000
+          : 4000,
+      ),
     });
     const durationMs = Date.now() - started;
     const quotaRemaining = headerInt(response, [

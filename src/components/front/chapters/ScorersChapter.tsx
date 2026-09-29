@@ -45,18 +45,30 @@ export async function ScorersChapter() {
   return (
     <section className={`${shell.band} ${styles.tone}`}>
       <div className={shell.inner}>
-        <FrontMark num={t('ch04')} title={t('ch04_title')} note={daysWindowLabel(days, locale)} href="/stats" cta={t('ch04_cta')} />
+        <FrontMark
+          num="02"
+          title={t('ch04_title')}
+          note={
+            days > 0
+              ? daysWindowLabel(days, locale)
+              : locale === 'ar'
+                ? 'من جداول الهدافين المخزّنة للموسم.'
+                : 'From the stored season scoring tables.'
+          }
+          href="/stats"
+          cta={t('ch04_cta')}
+        />
         <div className={styles.split}>
           {goals.length > 0 ? (
             <div>
               <h3 className={styles.h3}>{t('ch04_goals')}</h3>
-              <List rows={goals} unit={t('ch04_goals')} />
+              <List rows={goals.slice(0, 5)} unit={t('ch04_goals')} />
             </div>
           ) : null}
           {assists.length > 0 ? (
             <div>
               <h3 className={styles.h3}>{t('ch04_assists')}</h3>
-              <List rows={assists} unit={t('ch04_assists')} />
+              <List rows={assists.slice(0, 5)} unit={t('ch04_assists')} />
             </div>
           ) : null}
         </div>

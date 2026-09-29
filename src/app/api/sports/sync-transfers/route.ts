@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAuthorizedCron } from '@/lib/security/cron';
 import { persistTransfers } from '@/lib/transfers/persist';
+import { revalidateAfterTransfers } from '@/lib/cache/revalidate-public';
 import { swallow } from '@/lib/ops/caught';
 
 export async function GET(req: Request) {
@@ -8,5 +9,6 @@ export async function GET(req: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
   const result = await persistTransfers().catch(swallow('sync-transfers', { upserted: 0, clubs: 0 }));
+  revalidateAfterTransfers();
   return NextResponse.json({ success: true, ...result });
 }

@@ -3,6 +3,7 @@ import 'server-only';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma';
 import { hostFromUrl, isTrustedNewsHost, TRUSTED_NEWS_HOSTS } from '@/lib/news/trusted-sources';
+import { footballCoverageWhere } from '@/lib/news/football-scope';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 
 function trustedSourceUrlClause(): Prisma.NewsWhereInput {
@@ -38,12 +39,22 @@ export function publishedNewsWhere(): Prisma.NewsWhereInput {
     status: 'PUBLISHED',
     publishedAt: { not: null, lte: new Date() },
     sourceUrl: { not: null },
-    AND: [trustedSourceUrlClause(), editorialTitleClause()],
+    AND: [trustedSourceUrlClause(), editorialTitleClause(), footballCoverageWhere()],
   };
 }
 
-export function newsVisibleWhere(_locale: string): Prisma.NewsWhereInput {
-  return publishedNewsWhere();
+export function newsVisibleWhere(locale: string): Prisma.NewsWhereInput {
+  return {
+    AND: [
+      publishedNewsWhere(),
+      {
+        OR: [
+          { sourceLocale: locale },
+          { translations: { some: { locale, status: { in: ['APPROVED', 'DRAFT'] } } } },
+        ],
+      },
+    ],
+  };
 }
 
 export function isPublicTrustedStory(story: { sourceUrl?: string | null }) {
@@ -79,6 +90,11 @@ export async function overlayNewsTranslation<
   };
 }
 
+function titleFitsLocale(title: string, locale: string) {
+  const arabic = /[\u0600-\u06FF]/.test(title);
+  return locale === 'ar' ? arabic : !arabic;
+}
+
 export async function overlayNewsList<
   T extends { id: string; title: string; excerpt?: string | null; sourceLocale?: string | null }
 >(records: T[], locale: string) {
@@ -95,15 +111,14 @@ export async function overlayNewsList<
     const current = byNews.get(item.newsId);
     if (!current || item.status === 'APPROVED') byNews.set(item.newsId, item);
   }
-  return records.map((record) => {
-    if ((record.sourceLocale || 'ar') === locale) return record;
+  return records.flatMap((record) => {
     const translation = byNews.get(record.id);
-    if (!translation) return record;
-    return {
-      ...record,
-      title: translation.title,
-      excerpt: translation.excerpt ?? record.excerpt,
-    };
+    const next =
+      translation && (record.sourceLocale || 'ar') !== locale
+        ? { ...record, title: translation.title, excerpt: translation.excerpt ?? record.excerpt }
+        : record;
+    if (!titleFitsLocale(next.title, locale)) return [];
+    return [next];
   });
 }
 

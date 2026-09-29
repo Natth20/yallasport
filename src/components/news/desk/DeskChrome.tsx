@@ -17,8 +17,8 @@ export function EditionWire({ matches, locale }: { matches: PitchMatch[]; locale
       : pick(locale, 'سلك الملعب · أحدث الركلات', 'Pitch wire · latest kickoffs');
 
   return (
-    <div className="border-b border-border/80 bg-card/40 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-2 sm:px-6">
+    <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-border/80 bg-card/40 backdrop-blur-md">
+      <div className="flex w-full min-w-0 items-center gap-3 px-3 py-2 sm:px-4">
         <div className="flex shrink-0 items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-black text-primary">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
@@ -31,7 +31,7 @@ export function EditionWire({ matches, locale }: { matches: PitchMatch[]; locale
             </em>
           ) : null}
         </div>
-        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto no-scrollbar py-0.5">
           {matches.map((match) => {
             const live = match.status === 'LIVE' || match.status === 'HALFTIME';
             const hasScore = typeof match.homeScore === 'number' && typeof match.awayScore === 'number';
@@ -39,9 +39,8 @@ export function EditionWire({ matches, locale }: { matches: PitchMatch[]; locale
               <Link
                 key={match.id}
                 href={`/match/${match.id}`}
-                className={`group flex shrink-0 items-center gap-2 rounded-xl border border-border/60 bg-card/80 px-3 py-1.5 text-xs font-semibold transition-all hover:border-primary hover:bg-primary/5 ${
-                  live ? 'border-primary/40 bg-primary/5' : ''
-                }`}
+                className={`group flex shrink-0 items-center gap-2 rounded-xl border border-border/60 bg-card/80 px-3 py-1.5 text-xs font-semibold transition-all hover:border-primary hover:bg-primary/5 ${live ? 'border-primary/40 bg-primary/5' : ''
+                  }`}
               >
                 {match.league?.name ? (
                   <span className="hidden text-[9px] font-extrabold uppercase text-muted-foreground sm:inline">
@@ -241,11 +240,10 @@ export function DeskTools({
       <nav className="flex flex-wrap items-center gap-1.5" aria-label={pick(locale, 'أبواب التغطية', 'Coverage desks')}>
         <Link
           href={hrefFor({ desk: 'all', page: 1 })}
-          className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-            selectedDesk === 'all'
+          className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${selectedDesk === 'all'
               ? 'bg-primary text-primary-foreground shadow-sm'
               : 'border border-border/80 bg-card/80 text-foreground hover:border-primary'
-          }`}
+            }`}
         >
           {pick(locale, 'كل الأبواب', 'All desks')}
         </Link>
@@ -255,11 +253,10 @@ export function DeskTools({
             <Link
               key={chip.key}
               href={hrefFor({ desk: chip.key, page: 1 })}
-              className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                isSelected
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${isSelected
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'border border-border/80 bg-card/80 text-foreground hover:border-primary'
-              }`}
+                }`}
             >
               <span>{deskLabel(chip.key, locale)}</span>
               <span className={`text-[10px] tabular-nums ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
@@ -277,11 +274,10 @@ export function DeskTools({
           </span>
           <Link
             href={hrefFor({ source: 'all', page: 1 })}
-            className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${
-              selectedSource === 'all'
+            className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${selectedSource === 'all'
                 ? 'bg-primary text-primary-foreground'
                 : 'border border-border/70 bg-card/70 text-foreground hover:border-primary'
-            }`}
+              }`}
           >
             {pick(locale, 'الكل', 'All')}
           </Link>
@@ -291,11 +287,10 @@ export function DeskTools({
               <Link
                 key={source.name}
                 href={hrefFor({ source: source.name, page: 1 })}
-                className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${
-                  isSelected
+                className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${isSelected
                     ? 'bg-primary text-primary-foreground'
                     : 'border border-border/70 bg-card/70 text-foreground hover:border-primary'
-                }`}
+                  }`}
               >
                 <span>{source.name}</span>
                 <span className={`text-[9px] tabular-nums ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>

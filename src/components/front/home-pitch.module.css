@@ -1,0 +1,269 @@
+.pitch :global(.inner) {
+  gap: 1.55rem;
+}
+
+.block {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.block h3,
+.blockHead h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.blockHead a {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+  text-decoration: none;
+}
+
+.blockHead a:hover {
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.leagues {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.2rem, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clubs,
+.people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.2rem, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leagues > :only-child,
+.clubs > :only-child,
+.people > :only-child {
+  max-width: 12rem;
+}
+
+.leagues a,
+.clubs a,
+.people a {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  min-height: 8.8rem;
+  padding: 1rem 0.6rem 0.9rem;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, #c9a227 22%, var(--border));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, #c9a227 12%, transparent), transparent 52%),
+    color-mix(in srgb, var(--card) 96%, transparent);
+  color: inherit;
+  text-decoration: none;
+  text-align: center;
+}
+
+.clubs a,
+.people a {
+  min-height: 11.2rem;
+  padding-top: 1.15rem;
+}
+
+.leagues a:hover,
+.clubs a:hover,
+.people a:hover {
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+  border-color: color-mix(in srgb, #c9a227 42%, var(--border));
+}
+
+.leagues strong,
+.clubs strong,
+.people strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.clubs strong,
+.people strong {
+  font-size: 0.9rem;
+}
+
+.crestLg,
+.crestXl,
+.crestSm {
+  width: 2.9rem;
+  height: 2.9rem;
+}
+
+.crestXl {
+  width: 4.4rem;
+  height: 4.4rem;
+}
+
+.crestSm {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.people img,
+.people a > span {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #161412;
+}
+
+.people a > span {
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #e8c547;
+}
+
+.boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.9rem;
+}
+
+.boards > :only-child {
+  max-width: 24rem;
+}
+
+.boards article {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 1.2rem;
+  border: 1px solid color-mix(in srgb, #c9a227 18%, var(--border));
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+}
+
+.boardHead {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, #c9a227 16%, var(--border));
+  color: inherit;
+  text-decoration: none;
+}
+
+.boardHead:hover {
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.boardHead strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.boards ol {
+  margin: 0;
+  padding: 0.2rem 0 0.5rem;
+  list-style: none;
+}
+
+.boards li a {
+  display: grid;
+  grid-template-columns: 1.7rem auto minmax(0, 1fr) 2rem auto;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 2.45rem;
+  padding: 0.38rem 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.boards li a:hover {
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+  background: color-mix(in srgb, #c9a227 8%, transparent);
+}
+
+.boards b {
+  font-size: 0.78rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.boards li:first-child b {
+  color: #ca8a04;
+}
+
+.boards span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.boards em {
+  font-style: normal;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.boards i {
+  font-style: normal;
+  font-size: 0.84rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #b45309;
+}
+
+@media (min-width: 900px) {
+  .leagues,
+  .clubs,
+  .people {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .clubs,
+  .people {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .clubs,
+  .people,
+  .leagues {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

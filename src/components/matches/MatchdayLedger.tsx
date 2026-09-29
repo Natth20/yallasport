@@ -1,6 +1,6 @@
 import { MapPin, Radio, Trophy } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import {getTranslations} from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 
 export async function MatchdayLedger({
   census,
@@ -20,9 +20,9 @@ export async function MatchdayLedger({
   if (visibleCensus.length === 0 && grounds.length === 0 && broadcasts.length === 0) return null;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-3">
       {visibleCensus.length > 0 && (
-        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
+        <section className="min-w-0 rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
             <Trophy className="h-3.5 w-3.5 text-orange-500" />
             {t('daily_tally')}
@@ -31,25 +31,23 @@ export async function MatchdayLedger({
             {visibleCensus.map((item) => (
               <div
                 key={item.label}
-                className={`rounded-xl px-3 py-3 ${
-                  item.tone === 'yellow'
+                className={`rounded-xl px-3 py-3 ${item.tone === 'yellow'
                     ? 'bg-amber-50 dark:bg-amber-500/10'
                     : item.tone === 'red'
                       ? 'bg-red-50 dark:bg-red-500/10'
                       : item.tone === 'goal'
                         ? 'bg-emerald-50 dark:bg-emerald-500/10'
                         : 'bg-emerald-950/5 dark:bg-card/[0.04]'
-                }`}
+                  }`}
               >
-                <strong className={`block text-xl font-black tabular-nums ${
-                  item.tone === 'yellow'
+                <strong className={`block text-xl font-black tabular-nums ${item.tone === 'yellow'
                     ? 'text-amber-600'
                     : item.tone === 'red'
                       ? 'text-red-600'
                       : item.tone === 'goal'
                         ? 'text-emerald-700 dark:text-emerald-300'
                         : 'text-foreground dark:text-foreground'
-                }`}>{item.value}</strong>
+                  }`}>{item.value}</strong>
                 <span className="mt-1 block text-[9px] font-semibold text-muted-foreground">{item.label}</span>
               </div>
             ))}
@@ -58,7 +56,7 @@ export async function MatchdayLedger({
       )}
 
       {grounds.length > 0 && (
-        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
+        <section className="min-w-0 rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
             <MapPin className="h-3.5 w-3.5 text-orange-500" />
             {t('grounds')}
@@ -78,7 +76,7 @@ export async function MatchdayLedger({
       )}
 
       {broadcasts.length > 0 && (
-        <section className="rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
+        <section className="min-w-0 rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">
             <Radio className="h-3.5 w-3.5 text-orange-500" />
             {t('broadcasts')}
@@ -93,9 +91,8 @@ export async function MatchdayLedger({
                   ) : (
                     <span className="h-5 w-5 rounded bg-emerald-950/5 dark:bg-card/[0.04]" />
                   )}
-                  <span className={`min-w-0 flex-1 truncate font-semibold ${
-                    active ? 'text-orange-600' : 'text-foreground dark:text-foreground'
-                  }`}>{channel.name}</span>
+                  <span className={`min-w-0 flex-1 truncate font-semibold ${active ? 'text-orange-600' : 'text-foreground dark:text-foreground'
+                    }`}>{channel.name}</span>
                   <span className="tabular-nums text-orange-500">{channel.count}</span>
                 </>
               );

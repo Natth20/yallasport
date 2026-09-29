@@ -5,11 +5,11 @@ import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import type { FrontTransfer } from './types';
 
 export async function loadFrontTransfers(locale: string): Promise<FrontTransfer[]> {
-  const rows = await cachedJson('front:transfers:v1', 180, () =>
+  const rows = await cachedJson('front:transfers:v3', 90, () =>
     prisma.transfer
       .findMany({
         orderBy: { date: 'desc' },
-        take: 10,
+        take: 16,
         include: { player: { select: { name: true, slug: true, photoUrl: true } } },
       })
       .catch(swallow('front.transfers', [])),
@@ -21,6 +21,8 @@ export async function loadFrontTransfers(locale: string): Promise<FrontTransfer[
     fee: row.fee,
     fromTeam: row.fromTeam ? localizePlainName(locale, row.fromTeam) : null,
     toTeam: row.toTeam ? localizePlainName(locale, row.toTeam) : null,
+    fromLogo: row.fromLogo,
+    toLogo: row.toLogo,
     playerName: localizePlainName(locale, row.player.name),
     playerSlug: row.player.slug,
     playerPhoto: row.player.photoUrl,

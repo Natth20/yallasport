@@ -26,7 +26,7 @@ export async function PersonalBand() {
       <div className={shell.inner}>
         <FrontMark num={t('ch11')} title={t('ch11_title')} href="/favorites" cta={t('ch11_all')} />
         <ul className={styles.grid}>
-          {items.map((item) => {
+          {items.slice(0, 8).map((item) => {
             const href = item.kind === 'TEAM' ? `/team/${item.slug}` : item.kind === 'LEAGUE' ? `/league/${item.slug}` : `/player/${item.slug}`;
             return (
               <li key={`${item.kind}-${item.slug}`}>

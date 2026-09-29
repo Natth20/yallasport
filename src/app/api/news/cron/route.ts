@@ -1,14 +1,17 @@
 import { swallow } from '@/lib/ops/caught';
 import { NextResponse } from 'next/server';
+import { archiveOffFootballNews } from '@/lib/news/archive-off-football';
 import { importFromRSS } from '@/lib/news/rss-service';
 import { TRUSTED_RSS_FEEDS } from '@/lib/news/trusted-sources';
 import { AlertSeverity, AlertType, logSystemAlert } from '@/lib/monitoring';
 import { isAuthorizedCron } from '@/lib/security/cron';
 import { prisma } from '@/lib/prisma';
 import { alertRecentPublishedBreaking } from '@/lib/notifications/news-alerts';
+import { revalidateAfterNewsIngest } from '@/lib/cache/revalidate-public';
 
 /**
- * Hourly trusted news import + desk alerts.
+ * Hourly trusted news import used to wait for the desk. Trusted feeds now publish
+ * on ingest so photos/news halls show the latest source copy, then the desk can still edit.
  * Auth: CRON_SECRET bearer (same as sports sync).
  */
 export async function GET(req: Request) {
@@ -22,6 +25,7 @@ export async function GET(req: Request) {
       const result = await importFromRSS(feed.url).catch(swallow("src/app/api/news/cron/route.ts:20", ({ imported: 0 })));
       imported += result.imported;
     }
+    const archivedOffDesk = await archiveOffFootballNews().catch(swallow('src/app/api/news/cron/route.ts:archive', 0));
 
     const [pendingCount, breakingPending] = await Promise.all([
       prisma.news.count({ where: { status: 'PENDING_REVIEW' } }),
@@ -59,14 +63,16 @@ export async function GET(req: Request) {
     }
 
     const breakingPushed = await alertRecentPublishedBreaking();
+    revalidateAfterNewsIngest();
 
     return NextResponse.json({
       success: true,
       imported,
+      archivedOffDesk,
       pendingCount,
       breakingPending: breakingPending.length,
       breakingPushed,
-      autoPublished: 0,
+      autoPublished: imported,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'News cron failed';

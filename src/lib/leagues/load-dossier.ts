@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { sportsData } from '@/lib/sports-data';
+import { liveKickoffFloor } from '@/lib/sports-data/match-window';
 
 async function soft<T>(run: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -501,26 +502,53 @@ function mapMatchCard(match: {
   };
 }
 
+const leagueSelect = {
+  id: true,
+  externalId: true,
+  name: true,
+  slug: true,
+  logoUrl: true,
+  country: true,
+  _count: { select: { matches: true, standings: true } },
+} as const;
+
+async function findLeagueRowBySlug(slug: string) {
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(slug).trim();
+    } catch {
+      return slug.trim();
+    }
+  })();
+  if (!decoded) return null;
+  const exact = await soft(
+    () => prisma.league.findFirst({ where: { OR: [{ slug: decoded }, { slug }] }, select: leagueSelect }),
+    null
+  );
+  if (exact) return exact;
+  const candidates = await soft(
+    () =>
+      prisma.league.findMany({
+        where: {
+          OR: [
+            { slug: { startsWith: `${decoded}-`, mode: 'insensitive' } },
+            { slug: { equals: decoded, mode: 'insensitive' } },
+            { name: { contains: decoded.replace(/-/g, ' '), mode: 'insensitive' } },
+          ],
+        },
+        take: 8,
+        select: leagueSelect,
+      }),
+    []
+  );
+  return [...candidates].sort((a, b) => a.slug.length - b.slug.length)[0] ?? null;
+}
+
 export const loadLeagueDossier = cache(async function loadLeagueDossier(
   slug: string,
   options?: { season?: string }
 ): Promise<LeagueDossierData | null> {
-  const league = await soft(
-    () =>
-      prisma.league.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          externalId: true,
-          name: true,
-          slug: true,
-          logoUrl: true,
-          country: true,
-          _count: { select: { matches: true, standings: true } },
-        },
-      }),
-    null
-  );
+  const league = await findLeagueRowBySlug(slug);
   if (!league) return null;
 
   const now = new Date();
@@ -571,7 +599,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
       soft(
         () =>
           prisma.match.findMany({
-            where: { leagueId: league.id, status: { in: ['LIVE', 'HALFTIME'] } },
+            where: { leagueId: league.id, status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
             orderBy: { kickoffAt: 'asc' },
             take: 10,
             select: matchSelect,
@@ -802,9 +830,11 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
   const playerMap = new Map(players.map((p) => [p.id, p]));
   const teamMap = new Map(teams.map((t) => [t.id, t]));
 
+  const standingTeamIds = new Set(standingsBase.map((row) => row.team.id));
   let topScorers = scorerGroups
     .map((row) => {
       if (!row.playerId) return null;
+      if (standingTeamIds.size > 0 && !standingTeamIds.has(row.teamId)) return null;
       const player = playerMap.get(row.playerId);
       const team = teamMap.get(row.teamId);
       if (!player || !team) return null;
@@ -814,7 +844,13 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
 
   if (topScorers.length < 5 && league.externalId) {
     const apiScorers = await fetchApiTopScorers(league.externalId, seasonId);
-    if (apiScorers.length > topScorers.length) topScorers = apiScorers;
+    const allowed = new Set(standingsBase.map((row) => row.team.slug));
+    const scoped =
+      allowed.size > 0
+        ? apiScorers.filter((row) => allowed.has(row.team.slug) || standingsBase.some((club) => club.team.name === row.team.name))
+        : apiScorers;
+    const pick = scoped.length >= 3 ? scoped : apiScorers;
+    if (pick.length > topScorers.length) topScorers = pick;
   }
 
   const assistFromApi = topScorers

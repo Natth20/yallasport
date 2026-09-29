@@ -15,9 +15,9 @@ export async function TransfersChapter() {
   return (
     <section className={`${shell.band} ${styles.tone}`}>
       <div className={shell.inner}>
-        <FrontMark num={t('ch06')} title={t('ch06_title')} note={t('ch06_note')} href="/transfers" cta={t('ch06_cta')} />
+        <FrontMark num="03" title={t('ch06_title')} note={t('ch06_note')} href="/transfers" cta={t('ch06_cta')} />
         <ul className={styles.list}>
-          {rows.map((row) => (
+          {rows.slice(0, 5).map((row) => (
             <li key={row.id}>
               <Link href={`/player/${row.playerSlug}`}>
                 {row.playerPhoto ? (

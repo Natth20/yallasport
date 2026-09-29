@@ -38,6 +38,26 @@
   text-decoration: none;
 }
 
+.list li:first-child a,
+.list li:first-child div {
+  padding: var(--ys-space-4);
+  border-color: color-mix(in srgb, #e8c547 38%, var(--ys-divider));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, #e8c547 14%, transparent), transparent 42%),
+    var(--card);
+}
+
+.list li:first-child .rank {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #ca8a04;
+}
+
+.list li:first-child .value {
+  font-size: 1.05rem;
+  color: #ca8a04;
+}
+
 .list a:hover {
   color: inherit;
   -webkit-text-fill-color: currentcolor;

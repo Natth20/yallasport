@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { Link } from '@/i18n/navigation';
 import { AuthGate } from '@/components/auth/AuthGate';
+import styles from '@/components/auth/auth-gate.module.css';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 
@@ -35,18 +36,21 @@ async function ForgotPasswordPageBody() {
       title={t('recover_title')}
       lead={t('recover_lead')}
       seals={[t('recover_seal_1'), t('recover_seal_2')]}
+      gate="forgot"
     >
       <a
         href="https://accounts.google.com/signin/recovery"
         rel="noopener noreferrer"
-        className="auth-google"
+        className={styles.google}
       >
         {t('recover_google')}
       </a>
-      <p className="mt-5 text-[13px] leading-7 text-muted-foreground dark:text-foreground/45">{t('google_note')}</p>
-      <Link href="/login" className="mt-8 inline-flex text-[12px] font-bold text-primary hover:underline">
-        {t('recover_to_login')}
-      </Link>
+      <p className={styles.note}>{t('google_note')}</p>
+      <p className={styles.links}>
+        <Link href="/login" className={styles.link}>
+          {t('recover_to_login')}
+        </Link>
+      </p>
     </AuthGate>
   );
 }

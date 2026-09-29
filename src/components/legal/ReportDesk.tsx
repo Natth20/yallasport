@@ -3,18 +3,16 @@
 import { pick } from '@/i18n/pick';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { DeskComposer } from './DeskComposer';
-import { LexChamber, LexSection, LexCheckList } from './LexChamber';
-import styles from './lex.module.css';
-import { Mail, Trophy, FileText, ShieldCheck, Flame } from 'lucide-react';
+import {
+  FileText,
+  Flame,
+  Mail,
+  ShieldCheck,
+  Trophy,
+} from 'lucide-react';
+import styles from './report-desk.module.css';
 
 export function ReportDesk({ locale }: { locale: string }) {
-  const rail = [
-    { id: 'submit-form', label: pick(locale, 'إرسال بلاغ', 'Send a report') },
-    { id: 'when-to-report', label: pick(locale, 'ماذا نراجع', 'What we review') },
-    { id: 'workflow', label: pick(locale, 'بعد الإرسال', 'After you send') },
-    { id: 'channels', label: pick(locale, 'البريد', 'Email') },
-  ];
-
   const cats = [
     {
       icon: Trophy,
@@ -38,92 +36,116 @@ export function ReportDesk({ locale }: { locale: string }) {
     },
   ];
 
+  const steps = [
+    {
+      no: '01',
+      title: pick(locale, 'يُحفظ البلاغ', 'It is filed'),
+      body: pick(locale, 'رقم التتبع يظهر هنا فقط إن نجح الإرسال.', 'A tracking id appears here only if the send succeeds.'),
+    },
+    {
+      no: '02',
+      title: pick(locale, 'مراجعة المكتب', 'Desk review'),
+      body: pick(locale, 'المكتب يطابق الواقعة مع المصدر أو الصفحة المذكورة.', 'The desk checks the claim against the source or the page you named.'),
+    },
+    {
+      no: '03',
+      title: pick(locale, 'الرد إن وُجد بريد', 'A reply if you left mail'),
+      body: pick(locale, 'إن تركت بريداً، الرد يذهب عليه بعد المراجعة.', 'If you left an email, the reply goes there after review.'),
+    },
+  ];
+
   return (
-    <LexChamber
-      locale={locale}
-      path="/report"
-      tone="desk"
-      code="YS-DESK-01"
-      instrument={pick(locale, 'بلاغات', 'Reports')}
-      title={pick(locale, 'إبلاغ عن محتوى', 'Report content')}
-      wordmark={pick(locale, 'إبلاغ عن محتوى', 'Report content')}
-      eyebrow={pick(locale, 'مكتب العمليات', 'Operations desk')}
-      lead={pick(
-        locale,
-        'اكتب المشكلة بوضوح. البلاغ يصل لوحة العمليات. ما في أرقام وهمية هنا — رقم التتبع يظهر بعد الإرسال فقط.',
-        'Describe the problem clearly. The report goes to the operations desk. No invented SLAs — a tracking id appears only after you submit.',
-      )}
-      seals={[
-        pick(locale, 'نموذج مباشر', 'Direct form'),
-        pick(locale, 'مراجعة بشرية', 'Human review'),
-        pick(locale, 'رقم بعد الإرسال', 'Id after send'),
-      ]}
-      rail={rail}
-    >
-      <LexSection
-        id="submit-form"
-        index="01"
-        kicker={pick(locale, 'الخطوة الأولى', 'First step')}
-        title={pick(locale, 'أرسل البلاغ', 'Send the report')}
-      >
-        <p className="mb-4">
-          {pick(
-            locale,
-            'اختر النوع، اكتب التفاصيل (١٢ حرفاً على الأقل)، واترك بريداً إن بدك رد.',
-            'Pick a type, write at least 12 characters, and leave an email if you want a reply.',
-          )}
-        </p>
-        <DeskComposer locale={locale} channel="report" />
-      </LexSection>
-
-      <LexSection
-        id="when-to-report"
-        index="02"
-        kicker={pick(locale, 'الفئات', 'Categories')}
-        title={pick(locale, 'ماذا نراجع', 'What we review')}
-      >
-        <div className={styles['lex-report-cats']}>
-          {cats.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <div key={cat.title} className={styles['lex-report-cat']}>
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[var(--lex-accent)]" />
-                <div>
-                  <h4>{cat.title}</h4>
-                  <p>{cat.body}</p>
-                </div>
-              </div>
-            );
-          })}
+    <div className={styles.desk}>
+      <div className="salon-meters" aria-label={pick(locale, 'قواعد المكتب', 'Desk rules')}>
+        <div className="salon-meter">
+          <strong>01</strong>
+          <em>{pick(locale, 'نموذج مباشر', 'Direct form')}</em>
         </div>
-      </LexSection>
+        <div className="salon-meter">
+          <strong>02</strong>
+          <em>{pick(locale, 'مراجعة بشرية', 'Human review')}</em>
+        </div>
+        <div className="salon-meter">
+          <strong>03</strong>
+          <em>{pick(locale, 'رقم بعد الإرسال', 'Id after send')}</em>
+        </div>
+        <div className="salon-meter">
+          <strong>12</strong>
+          <em>{pick(locale, 'حرف حد أدنى', 'Min. characters')}</em>
+        </div>
+      </div>
 
-      <LexSection
-        id="workflow"
-        index="03"
-        kicker={pick(locale, 'المسار', 'Path')}
-        title={pick(locale, 'بعد الإرسال', 'After you send')}
-      >
-        <LexCheckList
-          items={[
-            pick(locale, 'يُحفظ البلاغ ويظهر رقم تتبع إن نجح الإرسال.', 'The report is stored and a tracking id appears if the send succeeds.'),
-            pick(locale, 'المكتب يطابق الواقعة مع المصدر أو الصفحة المذكورة.', 'The desk checks the claim against the source or the page you named.'),
-            pick(locale, 'إن تركت بريداً، الرد يذهب عليه بعد المراجعة.', 'If you left an email, the reply goes there after review.'),
-          ]}
-        />
-      </LexSection>
+      <div className={styles.board}>
+        <section className={styles.sheet} id="submit-form">
+          <header className={styles.head}>
+            <p className={styles.folio}>01 · {pick(locale, 'المكتب', 'Desk')}</p>
+            <h2>{pick(locale, 'أرسل البلاغ', 'Send the report')}</h2>
+            <p>
+              {pick(
+                locale,
+                'اختر النوع، اكتب التفاصيل (١٢ حرفاً على الأقل)، واترك بريداً إن بدك رد. ما في مواعيد وهمية — الرقم يظهر بعد الإرسال فقط.',
+                'Pick a type, write at least 12 characters, and leave an email if you want a reply. No invented SLAs — an id appears only after you submit.',
+              )}
+            </p>
+          </header>
+          <DeskComposer locale={locale} channel="report" />
+        </section>
 
-      <LexSection
-        id="channels"
-        index="04"
-        kicker={pick(locale, 'بديل', 'Alternative')}
-        title={pick(locale, 'البريد الرسمي', 'Official email')}
-      >
-        <a href={`mailto:${CONTACT_EMAIL}`} className={styles['lex-sidebar-btn']}>
-          <Mail className="h-3.5 w-3.5" />
-          <span>{CONTACT_EMAIL}</span>
-        </a>
-      </LexSection>
-    </LexChamber>
+        <aside className={styles.rail}>
+          <section className={styles.card} id="when-to-report">
+            <header className={styles.head}>
+              <p className={styles.folio}>02</p>
+              <h2>{pick(locale, 'ماذا نراجع', 'What we review')}</h2>
+            </header>
+            <div className={styles.cats}>
+              {cats.map((cat) => {
+                const Icon = cat.icon;
+                return (
+                  <article key={cat.title} className={styles.cat}>
+                    <i aria-hidden>
+                      <Icon size={15} />
+                    </i>
+                    <div>
+                      <h3>{cat.title}</h3>
+                      <p>{cat.body}</p>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className={styles.card} id="workflow">
+            <header className={styles.head}>
+              <p className={styles.folio}>03</p>
+              <h2>{pick(locale, 'بعد الإرسال', 'After you send')}</h2>
+            </header>
+            <div className={styles.steps}>
+              {steps.map((step) => (
+                <article key={step.no} className={styles.step}>
+                  <b>{step.no}</b>
+                  <div>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.card} id="channels">
+            <header className={styles.head}>
+              <p className={styles.folio}>04</p>
+              <h2>{pick(locale, 'البريد الرسمي', 'Official email')}</h2>
+              <p>{pick(locale, 'بديل إن تعذّر النموذج.', 'An alternative if the form cannot send.')}</p>
+            </header>
+            <a href={`mailto:${CONTACT_EMAIL}`} className={styles.mail}>
+              <Mail size={14} />
+              <span>{CONTACT_EMAIL}</span>
+            </a>
+          </section>
+        </aside>
+      </div>
+    </div>
   );
 }

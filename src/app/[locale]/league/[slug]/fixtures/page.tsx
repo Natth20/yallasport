@@ -12,7 +12,7 @@ import { loadLeagueDossier, type LeagueMatchCard } from '@/lib/leagues/load-doss
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 
-export const revalidate = 180;
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -151,7 +151,7 @@ function MatchRow({
               {typeof match.awayScore === 'number' ? match.awayScore : '—'}
             </strong>
           ) : (
-            <em>VS</em>
+            <em>×</em>
           )}
         </div>
 

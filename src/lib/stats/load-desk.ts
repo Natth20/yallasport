@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { cache } from 'react';
 import { sportsData } from '@/lib/sports-data';
 import { currentFootballSeason } from '@/lib/sports-data/season';
 import { playerSlugFor } from '@/lib/players/search';
@@ -13,6 +14,12 @@ export const STAT_BOARDS = [
   { id: '307', ar: 'دوري روشن', en: 'Saudi Pro League' },
   { id: '233', ar: 'الدوري المصري', en: 'Egyptian Premier League' },
 ] as const;
+
+export function statBoardLabel(locale: string, externalId: string | null | undefined, fallback: string) {
+  const board = STAT_BOARDS.find((row) => row.id === externalId);
+  if (board) return locale === 'ar' ? board.ar : board.en;
+  return fallback;
+}
 
 export type StatKind = 'goals' | 'assists' | 'yellow' | 'red';
 
@@ -54,14 +61,18 @@ function readValue(kind: StatKind, stats: NonNullable<ApiBoard['response']>[numb
   return block.goals?.total || 0;
 }
 
-export async function loadStatsDesk(leagueId: string, kind: StatKind) {
+export const loadStatsDesk = cache(async function loadStatsDesk(leagueId: string, kind: StatKind) {
   const board = STAT_BOARDS.find((row) => row.id === leagueId) || STAT_BOARDS[0];
   const liveSeason = currentFootballSeason();
-  let pack = await sportsData.getRaw<ApiBoard>(pathFor(kind, board.id, liveSeason));
+  let pack: ApiBoard | null = null;
   let usedSeason = liveSeason;
-  if (!pack?.response?.length) {
-    pack = await sportsData.getRaw<ApiBoard>(pathFor(kind, board.id, liveSeason - 1));
-    usedSeason = liveSeason - 1;
+  for (const year of [liveSeason, liveSeason - 1, liveSeason - 2]) {
+    const next = await sportsData.getRaw<ApiBoard>(pathFor(kind, board.id, year));
+    if (next?.response?.length) {
+      pack = next;
+      usedSeason = year;
+      break;
+    }
   }
 
   const raw = (pack?.response || [])
@@ -79,9 +90,9 @@ export async function loadStatsDesk(leagueId: string, kind: StatKind) {
   const ids = raw.map((row) => row.externalId).filter(Boolean);
   const players = ids.length
     ? await prisma.player.findMany({
-        where: { externalId: { in: ids } },
-        select: { externalId: true, slug: true, photoUrl: true, name: true },
-      })
+      where: { externalId: { in: ids } },
+      select: { externalId: true, slug: true, photoUrl: true, name: true },
+    })
     : [];
   const byExt = new Map(players.map((row) => [row.externalId, row]));
 
@@ -128,4 +139,4 @@ export async function loadStatsDesk(leagueId: string, kind: StatKind) {
   });
 
   return { board, season: usedSeason, liveSeason, previousSeason: usedSeason !== liveSeason, rows };
-}
+});

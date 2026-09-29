@@ -4,10 +4,10 @@
 }
 
 .inner {
-  width: min(72rem, calc(100% - var(--ys-space-6)));
+  width: min(76rem, calc(100% - var(--ys-space-8)));
   margin-inline: auto;
   display: grid;
-  gap: var(--ys-space-5);
+  gap: var(--ys-space-6);
 }
 
 .meta {

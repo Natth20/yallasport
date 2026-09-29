@@ -17,7 +17,7 @@ export async function BroadcastChapter() {
       <div className={shell.inner}>
         <FrontMark num={t('ch09')} title={t('ch09_title')} note={t('ch09_note')} href="/live" cta={t('cta_live')} />
         <ul className={styles.list}>
-          {rows.map((row) => (
+          {rows.slice(0, 5).map((row) => (
             <li key={row.id}>
               <Link href={`/match/${row.matchId}`}>
                 {row.channelLogo ? (

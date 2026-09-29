@@ -5,8 +5,32 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: var(--ys-space-3);
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ys-space-4);
+}
+
+.lead {
+  grid-column: 1 / -1;
+}
+
+.lead .frame img {
+  aspect-ratio: 16 / 8;
+}
+
+@media (min-width: 960px) {
+  .grid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+
+  .lead {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .lead .frame img {
+    aspect-ratio: 4 / 5;
+    min-height: 22rem;
+  }
 }
 
 .card {
@@ -33,6 +57,21 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  transition: transform var(--ys-duration) var(--ys-ease);
+}
+
+.card:hover img {
+  transform: scale(1.04);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame img {
+    transition: none;
+  }
+
+  .card:hover img {
+    transform: none;
+  }
 }
 
 .cat,

@@ -7,6 +7,8 @@ import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 import { gaMeasurementId } from '@/lib/analytics/config';
 
+export const revalidate = 86400;
+
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   return pageMetadata({

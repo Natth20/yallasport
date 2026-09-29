@@ -8,7 +8,8 @@ test('fresh news window is 48 hours', () => {
 });
 
 test('RSS dates in the future are rejected', () => {
-  assert.equal(parseRssPublishedAt({ isoDate: '2026-09-22T20:00:00.000Z' }), null);
+  const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  assert.equal(parseRssPublishedAt({ isoDate: future }), null);
 });
 
 test('RSS dates older than 14 days are not imported', () => {

@@ -29,7 +29,7 @@ export function CoverImage({
     setLoaded(false);
   }, [src]);
 
-  const fade = `transition-[opacity,filter] duration-700 ease-out ${loaded ? 'opacity-100 blur-0' : 'opacity-0 blur-md'}`;
+  const fade = `transition-opacity duration-500 ease-out ${loaded ? 'opacity-100' : 'opacity-60'}`;
 
   const url = !failed && src && src.length > 0 ? src : '';
   if (!url) {
@@ -45,11 +45,13 @@ export function CoverImage({
         alt={alt}
         srcSet={srcSet}
         sizes={srcSet ? sizes : undefined}
-        className={`absolute inset-0 z-0 h-full w-full ${fade} ${className ?? ''}`}
+        className={`absolute inset-0 z-0 h-full w-full object-cover ${fade} ${className ?? ''}`}
         referrerPolicy="no-referrer"
         decoding="async"
         fetchPriority={priority ? 'high' : 'auto'}
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => {
+          if (event.currentTarget.naturalWidth > 0) setLoaded(true);
+        }}
         onError={() => {
           if (!failed) setFailed(true);
         }}

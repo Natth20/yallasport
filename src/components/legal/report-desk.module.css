@@ -1,0 +1,373 @@
+.desk {
+  --desk-ink: #111;
+  display: grid;
+  gap: 1.45rem;
+  min-width: 0;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1080px) {
+  .board {
+    grid-template-columns: minmax(0, 1.55fr) minmax(17.5rem, 0.78fr);
+  }
+}
+
+.sheet,
+.card {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: 1.2rem 1.15rem 1.3rem;
+  border-radius: 0.25rem 1.4rem 1.4rem 0.25rem;
+  border: 1px solid color-mix(in srgb, #64748b 24%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, #94a3b8 10%, transparent), transparent 44%),
+    color-mix(in srgb, var(--card) 94%, transparent);
+}
+
+.head {
+  display: grid;
+  gap: 0.28rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+}
+
+.folio {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.head p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.rail {
+  display: grid;
+  gap: 1rem;
+}
+
+.cats {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.cat {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  padding: 0.8rem 0.85rem;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+}
+
+.cat i {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--ys-orange) 14%, transparent);
+  color: var(--ys-orange);
+  font-style: normal;
+}
+
+.cat h3 {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.cat p {
+  margin: 0.22rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.steps {
+  display: grid;
+  gap: 0;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 1.7rem minmax(0, 1fr);
+  gap: 0.7rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.step:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.step:first-child {
+  padding-top: 0;
+}
+
+.step b {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: var(--desk-ink);
+  -webkit-text-fill-color: var(--desk-ink);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.step h3 {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.step p {
+  margin: 0.2rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.mail,
+.mail:hover,
+.mail:focus-visible {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-height: 2.7rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: var(--desk-ink);
+  -webkit-text-fill-color: var(--desk-ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.desk :global(.lex-desk-card) {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.desk :global(.lex-kinds-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+@media (min-width: 720px) {
+  .desk :global(.lex-kinds-grid) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.desk :global(.lex-kind-card) {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--background) 60%, transparent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.desk :global(.lex-kind-card:hover) {
+  border-color: var(--ys-orange);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.desk :global(.lex-kind-card[data-selected='true']),
+.desk :global(.lex-kind-card[data-selected='true']:hover) {
+  border-color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 16%, var(--card));
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.desk :global(.lex-kind-icon) {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--ys-orange) 14%, transparent);
+  color: var(--ys-orange);
+}
+
+.desk :global(.lex-kind-label) {
+  min-width: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.desk :global(.lex-form-grid) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+}
+
+@media (min-width: 720px) {
+  .desk :global(.lex-form-grid) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.desk :global(.lex-form-full) {
+  grid-column: 1 / -1;
+}
+
+.desk :global(.lex-input-group) {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.desk :global(.lex-input-label) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.desk :global(.lex-input-label-hint) {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.desk :global(.lex-text-input) {
+  width: 100%;
+  min-width: 0;
+  padding: 0.72rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  color: var(--foreground);
+  font-size: 0.88rem;
+}
+
+.desk :global(.lex-text-input:focus) {
+  outline: none;
+  border-color: color-mix(in srgb, var(--ys-orange) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ys-orange) 14%, transparent);
+}
+
+.desk :global(.lex-textarea) {
+  min-height: 8.5rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.desk :global(.lex-submit-btn),
+.desk :global(.lex-submit-btn:hover),
+.desk :global(.lex-submit-btn:focus-visible) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.85rem;
+  padding: 0.7rem 1.2rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: var(--desk-ink);
+  -webkit-text-fill-color: var(--desk-ink);
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.desk :global(.lex-submit-btn:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.desk :global(.lex-receipt-box) {
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  padding: 1.6rem 1.1rem;
+  text-align: center;
+  border-radius: 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 24%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+}
+
+.desk :global(.lex-receipt-success-icon) {
+  display: grid;
+  place-items: center;
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: var(--desk-ink);
+}
+
+.desk :global(.lex-receipt-title) {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.desk :global(.lex-receipt-desc) {
+  margin: 0;
+  max-width: 32rem;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.desk :global(.lex-receipt-tag) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}

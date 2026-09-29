@@ -16,6 +16,7 @@ import { newsVisibleWhere, overlayNewsList, overlayNewsTranslation } from '@/lib
 import { deskLabel } from '@/lib/news/desks';
 import { deskAuthorLabel, formatNewsHtml } from '@/lib/news/format-body';
 import { wordCount, resolveFullArticleBody } from '@/lib/news/fetch-article';
+import { readingTimeMinutes } from '@/lib/news/reading-time';
 import { isProtectedFullTextSource } from '@/lib/news/import-copy';
 import { linkedEntitiesForNews } from '@/lib/news/entity-suggest';
 import { linkContent } from '@/lib/news/linking';
@@ -45,8 +46,10 @@ export async function generateMetadata({
 
   const news = await prisma.news.findFirst({
     where: {
-      OR: [{ slug: rawSlug }, { slug: decodedSlug }],
-      status: 'PUBLISHED',
+      AND: [
+        newsVisibleWhere(locale),
+        { OR: [{ slug: rawSlug }, { slug: decodedSlug }] },
+      ],
     },
   });
   const missing = pageMetadata({
@@ -95,8 +98,10 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
 
   const news = await prisma.news.findFirst({
     where: {
-      OR: [{ slug: rawSlug }, { slug: decodedSlug }],
-      status: 'PUBLISHED',
+      AND: [
+        newsVisibleWhere(locale),
+        { OR: [{ slug: rawSlug }, { slug: decodedSlug }] },
+      ],
     },
     include: {
       author: true,
@@ -132,7 +137,7 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
         where: { id: news.id },
         data: {
           content: resolved.html,
-          readingTime: Math.max(1, Math.ceil(resolved.words / 200)),
+          readingTime: readingTimeMinutes(resolved.html),
         },
       })
       .catch(swallow('src/app/[locale]/news/[slug]/page.tsx:enrich', null));
@@ -211,7 +216,7 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
   const showExcerpt = excerptIsBodyLead(localized.excerpt, resolved.html) === false;
   const protectedSource = isProtectedFullTextSource(news.sourceUrl);
   const clippedCopy = protectedSource || words < 40;
-  const readMins = words >= 180 ? news.readingTime || Math.max(1, Math.ceil(words / 200)) : null;
+  const readMins = readingTimeMinutes(resolved.html) || null;
   const newsSchema = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',

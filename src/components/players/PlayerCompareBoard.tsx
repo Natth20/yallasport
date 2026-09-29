@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import type { PlayerCompareCard } from '@/lib/players/load-dossier';
+import folio from './compare-folio.module.css';
 
 type Row = { key: string; label: string; left: number | null; right: number | null; better?: 'high' | 'low' };
 
@@ -22,22 +23,21 @@ function Radar({ left, right, labels }: { left: number[]; right: number[]; label
   };
   const poly = (vals: number[]) => vals.map((v, i) => point(i, Math.max(0.04, Math.min(1, v))).join(',')).join(' ');
   return (
-    <svg viewBox="0 0 240 240" className="mx-auto h-56 w-56" role="img">
+    <svg viewBox="0 0 240 240" className={folio.radar} role="img">
       {[0.33, 0.66, 1].map((ring) => (
         <polygon
           key={ring}
           fill="none"
-          stroke="currentColor"
-          className="text-border"
+          className={folio.radarRing}
           points={Array.from({ length: n }, (_, i) => point(i, ring).join(',')).join(' ')}
         />
       ))}
-      <polygon className="ys-radar-poly" points={poly(left)} fill="rgba(34,211,238,0.28)" stroke="#22d3ee" strokeWidth={1.5} />
-      <polygon className="ys-radar-poly" points={poly(right)} fill="rgba(249,115,22,0.28)" stroke="#f97316" strokeWidth={1.5} />
+      <polygon className={folio.radarInk} points={poly(left)} strokeWidth={1.5} />
+      <polygon className={folio.radarMark} points={poly(right)} strokeWidth={1.5} />
       {labels.map((label, i) => {
         const [x, y] = point(i, 1.16);
         return (
-          <text key={label} x={x} y={y} textAnchor="middle" className="fill-muted-foreground" fontSize="8">
+          <text key={label} x={x} y={y} textAnchor="middle" className={folio.radarLabel} fontSize="9">
             {label}
           </text>
         );
@@ -53,6 +53,7 @@ export function PlayerCompareBoard({
   gk,
   p1,
   p2,
+  season,
 }: {
   locale: string;
   left: PlayerCompareCard;
@@ -60,6 +61,7 @@ export function PlayerCompareBoard({
   gk: boolean;
   p1: string;
   p2: string;
+  season?: number;
 }) {
   const router = useRouter();
   const [per90, setPer90] = useState(false);
@@ -128,34 +130,48 @@ export function PlayerCompareBoard({
       ] as const);
   const max = radarKeys.map((row) => Math.max(row[1], row[2], 0.01));
 
+  const qs = (leftSlug: string, rightSlug: string) => {
+    const seasonQ = season ? `&season=${season}` : '';
+    return `/compare-players?p1=${encodeURIComponent(leftSlug)}&p2=${encodeURIComponent(rightSlug)}${seasonQ}`;
+  };
+
   const copyLink = async () => {
-    const url = `${window.location.origin}${window.location.pathname}?p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}`;
+    const url = `${window.location.origin}${window.location.pathname}?p1=${encodeURIComponent(p1)}&p2=${encodeURIComponent(p2)}${season ? `&season=${season}` : ''}`;
     await navigator.clipboard.writeText(url).catch(() => undefined);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap justify-center gap-2">
-        <button type="button" onClick={() => setPer90((v) => !v)} className="rounded-full border border-border px-3 py-1.5 text-xs font-bold">
+    <div className={folio.board}>
+      <div className={folio.boardTools}>
+        <button type="button" onClick={() => setPer90((v) => !v)}>
           {per90 ? (ar ? 'إجمالي الموسم' : 'Season totals') : (ar ? 'لكل 90 دقيقة' : 'Per 90')}
         </button>
-        <button type="button" onClick={() => router.push(`/compare-players?p1=${p2}&p2=${p1}`)} className="rounded-full border border-border px-3 py-1.5 text-xs font-bold">
+        <button type="button" onClick={() => router.push(qs(p2, p1))}>
           {ar ? 'تبديل الكفتين' : 'Swap sides'}
         </button>
-        <button type="button" onClick={copyLink} className="rounded-full border border-border px-3 py-1.5 text-xs font-bold transition-colors data-[on=true]:border-emerald-500 data-[on=true]:text-emerald-500" data-on={copied}>
+        <button type="button" onClick={copyLink} data-on={copied}>
           {copied ? (ar ? 'تم النسخ ✓' : 'Copied ✓') : (ar ? 'نسخ الرابط' : 'Copy link')}
         </button>
       </div>
-      <Radar
-        labels={radarKeys.map((row) => row[0])}
-        left={radarKeys.map((row, i) => row[1] / max[i])}
-        right={radarKeys.map((row, i) => row[2] / max[i])}
-      />
-      <div className="space-y-3">
+      {left.totals || right.totals ? (
+        <Radar
+          labels={radarKeys.map((row) => row[0])}
+          left={radarKeys.map((row, i) => row[1] / max[i])}
+          right={radarKeys.map((row, i) => row[2] / max[i])}
+        />
+      ) : (
+        <p className={folio.hint}>
+          {ar
+            ? 'المصدر ما رجّع ورقة موسم لهذين اللاعبين. الشرطة لا تُعرض كصفر.'
+            : 'The source has not returned a season sheet for these two. A missing figure is not shown as zero.'}
+        </p>
+      )}
+      <div className={folio.statList}>
         {rows.map((stat) => {
           const bothMissing = stat.left == null && stat.right == null;
+          if (bothMissing) return null;
           const l = stat.left ?? 0;
           const r = stat.right ?? 0;
           const total = l + r;
@@ -165,21 +181,21 @@ export function PlayerCompareBoard({
           const rightWins =
             !bothMissing && stat.left != null && stat.right != null && (stat.better === 'low' ? r < l : r > l);
           return (
-            <div key={stat.key} className="space-y-2 rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-sm ${leftWins ? 'bg-cyan-500/15 text-cyan-400 ring-1 ring-cyan-500/40' : 'text-cyan-500/70'}`}>
-                  {leftWins ? <span aria-hidden>▲</span> : null}
+            <div key={stat.key} className={folio.stat}>
+              <div className={folio.statHead}>
+                <span className={leftWins ? folio.win : undefined}>
+                  {leftWins ? '▲ ' : ''}
                   {cell(stat.left)}
                 </span>
-                <span className="uppercase tracking-wider text-muted-foreground">{stat.label}</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-sm ${rightWins ? 'bg-amber-500/15 text-amber-400 ring-1 ring-amber-500/40' : 'text-amber-500/70'}`}>
+                <em>{stat.label}</em>
+                <span className={rightWins ? folio.win : undefined}>
                   {cell(stat.right)}
-                  {rightWins ? <span aria-hidden>▲</span> : null}
+                  {rightWins ? ' ▲' : ''}
                 </span>
               </div>
-              <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                <div style={{ width: `${pct}%` }} className={`ys-grow-x h-full ${bothMissing ? 'bg-muted-foreground/30' : 'bg-cyan-500'}`} />
-                <div style={{ width: `${100 - pct}%` }} className={`ys-grow-x h-full ${bothMissing ? 'bg-muted-foreground/20' : 'bg-amber-500'}`} />
+              <div className={folio.bar} aria-hidden>
+                <i style={{ width: `${pct}%`, opacity: bothMissing ? 0.35 : 1 }} />
+                <i style={{ width: `${100 - pct}%`, opacity: bothMissing ? 0.25 : 1 }} />
               </div>
             </div>
           );

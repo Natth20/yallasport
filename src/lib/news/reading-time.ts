@@ -10,6 +10,37 @@ export function wordCountPlain(htmlOrText?: string | null) {
   return words.length;
 }
 
+const MIN_WORDS = 160;
+const LATIN_WPM = 220;
+const ARABIC_CHARS_PER_MIN = 850;
+const MIN_ARABIC_CHARS = 700;
+
 export function readingTimeMinutes(htmlOrText?: string | null) {
-  return Math.max(1, Math.ceil(wordCountPlain(htmlOrText) / 200));
+  const plain = plainNewsText(htmlOrText);
+  if (!plain) return 0;
+
+  const words = plain.split(/\s+/).filter(Boolean).length;
+  const arabicChars = (plain.match(/[\u0600-\u06FF]/g) || []).length;
+  const letters = plain.replace(/\s+/g, '').length;
+  const mostlyArabic = letters > 0 && arabicChars / letters >= 0.4;
+
+  if (mostlyArabic) {
+    if (arabicChars < MIN_ARABIC_CHARS && words < MIN_WORDS) return 0;
+    return Math.max(1, Math.ceil(arabicChars / ARABIC_CHARS_PER_MIN));
+  }
+
+  if (words < MIN_WORDS) return 0;
+  return Math.max(1, Math.ceil(words / LATIN_WPM));
+}
+
+/** List cards often only have a teaser. Trust a stored value only when it looks like a full read. */
+export function listedReadingMinutes(story: {
+  readingTime?: number | null;
+  excerpt?: string | null;
+  title?: string;
+}) {
+  const stored = Math.max(0, story.readingTime || 0);
+  const fromCopy = readingTimeMinutes(`${story.title || ''} ${story.excerpt || ''}`);
+  if (fromCopy > 0) return Math.max(stored, fromCopy);
+  return stored >= 2 ? stored : 0;
 }

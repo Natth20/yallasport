@@ -5,16 +5,16 @@ import { ClientTime } from '@/components/datetime/ClientTime';
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
-export function FrontWhen({ value }: { value: string }) {
+export function FrontWhen({ value }: { value: string | Date }) {
   const params = useParams();
   const locale = params?.locale === 'en' ? 'en' : 'ar';
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
 
   const delta = date.getTime() - Date.now();
   const abs = Math.abs(delta);
   if (abs >= WEEK) {
-    return <ClientTime value={value} locale={locale} options={{ day: 'numeric', month: 'short' }} />;
+    return <ClientTime value={date} locale={locale} options={{ day: 'numeric', month: 'short' }} />;
   }
 
   const rtf = new Intl.RelativeTimeFormat(locale === 'ar' ? 'ar' : 'en', { numeric: 'auto' });

@@ -72,24 +72,28 @@ export function StoryFolio({
   comments: NewsCommentRow[];
   isLoggedIn: boolean;
 }) {
+  const latin = /[A-Za-z]/.test(title.slice(0, 2));
+  const latinExcerpt = excerpt ? /[A-Za-z]/.test(excerpt.slice(0, 2)) : false;
+  const latinBody = /[A-Za-z]/.test(bodyHtml.replace(/<[^>]+>/g, '').trim().slice(0, 12));
+
   return (
     <article className={styles['ed']}>
       <span className={styles['ed-aura']} aria-hidden />
       <span className={styles['ed-grain']} aria-hidden />
       <div className={styles['ed-wrap']}>
-        <nav className={styles['ed-nav']}>
-          <Link href="/news">{pick(locale, 'غرفة الأخبار', 'News desk')}</Link>
+        <nav className={styles['ed-nav']} aria-label={pick(locale, 'مسار الخبر', 'Story path')}>
+          <Link href="/news">{pick(locale, 'الأخبار', 'News')}</Link>
           <i />
           <span>{kicker}</span>
           {breaking ? <b>{pick(locale, 'عاجل', 'Breaking')}</b> : null}
           {isPremium ? <b>{pick(locale, 'مميز', 'Premium')}</b> : null}
         </nav>
 
-        <header className={styles['ed-mast']}>
+        <header className={styles['ed-head']}>
           <p className={styles['ed-kicker']}>{kicker}</p>
-          <h1 dir={/[A-Za-z]/.test(title.slice(0, 2)) ? 'ltr' : 'auto'}>{title}</h1>
+          <h1 dir={latin ? 'ltr' : 'auto'}>{title}</h1>
           {showExcerpt && excerpt ? (
-            <p className={styles['ed-stand']} dir={/[A-Za-z]/.test(excerpt.slice(0, 2)) ? 'ltr' : 'auto'}>
+            <p className={styles['ed-stand']} dir={latinExcerpt ? 'ltr' : 'auto'}>
               {excerpt}
             </p>
           ) : null}
@@ -103,6 +107,12 @@ export function StoryFolio({
               </li>
             ) : null}
           </ul>
+          {canAccess ? (
+            <div className={styles['ed-toolbar']}>
+              <NewsShareMenu title={title} />
+              <NewsAudioReader text={bodyHtml} />
+            </div>
+          ) : null}
         </header>
 
         {heroImage ? (
@@ -116,39 +126,20 @@ export function StoryFolio({
                 priority
                 className="object-cover"
               />
-              <i className={`${styles['ed-bracket']} ${styles['is-tl']}`} />
-              <i className={`${styles['ed-bracket']} ${styles['is-tr']}`} />
-              <i className={`${styles['ed-bracket']} ${styles['is-bl']}`} />
-              <i className={`${styles['ed-bracket']} ${styles['is-br']}`} />
             </span>
             <figcaption>
+              <em>{pick(locale, 'من المصدر', 'From source')}</em>
               <span>{sourceLabel}</span>
-              <em>{pick(locale, 'غلاف التقرير', 'Report cover')}</em>
             </figcaption>
           </figure>
         ) : null}
 
         <div className={styles['ed-board']}>
-          <aside className={styles['ed-rail']}>
-            <StoryRail
-              locale={locale}
-              kicker={pick(locale, 'الآن على المكتب', 'On the desk')}
-              title={pick(locale, 'أحدث التقارير', 'Latest reports')}
-              stories={latest.slice(0, 6)}
-            />
-            <StoryRail
-              locale={locale}
-              kicker={pick(locale, 'التداول', 'Circulation')}
-              title={pick(locale, 'الأكثر قراءة', 'Most read')}
-              stories={popular.slice(0, 6)}
-            />
-          </aside>
-
           <div className={styles['ed-spine']}>
             <div className={styles['ed-sheet']}>
               <div
                 id="news-report-prose"
-                className={`${styles['ed-prose']}${!canAccess ? ` ${styles['is-gated']}` : ''}${/[A-Za-z]/.test(bodyHtml.replace(/<[^>]+>/g, '').trim().slice(0, 12)) ? ` ${styles['is-latin']}` : ''}`}
+                className={`${styles['ed-prose']}${!canAccess ? ` ${styles['is-gated']}` : ''}${latinBody ? ` ${styles['is-latin']}` : ''}`}
                 dangerouslySetInnerHTML={{ __html: bodyHtml }}
               />
 
@@ -193,13 +184,6 @@ export function StoryFolio({
                 </a>
               ) : null}
 
-              {canAccess ? (
-                <div className={styles['ed-tools']}>
-                  <NewsShareMenu title={title} />
-                  <NewsAudioReader text={bodyHtml} />
-                </div>
-              ) : null}
-
               {canAccess ? <StoryShareCard title={title} locale={locale} /> : null}
 
               {entities.length > 0 || tags.length > 0 ? (
@@ -226,24 +210,30 @@ export function StoryFolio({
           <aside className={styles['ed-rail']}>
             <StoryRail
               locale={locale}
-              kicker={pick(locale, 'من نفس المكتب', 'Same desk')}
+              kicker={pick(locale, 'نفس الباب', 'Same desk')}
               title={pick(locale, 'تقارير ذات صلة', 'Related reports')}
               stories={related.slice(0, 6)}
+            />
+            <StoryRail
+              locale={locale}
+              kicker={pick(locale, 'الأكثر قراءة', 'Most read')}
+              title={pick(locale, 'ما يتداول الآن', 'In circulation')}
+              stories={popular.slice(0, 5)}
             />
           </aside>
         </div>
 
-        {related.length > 0 || latest.length > 0 ? (
+        {(related.length > 0 || latest.length > 0) ? (
           <section className={styles['ed-floor']}>
             <div className={styles['ed-more-head']}>
               <div>
-                <p>{pick(locale, 'المزيد من الغرفة', 'More from the desk')}</p>
-                <h2>{pick(locale, 'تقارير تكمّل الطبعة', 'Reports that complete the edition')}</h2>
+                <p>{pick(locale, 'المزيد', 'More')}</p>
+                <h2>{pick(locale, 'تقارير تُكمل القراءة', 'Stories that continue the reading')}</h2>
               </div>
               <Link href="/news">{pick(locale, 'كل الأخبار', 'All news')}</Link>
             </div>
             <div className={styles['ed-floor-grid']}>
-              {(related.length > 0 ? related : latest).slice(0, 8).map((story) => (
+              {(related.length > 0 ? related : latest).slice(0, 4).map((story) => (
                 <Link key={story.id} href={`/news/${story.slug}`} className={styles['ed-card']}>
                   <span className={styles['ed-card-media']}>
                     {story.image ? <CoverImage src={story.image} alt="" sizes="320px" className="object-cover" /> : null}

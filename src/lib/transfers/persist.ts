@@ -29,12 +29,30 @@ function isSideSquad(name: string | null) {
 
 async function deskClubs() {
   const leagueIds = STAT_BOARDS.map((board) => board.id);
+  const select = { externalId: true, name: true, id: true, logoUrl: true } as const;
   const fromStandings = await prisma.team.findMany({
     where: { standings: { some: { league: { externalId: { in: leagueIds } } } } },
     take: 48,
-    select: { externalId: true, name: true, id: true, logoUrl: true },
+    select,
   });
-  return fromStandings.slice(0, 32);
+  if (fromStandings.length >= 12) return fromStandings.slice(0, 32);
+
+  const since = footballSeasonStart(currentFootballSeason() - 1);
+  const recent = await prisma.match.findMany({
+    where: { league: { externalId: { in: leagueIds } }, kickoffAt: { gte: since } },
+    orderBy: { kickoffAt: 'desc' },
+    take: 180,
+    select: { homeTeam: { select }, awayTeam: { select } },
+  });
+  const seen = new Map(fromStandings.map((club) => [club.externalId, club]));
+  for (const match of recent) {
+    for (const club of [match.homeTeam, match.awayTeam]) {
+      if (!seen.has(club.externalId)) seen.set(club.externalId, club);
+      if (seen.size >= 32) break;
+    }
+    if (seen.size >= 32) break;
+  }
+  return [...seen.values()].slice(0, 32);
 }
 
 async function rememberPlayer(externalId: string, name: string) {

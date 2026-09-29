@@ -79,20 +79,20 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  
+
   --primary: #0a4d3a;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #0f172a;
-  
+
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --accent: #f97316;
   --accent-foreground: #ffffff;
-  
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #0a4d3a;
@@ -159,7 +159,8 @@
   color-scheme: light;
 }
 
-.dark, [data-theme="dark"] {
+.dark,
+[data-theme="dark"] {
   /* Brand Core (Dark Adaptive) */
   --ys-orange: #f97316;
   --ys-orange-hover: #fb923c;
@@ -177,20 +178,20 @@
   --card-foreground: #f8fafc;
   --popover: #121212;
   --popover-foreground: #f8fafc;
-  
+
   --primary: #10b981;
   --primary-foreground: #0a0a0a;
   --secondary: #1e1e1e;
   --secondary-foreground: #f8fafc;
-  
+
   --muted: #18181b;
   --muted-foreground: #a1a1aa;
   --accent: #f97316;
   --accent-foreground: #ffffff;
-  
+
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
+
   --border: #27272a;
   --input: #27272a;
   --ring: #10b981;
@@ -219,7 +220,8 @@
   color-scheme: dark;
 }
 
-.light, [data-theme="light"] {
+.light,
+[data-theme="light"] {
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -248,7 +250,9 @@
    Base Elements Reset & Typography
    ========================================================================== */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   border-color: var(--border);
 }
@@ -286,7 +290,12 @@ body {
 }
 
 /* Typography Hierarchy */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-sans);
   color: var(--foreground);
   font-weight: 700;
@@ -295,12 +304,29 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
-h1 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); }
-h2 { font-size: clamp(1.4rem, 2.5vw, 1.875rem); }
-h3 { font-size: clamp(1.2rem, 2vw, 1.5rem); }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
+h1 {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+}
+
+h2 {
+  font-size: clamp(1.4rem, 2.5vw, 1.875rem);
+}
+
+h3 {
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+h5 {
+  font-size: 1.125rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
 
 p {
   margin-top: 0;
@@ -314,19 +340,37 @@ a {
   transition: color 0.15s ease-in-out, opacity 0.15s ease-in-out;
 }
 
-a:hover {
+/* Only tint bare text links. Classed CTAs keep their own ink —
+   otherwise orange-on-orange hover makes the label vanish. */
+a:hover:where(:not([class])) {
   color: var(--ys-orange);
-  -webkit-text-fill-color: var(--ys-orange);
 }
 
-ul, ol {
+/* Tailwind / utility orange fills: keep assigned ink, never hover-orange */
+:is(a, button).bg-orange-400:hover,
+:is(a, button).bg-orange-500:hover,
+:is(a, button).bg-orange-600:hover,
+:is(a, button).is-primary:hover,
+:is(a, button).is-on:hover {
+  -webkit-text-fill-color: currentColor;
+}
+
+ul,
+ol {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 /* Media Elements */
-img, svg, video, canvas, audio, iframe, embed, object {
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
   display: block;
   vertical-align: middle;
   max-width: 100%;
@@ -400,4 +444,17 @@ img {
 
 .ys-gradient-metallic-silver {
   background-image: var(--gradient-metallic-silver);
+}
+
+.ys-page-shell {
+  min-height: 0;
+}
+
+main.flex-grow {
+  display: flex;
+  flex-direction: column;
+}
+
+main.flex-grow>.ys-page-shell {
+  flex: 1 0 auto;
 }

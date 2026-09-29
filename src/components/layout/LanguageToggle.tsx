@@ -1,10 +1,10 @@
-// src/components/layout/LanguageToggle.tsx
 'use client';
 
 import React from 'react';
-import {useLocale} from 'next-intl';
-import {usePathname, useRouter} from '@/i18n/navigation';
+import { useLocale } from 'next-intl';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { Languages } from 'lucide-react';
+import styles from './chrome-control.module.css';
 
 export const LanguageToggle: React.FC = () => {
   const locale = useLocale();
@@ -14,7 +14,7 @@ export const LanguageToggle: React.FC = () => {
   const switchLocale = () => {
     const query = window.location.search.replace(/^\?/, '');
     router.replace(`${pathname}${query ? `?${query}` : ''}`, {
-      locale: locale === 'ar' ? 'en' : 'ar'
+      locale: locale === 'ar' ? 'en' : 'ar',
     });
   };
 
@@ -22,13 +22,11 @@ export const LanguageToggle: React.FC = () => {
     <button
       type="button"
       onClick={switchLocale}
-      className="flex items-center gap-2 px-3 py-1.5 text-muted-foreground hover:text-orange-500 transition-all rounded-full bg-muted dark:bg-muted hover:bg-orange-50 dark:hover:bg-orange-950/20 border border-transparent hover:border-orange-200"
-      aria-label={locale === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+      className={`${styles.btn} ${styles.lang}`}
+      aria-label={locale === 'ar' ? 'التبديل إلى الإنجليزية' : 'Switch to Arabic'}
     >
-      <Languages className="w-4 h-4 text-orange-500" />
-      <span className="text-[10px] font-black uppercase tracking-tighter">
-        {locale === 'ar' ? 'English' : 'العربية'}
-      </span>
+      <Languages className={styles.icon} />
+      <span>{locale === 'ar' ? 'EN' : 'AR'}</span>
     </button>
   );
 };

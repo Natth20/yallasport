@@ -10,6 +10,7 @@ import { alertMatchFans } from '@/lib/notifications/match-alerts';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { isAuthorizedCron } from '@/lib/security/cron';
 import { settleFinishedPredictions } from '@/lib/predictions/settle';
+import { revalidateAfterSportsSync } from '@/lib/cache/revalidate-public';
 
 /**
  * API Route: /api/sports/sync
@@ -110,6 +111,7 @@ export async function GET(req: Request) {
       }, { ex: 300 }),
       redis.set('live_matches', liveMatches, { ex: 30 }),
     ]);
+    revalidateAfterSportsSync();
 
     return NextResponse.json({
       success: true,

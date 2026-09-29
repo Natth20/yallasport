@@ -8,8 +8,10 @@ import { SalonStage } from '@/components/salon/SalonStage';
 import { YoutubeDesk } from '@/components/youtube/YoutubeDesk';
 import { YoutubeClipNav } from '@/components/youtube/YoutubeClipNav';
 import { YoutubeBrief } from '@/components/youtube/YoutubeBrief';
+import { YoutubeFoyer } from '@/components/youtube/YoutubeFoyer';
 import { swallow } from '@/lib/ops/caught';
 import { emptyYoutubeDeskStats, listYoutubeShelf, youtubeDeskStats } from '@/lib/youtube/ingest';
+import { pinThenRotate } from '@/lib/front/rotate-shelf';
 import { toYoutubeCards, youtubeCopy } from '@/lib/youtube/present';
 
 export const revalidate = 60;
@@ -61,10 +63,10 @@ async function ReelsPageBody({
       )}
       aside={pick(locale, `${stats.reels} ريل`, `${stats.reels} reels`)}
       tools={
-        <>
+        <YoutubeFoyer>
           <YoutubeClipNav locale={locale} current="reels" />
           <YoutubeBrief locale={locale} stats={stats} />
-        </>
+        </YoutubeFoyer>
       }
     >
       <YoutubeDesk
@@ -72,7 +74,7 @@ async function ReelsPageBody({
         locale={locale}
         copy={youtubeCopy(locale)}
         initialId={v}
-        clips={toYoutubeCards(clips, locale)}
+        clips={toYoutubeCards(pinThenRotate(clips, (clip) => clip.youtubeId === v), locale)}
         empty={pick(locale, 'لا ريلز على الرف بعد. الشورتس تُصنَّف من العنوان أو من مدة الفيديو إن وُجد مفتاح يوتيوب.', 'No reels on the shelf yet. Shorts are classified from the title, or from duration when a YouTube API key is set.')}
         archiveHref="/videos/archive"
         archiveLabel={pick(locale, 'الأرشيف', 'Archive')}

@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { slugifyCoachName } from '@/lib/coaches/slug';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { sportsData } from '@/lib/sports-data';
+import { liveKickoffFloor } from '@/lib/sports-data/match-window';
+import { apiSportsCoachPhoto, apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
@@ -46,7 +48,7 @@ const matchSelect = {
   awayTeamId: true,
   homeTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
   awayTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
-  league: { select: { id: true, name: true, slug: true, logoUrl: true, country: true } },
+  league: { select: { id: true, externalId: true, name: true, slug: true, logoUrl: true, country: true } },
   venue: { select: { name: true, city: true } },
 } as const;
 
@@ -69,7 +71,7 @@ export type DossierMatch = {
   awayTeamId: string;
   homeTeam: DossierCrest;
   awayTeam: DossierCrest;
-  league: { id: string; name: string; slug: string; logoUrl: string | null; country: string | null };
+  league: { id: string; externalId?: string; name: string; slug: string; logoUrl: string | null; country: string | null };
   venue: { name: string; city: string | null } | null;
 };
 
@@ -173,7 +175,7 @@ export type TeamDossierData = {
     goalsAgainst: number;
     points: number;
     seasonId: string;
-    league: { id: string; name: string; slug: string; logoUrl: string | null; country: string | null };
+    league: { id: string; externalId?: string; name: string; slug: string; logoUrl: string | null; country: string | null };
   } | null;
   stats: SplitStats & { goalDiff: number; winPct: number | null };
   homeStats: SplitStats;
@@ -193,6 +195,19 @@ export type TeamDossierData = {
     fromTeam: string | null;
     toTeam: string | null;
     player: { name: string; slug: string; photoUrl: string | null };
+  }>;
+  seasonSlice: SeasonSlice | null;
+  tableWindow: Array<{
+    rank: number;
+    points: number;
+    played: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    goalsFor: number;
+    goalsAgainst: number;
+    team: { id: string; name: string; slug: string; logoUrl: string | null };
+    isUs: boolean;
   }>;
   news: Array<{
     id: string;
@@ -575,40 +590,287 @@ function parseCareer(raw: unknown): Array<{
     }>;
 }
 
-export const loadTeamDossier = cache(async function loadTeamDossier(slug: string): Promise<TeamDossierData | null> {
-  const teamRow = await soft(
+const teamRowSelect = {
+  id: true,
+  externalId: true,
+  name: true,
+  slug: true,
+  logoUrl: true,
+  founded: true,
+  bio: true,
+  venue: { select: { name: true, city: true, capacity: true } },
+  coach: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      photoUrl: true,
+      nationality: true,
+      bio: true,
+      birthDate: true,
+      careerHistory: true,
+      trophies: {
+        orderBy: { season: 'desc' as const },
+        take: 8,
+        select: { title: true, season: true, teamName: true },
+      },
+    },
+  },
+} as const;
+
+export async function findTeamRowBySlug(slug: string) {
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(slug).trim();
+    } catch {
+      return slug.trim();
+    }
+  })();
+  if (!decoded) return null;
+
+  const exact = await soft(
     () =>
-      prisma.team.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          externalId: true,
-          name: true,
-          slug: true,
-          logoUrl: true,
-          founded: true,
-          bio: true,
-          venue: { select: { name: true, city: true, capacity: true } },
-          coach: {
-            select: {
-              id: true,
-              name: true,
-              photoUrl: true,
-              nationality: true,
-              bio: true,
-              birthDate: true,
-              careerHistory: true,
-              trophies: {
-                orderBy: { season: 'desc' },
-                take: 8,
-                select: { title: true, season: true, teamName: true },
-              },
-            },
-          },
-        },
+      prisma.team.findFirst({
+        where: { OR: [{ slug: decoded }, { slug }] },
+        select: teamRowSelect,
       }),
     null
   );
+  if (exact) return exact;
+
+  const candidates = await soft(
+    () =>
+      prisma.team.findMany({
+        where: {
+          OR: [
+            { slug: { startsWith: `${decoded}-`, mode: 'insensitive' } },
+            { slug: { equals: decoded, mode: 'insensitive' } },
+            { name: { equals: decoded, mode: 'insensitive' } },
+            { name: { startsWith: decoded, mode: 'insensitive' } },
+          ],
+        },
+        take: 12,
+        select: teamRowSelect,
+      }),
+    []
+  );
+  if (candidates.length === 0) return null;
+  const named = candidates.find((row) => row.name.toLowerCase() === decoded.toLowerCase());
+  if (named) return named;
+  return [...candidates].sort((a, b) => a.slug.length - b.slug.length)[0] ?? null;
+}
+
+type ApiSquadEntry = {
+  id: number;
+  name: string;
+  age?: number;
+  number?: number | null;
+  position?: string;
+  photo?: string;
+};
+
+async function hydrateSquadFromApi(teamId: string, teamExternalId: string): Promise<SquadPlayerRow[]> {
+  const data = await sportsData.getRaw<{
+    response?: Array<{ players?: ApiSquadEntry[] }>;
+  }>(`/players/squads?team=${encodeURIComponent(teamExternalId)}`);
+  const list = data?.response?.[0]?.players ?? [];
+  if (list.length === 0) return [];
+
+  const rows: SquadPlayerRow[] = [];
+  for (const entry of list) {
+    const externalId = String(entry.id);
+    const slug = `${slugifyName(entry.name) || 'player'}-${externalId}`;
+    const player = await soft(
+      () =>
+        prisma.player.upsert({
+          where: { externalId },
+          create: {
+            externalId,
+            name: entry.name,
+            slug,
+            photoUrl: apiSportsPlayerPhoto(externalId, entry.photo),
+            position: entry.position ?? null,
+          },
+          update: {
+            photoUrl: apiSportsPlayerPhoto(externalId, entry.photo) ?? undefined,
+            position: entry.position ?? undefined,
+          },
+          select: {
+            id: true,
+            externalId: true,
+            name: true,
+            slug: true,
+            photoUrl: true,
+            position: true,
+            nationality: true,
+            birthDate: true,
+          },
+        }),
+      null
+    );
+    if (!player) continue;
+    await soft(async () => {
+      const existing = await prisma.playerTeam.findFirst({
+        where: { playerId: player.id, teamId, to: null },
+        select: { id: true },
+      });
+      if (existing) {
+        if (entry.number != null) {
+          await prisma.playerTeam.update({
+            where: { id: existing.id },
+            data: { shirtNumber: entry.number },
+          });
+        }
+        return existing;
+      }
+      return prisma.playerTeam.create({
+        data: {
+          playerId: player.id,
+          teamId,
+          shirtNumber: entry.number ?? null,
+        },
+      });
+    }, null);
+    rows.push({
+      id: `${player.id}-${teamId}`,
+      shirtNumber: entry.number ?? null,
+      player,
+    });
+  }
+  return rows;
+}
+
+type ApiCoachRow = {
+  id?: number;
+  name?: string;
+  photo?: string;
+  nationality?: string;
+  birth?: { date?: string };
+  career?: Array<{ team?: { name?: string }; start?: string; end?: string }>;
+};
+
+async function fetchCoachFromApi(teamExternalId: string) {
+  const data = await sportsData.getRaw<{ response?: ApiCoachRow[] }>(
+    `/coachs?team=${encodeURIComponent(teamExternalId)}`
+  );
+  const row = data?.response?.[0];
+  if (!row?.name) return null;
+  const career = (row.career || [])
+    .filter((stint) => stint.team?.name)
+    .slice(0, 8)
+    .map((stint) => ({
+      club: stint.team!.name!,
+      from: stint.start,
+      to: stint.end || undefined,
+    }));
+  return {
+    id: row.id != null ? String(row.id) : `api-${slugifyName(row.name)}`,
+    slug: slugifyCoachName(row.name, row.id != null ? String(row.id) : 'api'),
+    name: row.name,
+    photoUrl: apiSportsCoachPhoto(row.id != null ? String(row.id) : null, row.photo),
+    nationality: row.nationality ?? null,
+    bio: null,
+    birthDate: row.birth?.date ? new Date(row.birth.date) : null,
+    trophies: [] as Array<{ title: string; season: string; teamName: string | null }>,
+    career,
+  };
+}
+
+export type SeasonSlice = {
+  form?: string;
+  cleanSheets?: number;
+  failedToScore?: number;
+  biggestWin?: string;
+  biggestLoss?: string;
+  formations: Array<{ formation: string; played: number }>;
+};
+
+async function fetchSeasonSlice(
+  teamExternalId: string,
+  leagueExternalId: string | undefined,
+  season: string
+): Promise<SeasonSlice | null> {
+  if (!leagueExternalId) return null;
+  const data = await sportsData.getRaw<{
+    response?: {
+      form?: string;
+      fixtures?: { played?: { total?: number } };
+      goals?: { for?: { total?: { total?: number } }; against?: { total?: { total?: number } } };
+      clean_sheet?: { total?: number };
+      failed_to_score?: { total?: number };
+      biggest?: {
+        wins?: { home?: string | null; away?: string | null };
+        loses?: { home?: string | null; away?: string | null };
+      };
+      lineups?: Array<{ formation?: string; played?: number }>;
+    };
+  }>(
+    `/teams/statistics?league=${encodeURIComponent(leagueExternalId)}&season=${encodeURIComponent(season)}&team=${encodeURIComponent(teamExternalId)}`
+  );
+  const row = data?.response;
+  if (!row) return null;
+  const wins = [row.biggest?.wins?.home, row.biggest?.wins?.away].filter(Boolean) as string[];
+  const losses = [row.biggest?.loses?.home, row.biggest?.loses?.away].filter(Boolean) as string[];
+  const formations = (row.lineups || [])
+    .filter((item): item is { formation: string; played: number } => Boolean(item.formation && item.played))
+    .sort((a, b) => b.played - a.played)
+    .slice(0, 4);
+  const hasAnything =
+    Boolean(row.form) ||
+    typeof row.clean_sheet?.total === 'number' ||
+    typeof row.failed_to_score?.total === 'number' ||
+    wins.length > 0 ||
+    losses.length > 0 ||
+    formations.length > 0;
+  if (!hasAnything) return null;
+  return {
+    form: row.form || undefined,
+    cleanSheets: row.clean_sheet?.total,
+    failedToScore: row.failed_to_score?.total,
+    biggestWin: wins[0],
+    biggestLoss: losses[0],
+    formations,
+  };
+}
+
+type ApiTransferRow = {
+  player?: { id?: number; name?: string };
+  update?: string;
+  transfers?: Array<{
+    date?: string;
+    type?: string;
+    teams?: { in?: { name?: string }; out?: { name?: string } };
+  }>;
+};
+
+async function fetchTransfersFromApi(teamExternalId: string) {
+  const data = await sportsData.getRaw<{ response?: ApiTransferRow[] }>(
+    `/transfers?team=${encodeURIComponent(teamExternalId)}`
+  );
+  const rows = data?.response ?? [];
+  return rows
+    .map((row, index) => {
+      const move = row.transfers?.[0];
+      if (!row.player?.name || !move?.date) return null;
+      return {
+        id: `api-${row.player.id ?? index}-${move.date}`,
+        date: new Date(move.date),
+        fee: move.type ?? null,
+        fromTeam: move.teams?.out?.name ?? null,
+        toTeam: move.teams?.in?.name ?? null,
+        player: {
+          name: row.player.name,
+          slug: row.player.id ? `${slugifyName(row.player.name)}-${row.player.id}` : slugifyName(row.player.name),
+          photoUrl: null,
+        },
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 8) as TeamDossierData['transfers'];
+}
+
+export const loadTeamDossier = cache(async function loadTeamDossier(slug: string): Promise<TeamDossierData | null> {
+  const teamRow = await findTeamRowBySlug(slug);
 
   if (!teamRow) return null;
 
@@ -679,6 +941,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
               where: {
                 OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
                 status: { in: ['LIVE', 'HALFTIME'] },
+                kickoffAt: { gte: liveKickoffFloor() },
               },
               orderBy: { kickoffAt: 'asc' },
               take: 4,
@@ -703,7 +966,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
                 points: true,
                 seasonId: true,
                 league: {
-                  select: { id: true, name: true, slug: true, logoUrl: true, country: true },
+                  select: { id: true, externalId: true, name: true, slug: true, logoUrl: true, country: true },
                 },
               },
             }),
@@ -838,6 +1101,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
               where: {
                 OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
                 status: { in: ['LIVE', 'HALFTIME'] },
+                kickoffAt: { gte: liveKickoffFloor() },
               },
               orderBy: { kickoffAt: 'asc' },
               take: 4,
@@ -848,10 +1112,140 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
     ]);
   }
 
+  if (isLiveSportsApi()) {
+    const missingPhotos = (players as SquadPlayerRow[]).some((row) => !row.player.photoUrl);
+    if (players.length === 0 || missingPhotos) {
+      const apiSquad = await soft(() => hydrateSquadFromApi(teamId, teamRow.externalId), []);
+      if (apiSquad.length > 0) {
+        const byExternal = new Map(apiSquad.map((row) => [row.player.externalId, row]));
+        if (players.length === 0) {
+          players = apiSquad;
+        } else {
+          players = (players as SquadPlayerRow[]).map((row) => {
+            const hit = byExternal.get(row.player.externalId);
+            return {
+              ...row,
+              shirtNumber: row.shirtNumber ?? hit?.shirtNumber ?? null,
+              player: {
+                ...row.player,
+                photoUrl: apiSportsPlayerPhoto(row.player.externalId, hit?.player.photoUrl || row.player.photoUrl),
+                position: row.player.position || hit?.player.position || null,
+              },
+            };
+          });
+          for (const row of apiSquad) {
+            if (!(players as SquadPlayerRow[]).some((item) => item.player.externalId === row.player.externalId)) {
+              (players as SquadPlayerRow[]).push(row);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  players = (players as SquadPlayerRow[]).map((row) => ({
+    ...row,
+    player: {
+      ...row.player,
+      photoUrl: apiSportsPlayerPhoto(row.player.externalId, row.player.photoUrl),
+    },
+  }));
+
   players = await soft(
     () => hydrateSquadNationalities(teamRow.externalId, players as SquadPlayerRow[]),
     players as SquadPlayerRow[]
   );
+
+  const leagueHint =
+    standingRow?.league.externalId ||
+    (finished[0] as DossierMatch | undefined)?.league.externalId ||
+    (upcoming[0] as DossierMatch | undefined)?.league.externalId;
+  const seasonHint = standingRow?.seasonId || String(footballSeason(now));
+
+  let apiStanding = standingRow;
+  if (!apiStanding && leagueHint && isLiveSportsApi()) {
+    const table = await soft(() => sportsData.getStandings(leagueHint, seasonHint), []);
+    const hit = table.find((row) => row.team.externalId === teamRow.externalId || row.team.name === teamRow.name);
+    if (hit) {
+      apiStanding = {
+        rank: hit.rank,
+        played: hit.played,
+        won: hit.won,
+        drawn: hit.drawn,
+        lost: hit.lost,
+        goalsFor: hit.goalsFor,
+        goalsAgainst: hit.goalsAgainst,
+        points: hit.points,
+        seasonId: seasonHint,
+        league: standingRow?.league || {
+          id: (finished[0] as DossierMatch | undefined)?.league.id || leagueHint,
+          externalId: leagueHint,
+          name: (finished[0] as DossierMatch | undefined)?.league.name || '',
+          slug: (finished[0] as DossierMatch | undefined)?.league.slug || '',
+          logoUrl: (finished[0] as DossierMatch | undefined)?.league.logoUrl || null,
+          country: (finished[0] as DossierMatch | undefined)?.league.country || null,
+        },
+      };
+    }
+  }
+
+  const seasonSlice = await soft(
+    () =>
+      isLiveSportsApi()
+        ? fetchSeasonSlice(teamRow.externalId, leagueHint, seasonHint)
+        : Promise.resolve(null),
+    null
+  );
+
+  if (transfers.length === 0 && isLiveSportsApi()) {
+    transfers = await soft(() => fetchTransfersFromApi(teamRow.externalId), []);
+  }
+
+  const apiCoach = isLiveSportsApi()
+    ? await soft(() => fetchCoachFromApi(teamRow.externalId), null)
+    : null;
+
+  const neighborRows = standingRow
+    ? await soft(
+      () =>
+        prisma.standing.findMany({
+          where: { leagueId: standingRow.league.id, seasonId: standingRow.seasonId },
+          orderBy: { rank: 'asc' },
+          take: 40,
+          select: {
+            rank: true,
+            points: true,
+            played: true,
+            won: true,
+            drawn: true,
+            lost: true,
+            goalsFor: true,
+            goalsAgainst: true,
+            teamId: true,
+            team: { select: { id: true, name: true, slug: true, logoUrl: true } },
+          },
+        }),
+      []
+    )
+    : [];
+  const focusRank = apiStanding?.rank;
+  const tableWindow = neighborRows
+    .filter((row) => {
+      if (typeof focusRank !== 'number') return row.rank <= 8;
+      return row.rank >= Math.max(1, focusRank - 2) && row.rank <= focusRank + 2;
+    })
+    .map((row) => ({
+      rank: row.rank,
+      points: row.points,
+      played: row.played,
+      won: row.won,
+      drawn: row.drawn,
+      lost: row.lost,
+      goalsFor: row.goalsFor,
+      goalsAgainst: row.goalsAgainst,
+      team: row.team,
+      isUs: row.teamId === teamId,
+    }));
 
   const squad = emptySquad();
   const ages: number[] = [];
@@ -1075,16 +1469,22 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
     coach: teamRow.coach
       ? {
         id: teamRow.coach.id,
-        slug: slugifyCoachName(teamRow.coach.name, teamRow.coach.id),
+        slug: teamRow.coach.slug || slugifyCoachName(teamRow.coach.name, apiCoach?.id || teamRow.coach.id),
         name: teamRow.coach.name,
-        photoUrl: teamRow.coach.photoUrl,
-        nationality: teamRow.coach.nationality,
+        photoUrl: apiSportsCoachPhoto(
+          apiCoach?.id || (teamRow.coach.slug ? teamRow.coach.slug.match(/(\d+)$/)?.[1] : null),
+          apiCoach?.photoUrl || teamRow.coach.photoUrl
+        ),
+        nationality: teamRow.coach.nationality || apiCoach?.nationality || null,
         bio: teamRow.coach.bio,
-        birthDate: teamRow.coach.birthDate,
+        birthDate: teamRow.coach.birthDate || apiCoach?.birthDate || null,
         trophies: teamRow.coach.trophies,
-        career: parseCareer(teamRow.coach.careerHistory).slice(0, 6),
+        career: (parseCareer(teamRow.coach.careerHistory).length > 0
+          ? parseCareer(teamRow.coach.careerHistory)
+          : apiCoach?.career || []
+        ).slice(0, 6),
       }
-      : null,
+      : apiCoach,
   };
 
   const upcomingTyped = upcoming as DossierMatch[];
@@ -1103,7 +1503,9 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
     nextMatch: liveTyped[0] || upcomingTyped[0] || null,
     form,
     formTrail,
-    standing: standingRow,
+    standing: apiStanding,
+    seasonSlice,
+    tableWindow,
     stats: {
       ...stats,
       goalDiff: stats.goalsFor - stats.goalsAgainst,

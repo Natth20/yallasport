@@ -1,18 +1,48 @@
 .stage {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 960;
   isolation: isolate;
-  min-height: calc(100dvh - 4.5rem);
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  min-width: 100%;
+  min-height: 100%;
   display: grid;
   place-items: center;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 70% 42% at 50% 100%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 62%),
-    var(--ys-bg-0);
+    radial-gradient(ellipse 80% 48% at 50% 108%, color-mix(in srgb, var(--ys-orange) 22%, transparent), transparent 58%),
+    radial-gradient(ellipse 42% 30% at 12% 8%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 70%),
+    var(--ys-bg-0, var(--background));
+}
+
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--foreground) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 40%, transparent) 1px, transparent 1px);
+  background-size: 3.2rem 3.2rem;
+  mask-image: radial-gradient(70% 60% at 50% 45%, #000 12%, transparent 78%);
 }
 
 .compact {
-  min-height: 0;
+  position: relative;
+  inset: auto;
+  z-index: 0;
+  width: 100%;
+  height: auto;
+  min-height: 14rem;
   background: transparent;
+}
+
+.compact::before {
+  display: none;
 }
 
 .center {
@@ -21,14 +51,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  justify-content: center;
+  gap: 1.75rem;
+  padding: 2rem;
 }
 
 .word {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.55rem;
 }
 
 .compact .word {
@@ -36,14 +68,15 @@
 }
 
 .word strong {
-  font-size: clamp(1.28rem, 3vw, 1.75rem);
-  font-weight: var(--ys-weight-display);
-  letter-spacing: -0.04em;
-  color: var(--ys-text);
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  font-weight: var(--ys-weight-display, 900);
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--ys-text, var(--foreground));
 }
 
 .accent {
-  background-image: var(--gradient-metallic-orange);
+  background-image: var(--gradient-metallic-orange, linear-gradient(135deg, #ff7b00, #e05e00));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -51,9 +84,44 @@
 
 .word em {
   font-style: normal;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.32em;
+  font-size: clamp(0.72rem, 1.6vw, 0.88rem);
+  font-weight: 800;
+  letter-spacing: 0.36em;
   text-transform: uppercase;
-  color: var(--ys-text-muted);
+  color: var(--ys-text-muted, var(--muted-foreground));
+}
+
+.bar {
+  width: min(16rem, 58vw);
+  height: 0.28rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.bar i {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff9a3c, var(--ys-orange), #ff7b00);
+  animation: loadSweep 1.15s ease-in-out infinite;
+}
+
+@keyframes loadSweep {
+  0% {
+    transform: translateX(-140%);
+  }
+
+  100% {
+    transform: translateX(360%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar i {
+    animation: none;
+    width: 70%;
+    transform: none;
+  }
 }

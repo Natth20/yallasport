@@ -1,17 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
-import { todayOrLiveWhere } from '@/lib/sports-data/match-window';
+import { liveKickoffFloor, todayOrLiveWhere } from '@/lib/sports-data/match-window';
 import { frontDayWindow } from './window';
 import type { FrontPulse } from './types';
 
 export async function loadFrontPulse(): Promise<FrontPulse> {
   const { todayKey, start, end, now } = frontDayWindow();
-  return cachedJson(`front:pulse:${todayKey}`, 60, async () => {
+  return cachedJson(`front:pulse:${todayKey}:v2`, 20, async () => {
     const [matches, live, groups] = await Promise.all([
       prisma.match.count({ where: todayOrLiveWhere(start, end, now) }).catch(swallow('front.pulse.matches', 0)),
       prisma.match
-        .count({ where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: new Date(now.getTime() - 12 * 60 * 60 * 1000) } } })
+        .count({ where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor(now) } } })
         .catch(swallow('front.pulse.live', 0)),
       prisma.matchEvent
         .groupBy({

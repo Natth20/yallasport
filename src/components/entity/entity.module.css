@@ -50,6 +50,9 @@
 .entityInner {
   position: relative;
   z-index: 1;
+  width: min(1240px, calc(100% - 2rem));
+  margin-inline: auto;
+  padding: 1.6rem 0 3.2rem;
 }
 
 .entityBrand {
@@ -64,7 +67,7 @@
   font-weight: 800;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--ys-orange);
 }
 
 .entityPlayer :global(.psheet-photo) {
@@ -151,13 +154,548 @@
 }
 
 @keyframes ysBarGrow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .entityPlayer :global(.psheet-bars b),
   .entityClub :global(.psheet-bars b) {
     animation: none;
   }
+}
+
+.entityFrame :global(a) {
+  -webkit-text-fill-color: currentColor;
+}
+
+.entityFrame :global(.psheet-inner) {
+  width: min(1180px, calc(100% - 1.75rem));
+  margin-inline: auto;
+  padding: 1.6rem 0 3.6rem;
+}
+
+.entityFrame :global(.psheet-hero) {
+  position: relative;
+  display: grid;
+  gap: 1.45rem;
+  padding: 1.7rem 1.65rem 1.55rem;
+  border-radius: 1.65rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 42%),
+    var(--card);
+}
+
+.entityFrame :global(.psheet-hero)::before,
+.entityFrame :global(.psheet-hero)::after {
+  content: '';
+  position: absolute;
+  width: 0.7rem;
+  height: 0.7rem;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 45%, transparent);
+}
+
+.entityFrame :global(.psheet-hero)::before {
+  top: 0.5rem;
+  inset-inline-start: 0.5rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.entityFrame :global(.psheet-hero)::after {
+  bottom: 0.5rem;
+  inset-inline-end: 0.5rem;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+@media (min-width: 900px) {
+  .entityFrame :global(.psheet-hero) {
+    grid-template-columns: auto minmax(0, 1fr) minmax(14.5rem, 19rem);
+    align-items: center;
+  }
+}
+
+.entityFrame :global(.psheet-photo),
+.entityFrame :global(.tsheet-medallion) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 7.4rem;
+  height: 7.4rem;
+  overflow: hidden;
+  border-radius: 1.35rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 70%, transparent);
+}
+
+.entityFrame :global(.psheet-photo) {
+  width: 8.4rem;
+  height: 10.4rem;
+  background: #111;
+}
+
+.entityFrame :global(.psheet-photo img),
+.entityFrame :global(.psheet-photo span) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.entityFrame :global(.psheet-photo span) {
+  display: grid;
+  place-items: center;
+  color: var(--ys-orange);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.entityFrame :global(.psheet-photo b),
+.entityFrame :global(.tsheet-medallion b) {
+  position: absolute;
+  bottom: 0.35rem;
+  inset-inline-end: 0.35rem;
+  min-width: 1.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: #14110e;
+  -webkit-text-fill-color: #14110e;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.entityFrame :global(.psheet-kicker) {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.entityFrame :global(.psheet-intro h1) {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.entityFrame :global(.psheet-aka) {
+  margin: 0.3rem 0 0;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.entityFrame :global(.psheet-chips) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.entityFrame :global(.psheet-chip),
+.entityFrame :global(.psheet-compare) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.85rem;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 60%, transparent);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.entityFrame :global(.psheet-chip.is-alert) {
+  border-color: color-mix(in srgb, #e11d48 40%, var(--border));
+  color: #e11d48;
+}
+
+.entityFrame :global(.psheet-compare) {
+  margin-top: 0.7rem;
+  background: var(--ys-orange);
+  border-color: var(--ys-orange);
+  color: #14110e;
+  -webkit-text-fill-color: #14110e;
+}
+
+.entityFrame :global(.psheet-facts) {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.15rem 0.1rem;
+}
+
+.entityFrame :global(.psheet-facts div) {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.entityFrame :global(.psheet-facts dt) {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.entityFrame :global(.psheet-facts dd) {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: end;
+}
+
+.entityFrame :global(.psheet-kpis) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 760px) {
+  .entityFrame :global(.psheet-kpis) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.entityFrame :global(.psheet-kpis li) {
+  padding: 0.95rem 0.95rem 0.85rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: var(--card);
+}
+
+.entityFrame :global(.psheet-kpis strong) {
+  display: block;
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.entityFrame :global(.psheet-kpis span) {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.entityFrame :global(.psheet-layout) {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.35rem;
+  align-items: start;
+}
+
+@media (min-width: 1020px) {
+  .entityFrame :global(.psheet-layout) {
+    grid-template-columns: minmax(0, 1fr) 18.5rem;
+  }
+}
+
+.entityFrame :global(.psheet-main),
+.entityFrame :global(.psheet-rail) {
+  display: grid;
+  gap: 1.05rem;
+  align-content: start;
+}
+
+.entityFrame :global(.psheet-card),
+.entityFrame :global(.tsheet-block),
+.entityFrame :global(.psheet-comp) {
+  padding: 1.15rem 1.15rem 1.05rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+}
+
+.entityFrame :global(.psheet-head h2),
+.entityFrame :global(.tsheet-mark h2) {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.entityFrame :global(.psheet-head p),
+.entityFrame :global(.tsheet-mark p) {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+.entityFrame :global(.psheet-split) {
+  display: grid;
+  gap: 0.7rem;
+}
+
+@media (min-width: 760px) {
+  .entityFrame :global(.psheet-split) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.entityFrame :global(.psheet-bars) {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.entityFrame :global(.psheet-bars p) {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+}
+
+.entityFrame :global(.psheet-bars i) {
+  display: block;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  overflow: hidden;
+}
+
+.entityFrame :global(.psheet-bars b) {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ys-orange);
+}
+
+.entityFrame :global(.psheet-rates) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entityFrame :global(.psheet-list),
+.entityFrame :global(.psheet-people),
+.entityFrame :global(.psheet-honours),
+.entityFrame :global(.psheet-news),
+.entityFrame :global(.psheet-log) {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entityFrame :global(.psheet-list li),
+.entityFrame :global(.psheet-people li),
+.entityFrame :global(.psheet-honours li),
+.entityFrame :global(.psheet-news li),
+.entityFrame :global(.psheet-log li) {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.entityFrame :global(.psheet-people a) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.entityFrame :global(.psheet-list em),
+.entityFrame :global(.psheet-honours em),
+.entityFrame :global(.psheet-news em) {
+  font-style: normal;
+  font-size: 0.74rem;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+}
+
+.entityFrame :global(.tsheet-form) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.7rem;
+}
+
+.entityFrame :global(.tsheet-pip) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.entityFrame :global(.tsheet-pip.is-w) {
+  background: color-mix(in srgb, #16a34a 20%, transparent);
+}
+
+.entityFrame :global(.tsheet-pip.is-d) {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.entityFrame :global(.tsheet-pip.is-l) {
+  background: color-mix(in srgb, #e11d48 16%, transparent);
+}
+
+.entityFrame :global(.tsheet-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  align-items: center;
+}
+
+.entityFrame :global(.tsheet-slip) {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.9rem 0.95rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.entityFrame :global(.tsheet-slip.is-live) {
+  border-color: color-mix(in srgb, #e11d48 35%, var(--border));
+}
+
+.entityFrame :global(.tsheet-slip > p) {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.72rem;
+}
+
+.entityFrame :global(.tsheet-slip > div) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.entityFrame :global(.tsheet-slip > div span) {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.entityFrame :global(.tsheet-slip > div span:last-child) {
+  justify-content: flex-end;
+}
+
+.entityFrame :global(.tsheet-slip > div i) {
+  font-style: normal;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.entityFrame :global(.tsheet-squad) {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 720px) {
+  .entityFrame :global(.tsheet-squad) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.entityFrame :global(.tsheet-squad a) {
+  display: grid;
+  grid-template-columns: 1.4rem 2.35rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.45rem;
+  border-radius: 0.8rem;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.entityFrame :global(.tsheet-squad img),
+.entityFrame :global(.tsheet-squad a > span:first-of-type) {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.entityFrame :global(.tsheet-squad em) {
+  display: block;
+  font-style: normal;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.entityFrame :global(.tsheet-chapter h3) {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.8rem 0 0;
+  font-size: 0.95rem;
+}
+
+.entityFrame :global(.psheet-tr) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.entityFrame :global(.psheet-tr.is-head) {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.entityFrame :global(.psheet-comp-top) {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 800;
+}
+
+.entityFrame :global(.tsheet-standing) {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.entityFrame :global(.tsheet-standing-cells) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entityFrame :global(.tsheet-board) {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
 }

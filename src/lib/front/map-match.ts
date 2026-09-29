@@ -1,3 +1,4 @@
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import type { FrontMatch } from './types';
 
 export const frontMatchSelect = {
@@ -24,7 +25,7 @@ type MatchRow = {
   league: { id: string; name: string; slug: string; logoUrl: string | null; country: string | null };
 };
 
-export function toFrontMatch(row: MatchRow): FrontMatch {
+export function toFrontMatch(row: MatchRow, locale: string): FrontMatch {
   return {
     id: row.id,
     status: row.status,
@@ -32,8 +33,12 @@ export function toFrontMatch(row: MatchRow): FrontMatch {
     awayScore: row.awayScore,
     minute: row.minute,
     kickoffAt: new Date(row.kickoffAt).toISOString(),
-    homeTeam: row.homeTeam,
-    awayTeam: row.awayTeam,
-    league: row.league,
+    homeTeam: { ...row.homeTeam, name: localizePlainName(locale, row.homeTeam.name) },
+    awayTeam: { ...row.awayTeam, name: localizePlainName(locale, row.awayTeam.name) },
+    league: {
+      ...row.league,
+      name: localizePlainName(locale, row.league.name),
+      country: row.league.country ? localizePlainName(locale, row.league.country) : row.league.country,
+    },
   };
 }

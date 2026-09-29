@@ -24,6 +24,13 @@ const DEFAULT_SETTINGS: SettingsContextType = {
 
 function readDataSaver(): boolean {
   try {
+    const cookie = document.cookie.match(/(?:^|; )yalla-data-saver=(1|0)/);
+    if (cookie?.[1] === '1') return true;
+    if (cookie?.[1] === '0') return false;
+  } catch {
+    /* cookie blocked */
+  }
+  try {
     return JSON.parse(localStorage.getItem(DATA_SAVER_KEY) || 'false') === true;
   } catch (error) {
     reportCaughtError("src/lib/context/SettingsContext.tsx:26", error, { persist: false });
@@ -43,6 +50,7 @@ function syncReducedMotionDom() {
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [dataSaver, setDataSaver] = useState(false);
+  const [ready, setReady] = useState(false);
   const [timezone, setTimezoneState] = useState('Asia/Riyadh');
   const [timezoneMode, setTimezoneMode] = useState<'auto' | 'manual'>('auto');
 
@@ -50,6 +58,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const saved = readDataSaver();
     setDataSaver(saved);
     syncDataSaverDom(saved);
+    setReady(true);
 
     const savedTimezone = localStorage.getItem('yalla-timezone');
     const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Riyadh';
@@ -65,8 +74,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     syncDataSaverDom(dataSaver);
-  }, [dataSaver]);
+  }, [dataSaver, ready]);
 
   const toggleDataSaver = useCallback(() => {
     setDataSaver((current) => {

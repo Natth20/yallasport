@@ -13,7 +13,17 @@
 .rail {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: var(--ys-space-3);
+  gap: var(--ys-space-4);
+}
+
+@media (min-width: 960px) {
+  .rail {
+    grid-template-columns: 1.7fr 1fr 1fr 1fr;
+  }
+
+  .clip:first-child strong {
+    font-size: var(--ys-font-h5);
+  }
 }
 
 .clip {
@@ -32,9 +42,19 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  border-radius: var(--ys-radius-ui);
+  border-radius: var(--ys-radius-sharp);
   background: var(--ys-bg-3);
-  box-shadow: var(--ys-elev-1);
+  box-shadow: var(--ys-elev-2);
+  transition: transform var(--ys-duration) var(--ys-ease);
+}
+
+.clip:hover img {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clip img { transition: none; }
+  .clip:hover img { transform: none; }
 }
 
 .clip strong {

@@ -51,7 +51,13 @@
   height: 7.5rem;
 }
 
+.xl {
+  width: clamp(10.5rem, 22vw, 16rem);
+  height: clamp(10.5rem, 22vw, 16rem);
+}
+
 @keyframes metalPulse {
+
   0%,
   100% {
     transform: scale(1);
@@ -69,6 +75,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .logo,
   .sheen::after {
     animation: none;

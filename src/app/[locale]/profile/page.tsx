@@ -2,19 +2,22 @@ import React, { Suspense } from 'react';
 import { auth } from '@/lib/auth/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import { User, Heart, Bell } from 'lucide-react';
+import { Shield, User, Heart, Bell, Pencil } from 'lucide-react';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 import { Link } from '@/i18n/navigation';
 import { format } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { NotificationSettings } from './NotificationSettings';
 import { PAYMENTS_ENABLED, subscriptionLabel, isPremiumSubscriber } from '@/lib/auth/premium';
+import { isStaffRole } from '@/lib/auth/admin-access';
 import { getLocale } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { SalonStage } from '@/components/salon/SalonStage';
+import { HallFoyer } from '@/components/salon/HallFoyer';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import styles from './profile.module.css';
 
 const emptyPrefs = {
@@ -106,10 +109,10 @@ async function ProfilePageBody() {
   ]);
   const favoriteDetails = new Map<string, { name: string; href: string }>();
   const versus = pick(locale, 'ضد', 'vs');
-  teams.forEach((team) => favoriteDetails.set(team.id, { name: team.name, href: `/team/${team.slug}` }));
-  leagues.forEach((league) => favoriteDetails.set(league.id, { name: league.name, href: `/league/${league.slug}` }));
+  teams.forEach((team) => favoriteDetails.set(team.id, { name: localizePlainName(locale, team.name), href: `/team/${team.slug}` }));
+  leagues.forEach((league) => favoriteDetails.set(league.id, { name: localizePlainName(locale, league.name), href: `/league/${league.slug}` }));
   matches.forEach((match) => favoriteDetails.set(match.id, {
-    name: `${match.homeTeam.name} ${versus} ${match.awayTeam.name}`,
+    name: `${localizePlainName(locale, match.homeTeam.name)} ${versus} ${localizePlainName(locale, match.awayTeam.name)}`,
     href: `/match/${match.id}`,
   }));
 
@@ -138,39 +141,44 @@ async function ProfilePageBody() {
 
   return (
     <SalonStage
-      tone="vault"
+      tone="pass"
       wide
-      kicker={pick(locale, 'الحساب', 'Account')}
+      compact
+      kicker={pick(locale, 'بطاقة العضوية', 'Membership')}
       title={displayName}
       lead={user.role}
-      aside={
-        <Badge variant={premium ? 'accent' : 'outline'} size="sm">
-          {subscriptionLabel(user.subscriptionStatus, locale)} · {user.points} {pick(locale, 'نقطة', 'pts')}
-        </Badge>
-      }
+      aside={`${user.points} ${pick(locale, 'نقطة', 'pts')}`}
       tools={
-        <div className={styles.nav}>
-          <Link href="/profile/edit">
-            <User aria-hidden="true" />
-            {pick(locale, 'تعديل الملف', 'Edit profile')}
-          </Link>
-          <Link href="/favorites">
-            <Heart aria-hidden="true" />
-            {pick(locale, 'صفحة المفضلة', 'Favorites page')}
-          </Link>
-          <Link href="/settings/notifications">
-            <Bell aria-hidden="true" />
-            {pick(locale, 'إعدادات التنبيهات', 'Notification settings')}
-          </Link>
+        <HallFoyer
+          label={pick(locale, 'جناح الحساب', 'Account suite')}
+          items={[
+            { href: '/profile', label: pick(locale, 'الملف', 'Profile'), icon: User, current: true },
+            { href: '/profile/edit', label: pick(locale, 'تعديل', 'Edit'), icon: Pencil },
+            { href: '/favorites', label: pick(locale, 'المفضلة', 'Favorites'), icon: Heart },
+            { href: '/settings', label: pick(locale, 'الإعدادات', 'Settings'), icon: Bell },
+            ...(isStaffRole(user.role)
+              ? [{ href: '/admin', label: pick(locale, 'لوحة التحكم', 'Control desk'), icon: Shield }]
+              : []),
+          ]}
+        />
+      }
+    >
+      <div className={styles.stack}>
+        <section className={styles.pass}>
+          <p>{pick(locale, 'السجل', 'Record')}</p>
+          <strong>{displayName}</strong>
+          <em>{user.email}</em>
+          <span>
+            {subscriptionLabel(user.subscriptionStatus, locale)}
+            {premium ? ` · ${pick(locale, 'مميز', 'Premium')}` : ''}
+          </span>
           <SignOutButton
             locale={locale}
             label={pick(locale, 'تسجيل الخروج', 'Sign out')}
             className={styles.signOut}
           />
-        </div>
-      }
-    >
-      <div className={styles.stack}>
+        </section>
+
         <section>
           <div className={styles.head}>
             <h2>{pick(locale, 'مفضلاتي', 'My favorites')}</h2>

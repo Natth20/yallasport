@@ -1,121 +1,613 @@
-/* ══════════════════════════════════════════════════════════════════════
-   YALLA SPORT — ABOUT HOUSE & BRAND SANCTUARY
-   Ultra-Minimalist Luxury Design
-   ══════════════════════════════════════════════════════════════════════ */
-
-.aboutHouse {
-  position: relative;
-  isolation: isolate;
-  min-height: 100dvh;
+.house {
+  display: grid;
+  gap: 1.95rem;
 }
 
-/* Very subtle background light, no harsh colors */
-.aboutHouse::before {
-  content: '';
-  position: absolute;
-  top: -10%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 1200px;
-  height: 60vh;
-  background: radial-gradient(ellipse at top, color-mix(in srgb, var(--primary) 6%, transparent), transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-.aboutMaisonHero {
-  position: relative;
-  background: color-mix(in srgb, var(--card) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
-:global(html.dark) .aboutMaisonHero {
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
-}
-
-.aboutStatCard {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  background: color-mix(in srgb, var(--card) 50%, transparent);
-  padding: 1.5rem;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
-  backdrop-filter: blur(12px);
-}
-
-.aboutStatCard:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
-  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08);
-}
-
-:global(html.dark) .aboutStatCard:hover {
-  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
-}
-
-.aboutStatCard::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  inset-inline-start: 10%;
-  width: 80%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--primary) 40%, transparent), transparent);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.aboutStatCard:hover::after {
-  opacity: 1;
-}
-
-.aboutPillarCard {
-  position: relative;
-  height: 100%;
-  border-radius: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  background: color-mix(in srgb, var(--card) 40%, transparent);
-  padding: 2rem;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
-  backdrop-filter: blur(12px);
-}
-
-.aboutPillarCard:hover {
-  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
-}
-
-:global(html.dark) .aboutPillarCard:hover {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
-}
-
-.aboutDoorCard {
+.toc {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 1.5rem;
-  border-radius: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  background: color-mix(in srgb, var(--card) 50%, transparent);
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.2rem 0;
+  scrollbar-width: none;
+}
+
+.toc::-webkit-scrollbar {
+  display: none;
+}
+
+.toc a {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  color: var(--foreground);
   text-decoration: none;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.toc a:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.35rem 1.3rem 1.45rem;
+  border-radius: 0.3rem 1.4rem 1.4rem 0.3rem;
+  border: 1px solid color-mix(in srgb, #7f1d1d 22%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, #d6c4a3 12%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+    0 18px 40px color-mix(in srgb, #7f1d1d 6%, transparent);
+}
+
+.panelHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.panelHead p {
+  margin: 0 0 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.panelHead h2 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+  letter-spacing: -0.02em;
+}
+
+.panelHead em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+}
+
+.livePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.livePill i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+}
+
+.duo {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 860px) {
+  .duo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pillar {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1.2rem 1.15rem;
+  border-radius: 0.25rem 1.2rem 1.2rem 0.25rem;
+  border: 1px solid color-mix(in srgb, #7f1d1d 22%, var(--border));
+  border-inline-start: 3px solid #7f1d1d;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #d6c4a3 8%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card) 80%, transparent);
+}
+
+.pillar span {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--ys-orange);
+}
+
+.pillar h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.pillar p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.quote {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.25rem 1.2rem;
+  border-radius: 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ys-orange) 7%, transparent), transparent 55%),
+    color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.quote b {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.quote blockquote {
+  margin: 0;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.55;
+  letter-spacing: -0.02em;
+}
+
+.quote footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+@media (min-width: 720px) {
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stat {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1rem 0.95rem;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: var(--card);
   color: inherit;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, background 0.4s ease, box-shadow 0.4s ease;
-  backdrop-filter: blur(12px);
+  text-decoration: none;
 }
 
-.aboutDoorCard:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+.stat:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 42%, transparent);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.stat.is-live {
+  border-color: color-mix(in srgb, var(--ys-orange) 36%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+}
+
+.stat strong {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.stat em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-style: normal;
+  color: var(--muted-foreground);
+}
+
+.wire {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.wireHead {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.wireHead i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+}
+
+.wireGrid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+@media (min-width: 760px) {
+  .wireGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .wireGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.match {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.85rem 0.9rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 55%, var(--card));
+  color: inherit;
+  text-decoration: none;
+}
+
+.match:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, transparent);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.match span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+}
+
+.match b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
+.match em {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.empty {
+  margin: 0;
+  padding: 0.85rem 0.2rem;
+  font-size: 0.82rem;
+  color: var(--muted-foreground);
+}
+
+.grid4 {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .grid4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.card {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  height: 100%;
+  padding: 1.05rem 1rem;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: var(--card);
+}
+
+.card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.card header em {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.row b {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  color: var(--ys-orange);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+}
+
+.row h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+}
+
+.row p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.split {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 960px) {
+  .split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.doors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+@media (min-width: 760px) {
+  .doors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .doors {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.door {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1rem 0.95rem;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+}
+
+.door:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 42%, transparent);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.door span {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--ys-orange);
+}
+
+.door strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.door em {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.72rem;
+  font-style: normal;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+.checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.checks li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.checks i {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.cta,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.cta {
+  border: 0;
+  background: var(--ys-orange);
+  color: #111;
+}
+
+.cta:hover {
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+
+.ghost {
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
   background: color-mix(in srgb, var(--card) 80%, transparent);
-  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05);
+  color: var(--foreground);
 }
 
-:global(html.dark) .aboutDoorCard:hover {
-  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.4);
+.ghost:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.legal a {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.legal a:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.langs {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.langRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.langRow span {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.colo {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
 }

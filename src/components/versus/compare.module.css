@@ -1,7 +1,7 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.85rem;
 }
 
 .duel {
@@ -9,6 +9,12 @@
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: clamp(0.65rem, 2vw, 1.5rem);
+  padding: 1.05rem 0.95rem;
+  border-radius: 1.55rem;
+  border: 1px solid color-mix(in srgb, #c2410c 20%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, #c2410c 10%, transparent) 0%, transparent 46%, color-mix(in srgb, #475569 12%, transparent) 100%),
+    color-mix(in srgb, var(--card) 88%, transparent);
 }
 
 .side {
@@ -26,9 +32,19 @@
   width: clamp(4.25rem, 12vw, 6.5rem);
   height: clamp(4.25rem, 12vw, 6.5rem);
   padding: 0.55rem;
-  border-radius: var(--radius-lg);
+  border-radius: 1.15rem;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--card) 80%, transparent);
+}
+
+.duel> :first-child .crest {
+  border-color: color-mix(in srgb, #c2410c 36%, var(--border));
+  box-shadow: 0 12px 28px color-mix(in srgb, #c2410c 12%, transparent);
+}
+
+.duel> :last-child .crest {
+  border-color: color-mix(in srgb, #64748b 36%, var(--border));
+  box-shadow: 0 12px 28px color-mix(in srgb, #64748b 14%, transparent);
 }
 
 .crestImg {
@@ -70,14 +86,15 @@
 .vs {
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-full);
-  background: var(--ys-orange);
+  width: 3.4rem;
+  height: 3.4rem;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  background: linear-gradient(135deg, #c2410c, var(--ys-orange));
   color: #fff;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--ys-orange) 28%, transparent);
 }
 
 .head {
@@ -235,6 +252,12 @@
 .rules {
   display: grid;
   gap: 0.75rem;
+}
+
+.facts> :only-child,
+.meetings> :only-child,
+.rules> :only-child {
+  max-width: 22rem;
 }
 
 .meeting {
@@ -495,6 +518,7 @@
 }
 
 @media (min-width: 640px) {
+
   .facts,
   .meetings {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -513,6 +537,7 @@
 }
 
 @media (min-width: 960px) {
+
   .rules,
   .meetings {
     grid-template-columns: repeat(4, minmax(0, 1fr));

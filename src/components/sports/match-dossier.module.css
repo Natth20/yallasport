@@ -6,12 +6,113 @@
 
 .matchCenter {
   isolation: isolate;
-  background:
-    radial-gradient(85% 45% at 50% 0%, color-mix(in srgb, var(--ys-green-dark, #0a4d3a) 12%, transparent), transparent 65%),
-    var(--background);
+  display: grid;
+  gap: 1.65rem;
+  background: transparent;
   color: var(--foreground);
-  padding-bottom: 6rem;
-  min-height: 100vh;
+  padding-bottom: 0.5rem;
+  min-height: 0;
+}
+
+.nightPitch {
+  padding: 0.85rem 0.7rem 1.1rem;
+  border-radius: 1.7rem;
+  border: 1px solid color-mix(in srgb, #86efac 16%, var(--border));
+  background:
+    radial-gradient(70% 40% at 50% 0%, color-mix(in srgb, #f8fafc 10%, transparent), transparent 55%),
+    radial-gradient(48% 28% at 50% 100%, color-mix(in srgb, #14532d 28%, transparent), transparent 58%),
+    color-mix(in srgb, #0b1220 55%, transparent);
+}
+
+.dayRail {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.dayRailHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dayRailHead p {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.dayRailHead h3 {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.dayRailHead span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.dayRailList {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.15rem 0 0.35rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.dayRailCard {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 16.5rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  text-decoration: none;
+  color: inherit;
+}
+
+.dayRailCard:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 42%, var(--border));
+}
+
+.dayRailNum {
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--ys-orange);
+}
+
+.dayRailCopy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.dayRailCopy b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.dayRailCopy i {
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
 }
 
 /* ==========================================================================
@@ -21,12 +122,25 @@
 .hero {
   position: relative;
   overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 32rem;
+  height: auto;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: 0;
+  margin-bottom: 0;
   background:
-    radial-gradient(65% 60% at 80% 10%, rgba(249, 115, 22, 0.2), transparent 60%),
-    radial-gradient(70% 65% at 15% 95%, rgba(16, 185, 129, 0.25), transparent 65%),
-    linear-gradient(180deg, #070d18 0%, #03060c 100%);
-  color: #fff;
-  border-bottom: 1px solid color-mix(in srgb, #fff 10%, transparent);
+    radial-gradient(55% 70% at 88% 0%, color-mix(in srgb, var(--ys-orange) 28%, transparent), transparent 58%),
+    radial-gradient(40% 50% at 8% 100%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 60%),
+    linear-gradient(180deg, #14110e 0%, #0b0b0b 100%);
+  color: #f6f1ea;
+  box-shadow: none;
+}
+
+.hero::before,
+.hero::after {
+  display: none;
 }
 
 .heroAurora {
@@ -41,9 +155,10 @@
   composes: heroAurora;
   top: -6rem;
   inset-inline-start: -4rem;
-  width: 22rem;
-  height: 22rem;
-  background: radial-gradient(circle, #10b981, transparent 70%);
+  width: 18rem;
+  height: 18rem;
+  background: radial-gradient(circle, var(--ys-orange), transparent 70%);
+  opacity: 0.28;
 }
 
 .auroraRight {
@@ -67,12 +182,23 @@
   mask-image: radial-gradient(70% 70% at 50% 50%, #000 30%, transparent 80%);
 }
 
+.hero a,
+.hero button {
+  -webkit-text-fill-color: currentColor;
+}
+
 .heroContent {
   position: relative;
   z-index: 2;
-  width: min(1280px, calc(100% - 2rem));
+  width: 100%;
   margin-inline: auto;
-  padding-block: 1.5rem 2.25rem;
+  padding: 1.45rem 1.7rem 1.85rem;
+}
+
+@media (min-width: 900px) {
+  .heroContent {
+    padding: 1.85rem 2.5rem 2.15rem;
+  }
 }
 
 /* ---- Top Breadcrumb & Status Bar ---- */
@@ -135,8 +261,13 @@
 }
 
 @keyframes liveDotPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-  100% { box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0);
+  }
 }
 
 /* ==========================================================================
@@ -147,8 +278,8 @@
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 1.5rem;
-  margin-block: 2.25rem 2rem;
+  gap: 2rem;
+  margin-block: 1.85rem 1.65rem;
 }
 
 @media (max-width: 640px) {
@@ -169,10 +300,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(4.5rem, 10vw, 7rem);
-  height: clamp(4.5rem, 10vw, 7rem);
-  padding: 0.6rem;
-  border-radius: 1.6rem;
+  width: clamp(5.2rem, 12vw, 8.4rem);
+  height: clamp(5.2rem, 12vw, 8.4rem);
+  padding: 0.7rem;
+  border-radius: 1.7rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(16px);
@@ -299,16 +430,87 @@
   gap: 0.6rem;
 }
 
+.stageFollow,
+.hero .stageFollow {
+  min-height: 2.45rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 140, 0, 0.72);
+  background: linear-gradient(135deg, #ff7b00 0%, #e05e00 100%);
+  color: #0b0b0b;
+  -webkit-text-fill-color: #0b0b0b;
+  box-shadow:
+    0 8px 22px -10px rgba(255, 123, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.stageFollow:hover,
+.hero .stageFollow:hover {
+  color: #0b0b0b;
+  -webkit-text-fill-color: #0b0b0b;
+}
+
+.stageFollow[data-on='true'],
+.hero .stageFollow[data-on='true'] {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  box-shadow: none;
+}
+
+.stageFollow[data-on='true']:hover,
+.hero .stageFollow[data-on='true']:hover {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
+.stageAction,
+.hero .stageAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.stageAction:hover,
+.hero .stageAction:hover {
+  border-color: rgba(255, 140, 0, 0.55);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+
+.stageActionOn,
+.hero .stageActionOn {
+  border-color: rgba(255, 140, 0, 0.7);
+  background: linear-gradient(135deg, #ff7b00 0%, #e05e00 100%);
+  color: #0b0b0b;
+  -webkit-text-fill-color: #0b0b0b;
+}
+
+.stageActionOn:hover,
+.hero .stageActionOn:hover {
+  color: #0b0b0b;
+  -webkit-text-fill-color: #0b0b0b;
+}
+
 /* ==========================================================================
    MAIN DOSSIER LAYOUT & TABS
    ========================================================================== */
 
 .mainLayout {
-  width: min(1280px, calc(100% - 2rem));
-  margin-inline: auto;
-  padding-block: 2.25rem 4rem;
+  width: 100%;
+  min-width: 0;
   display: grid;
-  gap: 2.25rem;
+  gap: 1.65rem;
 }
 
 @media (min-width: 1100px) {
@@ -379,7 +581,7 @@
   composes: tabButton;
   color: #fff;
   background: var(--primary);
-  box-shadow: 0 4px 14px -4px rgba(10, 77, 58, 0.6);
+  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--ys-orange) 55%, transparent);
 }
 
 /* ---- Events Timeline ---- */
@@ -587,7 +789,7 @@
 }
 
 .statMeterHome {
-  background: linear-gradient(90deg, #10b981, #059669);
+  background: color-mix(in srgb, var(--foreground) 72%, transparent);
   transition: width 400ms ease;
 }
 
@@ -967,3 +1169,452 @@
   flex-shrink: 0;
 }
 
+/* ---- Match context pack (real API / DB rows only) ---- */
+.pack {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 1.15rem;
+}
+
+.packHead {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 0.4rem;
+}
+
+.packKicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.packTitle {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.packLead {
+  margin: 0;
+  max-width: 46rem;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.packFacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.packFact {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ys-orange) 8%, var(--card)), var(--card));
+}
+
+.packFactIcon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--ys-orange);
+}
+
+.packFactLabel {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.packFactValue {
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.packBand {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.15rem 1.15rem 1.25rem;
+  border-radius: 1.4rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+}
+
+.packBandHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.packBandHead h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.packBandIcon {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--ys-orange);
+}
+
+.packCount,
+.packMore {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.packMore:hover {
+  text-decoration: underline;
+}
+
+.packTape {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  list-style: none;
+  margin: 0;
+}
+
+.packTapeHome,
+.packTapeAway {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 9.5rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+}
+
+.packTapeHome {
+  background: color-mix(in srgb, #10b981 10%, var(--card));
+}
+
+.packTapeAway {
+  background: color-mix(in srgb, #3b82f6 10%, var(--card));
+}
+
+.packTapeMin {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--ys-orange);
+}
+
+.packTapeName {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.packTapeAssist,
+.packTapeTag {
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+}
+
+.packDuel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 860px) {
+  .packDuel {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.packBoardHome,
+.packBoardAway {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.1rem;
+  border-radius: 1.4rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.packBoardHome {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #10b981 16%, transparent);
+}
+
+.packBoardAway {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #3b82f6 16%, transparent);
+}
+
+.packBoardHead {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.packBoardHead strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.packBoardHead em {
+  display: block;
+  font-style: normal;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+
+.packBoardCrest,
+.packMiniCrest {
+  width: 1.7rem;
+  height: 1.7rem;
+  object-fit: contain;
+}
+
+.packPips {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.formWin,
+.formLoss,
+.formDraw {
+  display: inline-flex;
+  width: 1.45rem;
+  height: 1.45rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.formWin {
+  background: #059669;
+}
+
+.formLoss {
+  background: #dc2626;
+}
+
+.formDraw {
+  background: color-mix(in srgb, var(--foreground) 28%, transparent);
+}
+
+.packRecent,
+.packFixtureGrid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+@media (min-width: 720px) {
+  .packFixtureGrid {
+    grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  }
+}
+
+.packFixture {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.75rem 0.8rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 2.5%, var(--card));
+  color: inherit;
+  text-decoration: none;
+}
+
+.packFixture:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+}
+
+.packFixtureLeague,
+.packFixtureTime {
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.packFixtureRow {
+  display: grid;
+  grid-template-columns: 1.4rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.packFixtureName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.packFixtureScore {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86rem;
+}
+
+.packH2hBar {
+  display: flex;
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.packH2hHome {
+  background: #e05e00;
+}
+
+.packH2hDraw {
+  background: color-mix(in srgb, var(--foreground) 28%, transparent);
+}
+
+.packH2hAway {
+  background: var(--ys-orange);
+}
+
+.packH2hLegend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.packTableWrap {
+  overflow-x: auto;
+}
+
+.packTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.packTable th,
+.packTable td {
+  padding: 0.45rem 0.4rem;
+  text-align: start;
+  border-bottom: 1px solid var(--border);
+}
+
+.packTable th {
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.packTableHot {
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+.packTableTeam {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.packScorers {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 860px) {
+  .packScorers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.packScorer {
+  display: grid;
+  grid-template-columns: 1.4rem 2.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+}
+
+.packScorerRank {
+  font-weight: 900;
+  color: var(--ys-orange);
+}
+
+.packScorerPhoto,
+.packScorerGhost {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.packScorerGhost {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.packScorer strong,
+.packScorer em {
+  display: block;
+}
+
+.packScorer em {
+  font-style: normal;
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+}
+
+.packScorer b {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+}
+
+.packNews {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 720px) {
+  .packNews {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .packNews {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.packFoot {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}

@@ -33,7 +33,7 @@ export function FrontMark({
 }
 
 export function FrontSkeleton({ kind }: { kind: 'hero' | 'pulse' | 'chapter' }) {
-  if (kind === 'hero') return <BrandBuildScreen compact />;
+  if (kind === 'hero') return <BrandBuildScreen />;
   if (kind === 'pulse') return <div className={page.skelPulse} aria-hidden />;
   return <div className={page.skelChapter} aria-hidden />;
 }

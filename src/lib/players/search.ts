@@ -41,12 +41,16 @@ function rankScore(name: string, slug: string, query: string) {
   return 6;
 }
 
+const memo = new Map<string, { at: number; hits: PlayerSearchHit[] }>();
+
 async function fromLedger(q: string, locale: string): Promise<PlayerSearchHit[]> {
+  const slugBit = q.toLowerCase().replace(/\s+/g, '-');
   const rows = await prisma.player.findMany({
     where: {
       OR: [
         { name: { contains: q, mode: 'insensitive' } },
         { officialName: { contains: q, mode: 'insensitive' } },
+        { slug: { contains: slugBit, mode: 'insensitive' } },
       ],
     },
     take: 12,
@@ -54,14 +58,13 @@ async function fromLedger(q: string, locale: string): Promise<PlayerSearchHit[]>
       name: true,
       slug: true,
       photoUrl: true,
-      teams: { where: { to: null }, take: 1, select: { team: { select: { name: true } } } },
     },
   });
   return rows.map((row) => ({
     name: localizePlainName(locale, row.name),
     slug: row.slug,
     photoUrl: row.photoUrl,
-    teamName: row.teams[0]?.team.name ? localizePlainName(locale, row.teams[0].team.name) : null,
+    teamName: null,
   }));
 }
 
@@ -154,13 +157,31 @@ function mergeHits(query: string, batches: PlayerSearchHit[][]): PlayerSearchHit
 export async function searchPlayers(q: string, locale: string): Promise<PlayerSearchHit[]> {
   const query = q.trim().slice(0, 80);
   if (query.length < 2) return [];
+  const memoKey = `${locale}:${query.toLowerCase()}`;
+  const cached = memo.get(memoKey);
+  if (cached && Date.now() - cached.at < 45_000) return cached.hits;
+
   const latin = sourceSearchQuery(query);
   const mapped = latin !== query;
   const sourceQuery = latin.length >= 3 ? latin : query;
-  const [ledgerNative, ledgerLatin, source] = await Promise.all([
+  const [ledgerNative, ledgerLatin] = await Promise.all([
     fromLedger(query, locale),
     mapped ? fromLedger(latin, locale) : Promise.resolve([]),
-    fromSource(sourceQuery, locale),
   ]);
-  return mergeHits(latin || query, mapped ? [source, ledgerLatin, ledgerNative] : [source, ledgerNative]);
+  const desk = mergeHits(latin || query, mapped ? [ledgerLatin, ledgerNative] : [ledgerNative]);
+  const hits =
+    desk.length > 0
+      ? desk
+      : mergeHits(
+        latin || query,
+        mapped
+          ? [await fromSource(sourceQuery, locale), ledgerLatin, ledgerNative]
+          : [await fromSource(sourceQuery, locale), ledgerNative],
+      );
+  memo.set(memoKey, { at: Date.now(), hits });
+  if (memo.size > 80) {
+    const first = memo.keys().next().value;
+    if (first) memo.delete(first);
+  }
+  return hits;
 }

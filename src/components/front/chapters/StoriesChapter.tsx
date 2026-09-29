@@ -6,35 +6,61 @@ import { FrontMark } from '../FrontMark';
 import { FrontWhen } from '../FrontWhen';
 import { MetaLine } from '../MetaLine';
 import shell from '../front-shell.module.css';
-import styles from '../stories.module.css';
+import styles from '../press-suite.module.css';
 
 export async function StoriesChapter() {
   const locale = await getLocale();
   const t = await getTranslations('front');
-  const { rest } = await loadFrontStories(locale);
-  if (rest.length === 0) return null;
+  const { lead, rest } = await loadFrontStories(locale);
+  const stack = rest.slice(0, 5);
+  if (!lead && stack.length === 0) return null;
+
   return (
-    <section className={`${shell.band} ${styles.tone}`}>
+    <section className={`${shell.band} ${styles.suite}`}>
       <div className={shell.inner}>
-        <FrontMark num={t('ch02')} title={t('ch02_title')} note={t('ch02_note')} href="/news" cta={t('ch02_cta')} />
-        <ul className={styles.list}>
-          {rest.map((story) => (
-            <li key={story.id}>
-              <Link href={`/news/${story.slug}`}>
-                {story.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={story.image} alt="" referrerPolicy="no-referrer" />
-                ) : null}
-                <span className={styles.copy}>
-                  <em className={styles.kicker}>{deskLabel(story.category, locale)}</em>
-                  <strong>{story.title}</strong>
-                  {story.excerpt ? <p className={`${shell.meta} ${shell.clamp}`}>{story.excerpt}</p> : null}
-                  <MetaLine className={shell.meta} parts={[story.sourceName, <FrontWhen key={story.id} value={story.publishedAt} />]} />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <FrontMark num="04" title={t('ch02_title')} note={t('ch02_note')} href="/news" cta={t('ch02_cta')} />
+        <div className={styles.press}>
+          {lead ? (
+            <Link href={`/news/${lead.slug}`} className={styles.feature}>
+              {lead.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={lead.image} alt="" className={styles.shot} referrerPolicy="no-referrer" />
+              ) : (
+                <span className={styles.shot} />
+              )}
+              <span className={styles.shade} aria-hidden />
+              <span className={styles.copy}>
+                <em className={styles.stamp}>{deskLabel(lead.category, locale)}</em>
+                <b>{lead.title}</b>
+                {lead.excerpt ? <p>{lead.excerpt}</p> : null}
+                <small>
+                  <MetaLine parts={[lead.sourceName, <FrontWhen key={lead.id} value={lead.publishedAt} />]} />
+                </small>
+              </span>
+            </Link>
+          ) : null}
+          {stack.length > 0 ? (
+            <div className={styles.stack}>
+              {stack.map((story) => (
+                <Link key={story.id} href={`/news/${story.slug}`} className={styles.row}>
+                  {story.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={story.image} alt="" className={styles.thumb} referrerPolicy="no-referrer" />
+                  ) : (
+                    <span className={styles.blank} aria-hidden />
+                  )}
+                  <span>
+                    <em className={styles.kicker}>{deskLabel(story.category, locale)}</em>
+                    <b>{story.title}</b>
+                    <small>
+                      <MetaLine parts={[story.sourceName, <FrontWhen key={story.id} value={story.publishedAt} />]} />
+                    </small>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
     </section>
   );

@@ -44,8 +44,9 @@ async function ProfileEditPageBody() {
 
   return (
     <SalonStage
-      tone="vault"
-      kicker={pick(locale, 'الملف', 'Profile')}
+      tone="quill"
+      compact
+      kicker={pick(locale, 'الحبر', 'Ink')}
       title={pick(locale, 'تعديل الملف الشخصي', 'Edit profile')}
       lead={pick(
         locale,

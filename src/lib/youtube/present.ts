@@ -46,6 +46,6 @@ export function youtubeCopy(locale: string) {
     nowShowing: ar ? 'الآن على الشاشة' : 'Now showing',
     nowPlaying: ar ? 'يُعرض' : 'Playing',
     shelf: ar ? 'الرفّ' : 'The shelf',
-    shelfLead: ar ? 'اختر كليباً ليُعرض في القاعة' : 'Pick a clip to put it on screen',
+    shelfLead: ar ? 'شبكة واحدة. صفِّ بالقناة أو بالاسم، واضغط الكليب ليُعرض.' : 'One even grid. Filter by channel or name, then tap a clip to put it on screen.',
   };
 }

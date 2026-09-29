@@ -1,0 +1,1199 @@
+.stage {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100dvh - 4.5rem);
+  overflow: hidden;
+  font-family: var(--font-sans);
+}
+
+.aura {
+  pointer-events: none;
+  position: absolute;
+  inset-inline-start: 50%;
+  top: -10rem;
+  z-index: 0;
+  width: min(56rem, 90vw);
+  height: 22rem;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 70%);
+}
+
+.grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.05;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--foreground) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--foreground) 40%, transparent) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+  mask-image: radial-gradient(70% 60% at 50% 20%, #000 10%, transparent 75%);
+}
+
+.filament {
+  position: relative;
+  z-index: 1;
+  height: 2px;
+  overflow: hidden;
+  background: linear-gradient(90deg, var(--ys-orange), color-mix(in srgb, var(--ys-orange) 35%, transparent) 46%, transparent);
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: min(1240px, calc(100% - 2.4rem));
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  padding: 2.45rem 0 4.2rem;
+  overflow-x: clip;
+}
+
+.wide .inner {
+  width: min(1400px, calc(100% - 1.8rem));
+  padding: 2rem 0 3.8rem;
+}
+
+.compact .inner {
+  padding-top: 1.25rem;
+  padding-bottom: 3.1rem;
+}
+
+.ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background:
+    radial-gradient(circle at 0% 50%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 46%),
+    color-mix(in srgb, var(--card) 88%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent);
+}
+
+.ribbonMark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ribbonTitle {
+  margin: 0.15rem 0 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.ribbonAside {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.wire {
+  background:
+    radial-gradient(70% 42% at 50% 0%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 58%),
+    radial-gradient(46% 32% at 92% 88%, color-mix(in srgb, #166534 16%, transparent), transparent 55%),
+    var(--background);
+}
+
+.vault {
+  background:
+    radial-gradient(58% 38% at 12% 0%, color-mix(in srgb, #c9a227 18%, transparent), transparent 56%),
+    radial-gradient(40% 28% at 88% 8%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 50%),
+    var(--background);
+}
+
+.gallery {
+  background:
+    radial-gradient(55% 34% at 48% 0%, color-mix(in srgb, #8b5a2b 20%, transparent), transparent 58%),
+    radial-gradient(36% 26% at 8% 100%, color-mix(in srgb, #3f2a1a 22%, transparent), transparent 52%),
+    var(--background);
+}
+
+.podium {
+  background:
+    radial-gradient(52% 36% at 78% 0%, color-mix(in srgb, #0ea5e9 12%, transparent), transparent 54%),
+    radial-gradient(42% 28% at 8% 0%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 50%),
+    var(--background);
+}
+
+.booth {
+  background:
+    radial-gradient(58% 36% at 18% 0%, color-mix(in srgb, #6366f1 14%, transparent), transparent 56%),
+    radial-gradient(42% 28% at 88% 6%, color-mix(in srgb, #c9a227 14%, transparent), transparent 50%),
+    var(--background);
+}
+
+.seek {
+  background:
+    radial-gradient(62% 38% at 50% 0%, color-mix(in srgb, #ef4444 16%, transparent), transparent 58%),
+    radial-gradient(40% 26% at 8% 100%, color-mix(in srgb, #7f1d1d 18%, transparent), transparent 52%),
+    var(--background);
+}
+
+.press {
+  background:
+    radial-gradient(58% 34% at 50% 0%, color-mix(in srgb, #d6c4a3 16%, transparent), transparent 56%),
+    radial-gradient(36% 24% at 92% 8%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 48%),
+    var(--background);
+}
+
+.reel {
+  background:
+    radial-gradient(56% 36% at 72% 0%, color-mix(in srgb, #a855f7 12%, transparent), transparent 54%),
+    radial-gradient(42% 28% at 8% 0%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 50%),
+    var(--background);
+}
+
+.seek .ribbon {
+  border-color: color-mix(in srgb, #ef4444 28%, var(--border));
+  background:
+    radial-gradient(circle at 0% 50%, color-mix(in srgb, #ef4444 14%, transparent), transparent 48%),
+    color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.press .ribbon {
+  border-radius: 0.55rem;
+  border-color: color-mix(in srgb, #8b7355 28%, var(--border));
+}
+
+.reel .ribbon {
+  border-color: color-mix(in srgb, #a855f7 26%, var(--border));
+}
+
+.booth .ribbon {
+  border-color: color-mix(in srgb, #6366f1 24%, var(--border));
+}
+
+.frame {
+  background:
+    radial-gradient(56% 34% at 50% 0%, color-mix(in srgb, #e7e5e4 16%, transparent), transparent 56%),
+    radial-gradient(38% 26% at 8% 8%, color-mix(in srgb, #c9a227 12%, transparent), transparent 50%),
+    var(--background);
+}
+
+.market {
+  background:
+    radial-gradient(58% 36% at 12% 0%, color-mix(in srgb, #10b981 14%, transparent), transparent 56%),
+    radial-gradient(40% 26% at 92% 8%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 48%),
+    var(--background);
+}
+
+.ledger {
+  background:
+    radial-gradient(54% 36% at 80% 0%, color-mix(in srgb, #eab308 14%, transparent), transparent 54%),
+    radial-gradient(40% 26% at 8% 0%, color-mix(in srgb, #64748b 16%, transparent), transparent 50%),
+    var(--background);
+}
+
+.frame .ribbon {
+  border-radius: 0.4rem;
+  border-color: color-mix(in srgb, #c9a227 30%, var(--border));
+}
+
+.market .ribbon {
+  border-color: color-mix(in srgb, #10b981 28%, var(--border));
+}
+
+.ledger .ribbon {
+  border-color: color-mix(in srgb, #eab308 28%, var(--border));
+}
+
+.scale {
+  background:
+    radial-gradient(48% 38% at 0% 0%, color-mix(in srgb, #c2410c 18%, transparent), transparent 56%),
+    radial-gradient(48% 38% at 100% 0%, color-mix(in srgb, #475569 20%, transparent), transparent 56%),
+    var(--background);
+}
+
+.wager {
+  background:
+    radial-gradient(56% 36% at 18% 0%, color-mix(in srgb, #4338ca 16%, transparent), transparent 56%),
+    radial-gradient(40% 28% at 92% 8%, color-mix(in srgb, #eab308 12%, transparent), transparent 50%),
+    var(--background);
+}
+
+.night {
+  background:
+    radial-gradient(70% 42% at 50% 0%, color-mix(in srgb, #f8fafc 14%, transparent), transparent 58%),
+    radial-gradient(50% 32% at 50% 100%, color-mix(in srgb, #14532d 22%, transparent), transparent 55%),
+    var(--background);
+}
+
+.charter {
+  background:
+    radial-gradient(58% 34% at 50% 0%, color-mix(in srgb, #d6c4a3 14%, transparent), transparent 56%),
+    radial-gradient(38% 26% at 8% 100%, color-mix(in srgb, #7f1d1d 16%, transparent), transparent 52%),
+    var(--background);
+}
+
+.scale .ribbon {
+  border-radius: 0.35rem 1.35rem;
+  border-color: color-mix(in srgb, #c2410c 28%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, #c2410c 10%, transparent), color-mix(in srgb, #475569 10%, transparent)),
+    color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.wager .ribbon {
+  border-radius: 0.45rem;
+  border-color: color-mix(in srgb, #eab308 30%, var(--border));
+  background:
+    radial-gradient(circle at 0% 50%, color-mix(in srgb, #4338ca 16%, transparent), transparent 48%),
+    color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.night .ribbon {
+  border-color: color-mix(in srgb, #86efac 22%, var(--border));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, #f8fafc 10%, transparent), transparent 52%),
+    color-mix(in srgb, #0b1220 82%, transparent);
+}
+
+.charter .ribbon {
+  border-radius: 0.2rem;
+  border-color: color-mix(in srgb, #7f1d1d 28%, var(--border));
+}
+
+.lamp {
+  background:
+    radial-gradient(62% 40% at 50% 0%, color-mix(in srgb, #22d3ee 14%, transparent), transparent 56%),
+    radial-gradient(40% 26% at 92% 8%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 50%),
+    var(--background);
+}
+
+.post {
+  background:
+    radial-gradient(56% 36% at 12% 0%, color-mix(in srgb, #1e3a8a 18%, transparent), transparent 56%),
+    radial-gradient(40% 26% at 92% 8%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 48%),
+    var(--background);
+}
+
+.deed {
+  background:
+    radial-gradient(54% 34% at 50% 0%, color-mix(in srgb, #94a3b8 16%, transparent), transparent 56%),
+    radial-gradient(38% 26% at 8% 100%, color-mix(in srgb, #334155 18%, transparent), transparent 52%),
+    var(--background);
+}
+
+.keep {
+  background:
+    radial-gradient(56% 36% at 18% 0%, color-mix(in srgb, #e11d48 12%, transparent), transparent 56%),
+    radial-gradient(40% 26% at 92% 8%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 48%),
+    var(--background);
+}
+
+.dial {
+  background:
+    radial-gradient(54% 36% at 80% 0%, color-mix(in srgb, #71717a 16%, transparent), transparent 54%),
+    radial-gradient(40% 26% at 8% 0%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 50%),
+    var(--background);
+}
+
+.lamp .ribbon {
+  border-radius: 999px;
+  border-color: color-mix(in srgb, #22d3ee 28%, var(--border));
+}
+
+.post .ribbon {
+  border-radius: 0.3rem 1.4rem 1.4rem 0.3rem;
+  border-color: color-mix(in srgb, #1e3a8a 28%, var(--border));
+}
+
+.deed .ribbon {
+  border-radius: 0.2rem;
+  border-color: color-mix(in srgb, #64748b 30%, var(--border));
+}
+
+.keep .ribbon {
+  border-color: color-mix(in srgb, #e11d48 26%, var(--border));
+}
+
+.dial .ribbon {
+  border-radius: 0.55rem;
+  border-color: color-mix(in srgb, #a1a1aa 28%, var(--border));
+}
+
+.pass {
+  background:
+    radial-gradient(56% 36% at 12% 0%, color-mix(in srgb, #e8c547 16%, transparent), transparent 54%),
+    radial-gradient(42% 28% at 92% 8%, color-mix(in srgb, #312e81 16%, transparent), transparent 50%),
+    var(--background);
+}
+
+.quill {
+  background:
+    radial-gradient(58% 34% at 50% 0%, color-mix(in srgb, #f5e6c8 16%, transparent), transparent 56%),
+    radial-gradient(36% 24% at 8% 100%, color-mix(in srgb, #44403c 14%, transparent), transparent 50%),
+    var(--background);
+}
+
+.turn {
+  background:
+    radial-gradient(60% 38% at 0% 0%, color-mix(in srgb, #b45309 16%, transparent), transparent 56%),
+    radial-gradient(46% 30% at 100% 100%, color-mix(in srgb, #1c1917 22%, transparent), transparent 52%),
+    var(--background);
+}
+
+.sash {
+  background:
+    radial-gradient(58% 36% at 50% 0%, color-mix(in srgb, #1d4ed8 16%, transparent), transparent 56%),
+    radial-gradient(40% 26% at 92% 8%, color-mix(in srgb, #e8c547 14%, transparent), transparent 48%),
+    var(--background);
+}
+
+.agenda {
+  background:
+    radial-gradient(56% 36% at 18% 0%, color-mix(in srgb, #0d9488 16%, transparent), transparent 56%),
+    radial-gradient(40% 26% at 92% 8%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 48%),
+    var(--background);
+}
+
+.rung {
+  background:
+    radial-gradient(54% 36% at 80% 0%, color-mix(in srgb, #4d7c0f 16%, transparent), transparent 54%),
+    radial-gradient(40% 26% at 8% 0%, color-mix(in srgb, #e8c547 10%, transparent), transparent 50%),
+    var(--background);
+}
+
+.blaze {
+  background:
+    radial-gradient(56% 36% at 72% 0%, color-mix(in srgb, #f43f5e 14%, transparent), transparent 54%),
+    radial-gradient(40% 26% at 8% 0%, color-mix(in srgb, #e8c547 12%, transparent), transparent 50%),
+    var(--background);
+}
+
+.folio {
+  background:
+    radial-gradient(54% 34% at 50% 0%, color-mix(in srgb, #a8a29e 14%, transparent), transparent 56%),
+    radial-gradient(38% 26% at 8% 100%, color-mix(in srgb, #57534e 16%, transparent), transparent 52%),
+    var(--background);
+}
+
+.pass .ribbon {
+  border-radius: 0.85rem 0.35rem;
+  border-color: color-mix(in srgb, #e8c547 32%, var(--border));
+}
+
+.quill .ribbon {
+  border-radius: 0.2rem;
+  border-color: color-mix(in srgb, #a8a29e 30%, var(--border));
+}
+
+.turn .ribbon {
+  border-radius: 0.35rem;
+  border-color: color-mix(in srgb, #b45309 30%, var(--border));
+}
+
+.sash .ribbon {
+  border-image: linear-gradient(90deg, #1d4ed8, #e8c547, #1d4ed8) 1;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 0;
+  border-color: color-mix(in srgb, #1d4ed8 32%, var(--border));
+}
+
+.agenda .ribbon {
+  border-radius: 0.4rem;
+  border-color: color-mix(in srgb, #0d9488 28%, var(--border));
+}
+
+.rung .ribbon {
+  border-color: color-mix(in srgb, #4d7c0f 28%, var(--border));
+}
+
+.blaze .ribbon {
+  border-color: color-mix(in srgb, #f43f5e 28%, var(--border));
+}
+
+.folio .ribbon {
+  border-radius: 0.2rem;
+  border-color: color-mix(in srgb, #a8a29e 28%, var(--border));
+}
+
+.wager :global(.ph-tally) article {
+  border-color: color-mix(in srgb, #eab308 28%, var(--border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, #4338ca 14%, transparent), transparent 52%),
+    color-mix(in srgb, var(--card) 90%, transparent);
+}
+
+.scale :global(.duel) {
+  border-color: color-mix(in srgb, #c2410c 22%, var(--border));
+}
+
+.market :global(.xfer-hero) {
+  border-color: color-mix(in srgb, #10b981 28%, var(--border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, #10b981 12%, transparent), transparent 48%),
+    color-mix(in srgb, var(--card) 90%, transparent);
+}
+
+.market :global(.xfer-row.is-fee) {
+  border-color: color-mix(in srgb, #10b981 32%, var(--border));
+}
+
+.market :global(.xfer-fee) {
+  color: #34d399;
+}
+
+.ledger :global(.stats-podium a),
+.ledger :global(.stats-podium > div) {
+  border-color: color-mix(in srgb, #eab308 32%, var(--border));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, #eab308 14%, transparent), transparent 52%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  gap: 1.55rem;
+  padding: 2.05rem 2rem 1.9rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  border-radius: 1.85rem;
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--ys-orange) 18%, transparent), transparent 42%),
+    radial-gradient(circle at 92% 100%, color-mix(in srgb, var(--ys-orange) 8%, transparent), transparent 38%),
+    linear-gradient(180deg, color-mix(in srgb, var(--foreground) 4%, transparent), transparent 48%),
+    var(--card);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent),
+    0 28px 60px color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+.hero::before,
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 0.85rem;
+  height: 0.85rem;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 45%, transparent);
+}
+
+.hero::before {
+  top: 0.55rem;
+  inset-inline-start: 0.55rem;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.hero::after {
+  bottom: 0.55rem;
+  inset-inline-end: 0.55rem;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+.heroMark {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.seal {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 26%, color-mix(in srgb, var(--ys-orange) 24%, transparent), transparent 54%),
+    #0b0b0b;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ys-orange) 32%, transparent),
+    0 0 18px color-mix(in srgb, var(--ys-orange) 16%, transparent);
+}
+
+.seal :global(img) {
+  border-radius: 999px;
+  background: transparent;
+}
+
+.kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.heroCopy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+  color: var(--foreground);
+}
+
+.heroCopy h1::before {
+  content: '';
+  display: block;
+  width: 2.4rem;
+  height: 2px;
+  margin-bottom: 0.7rem;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--ys-orange), transparent);
+}
+
+.heroCopy p {
+  margin: 0.85rem 0 0;
+  max-width: 40rem;
+  font-size: 0.98rem;
+  line-height: 1.75;
+  color: var(--muted-foreground);
+}
+
+.aside {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.tools {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.55rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.stage :global(.salon-foyer) {
+  display: grid;
+  gap: 0.95rem;
+  padding: 1.15rem 1.2rem 1.25rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 20%, var(--border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.stage :global(.salon-form) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 0.85rem;
+  align-items: end;
+  padding: 0.95rem 1rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+}
+
+.stage :global(.salon-form label) {
+  display: flex;
+  min-width: 9rem;
+  flex: 1 1 9rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.salon-form select) {
+  height: 2.65rem;
+  padding: 0 0.75rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
+  color: var(--foreground);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.stage :global(.salon-form select:focus) {
+  outline: none;
+  border-color: color-mix(in srgb, var(--ys-orange) 50%, var(--border));
+}
+
+.stage :global(.salon-reset) {
+  height: 2.65rem;
+  padding: 0 0.95rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.body {
+  margin-top: 1.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.held.wide .inner {
+  width: min(1400px, calc(100% - 1.5rem));
+  padding: 1.7rem 0 3.2rem;
+}
+
+.held .hero {
+  gap: 1.4rem;
+  padding: 1.85rem 1.8rem 1.7rem;
+  border-radius: 1.7rem;
+}
+
+.held .heroCopy p {
+  margin-top: 0.7rem;
+  line-height: 1.7;
+}
+
+.held .tools {
+  gap: 0.85rem;
+  margin-top: 1.15rem;
+}
+
+.held .body {
+  margin-top: 1.35rem;
+}
+
+.held :global(.salon-foyer) {
+  gap: 0.85rem;
+  padding: 1rem 1.1rem 1.15rem;
+  border-radius: 1.4rem;
+}
+
+.stage :global(.salon-tabs) {
+  display: flex;
+  flex-wrap: wrap;
+  width: fit-content;
+  gap: 0.3rem;
+  padding: 0.28rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--muted) 78%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+}
+
+.stage :global(.salon-tab) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.48rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.stage :global(.salon-tab:hover) {
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.stage :global(.salon-tab.is-on),
+.stage :global(.salon-tab.is-on:hover),
+.stage :global(.salon-tab.is-on:hover span),
+.stage :global(.salon-tab.is-on:hover em) {
+  background: var(--ys-orange);
+  border-color: var(--ys-orange);
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+
+.stage :global(.salon-tab-badge) {
+  display: inline-flex;
+  margin-inline-start: 0.4rem;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.stage :global(.salon-tab.is-on .salon-tab-badge) {
+  background: rgba(0, 0, 0, 0.18);
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+
+.stage :global(.salon-meters) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0 0 1.4rem;
+}
+
+@media (min-width: 720px) {
+  .stage :global(.salon-meters) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stage :global(.salon-meter) {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.stage :global(.salon-meter strong) {
+  font-size: 1.35rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage :global(.salon-meter em) {
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.salon-empty) {
+  padding: 2.8rem 1.2rem;
+  border-radius: 1.2rem;
+  border: 1px dashed color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 58%),
+    color-mix(in srgb, var(--card) 70%, transparent);
+}
+
+.stage :global(.salon-empty strong) {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.stage :global(.salon-empty p) {
+  margin: 0.4rem 0 0;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.xfer-fresh) {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.xfer-hero) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.9rem;
+  gap: 0.2rem 0.9rem;
+  margin-bottom: 1.3rem;
+  padding: 1.35rem 1.35rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 26%, var(--border));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 50%),
+    var(--card);
+}
+
+.stage :global(.xfer-hero img),
+.stage :global(.xfer-hero i) {
+  grid-row: 1 / span 3;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--muted));
+}
+
+.stage :global(.xfer-hero i) {
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.stage :global(.xfer-hero em) {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.stage :global(.xfer-hero strong) {
+  font-size: 1.25rem;
+}
+
+.stage :global(.xfer-hero span) {
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+}
+
+.stage :global(.xfer-tally) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 760px) {
+  .stage :global(.xfer-tally) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.stage :global(.xfer-tally article) {
+  padding: 0.85rem 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.stage :global(.xfer-tally strong) {
+  display: block;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.stage :global(.xfer-tally span) {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.xfer-month) {
+  margin-bottom: 1.6rem;
+}
+
+.stage :global(.xfer-month h2) {
+  margin: 0 0 0.7rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.stage :global(.xfer-list) {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.stage :global(.xfer-row) {
+  display: grid;
+  gap: 0.55rem 1rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+}
+
+@media (min-width: 860px) {
+  .stage :global(.xfer-row) {
+    grid-template-columns: minmax(10rem, 1.1fr) minmax(12rem, 1.4fr) auto;
+  }
+}
+
+.stage :global(.xfer-row.is-fee) {
+  border-color: color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+}
+
+.stage :global(.xfer-who),
+.stage :global(.xfer-path) {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.stage :global(.xfer-who img) {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--background);
+}
+
+.stage :global(.xfer-path img) {
+  width: 1.45rem;
+  height: 1.45rem;
+  object-fit: contain;
+  background: transparent;
+}
+
+.stage :global(.xfer-who i) {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 14%, var(--muted));
+  font-style: normal;
+  font-weight: 800;
+  font-size: 0.72rem;
+}
+
+.stage :global(.xfer-who a),
+.stage :global(.xfer-path a) {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.stage :global(.xfer-who a:hover),
+.stage :global(.xfer-path a:hover) {
+  color: var(--ys-orange);
+}
+
+.stage :global(.xfer-path b) {
+  color: var(--ys-orange);
+  font-weight: 800;
+}
+
+.stage :global(.xfer-meta) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  font-size: 0.74rem;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.xfer-kind),
+.stage :global(.xfer-fee) {
+  font-style: normal;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.stage :global(.xfer-fee) {
+  color: var(--ys-orange);
+  border-color: color-mix(in srgb, var(--ys-orange) 30%, var(--border));
+}
+
+.stage :global(.stats-podium) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.2rem;
+}
+
+@media (min-width: 800px) {
+  .stage :global(.stats-podium) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  .stage :global(.stats-podium > *:first-child) {
+    order: 2;
+  }
+
+  .stage :global(.stats-podium > *:nth-child(2)) {
+    order: 1;
+  }
+
+  .stage :global(.stats-podium > *:nth-child(3)) {
+    order: 3;
+  }
+}
+
+.stage :global(.stats-podium a:hover) {
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.stage :global(.stats-podium a),
+.stage :global(.stats-podium > div) {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 1.3rem 1rem 1.1rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 52%),
+    var(--card);
+}
+
+.stage :global(.stats-medal) {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--ys-orange);
+}
+
+.stage :global(.stats-podium img) {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--background);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ys-orange) 28%, transparent);
+}
+
+.stage :global(.stats-podium i) {
+  display: grid;
+  place-items: center;
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+  font-style: normal;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.stage :global(.stats-podium strong) {
+  font-size: 1.02rem;
+}
+
+.stage :global(.stats-podium em) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.stats-podium .stats-crest),
+.stage :global(.stats-row .stats-crest) {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0;
+  object-fit: contain;
+  box-shadow: none;
+}
+
+.stage :global(.stats-podium b) {
+  font-size: 1.5rem;
+  color: var(--ys-orange);
+}
+
+.stage :global(.stats-podium small) {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.stats-board) {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.stage :global(.stats-row) {
+  display: grid;
+  grid-template-columns: 2.2rem 2.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  text-decoration: none;
+  color: inherit;
+}
+
+.stage :global(.stats-row:hover) {
+  border-color: color-mix(in srgb, var(--ys-orange) 32%, var(--border));
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.stage :global(.stats-rank) {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.stage :global(.stats-row img) {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--background);
+}
+
+.stage :global(.stats-row i) {
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--muted));
+  font-style: normal;
+  font-weight: 800;
+}
+
+.stage :global(.stats-who) {
+  min-width: 0;
+}
+
+.stage :global(.stats-who strong) {
+  display: block;
+}
+
+.stage :global(.stats-who em) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-style: normal;
+  font-size: 0.74rem;
+  color: var(--muted-foreground);
+}
+
+.stage :global(.stats-meter) {
+  display: block;
+  height: 3px;
+  margin-top: 0.4rem;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  overflow: hidden;
+}
+
+.stage :global(.stats-meter span) {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ys-orange);
+}
+
+.stage :global(.stats-row b) {
+  font-size: 1.05rem;
+}

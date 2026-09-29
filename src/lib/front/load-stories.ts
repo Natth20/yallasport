@@ -2,8 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
 import { newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
-import { newsFreshSince } from '@/lib/news/freshness';
 import { publicStoryImage } from '@/lib/news/enrich-source';
+import { rotateStart } from './rotate-shelf';
 import type { FrontStory } from './types';
 
 const newsSelect = {
@@ -43,25 +43,26 @@ function toStory(row: {
 }
 
 export async function loadFrontStories(locale: string): Promise<{ lead: FrontStory | null; rest: FrontStory[]; photos: FrontStory[] }> {
-  const raw = await cachedJson('front:news:v1', 90, () =>
+  const raw = await cachedJson(`front:news:${locale === 'en' ? 'en' : 'ar'}:v7`, 40, () =>
     prisma.news
       .findMany({
-        where: {
-          AND: [newsVisibleWhere(locale), { publishedAt: { gte: newsFreshSince() } }],
-        },
+        where: newsVisibleWhere(locale),
         orderBy: { publishedAt: 'desc' },
-        take: 20,
+        take: 48,
         select: newsSelect,
       })
       .catch(swallow('front.news', [])),
   );
 
   const localized = await overlayNewsList(raw, locale);
-  const stories = localized.map(toStory);
-  const photos = stories.filter((item) => item.image).slice(0, 8);
+  const stories = rotateStart(localized.map(toStory), 3);
+  const photos = rotateStart(
+    stories.filter((item) => item.image),
+    4,
+  ).slice(0, 16);
   return {
     lead: stories[0] ?? null,
-    rest: stories.slice(1, 9),
+    rest: stories.slice(1, 16),
     photos,
   };
 }

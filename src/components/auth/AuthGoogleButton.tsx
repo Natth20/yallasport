@@ -4,8 +4,15 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
+import styles from './auth-gate.module.css';
 
-export function AuthGoogleButton({ intent }: { intent: 'login' | 'register' }) {
+export function AuthGoogleButton({
+  intent,
+  callbackUrl = '/',
+}: {
+  intent: 'login' | 'register';
+  callbackUrl?: string;
+}) {
   const t = useTranslations('auth');
   const [busy, setBusy] = useState(false);
 
@@ -15,9 +22,9 @@ export function AuthGoogleButton({ intent }: { intent: 'login' | 'register' }) {
       disabled={busy}
       onClick={async () => {
         setBusy(true);
-        await signIn('google', { callbackUrl: '/' });
+        await signIn('google', { callbackUrl });
       }}
-      className="auth-google"
+      className={styles.google}
     >
       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleMark />}
       <span>{intent === 'register' ? t('google_register') : t('google')}</span>

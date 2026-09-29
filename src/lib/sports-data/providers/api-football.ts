@@ -193,15 +193,18 @@ export class ApiFootballProvider implements SportsDataProvider {
   }
 
   async getMatchById(id: string): Promise<NormalizedMatchDetail> {
-    const [fixtureData, eventsData, lineupsData, statisticsData] = await Promise.all([
-      this.fetch<ApiFixture>(`/fixtures?id=${id}`),
+    const fixtureData = await this.fetch<ApiFixture>(`/fixtures?id=${id}`);
+    if (!fixtureData.response || fixtureData.response.length === 0) {
+      throw new Error('Match not found');
+    }
+    const extras = await Promise.all([
       this.fetch<ApiEvent>(`/fixtures/events?fixture=${id}`),
       this.fetch<ApiLineup>(`/fixtures/lineups?fixture=${id}`),
       this.fetch<ApiTeamStatistics>(`/fixtures/statistics?fixture=${id}`),
     ]);
-    if (!fixtureData.response || fixtureData.response.length === 0) {
-      throw new Error('Match not found');
-    }
+    const eventsData = extras[0];
+    const lineupsData = extras[1];
+    const statisticsData = extras[2];
     const f = fixtureData.response[0];
     const status = this.mapStatus(f.fixture.status.short);
 

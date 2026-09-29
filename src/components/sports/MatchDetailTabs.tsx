@@ -172,14 +172,14 @@ export function MatchDetailTabs({
                   const iconClass = isGoal
                     ? styles.eventGoal
                     : isYellow
-                    ? styles.eventYellow
-                    : isRed
-                    ? styles.eventRed
-                    : isSub
-                    ? styles.eventSub
-                    : isVar
-                    ? styles.eventVar
-                    : styles.eventIcon;
+                      ? styles.eventYellow
+                      : isRed
+                        ? styles.eventRed
+                        : isSub
+                          ? styles.eventSub
+                          : isVar
+                            ? styles.eventVar
+                            : styles.eventIcon;
 
                   return (
                     <div
@@ -229,22 +229,20 @@ export function MatchDetailTabs({
                 <button
                   type="button"
                   onClick={() => setLineupView('pitch')}
-                  className={`rounded-lg px-3 py-1.5 transition-all ${
-                    lineupView === 'pitch'
+                  className={`rounded-lg px-3 py-1.5 transition-all ${lineupView === 'pitch'
                       ? 'bg-primary text-white shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   ⚽ {pick(locale, 'الملعب', 'Pitch')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setLineupView('list')}
-                  className={`rounded-lg px-3 py-1.5 transition-all ${
-                    lineupView === 'list'
+                  className={`rounded-lg px-3 py-1.5 transition-all ${lineupView === 'list'
                       ? 'bg-primary text-white shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   📋 {pick(locale, 'القائمة', 'List')}
                 </button>
@@ -356,7 +354,7 @@ export function MatchDetailTabs({
                 return (
                   <div key={String(label)} className={styles.statRow}>
                     <div className={styles.statRowHeader}>
-                      <span className="tabular-nums font-black text-emerald-600 dark:text-emerald-400">
+                      <span className="tabular-nums font-black">
                         {home}
                         {suffix}
                       </span>

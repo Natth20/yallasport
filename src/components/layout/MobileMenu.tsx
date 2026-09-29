@@ -9,15 +9,26 @@ import { BrandMark } from '@/components/brand/BrandMark';
 import { Button, Badge, Input } from '@/components/ui';
 import { LanguageToggle } from './LanguageToggle';
 import { ThemeToggle } from './ThemeToggle';
+import { DataSaverToggle } from './DataSaverToggle';
 import styles from './mobile-menu.module.css';
 
 export interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   navItems: Array<{ name: string; href: string; badge?: string }>;
+  moreGroups?: Array<{ label: string; items: Array<{ name: string; href: string }> }>;
+  desk?: React.ReactNode;
+  onSearch?: () => void;
 }
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navItems }) => {
+export const MobileMenu: React.FC<MobileMenuProps> = ({
+  isOpen,
+  onClose,
+  navItems,
+  moreGroups = [],
+  desk,
+  onSearch,
+}) => {
   const { t, dir, language } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
@@ -53,21 +64,45 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navItem
     }
   };
 
+  const renderLink = (item: { name: string; href: string; badge?: string }) => {
+    const active = isActive(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onClose}
+        className={`${styles.navLink} ${active ? styles.active : ''}`}
+      >
+        <span className={styles.navLabel}>{item.name}</span>
+        {item.badge && (
+          <Badge variant={item.href === '/live' ? 'live' : 'accent'} size="sm">
+            {item.badge}
+          </Badge>
+        )}
+      </Link>
+    );
+  };
+
   const menuContent = (
     <div className={styles.drawerOverlay} dir={dir}>
       <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <div className={styles.drawer}>
-        {/* Header */}
         <div className={styles.drawerHeader}>
           <Link href="/" className={styles.brandLink} onClick={onClose} aria-label="Yalla Sport">
             <BrandMark size={36} />
             <div className={styles.brandText}>
               <span className={styles.brandName}>
-                {dir === 'rtl' ? 'يلا سبورت' : 'Yalla Sport'}
+                {dir === 'rtl' ? (
+                  <>
+                    <span className={styles.brandAccent}>يلا</span> سبورت
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.brandAccent}>Yalla</span> Sport
+                  </>
+                )}
               </span>
-              <span className={styles.brandTagline}>
-                {language === 'ar' ? 'المنصة الرياضية الأولى' : 'Premier Sports Hub'}
-              </span>
+              <span className={styles.brandTagline} aria-hidden />
             </div>
           </Link>
           <button
@@ -80,46 +115,46 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navItem
           </button>
         </div>
 
-        {/* Search */}
         <div className={styles.searchBox}>
-          <form onSubmit={handleSearchSubmit}>
-            <Input
-              placeholder={t('common.search') || 'بحث عن مباراة، فريق، لاعب...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="w-4 h-4" />}
-              inputSize="sm"
-            />
-          </form>
+          {onSearch ? (
+            <button type="button" className={styles.searchLaunch} onClick={onSearch}>
+              <Search className="h-4 w-4" />
+              <span>{language === 'ar' ? 'ابحث في المصدر…' : 'Search the source…'}</span>
+            </button>
+          ) : (
+            <form onSubmit={handleSearchSubmit}>
+              <Input
+                placeholder={t('common.search') || 'بحث عن مباراة، فريق، لاعب...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                leftIcon={<Search className="w-4 w-4" />}
+                inputSize="sm"
+              />
+            </form>
+          )}
         </div>
 
-        {/* Navigation List */}
         <nav className={styles.navList}>
-          {navItems.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={`${styles.navLink} ${active ? styles.active : ''}`}
-              >
-                <span className={styles.navLabel}>{item.name}</span>
-                {item.badge && (
-                  <Badge variant={item.href === '/live' ? 'live' : 'accent'} size="sm">
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            );
-          })}
+          {navItems.map(renderLink)}
+          {moreGroups.map((group) => (
+            <div key={group.label} className={styles.navGroup}>
+              <p className={styles.navGroupLabel}>{group.label}</p>
+              {group.items.map(renderLink)}
+            </div>
+          ))}
+          {desk ? (
+            <div className={styles.navGroup} onClick={onClose}>
+              <p className={styles.navGroupLabel}>{language === 'ar' ? 'المكتب' : 'Desk'}</p>
+              {desk}
+            </div>
+          ) : null}
         </nav>
 
-        {/* Footer & Actions */}
         <div className={styles.drawerFooter}>
           <div className={styles.togglesRow}>
             <LanguageToggle />
             <ThemeToggle />
+            <DataSaverToggle />
           </div>
 
           <div className={styles.authButtons}>
@@ -143,7 +178,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navItem
                 onClose();
               }}
             >
-              {t('common.register') || 'إنشاء حساب جديد'}
+              {language === 'ar' ? 'إنشاء حساب جديد' : 'Create account'}
             </Button>
           </div>
         </div>

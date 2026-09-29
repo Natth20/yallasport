@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
-import { STAT_BOARDS } from '@/lib/stats/load-desk';
+import { STAT_BOARDS, statBoardLabel } from '@/lib/stats/load-desk';
 import { standingZone } from '@/lib/leagues/load-dossier';
 import { currentFootballSeason } from '@/lib/sports-data/season';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
@@ -12,7 +12,7 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
   const previous = String(currentFootballSeason() - 1);
   const ids = STAT_BOARDS.map((board) => board.id);
 
-  const packed = await cachedJson(`front:tables:${season}`, 180, async () => {
+  const packed = await cachedJson(`front:tables:${season}:v4`, 90, async () => {
     const leagues = await prisma.league
       .findMany({
         where: { externalId: { in: [...ids] } },
@@ -31,7 +31,7 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
         .findMany({
           where: { leagueId: league.id, seasonId },
           orderBy: { rank: 'asc' },
-          take: 8,
+          take: 10,
           include: { team: { select: { id: true, name: true, slug: true, logoUrl: true } } },
         })
         .catch(swallow(`front.tables.${board.id}`, []));
@@ -41,7 +41,7 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
           .findMany({
             where: { leagueId: league.id, seasonId },
             orderBy: { rank: 'asc' },
-            take: 8,
+            take: 10,
             include: { team: { select: { id: true, name: true, slug: true, logoUrl: true } } },
           })
           .catch(swallow(`front.tables.${board.id}.prev`, []));
@@ -57,6 +57,7 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
           slug: league.slug,
           logoUrl: league.logoUrl,
           country: league.country,
+          externalId: league.externalId,
         },
         seasonId,
         rows: rows.map((row) => ({
@@ -84,8 +85,14 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
   return packed.map((table) => ({
     ...table,
     league: {
-      ...table.league,
-      name: localizePlainName(locale, table.league.name),
+      id: table.league.id,
+      slug: table.league.slug,
+      logoUrl: table.league.logoUrl,
+      name: statBoardLabel(
+        locale,
+        'externalId' in table.league ? String((table.league as { externalId?: string }).externalId ?? '') : null,
+        localizePlainName(locale, table.league.name),
+      ),
       country: table.league.country ? localizePlainName(locale, table.league.country) : table.league.country,
     },
     rows: table.rows.map((row) => ({

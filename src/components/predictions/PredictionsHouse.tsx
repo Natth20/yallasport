@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma';
 import { sportsData } from '@/lib/sports-data';
 import { currentFootballSeason } from '@/lib/sports-data/season';
 import { safeRedisGet } from '@/lib/redis';
+import { loadBoardPublic } from '@/lib/predictions/load-board';
 import { LeaderboardExplorer, UserRankItem, RealScorerItem } from './LeaderboardExplorer';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { predictionAccuracy, rankByPoints, scorerDeskSlug, settledStreak } from '@/lib/predictions/rank';
@@ -32,74 +33,36 @@ const SCORER_LEAGUES = [
   { id: '307', ar: 'دوري روشن السعودي', en: 'Saudi Pro League' },
 ] as const;
 
-const OPEN_LEAGUE_IDS = ['2', '39', '140', '307', '135', '78', '61', '3'] as const;
-
 export async function PredictionsHouse() {
   const t = await getTranslations('board');
   const locale = await getLocale();
   const session = await auth();
   const now = new Date();
   const season = String(currentFootballSeason());
-  const openWhere = {
-    status: 'NOT_STARTED' as const,
-    kickoffAt: { gte: now },
-    league: { externalId: { in: [...OPEN_LEAGUE_IDS] } },
-  };
-  const participantWhere = { OR: [{ points: { gt: 0 } }, { predictions: { some: {} } }] };
+  const bucket = Math.floor(now.getTime() / 60_000);
+  const {
+    rows,
+    peopleCount,
+    pointsAgg,
+    slipCount,
+    settledCount,
+    openCount,
+    openMatches,
+    moodRows,
+    participantWhere,
+  } = await loadBoardPublic(bucket);
 
-  const [rows, peopleCount, pointsAgg] = await Promise.all([
-    prisma.user.findMany({
-      where: participantWhere,
+  const me = session?.user?.email
+    ? await prisma.user.findUnique({
+      where: { email: session.user.email },
       select: {
         id: true,
         name: true,
-        image: true,
         points: true,
         _count: { select: { predictions: true } },
       },
-      orderBy: [{ points: 'desc' }, { predictions: { _count: 'desc' } }],
-      take: 80,
-    }),
-    prisma.user.count({ where: participantWhere }),
-    prisma.user.aggregate({ where: participantWhere, _sum: { points: true } }),
-  ]);
-
-  const [slipCount, settledCount, openCount] = await Promise.all([
-    prisma.prediction.count(),
-    prisma.prediction.count({ where: { isCorrect: { not: null } } }),
-    prisma.match.count({ where: openWhere }),
-  ]);
-
-  const [openMatches, moodRows, me] = await Promise.all([
-    prisma.match.findMany({
-      where: openWhere,
-      orderBy: { kickoffAt: 'asc' },
-      take: 8,
-      select: {
-        id: true,
-        kickoffAt: true,
-        homeTeam: { select: { name: true, logoUrl: true } },
-        awayTeam: { select: { name: true, logoUrl: true } },
-        league: { select: { name: true } },
-        _count: { select: { predictions: true } },
-      },
-    }),
-    prisma.prediction.groupBy({
-      by: ['predictedOutcome'],
-      _count: { _all: true },
-    }),
-    session?.user?.email
-      ? prisma.user.findUnique({
-        where: { email: session.user.email },
-        select: {
-          id: true,
-          name: true,
-          points: true,
-          _count: { select: { predictions: true } },
-        },
-      })
-      : Promise.resolve(null),
-  ]);
+    })
+    : null;
 
   const liveMeta = await safeRedisGet<{ syncedAt?: string; predictionsSettled?: number }>('sports:meta:live');
   const scorerPacks: NormalizedScorer[][] = [];
@@ -192,7 +155,7 @@ export async function PredictionsHouse() {
     rank: idx + 1,
   }));
 
-  const pointsOnBoard = pointsAgg._sum.points ?? 0;
+  const pointsOnBoard = pointsAgg._sum?.points ?? 0;
   const podium = rows.filter((row) => row.points > 0).slice(0, 3);
   const onBoard = Boolean(myRank);
 
@@ -224,9 +187,10 @@ export async function PredictionsHouse() {
 
   return (
     <SalonStage
-      tone="podium"
+      tone="wager"
       wide
-      kicker={`${t('house')} · ${now.getFullYear()}`}
+      compact
+      kicker={t('house')}
       title={t('headline')}
       lead={`${t('standfirst')} ${t('points_rule')}`}
       aside={

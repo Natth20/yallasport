@@ -15,6 +15,7 @@ import {
   isTrustedNewsUrl,
   isTrustedRssFeedUrl,
 } from '@/lib/news/trusted-sources';
+import { isFootballCoverage } from '@/lib/news/football-scope';
 import { classifyDesk, competitionTags } from '@/lib/news/desks';
 import { parseRssPublishedAt, shouldImportRssStory } from '@/lib/news/freshness';
 
@@ -62,18 +63,13 @@ export async function fetchRSSFeed(url: string): Promise<RSSItem[]> {
   }
 }
 
-function isNonSportsNoise(title: string, content: string) {
-  const text = `${title} ${content}`.toLowerCase();
-  return /الحوثيون|حوثي|غارة|غارات|قصف|صاروخ|صواريخ|معارك|عسكرية|الحرب في|أسعار الخبز|دعم الخبز|تضخم|انتخابات برلمانية|مجلس النواب|أزمة دبلوماسية|مظاهرات|اغتيال/.test(
-    text
-  );
-}
-
 function isFootballItem(item: RSSItem) {
-  const haystack = `${item.title} ${item.content} ${item.source}`.toLowerCase();
-  return /football|soccer|premier league|laliga|serie a|bundesliga|champions|uefa|fifa|afc|caf|كرة|كروية|الدوري|مباراة|مباريات|هدف|أهداف|منتخب|منتخبات|لاعب|لاعبين|مدرب|بطولة|كأس|دوري|نادي|أندية|ريال مدريد|برشلونة|ليفربول|مانشستر|الهلال|النصر|الاتحاد|الأهلي|ميسي|رونالدو|صلاح|فينيسيوس|مبابي|هالاند|مرموش|انتقالات|ميركاتو|تسديدة|ركلة/.test(
-    haystack
-  );
+  return isFootballCoverage({
+    title: item.title,
+    content: item.content,
+    sourceUrl: item.link,
+    sourceName: item.source,
+  });
 }
 
 function looksBreaking(title: string) {
@@ -113,7 +109,6 @@ export async function importFromRSS(url: string) {
     if (!item.link || !item.title) continue;
     if (!isTrustedNewsUrl(item.link)) continue;
     if (!isEditorialNewsItem(item.title, item.content)) continue;
-    if (isNonSportsNoise(item.title, item.content)) continue;
     if (!isFootballItem(item)) continue;
 
     const aliases = newsUrlAliases(item.link);
@@ -169,7 +164,7 @@ export async function importFromRSS(url: string) {
         slug: uniqueSlug,
         category: classifyDesk(item.title, copy.content),
         tags: ['football', 'rss', 'trusted', ...competitionTags(item.title, copy.content)],
-        status: 'PENDING_REVIEW',
+        status: 'PUBLISHED',
         publishedAt,
         breaking,
         featured: false,

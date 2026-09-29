@@ -13,6 +13,9 @@ import { localizeEntityMap, newsVisibleWhere, overlayNewsList } from '@/lib/i18n
 import { dateKeyInTimezone, dayBoundsInTimezone, normalizeTimezone } from '@/lib/datetime/format';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
+import { HallFoyer } from '@/components/salon/HallFoyer';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { CalendarDays, Radio, Search, Trophy } from 'lucide-react';
 
 export const revalidate = 60;
 
@@ -453,39 +456,68 @@ async function LeaguesPageBody({
   });
 
   return (
-    <LeaguesAtlas
-      locale={locale}
-      now={now}
-      paramsQ={params.q}
-      selectedCountry={selectedCountry}
-      activeFilter={activeFilter}
-      activeSort={activeSort}
-      loggedIn={Boolean(session?.user)}
-      liveMatches={liveMatches}
-      followedSet={followedSet}
-      followedLeagues={followedLeagues}
-      spotlightLeague={spotlightLeague}
-      spotlightLiveMatches={spotlightLiveMatches}
-      liveBoard={liveBoard}
-      liveGoalByMatch={liveGoalByMatch}
-      sortedLeagues={sortedLeagues}
-      chapterEntries={visibleChapters}
-      unlocated={visibleUnlocated}
-      directoryCapped={browseDesk}
-      jumpCountries={jumpCountries}
-      visibleCountries={visibleCountries}
-      extraCountryCount={extraCountryCount}
-      countryCoverage={countryCoverage}
-      countryHref={countryHref}
-      filterCounts={filterCounts}
-      census={census}
-      providerIsLive={providerIsLive}
-      syncedAt={syncedAt}
-      upcomingMatches={upcomingMatches}
-      recentResults={recentResults}
-      titleRaces={titleRaces}
-      scorers={scorers}
-      leagueNews={leagueNews}
-    />
+    <SalonStage
+      tone="booth"
+      wide
+      compact
+      kicker={pick(locale, 'قاعة البطولات', 'League hall')}
+      title={pick(locale, 'البطولات', 'Leagues')}
+      lead={pick(
+        locale,
+        'جداول ومباشر ومواعيد من المصدر فقط — بلا تعبئة وبلا أرقام وهمية.',
+        'Tables, live and fixtures from the source only — no filler, no invented numbers.',
+      )}
+      aside={
+        liveMatches.length > 0
+          ? pick(locale, `${liveMatches.length} مباشرة`, `${liveMatches.length} live`)
+          : pick(locale, 'من المصدر', 'From source')
+      }
+      tools={
+        <HallFoyer
+          label={pick(locale, 'جناح الأطلس', 'Atlas suite')}
+          items={[
+            { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
+            { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
+            { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy, current: true },
+            { href: '/leagues?filter=covered', label: pick(locale, 'المغطاة', 'Covered'), icon: Search },
+          ]}
+        />
+      }
+    >
+      <LeaguesAtlas
+        locale={locale}
+        now={now}
+        paramsQ={params.q}
+        selectedCountry={selectedCountry}
+        activeFilter={activeFilter}
+        activeSort={activeSort}
+        loggedIn={Boolean(session?.user)}
+        liveMatches={liveMatches}
+        followedSet={followedSet}
+        followedLeagues={followedLeagues}
+        spotlightLeague={spotlightLeague}
+        spotlightLiveMatches={spotlightLiveMatches}
+        liveBoard={liveBoard}
+        liveGoalByMatch={liveGoalByMatch}
+        sortedLeagues={sortedLeagues}
+        chapterEntries={visibleChapters}
+        unlocated={visibleUnlocated}
+        directoryCapped={browseDesk}
+        jumpCountries={jumpCountries}
+        visibleCountries={visibleCountries}
+        extraCountryCount={extraCountryCount}
+        countryCoverage={countryCoverage}
+        countryHref={countryHref}
+        filterCounts={filterCounts}
+        census={census}
+        providerIsLive={providerIsLive}
+        syncedAt={syncedAt}
+        upcomingMatches={upcomingMatches}
+        recentResults={recentResults}
+        titleRaces={titleRaces}
+        scorers={scorers}
+        leagueNews={leagueNews}
+      />
+    </SalonStage>
   );
 }

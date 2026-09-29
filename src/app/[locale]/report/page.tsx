@@ -3,6 +3,8 @@ import { getLocale } from 'next-intl/server';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { pick } from '@/i18n/pick';
 import { ReportDesk } from '@/components/legal/ReportDesk';
+import { HallFoyer } from '@/components/salon/HallFoyer';
+import { SalonStage } from '@/components/salon/SalonStage';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 
@@ -30,5 +32,33 @@ export default function ReportPage() {
 
 async function ReportPageBody() {
   const locale = await getLocale();
-  return <ReportDesk locale={locale} />;
+  return (
+    <SalonStage
+      tone="deed"
+      wide
+      compact
+      kicker={pick(locale, 'مكتب العمليات', 'Operations desk')}
+      title={pick(locale, 'إبلاغ عن محتوى', 'Report content')}
+      lead={pick(
+        locale,
+        'اكتب المشكلة بوضوح. البلاغ يصل لوحة العمليات. ما في أرقام وهمية هنا — رقم التتبع يظهر بعد الإرسال فقط.',
+        'Describe the problem clearly. The report goes to the operations desk. No invented SLAs — a tracking id appears only after you submit.',
+      )}
+      aside="YS-DESK-01"
+      tools={
+        <HallFoyer
+          label={pick(locale, 'جناح الوثائق', 'Legal suite')}
+          items={[
+            { href: '/about', label: pick(locale, 'من نحن', 'About') },
+            { href: '/contact', label: pick(locale, 'تواصل', 'Contact') },
+            { href: '/report', label: pick(locale, 'إبلاغ', 'Report'), current: true },
+            { href: '/privacy', label: pick(locale, 'الخصوصية', 'Privacy') },
+            { href: '/terms', label: pick(locale, 'الشروط', 'Terms') },
+          ]}
+        />
+      }
+    >
+      <ReportDesk locale={locale} />
+    </SalonStage>
+  );
 }

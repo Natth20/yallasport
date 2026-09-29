@@ -5,6 +5,7 @@ import { localizeEntityMap, newsVisibleWhere, overlayNewsList } from '@/lib/i18n
 import { prisma } from '@/lib/prisma';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { SearchTicket } from './SearchTicket';
+import { loadSeekIndex } from '@/lib/search/load-index';
 import { canShowScore, clampSeekQuery, parseSeekKind, seekHref, type SeekKind } from './seek';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -73,23 +74,8 @@ export async function SearchHouse({
     ],
   };
 
-  const [deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows] = await Promise.all([
-    prisma.news.count({ where: newsVisibleWhere(locale) }),
-    prisma.team.count(),
-    prisma.player.count(),
-    prisma.league.count(),
-    prisma.match.count(),
-    prisma.match.count({ where: { status: 'LIVE' } }),
-    prisma.match.findMany({
-      orderBy: { kickoffAt: 'desc' },
-      take: 24,
-      select: {
-        homeTeam: { select: { name: true } },
-        awayTeam: { select: { name: true } },
-        league: { select: { name: true } },
-      },
-    }),
-  ]);
+  const { deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows } =
+    await loadSeekIndex(locale);
 
   const empty = {
     news: [] as Array<{
@@ -243,16 +229,13 @@ export async function SearchHouse({
 
   return (
     <SalonStage
-      tone="seek"
+      tone="lamp"
       wide
+      compact
       kicker={t('kicker')}
       title={t('title')}
       lead={t('standfirst')}
-      aside={
-        <Badge variant={liveMatches > 0 ? 'live' : 'outline'} size="sm">
-          {liveMatches} {t('tally_live_short')}
-        </Badge>
-      }
+      aside={`${liveMatches} ${t('tally_live_short')}`}
     >
       <div className={styles.stack}>
         <SearchTicket initialQuery={query} kind={kind} />
@@ -261,7 +244,7 @@ export async function SearchHouse({
           <div className={styles.chips}>
             <span className={styles.chipsLabel}>
               <Flame aria-hidden="true" />
-              <span>{isAr ? 'أكثر بحثاً:' : 'Trending Seek:'}</span>
+              <span>{isAr ? 'من آخر المباريات:' : 'From recent fixtures:'}</span>
             </span>
             {suggestions.map((chip) => (
               <Tooltip key={chip} content={chip} position="bottom">

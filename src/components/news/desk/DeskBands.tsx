@@ -41,18 +41,18 @@ export function TablesBand({ tables, locale }: { tables: TableSnapshot[]; locale
   if (tables.length === 0) return null;
 
   return (
-    <section className="mt-10">
+    <section className="mt-10 min-w-0">
       <BandHead
         locale={locale}
         kicker={pick(locale, 'الجداول', 'The tables')}
         title={pick(locale, 'الترتيب من المصدر', 'Standings from the source')}
         action={{ href: '/leagues', label: pick(locale, 'كل البطولات', 'All leagues') }}
       />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
         {tables.map((table) => (
           <article
             key={table.league.id}
-            className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-sm shadow-sm"
+            className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-sm shadow-sm"
           >
             <header className="flex items-center gap-3 border-b border-border/70 p-4 bg-muted/20">
               {table.league.logoUrl ? (
@@ -123,14 +123,14 @@ export function GoalsBand({ goals, locale }: { goals: GoalMoment[]; locale: stri
   if (goals.length === 0) return null;
 
   return (
-    <section className="mt-10">
+    <section className="mt-10 min-w-0">
       <BandHead
         locale={locale}
         kicker={pick(locale, 'الشباك', 'The net')}
         title={pick(locale, 'آخر الأهداف', 'Latest goals')}
         action={{ href: '/matches', label: pick(locale, 'كل المباريات', 'All matches') }}
       />
-      <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ol className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {goals.map((goal) => (
           <li key={goal.id}>
             <Link
@@ -172,14 +172,14 @@ export function BroadcastBand({ broadcasts, locale }: { broadcasts: Broadcast[];
   if (broadcasts.length === 0) return null;
 
   return (
-    <section className="mt-10">
+    <section className="mt-10 min-w-0">
       <BandHead
         locale={locale}
         kicker={pick(locale, 'الإرسال', 'Transmission')}
         title={pick(locale, 'أين تشاهد اليوم', 'Where to watch today')}
         action={{ href: '/live', label: pick(locale, 'يلا سبورت مباشر', 'Yalla Sport Live') }}
       />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {broadcasts.map((row) => {
           const live = row.status === 'LIVE' || row.status === 'HALFTIME';
           return (

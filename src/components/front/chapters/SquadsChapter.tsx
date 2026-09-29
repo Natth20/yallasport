@@ -17,7 +17,7 @@ export async function SquadsChapter() {
         <FrontMark num={t('ch05')} title={t('ch05_title')} note={t('ch05_note')} />
         {leagues.length > 0 ? (
           <ul className={styles.crests}>
-            {leagues.map((league) => (
+            {leagues.slice(0, 8).map((league) => (
               <li key={league.id}>
                 <Link href={`/league/${league.slug}`}>
                   <LeagueCrest name={league.name} logoUrl={league.logoUrl} className="h-10 w-10" />
@@ -31,7 +31,7 @@ export async function SquadsChapter() {
           <div>
             <h3 className={styles.h3}>{t('ch05_clubs')}</h3>
             <ul className={styles.grid}>
-              {clubs.map((club) => (
+              {clubs.slice(0, 8).map((club) => (
                 <li key={club.id}>
                   <Link href={`/team/${club.slug}`}>
                     <LeagueCrest name={club.name} logoUrl={club.logoUrl} className="h-8 w-8" />
@@ -46,7 +46,7 @@ export async function SquadsChapter() {
           <div>
             <h3 className={styles.h3}>{t('ch05_players')}</h3>
             <ul className={styles.people}>
-              {players.map((player) => (
+              {players.slice(0, 8).map((player) => (
                 <li key={player.id}>
                   <Link href={`/player/${player.slug}`}>
                     {player.photoUrl ? (

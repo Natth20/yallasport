@@ -1,0 +1,214 @@
+.headerSticky {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  font-family: var(--font-sans);
+  background-color: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scrolled {
+  box-shadow: var(--ys-shadow-md);
+  background-color: color-mix(in srgb, var(--card) 96%, transparent);
+}
+
+.container {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  height: 4.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   Logo & Brand
+   ========================================================================== */
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.brandLink:hover {
+  opacity: 0.9;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  line-height: 1.1;
+}
+
+.brandTagline {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--ys-orange);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 0.15rem;
+}
+
+/* ==========================================================================
+   Desktop Navigation
+   ========================================================================== */
+
+.desktopNav {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (min-width: 1024px) {
+  .desktopNav {
+    display: flex;
+  }
+}
+
+.navItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  position: relative;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.navItem:hover {
+  color: var(--foreground);
+  background-color: var(--secondary);
+}
+
+.navItem.active {
+  color: var(--foreground);
+  background-color: var(--secondary);
+}
+
+.navItem.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 1rem;
+  right: 1rem;
+  height: 2px;
+  background-color: var(--ys-orange);
+  border-radius: var(--radius-full);
+}
+
+/* ==========================================================================
+   Header Actions (Search, Language, Theme, Auth)
+   ========================================================================== */
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.searchButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.875rem;
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.searchButton:hover {
+  background-color: var(--card);
+  border-color: var(--ring);
+  color: var(--foreground);
+}
+
+.searchIcon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.searchKbd {
+  font-size: 0.6875rem;
+  padding: 0.1rem 0.35rem;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--muted-foreground);
+}
+
+.togglesDesktop {
+  display: none;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+@media (min-width: 768px) {
+  .togglesDesktop {
+    display: flex;
+  }
+}
+
+.authDesktop {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .authDesktop {
+    display: flex;
+  }
+}
+
+.mobileMenuTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+@media (min-width: 1024px) {
+  .mobileMenuTrigger {
+    display: none;
+  }
+}
+
+.mobileMenuTrigger:hover {
+  background-color: var(--muted);
+  color: var(--ys-orange);
+}

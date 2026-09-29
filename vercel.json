@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/sports/sync-transfers",
-      "schedule": "0 6 * * *"
+      "schedule": "25 */6 * * *"
     },
     {
       "path": "/api/notifications/reminders",
@@ -14,11 +14,11 @@
     },
     {
       "path": "/api/news/cron",
-      "schedule": "0 * * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/youtube/cron",
-      "schedule": "*/20 * * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "path": "/api/system/backup?kind=daily",

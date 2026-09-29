@@ -22,7 +22,7 @@ export function formatKickoff(
   locale: 'ar' | 'en' = 'ar',
   options: Intl.DateTimeFormatOptions = {}
 ) {
-  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-GB', {
+  const resolved: Intl.DateTimeFormatOptions = {
     timeZone: normalizeTimezone(timezone),
     weekday: 'short',
     day: 'numeric',
@@ -31,7 +31,13 @@ export function formatKickoff(
     minute: '2-digit',
     hourCycle: 'h23',
     ...options,
-  }).format(new Date(value));
+  };
+  (Object.keys(resolved) as (keyof Intl.DateTimeFormatOptions)[]).forEach((key) => {
+    if (resolved[key] === undefined) delete resolved[key];
+  });
+  if (!resolved.hour && !resolved.minute) delete resolved.hourCycle;
+
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA' : 'en-GB', resolved).format(new Date(value));
 }
 
 export function timezoneLabel(timezone: string, locale: 'ar' | 'en' = 'ar') {

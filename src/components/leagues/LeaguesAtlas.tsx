@@ -6,7 +6,6 @@ import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
 import { LeagueFilterBar } from '@/components/leagues/LeagueFilterBar';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { LeagueDeskCard } from '@/components/leagues/LeagueDeskCard';
-import { DeskRule, EditionPlate, EndMark, PhotoCorners, StorySpine } from '@/components/news/NewsOrnaments';
 import { pick } from '@/i18n/pick';
 import styles from './leagues-atlas.module.css';
 
@@ -197,7 +196,7 @@ export function LeaguesAtlas({
   }>;
 }) {
   return (
-    <div className="league-atlas min-h-screen pb-16">
+    <div className={`${styles.leagueAtlas} league-atlas pb-10`}>
       <span className="atlas-flood atlas-flood-a" aria-hidden />
       <span className="atlas-flood atlas-flood-b" aria-hidden />
       {liveMatches.length > 0 && (
@@ -232,51 +231,45 @@ export function LeaguesAtlas({
 
       <section className={`${styles.atlasHero} atlas-hero`}>
         <div className="relative mx-auto max-w-7xl px-5 pb-8 pt-4 sm:px-6 lg:px-8">
-          <header className="atlas-mast mb-5">
-            <div className="flex flex-wrap items-end gap-4">
-              <EditionPlate year={now.getFullYear()} label={pick(locale, 'الموسم', 'Season')} />
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.34em] text-orange-500">
-                  Yalla <span className="atlas-ink">Atlas</span>
-                </p>
-                <h1 className="atlas-mast-wordmark mt-2">
-                  {pick(locale, 'البطولات', 'Leagues')}
-                </h1>
-                <div className="atlas-hero-meta">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${liveMatches.length > 0
-                        ? 'animate-pulse bg-rose-400'
-                        : providerIsLive
-                          ? 'bg-emerald-400'
-                          : 'bg-amber-400'
-                        }`}
-                    />
-                    {liveMatches.length > 0
-                      ? pick(locale, `${liveMatches.length} مباراة على الملعب`, `${liveMatches.length} live now`)
+          <header className={styles.mast}>
+            <div className={styles.mastMark}>
+              <span className={styles.seal} aria-hidden>YS</span>
+              <span className={styles.kicker}>{pick(locale, 'قاعة البطولات', 'League hall')}</span>
+            </div>
+            <div className={styles.mastCopy}>
+              <h1>{pick(locale, 'البطولات', 'Leagues')}</h1>
+              <p>
+                {pick(
+                  locale,
+                  'جداول ومباشر ومواعيد من المصدر فقط — بلا تعبئة وبلا أرقام وهمية.',
+                  'Tables, live and fixtures from the source only — no filler, no invented numbers.'
+                )}
+              </p>
+              <div className="atlas-hero-meta">
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${liveMatches.length > 0
+                      ? 'bg-rose-500'
                       : providerIsLive
-                        ? pick(locale, 'متصل بالمصدر', 'Source connected')
-                        : pick(locale, 'المزوّد غير مفعّل', 'Provider offline')}
+                        ? 'bg-orange-500'
+                        : 'bg-amber-400'
+                      }`}
+                  />
+                  {liveMatches.length > 0
+                    ? pick(locale, `${liveMatches.length} مباراة على الملعب`, `${liveMatches.length} live now`)
+                    : providerIsLive
+                      ? pick(locale, 'متصل بالمصدر', 'Source connected')
+                      : pick(locale, 'المزوّد غير مفعّل', 'Provider offline')}
+                </span>
+                {syncedAt && (
+                  <span>
+                    {pick(locale, 'مزامنة', 'Synced')} · <ClientTime value={syncedAt} />
                   </span>
-                  {syncedAt && (
-                    <span>
-                      {pick(locale, 'مزامنة', 'Synced')} · <ClientTime value={syncedAt} />
-                    </span>
-                  )}
-                  <span>{pick(locale, 'من المصدر فقط', 'Source only')}</span>
-                </div>
+                )}
+                <span>{now.getFullYear()}</span>
               </div>
             </div>
-            <p className={`${styles.atlasHeroLede} atlas-hero-lede`}>
-              {pick(
-                locale,
-                'جداول ومباشر ومواعيد من المصدر فقط — بلا تعبئة وبلا أرقام وهمية.',
-                'Tables, live and fixtures from the source only — no filler, no invented numbers.'
-              )}
-            </p>
           </header>
-
-          <DeskRule className="mb-5 opacity-70" />
 
           {census.length > 0 ? (
             <div className="atlas-census">
@@ -290,8 +283,7 @@ export function LeaguesAtlas({
           ) : null}
 
           {spotlightLeague && (spotlightLeague.liveMatch || spotlightLeague.podium.length > 0 || spotlightLeague.nextMatch || spotlightLeague.lastResult) && (
-            <div className="atlas-programme relative mt-5 rounded-[1.6rem]">
-              <PhotoCorners className="pointer-events-none absolute inset-3 opacity-30" />
+            <div className="atlas-programme relative mt-5">
               <div
                 className={`relative grid ${spotlightLeague.podium.length > 0 || spotlightLiveMatches.length > 0
                   ? 'lg:grid-cols-[auto_minmax(0,1.1fr)_minmax(0,0.9fr)]'
@@ -639,7 +631,6 @@ export function LeaguesAtlas({
                       : pick(locale, 'دليل البطولات', 'League directory')
                     : selectedCountry}
                 </h2>
-                <DeskRule className="mt-3 max-w-xs opacity-60" />
               </div>
               <span className="text-[12px] text-muted-foreground">
                 {directoryCapped
@@ -705,7 +696,6 @@ export function LeaguesAtlas({
                 return (
                   <section key={country} id={countryAnchor(country)} className="atlas-chapter scroll-mt-[8.5rem]">
                     <div className="atlas-chapter-head mb-4">
-                      <StorySpine mark="YS" folio={String(chapterIndex + 1).padStart(2, '0')} className="atlas-chapter-spine" />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-end justify-between gap-2">
                           <div>
@@ -725,7 +715,6 @@ export function LeaguesAtlas({
                             ) : null}
                           </span>
                         </div>
-                        <DeskRule className="mt-3 max-w-sm opacity-50" />
                       </div>
                     </div>
                     <div className="atlas-directory">
@@ -856,7 +845,6 @@ export function LeaguesAtlas({
                     <span className="atlas-section-kicker">{pick(locale, 'من المصدر', 'From source')}</span>
                     <h2>{pick(locale, 'آخر النتائج', 'Latest results')}</h2>
                   </div>
-                  <DeskRule className="atlas-results-rule" />
                 </div>
                 <div className="atlas-results-grid">
                   {recentResults.map((match) => (
@@ -965,7 +953,6 @@ export function LeaguesAtlas({
             </div>
           </section>
         )}
-        <EndMark className="mt-12 opacity-70" />
       </main>
     </div>
   );

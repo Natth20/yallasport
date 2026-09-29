@@ -7,11 +7,14 @@ import { pageMetadata } from '@/lib/seo/site';
 import { Link } from '@/i18n/navigation';
 import { loadTransferDesk } from '@/lib/transfers/load-desk';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
+import { TransferFace } from '@/components/transfers/TransferFace';
+import { ArrowLeftRight, BarChart3, CalendarDays, Radio, Trophy } from 'lucide-react';
 import { TransferFilters } from '@/components/transfers/TransferFilters';
 import { ClientTime } from '@/components/datetime/ClientTime';
 
-export const revalidate = 120;
+export const revalidate = 90;
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -75,10 +78,19 @@ async function TransfersPageBody({
   const window = params.window?.trim() || '';
   const desk = await loadTransferDesk({ club, player, season, kind, window });
   const groups = groupByMonth(desk.rows);
+  const paid = desk.rows.filter((row) => row.fee).length;
+  const loans = desk.rows.filter((row) => row.kind === 'loan').length;
+  const frees = desk.rows.filter((row) => row.kind === 'free').length;
+  const tally = [
+    { value: desk.rows.length, label: pick(locale, 'صفقة ظاهرة', 'Moves shown') },
+    ...(paid > 0 ? [{ value: paid, label: pick(locale, 'برسم', 'With a fee') }] : []),
+    ...(loans > 0 ? [{ value: loans, label: pick(locale, 'إعارة', 'Loans') }] : []),
+    ...(frees > 0 ? [{ value: frees, label: pick(locale, 'انتقال حر', 'Free moves') }] : []),
+  ];
 
   return (
     <SalonStage
-      tone="wire"
+      tone="market"
       kicker={pick(locale, 'سلك الميركاتو', 'Mercato wire')}
       title={pick(locale, 'الانتقالات', 'Transfers')}
       lead={pick(
@@ -87,26 +99,40 @@ async function TransfersPageBody({
         `Seasons ${desk.fromSeason}/${desk.fromSeason + 1} and ${desk.seasonLabel}/${desk.seasonLabel + 1} from the source ledger.`,
       )}
       aside={pick(locale, `${desk.rows.length} صفقة`, `${desk.rows.length} moves`)}
+      wide
+      compact
       tools={
-        <TransferFilters
-          locale={locale}
-          values={{ club, player, season, kind, window }}
-          clubs={[
-            { value: '', label: pick(locale, 'كل الأندية', 'All clubs') },
-            ...desk.clubs.map((name) => ({ value: name, label: localizePlainName(locale, name) })),
-          ]}
-          players={[
-            { value: '', label: pick(locale, 'كل اللاعبين', 'All players') },
-            ...desk.players.slice(0, 120).map((row) => ({
-              value: row.slug || row.name,
-              label: localizePlainName(locale, row.name),
-            })),
-          ]}
-          seasons={[
-            { value: '', label: pick(locale, 'آخر موسمين', 'Last two seasons') },
-            ...desk.seasons.map((year) => ({ value: String(year), label: `${year}/${year + 1}` })),
-          ]}
-        />
+        <div className="salon-foyer">
+          <HallFoyer
+            label={pick(locale, 'جناح الملعب', 'Pitch suite')}
+            items={[
+              { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
+              { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
+              { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
+              { href: '/transfers', label: pick(locale, 'الانتقالات', 'Transfers'), icon: ArrowLeftRight, current: true },
+              { href: '/stats', label: pick(locale, 'إحصائيات', 'Stats'), icon: BarChart3 },
+            ]}
+          />
+          <TransferFilters
+            locale={locale}
+            values={{ club, player, season, kind, window }}
+            clubs={[
+              { value: '', label: pick(locale, 'كل الأندية', 'All clubs') },
+              ...desk.clubs.map((name) => ({ value: name, label: localizePlainName(locale, name) })),
+            ]}
+            players={[
+              { value: '', label: pick(locale, 'كل اللاعبين', 'All players') },
+              ...desk.players.slice(0, 120).map((row) => ({
+                value: row.slug || row.name,
+                label: localizePlainName(locale, row.name),
+              })),
+            ]}
+            seasons={[
+              { value: '', label: pick(locale, 'آخر موسمين', 'Last two seasons') },
+              ...desk.seasons.map((year) => ({ value: String(year), label: `${year}/${year + 1}` })),
+            ]}
+          />
+        </div>
       }
     >
       {desk.syncedAt ? (
@@ -116,8 +142,23 @@ async function TransfersPageBody({
         </p>
       ) : null}
 
+      {desk.rows.length > 0 ? (
+        <div className="xfer-tally">
+          {tally.map((item) => (
+            <article key={item.label}>
+              <strong>{item.value}</strong>
+              <span>{item.label}</span>
+            </article>
+          ))}
+        </div>
+      ) : null}
+
       {desk.headline ? (
         <article className="xfer-hero">
+          <TransferFace
+            src={desk.headline.playerPhoto}
+            name={localizePlainName(locale, desk.headline.playerName)}
+          />
           <em>{pick(locale, 'أكبر صفقة موثقة', 'Largest verified fee')}</em>
           <strong>{localizePlainName(locale, desk.headline.playerName)}</strong>
           <span>
@@ -129,8 +170,14 @@ async function TransfersPageBody({
 
       {desk.rows.length === 0 ? (
         <div className="salon-empty">
-          <strong>{pick(locale, 'ما في صفقات', 'No moves')}</strong>
-          <p>{pick(locale, 'ما في انتقالات بهالفلاتر من المصدر.', 'No transfers from the source for these filters.')}</p>
+          <strong>{pick(locale, 'ما في صفقات من المصدر', 'No moves from the source')}</strong>
+          <p>
+            {pick(
+              locale,
+              'الدفتر فاضي بهالفلاتر. غيّر النادي أو الموسم، أو امسح الفلاتر. ما بنعرض صفقات مخترعة.',
+              'The ledger is empty for these filters. Change club or season, or reset. We do not invent deals.',
+            )}
+          </p>
         </div>
       ) : (
         <div className="xfer-wire">
@@ -145,12 +192,7 @@ async function TransfersPageBody({
                   const inner = (
                     <>
                       <span className="xfer-who">
-                        {row.playerPhoto ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.playerPhoto} alt="" />
-                        ) : (
-                          <i>{name.charAt(0)}</i>
-                        )}
+                        <TransferFace src={row.playerPhoto} name={name} />
                         {row.playerSlug ? (
                           <Link href={`/player/${row.playerSlug}`}>
                             <strong>{name}</strong>

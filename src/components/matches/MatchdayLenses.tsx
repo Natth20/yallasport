@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import { getLocale } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
+import styles from './matches-hall.module.css';
 
 export type LensChip = {
   value: string;
@@ -32,52 +33,55 @@ export async function MatchdayLenses({
   }
 
   return (
-    <div className="space-y-2">
-      {hasActive ? (
-        <div className="flex justify-end">
-          <Link
-            href={clearHref}
-            className="rounded-full border border-border bg-card px-3 py-1 text-[10px] font-bold text-muted-foreground transition-colors hover:border-orange-500/40 hover:text-orange-600 dark:border-border dark:bg-muted"
-          >
-            {pick(locale, 'عرض كل المباريات', 'Show all matches')}
+    <div className={styles.lensDeck}>
+      <div className={styles.lensDeckHead}>
+        <span>{pick(locale, 'عدّسات اليوم', "Today's lenses")}</span>
+        {hasActive ? (
+          <Link href={clearHref} className={styles.lensClear}>
+            {pick(locale, 'مسح العدسات', 'Clear lenses')}
           </Link>
-        </div>
+        ) : null}
+      </div>
+      {leagues.length > 0 ? (
+        <LensRail label={pick(locale, 'بطولة', 'Competition')} chips={leagues} />
       ) : null}
-      {leagues.length > 0 ? <LensRail chips={leagues} /> : null}
-      {channels.length > 0 ? <LensRail chips={channels} /> : null}
-      {hours.length > 0 ? <LensRail chips={hours} tabular /> : null}
+      {channels.length > 0 ? (
+        <LensRail label={pick(locale, 'قناة', 'Channel')} chips={channels} />
+      ) : null}
+      {hours.length > 0 ? (
+        <LensRail label={pick(locale, 'ساعة', 'Hour')} chips={hours} tabular />
+      ) : null}
     </div>
   );
 }
 
 function LensRail({
+  label,
   chips,
   tabular,
 }: {
+  label: string;
   chips: LensChip[];
   tabular?: boolean;
 }) {
   return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-      {chips.map((chip) => (
-        <Link
-          key={chip.value}
-          href={chip.href}
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold transition-colors ${
-            chip.active
-              ? 'border-orange-500/50 bg-orange-500 text-primary-foreground'
-              : 'border-border bg-card text-foreground hover:border-orange-500/30 hover:text-orange-600 dark:border-border dark:bg-muted dark:text-muted-foreground'
-          }`}
-        >
-          {chip.logoUrl ? (
-            <img src={chip.logoUrl} alt="" className="h-3.5 w-3.5 object-contain" />
-          ) : null}
-          <span className={tabular ? 'tabular-nums' : undefined}>{chip.label}</span>
-          <span className={`tabular-nums ${chip.active ? 'text-white/80' : 'text-muted-foreground'}`}>
-            {chip.count}
-          </span>
-        </Link>
-      ))}
+    <div className={styles.lensRow}>
+      <span className={styles.lensLabel}>{label}</span>
+      <div className={styles.lensRail}>
+        {chips.map((chip) => (
+          <Link
+            key={chip.value}
+            href={chip.href}
+            className={`${styles.lensChip} ${chip.active ? styles.lensChipOn : ''}`}
+          >
+            {chip.logoUrl ? (
+              <img src={chip.logoUrl} alt="" className={styles.lensLogo} />
+            ) : null}
+            <span className={tabular ? styles.lensTabular : undefined}>{chip.label}</span>
+            <b>{chip.count}</b>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

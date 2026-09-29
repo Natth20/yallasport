@@ -27,6 +27,7 @@ function persistTheme(theme: Theme) {
   const root = document.documentElement;
   root.classList.remove('light', 'dark');
   root.classList.add(theme);
+  root.setAttribute('data-theme', theme);
   root.style.colorScheme = theme;
   document.cookie = `${THEME_COOKIE}=${theme}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
   try {
@@ -60,17 +61,21 @@ export function ThemeProvider({
   initialTheme?: Theme;
 }) {
   const [theme, setThemeState] = useState<Theme>(initialTheme);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const stored = readClientTheme();
     const fromDom = document.documentElement.classList.contains('light') ? 'light' : 'dark';
     const next = stored ?? fromDom;
-    if (next !== initialTheme) setThemeState(next);
-  }, [initialTheme]);
+    setThemeState(next);
+    persistTheme(next);
+    setReady(true);
+  }, []);
 
   useEffect(() => {
+    if (!ready) return;
     persistTheme(theme);
-  }, [theme]);
+  }, [ready, theme]);
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);

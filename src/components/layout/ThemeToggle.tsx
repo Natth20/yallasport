@@ -3,6 +3,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { useTranslations } from 'next-intl';
+import styles from './chrome-control.module.css';
 
 export function ThemeToggle() {
   const t = useTranslations('ui');
@@ -18,12 +19,13 @@ export function ThemeToggle() {
         event.stopPropagation();
         toggleTheme();
       }}
-      className="rounded-full p-2 text-muted-foreground transition-all hover:bg-orange-50 hover:text-orange-500 dark:hover:bg-slate-800"
+      className={styles.btn}
       title={label}
       aria-label={label}
       aria-pressed={light}
+      suppressHydrationWarning
     >
-      {light ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+      {light ? <Moon className={styles.icon} /> : <Sun className={styles.icon} />}
     </button>
   );
 }

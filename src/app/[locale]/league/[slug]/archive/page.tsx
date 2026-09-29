@@ -13,7 +13,7 @@ import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,

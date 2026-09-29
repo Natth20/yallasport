@@ -51,7 +51,7 @@ export type FrontStandingRow = {
 };
 
 export type FrontTable = {
-  league: FrontCrest & { country?: string | null };
+  league: FrontCrest & { country?: string | null; externalId?: string | null };
   seasonId: string;
   rows: FrontStandingRow[];
 };
@@ -69,6 +69,8 @@ export type FrontTransfer = {
   fee: string | null;
   fromTeam: string | null;
   toTeam: string | null;
+  fromLogo: string | null;
+  toLogo: string | null;
   playerName: string;
   playerSlug: string;
   playerPhoto: string | null;
@@ -81,6 +83,16 @@ export type FrontClip = {
   thumbnailUrl: string | null;
   channelTitle: string;
   publishedAt: string;
+};
+
+export type FrontTapeGoal = {
+  id: string;
+  minute: number;
+  player: string;
+  slug: string | null;
+  matchId: string;
+  home: string;
+  away: string;
 };
 
 export type FrontBroadcast = {

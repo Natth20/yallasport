@@ -9,6 +9,15 @@
   min-height: 100dvh;
 }
 
+.contactHouse::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--ys-orange), color-mix(in srgb, var(--ys-orange) 35%, transparent) 46%, transparent);
+}
+
 /* Very subtle background light */
 .contactHouse::before {
   content: '';
@@ -26,9 +35,11 @@
 
 .contactHero {
   position: relative;
-  background: color-mix(in srgb, var(--card) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.05);
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 46%),
+    color-mix(in srgb, var(--card) 86%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  box-shadow: 0 22px 48px color-mix(in srgb, var(--ys-orange) 6%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -38,10 +49,12 @@
 }
 
 .contactFormCard {
-  border-radius: 1.5rem;
-  background: color-mix(in srgb, var(--card) 50%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+  border-radius: 1.6rem;
+  background: color-mix(in srgb, var(--card) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+    0 22px 48px color-mix(in srgb, var(--ys-orange) 8%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: box-shadow 0.4s ease, border-color 0.4s ease;
@@ -82,7 +95,255 @@
   border-color: var(--primary);
   background: var(--background);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
-  transform: translateY(-1px);
+}
+
+.house {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.toc {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.toc::-webkit-scrollbar {
+  display: none;
+}
+
+.toc a {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.toc a:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.split {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (min-width: 1080px) {
+  .split {
+    grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr);
+    align-items: start;
+  }
+}
+
+.stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem 1.15rem 1.3rem;
+  border-radius: 0.3rem 1.4rem 1.4rem 0.3rem;
+  border: 1px solid color-mix(in srgb, #1e3a8a 22%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, #1e3a8a 10%, transparent), transparent 42%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.panelHead {
+  display: grid;
+  gap: 0.2rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.panelHead p {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.panelHead h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.panelHead em {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+}
+
+.note {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 8%, transparent);
+  font-size: 0.78rem;
+}
+
+.list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.8rem 0.85rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.row b {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  color: var(--ys-orange);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.66rem;
+}
+
+.row h3 {
+  margin: 0 0 0.2rem;
+  font-size: 0.86rem;
+}
+
+.row p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.mail {
+  justify-self: start;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: #111;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.mail:hover {
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.card {
+  display: grid;
+  gap: 0.4rem;
+  height: 100%;
+  padding: 1rem 0.95rem;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: var(--card);
+}
+
+.card span {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.card p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.doors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+@media (min-width: 760px) {
+  .doors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.door {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.95rem 0.9rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+}
+
+.door:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 42%, transparent);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+.door span {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
+.door strong {
+  font-size: 0.88rem;
+}
+
+.colo {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
 }
 
 .contactReceipt {

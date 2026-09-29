@@ -2,10 +2,10 @@ import { swallow, reportCaughtError } from '@/lib/ops/caught';
 // src/lib/sports-data/cached-provider.ts
 import { SportsDataProvider } from './interface';
 import { safeRedisGet, safeRedisSet } from '../redis';
-import { 
-  NormalizedMatch, 
-  NormalizedMatchDetail, 
-  NormalizedTeam, 
+import {
+  NormalizedMatch,
+  NormalizedMatchDetail,
+  NormalizedTeam,
   NormalizedStanding,
   NormalizedScorer,
   LiveMatchesPayload,
@@ -85,7 +85,8 @@ export class CachedSportsDataProvider implements SportsDataProvider {
 
     const fresh = await withBudget(
       this.baseProvider.getMatchById(id).catch(swallow("src/lib/sports-data/cached-provider.ts:83", null)),
-      null as NormalizedMatchDetail | null
+      null as NormalizedMatchDetail | null,
+      12000,
     );
     if (!fresh) throw new Error('Match not found');
     const ttl = fresh.status === 'FINISHED' ? this.LONG_CACHE_TTL : this.CACHE_TTL;
@@ -178,14 +179,29 @@ export class CachedSportsDataProvider implements SportsDataProvider {
     if (cached != null) {
       const rows = (cached as { response?: unknown[] } | null)?.response;
       const emptySearch = /players\?search=/i.test(path) && Array.isArray(rows) && rows.length === 0;
-      if (!emptySearch) return cached;
+      const emptyLedger =
+        (/\/transfers\?/i.test(path) || /\/players\/top/i.test(path) || /\/players\?id=/i.test(path)) &&
+        Array.isArray(rows) &&
+        rows.length === 0;
+      if (!emptySearch && !emptyLedger) return cached;
     }
     try {
-      const budget = /players\?search=/i.test(path) ? 10000 : 3500;
+      const budget =
+        /players\?(search|id)=/i.test(path) ||
+        /\/transfers\?/i.test(path) ||
+        /\/players\/top/i.test(path) ||
+        /\/fixtures\?id=/i.test(path) ||
+        /\/fixtures\/(events|lineups|statistics)/i.test(path)
+          ? 12000
+          : 3500;
       const fresh = await withBudget(this.baseProvider.getRaw<T>(path), null as T | null, budget);
       const rows = (fresh as { response?: unknown[] } | null)?.response;
       const emptySearch = /players\?search=/i.test(path) && Array.isArray(rows) && rows.length === 0;
-      if (fresh != null && !emptySearch) {
+      const emptyBoard =
+        (/\/players\/top/i.test(path) || /\/transfers\?/i.test(path) || /\/players\?id=/i.test(path)) &&
+        Array.isArray(rows) &&
+        rows.length === 0;
+      if (fresh != null && !emptySearch && !emptyBoard) {
         await safeRedisSet(cacheKey, fresh, { ex: ttl });
         return fresh;
       }

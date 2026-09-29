@@ -8,8 +8,11 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { VersusPair } from './VersusPair';
 import { QuickDerbyBar } from './QuickDerbyBar';
 import { CrestImage } from '@/components/common/CrestImage';
+import { cache } from 'react';
+import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { Badge } from '@/components/ui/Badge';
+import { Scale, Users } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { DERBY_NEEDLES, recordFor, remapMatchSides, shareBar, versusHref, type VersusTeamOption } from './versus';
@@ -19,7 +22,7 @@ import styles from './compare.module.css';
 
 const TEAM_SELECT = { id: true, slug: true, name: true, logoUrl: true, externalId: true } as const;
 
-async function findDeskTeam(slug?: string) {
+const findDeskTeam = cache(async function findDeskTeam(slug?: string) {
   if (!slug) return null;
   const exact = await prisma.team.findUnique({ where: { slug }, select: TEAM_SELECT });
   if (exact) return exact;
@@ -27,7 +30,7 @@ async function findDeskTeam(slug?: string) {
     where: { slug: { startsWith: `${slug}-` } },
     select: TEAM_SELECT,
   });
-}
+});
 
 async function finishedGoals(teamId: string) {
   const [home, away] = await Promise.all([
@@ -295,15 +298,21 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
 
   return (
     <SalonStage
-      tone="podium"
+      tone="scale"
       wide
-      kicker={`${t('house')} · ${t('folio')}`}
+      compact
+      kicker={t('house')}
       title={paired ? t('headline_pair', { a: leftName, b: rightName }) : t('headline')}
       lead={t('standfirst')}
-      aside={
-        <Badge variant="outline" size="sm">
-          {teamCount} {locale === 'en' ? 'teams in the ledger' : 'فريق في الدفتر'}
-        </Badge>
+      aside={`${teamCount} ${locale === 'en' ? 'clubs' : 'نادي'}`}
+      tools={
+        <HallFoyer
+          label={t('folio')}
+          items={[
+            { href: '/compare', label: locale === 'en' ? 'Clubs' : 'الأندية', icon: Scale, current: true },
+            { href: '/compare-players', label: locale === 'en' ? 'Players' : 'اللاعبون', icon: Users },
+          ]}
+        />
       }
     >
       <div className={styles.stack}>

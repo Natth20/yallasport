@@ -10,8 +10,12 @@ import { pageMetadata } from '@/lib/seo/site';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
 import { walkLocalizeNames, localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { FrontSkeleton } from '@/components/front/FrontMark';
+import { SalonStage } from '@/components/salon/SalonStage';
+import { auth } from '@/lib/auth/auth';
+import { HallFoyer } from '@/components/salon/HallFoyer';
+import { CalendarDays, Calendar, History, Target, Trophy } from 'lucide-react';
 
-export const revalidate = 300;
+export const revalidate = 90;
 
 export async function generateMetadata({
   params,
@@ -69,6 +73,15 @@ async function LeaguePageBody({
   const dossier = await loadLeagueDossier(slug, { season });
   if (!dossier) notFound();
   walkLocalizeNames(locale, dossier);
+  const session = await auth();
+  const isFollowing = session?.user?.id
+    ? Boolean(
+      await prisma.userFavorite.findFirst({
+        where: { userId: session.user.id, entityType: 'LEAGUE', entityId: dossier.league.id },
+        select: { id: true },
+      }),
+    )
+    : false;
 
   return (
     <>
@@ -81,13 +94,38 @@ async function LeaguePageBody({
           sport: 'Soccer',
         }}
       />
-      <LeagueDossier
-        locale={locale}
-        now={new Date()}
-        dossier={dossier}
-        isLoggedIn={false}
-        initialIsFollowing={false}
-      />
+      <SalonStage
+        tone="sash"
+        wide
+        compact
+        kicker={pick(locale, 'وشاح البطولة', 'Competition sash')}
+        title={localizePlainName(locale, dossier.league.name)}
+        lead={pick(
+          locale,
+          'الشاشة للمباراة المختارة، والقائمة للجولة، والجدران للترتيب والأندية والأرقام من المصدر فقط.',
+          'The screen holds the selected fixture, the programme holds the round, and the walls hold the table, clubs and numbers from the source only.',
+        )}
+        aside={dossier.seasonId || dossier.league.country || undefined}
+        tools={
+          <HallFoyer
+            label={pick(locale, 'فصول البطولة', 'Competition chapters')}
+            items={[
+              { href: `/league/${dossier.league.slug}`, label: pick(locale, 'الملف', 'Hub'), icon: CalendarDays, current: true },
+              { href: `/league/${dossier.league.slug}/fixtures`, label: pick(locale, 'الجدول', 'Fixtures'), icon: Calendar },
+              { href: `/league/${dossier.league.slug}/standings`, label: pick(locale, 'الترتيب', 'Table'), icon: Trophy },
+              { href: `/league/${dossier.league.slug}/top-scorers`, label: pick(locale, 'الهدافون', 'Scorers'), icon: Target },
+              { href: `/league/${dossier.league.slug}/archive`, label: pick(locale, 'الأرشيف', 'Archive'), icon: History },
+            ]}
+          />
+        }
+      >
+        <LeagueDossier
+          locale={locale}
+          dossier={dossier}
+          isLoggedIn={Boolean(session?.user)}
+          initialIsFollowing={isFollowing}
+        />
+      </SalonStage>
     </>
   );
 }

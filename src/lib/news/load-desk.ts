@@ -8,6 +8,7 @@ import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { dayBoundsInTimezone, dateKeyInTimezone } from '@/lib/datetime/format';
 import { NEWS_DESKS, DEFAULT_DESK } from '@/lib/news/desks';
 import { newsFreshSince } from '@/lib/news/freshness';
+import { rotateStart } from '@/lib/front/rotate-shelf';
 import { MATCH_ARCHIVE_AFTER_MS, belongsOnTodayBoard, todayOrLiveWhere } from '@/lib/sports-data/match-window';
 import type { Prisma } from '@/generated/prisma';
 
@@ -20,7 +21,7 @@ import type { Prisma } from '@/generated/prisma';
  * a real row rather than a hardcoded sample.
  */
 
-export const NEWS_PAGE_SIZE = 20;
+export const NEWS_PAGE_SIZE = 36;
 
 const storySelect = {
   id: true,
@@ -149,6 +150,7 @@ export type NewsDeskData = {
   mostRead: Brief[];
   freshest: Brief[];
   sameDesk: Brief[];
+  weekFile: Brief[];
   pitch: PitchMatch[];
   liveCount: number;
   tables: TableSnapshot[];
@@ -195,7 +197,7 @@ function searchClause(query: string, locale: string): Prisma.NewsWhereInput[] {
   ];
 }
 
-export async function loadNewsDesk({
+export const loadNewsDesk = cache(async function loadNewsDesk({
   locale,
   timezone,
   query,
@@ -262,9 +264,13 @@ export async function loadNewsDesk({
 
   // ── front page slots ──────────────────────────────────────────────────────
   const onFirstPage = page === 1;
-  const lead = onFirstPage ? localized[0] ?? null : null;
-  const subLeads = onFirstPage ? localized.slice(1, 4) : [];
-  const rest = onFirstPage ? localized.slice(4) : localized;
+  const filed = localized.filter((story) => story.category !== DEFAULT_DESK.key);
+  const catchAll = localized.filter((story) => story.category === DEFAULT_DESK.key);
+  const stacked = filed.length > 0 ? [...filed, ...catchAll] : localized;
+  const front = onFirstPage && !query && desk === 'all' ? rotateStart(stacked, 1) : stacked;
+  const lead = onFirstPage ? front[0] ?? null : null;
+  const subLeads = onFirstPage ? front.slice(1, 4) : [];
+  const rest = onFirstPage ? front.slice(4) : localized;
   const breaking =
     localizedExtras.find(
       (entry) =>
@@ -339,6 +345,7 @@ export async function loadNewsDesk({
     mostRead: [...localizedExtras].sort((a, b) => b.views - a.views).slice(0, 6),
     freshest: localizedExtras.slice(0, 10),
     sameDesk,
+    weekFile: localizedExtras,
     pitch: [],
     liveCount: 0,
     tables: [],
@@ -348,7 +355,7 @@ export async function loadNewsDesk({
     archive,
     stats,
   };
-}
+});
 
 export const loadNewsSidecars = cache(async function loadNewsSidecars({
   locale,

@@ -4,6 +4,8 @@ import { FrontSkeleton } from '@/components/front/FrontMark';
 import { Link } from '@/i18n/navigation';
 import { AuthGate } from '@/components/auth/AuthGate';
 import { AuthGoogleButton } from '@/components/auth/AuthGoogleButton';
+import styles from '@/components/auth/auth-gate.module.css';
+import { safeCallbackPath } from '@/lib/auth/next-path';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 
@@ -19,16 +21,26 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   return (
     <Suspense fallback={<FrontSkeleton kind="hero" />}>
-      <LoginPageBody />
+      <LoginPageBody searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function LoginPageBody() {
+async function LoginPageBody({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   const t = await getTranslations('auth');
+  const next = safeCallbackPath((await searchParams).callbackUrl);
+  const registerHref = next === '/' ? '/register' : `/register?callbackUrl=${encodeURIComponent(next)}`;
   return (
     <AuthGate
       code={t('login_code')}
@@ -36,16 +48,17 @@ async function LoginPageBody() {
       title={t('login_title')}
       lead={t('login_lead')}
       seals={[t('login_seal_1'), t('login_seal_2')]}
+      gate="login"
     >
-      <AuthGoogleButton intent="login" />
-      <p className="mt-5 text-[13px] leading-7 text-muted-foreground dark:text-foreground/45">{t('google_note')}</p>
-      <div className="mt-8 flex flex-col gap-3 text-[12px] font-bold sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/forgot-password" className="text-primary hover:underline">
+      <AuthGoogleButton intent="login" callbackUrl={next} />
+      <p className={styles.note}>{t('google_note')}</p>
+      <div className={styles.links}>
+        <Link href="/forgot-password" className={styles.link}>
           {t('forgot_link')}
         </Link>
-        <p className="text-muted-foreground">
+        <p className={styles.quiet}>
           {t('login_to_register')}{' '}
-          <Link href="/register" className="text-primary hover:underline">
+          <Link href={registerHref} className={styles.link}>
             {t('login_to_register_link')}
           </Link>
         </p>

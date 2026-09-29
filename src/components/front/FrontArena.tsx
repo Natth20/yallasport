@@ -27,8 +27,8 @@ export async function FrontArena() {
   const live = matches.filter((match) => isLiveStatus(match.status));
   const soon = matches.filter((match) => !isLiveStatus(match.status) && match.status !== 'FINISHED');
   const done = matches.filter((match) => match.status === 'FINISHED');
-  const headline = rest.slice(0, 6);
-  const liveOrRecent = live.length > 0 ? live.slice(0, 8) : done.slice(0, 4);
+  const headline = rest.slice(0, 4);
+  const liveOrRecent = live.length > 0 ? live.slice(0, 4) : done.slice(0, 3);
 
   if (matches.length === 0 && headline.length === 0 && leagues.length === 0) return null;
 
@@ -64,7 +64,7 @@ export async function FrontArena() {
             <section className={styles.block}>
               <FrontMark num={t('ch01')} title={t('ch01_soon')} href="/matches" cta={t('ch01_cta')} />
               <div className={styles.kickGrid}>
-                {soon.slice(0, 8).map((match) => {
+                {soon.slice(0, 4).map((match) => {
                   const special = specialStatusLabel(match.status, locale);
                   return (
                     <Link key={match.id} href={`/match/${match.id}`} className={styles.kick}>
@@ -129,7 +129,7 @@ export async function FrontArena() {
           <section className={styles.block}>
             <FrontMark num={t('ch03')} title={t('door_leagues')} href="/leagues" cta={t('ch03_cta')} />
             <div className={styles.leagues}>
-              {leagues.map((league) => (
+              {leagues.slice(0, 8).map((league) => (
                 <Link key={league.id} href={`/league/${league.slug}`} className={styles.league}>
                   <LeagueCrest name={league.name} logoUrl={league.logoUrl} className="h-10 w-10" />
                   <span>{league.name}</span>

@@ -7,7 +7,7 @@ import type { FrontBroadcast } from './types';
 
 export async function loadFrontBroadcast(locale: string): Promise<FrontBroadcast[]> {
   const { todayKey, start, end } = frontDayWindow();
-  const rows = await cachedJson(`front:tv:${todayKey}`, 120, () =>
+  const rows = await cachedJson(`front:tv:${todayKey}:v2`, 60, () =>
     listTonightTvGuide({ start, end }).catch(swallow('front.tv', [])),
   );
 

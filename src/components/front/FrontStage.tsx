@@ -22,8 +22,8 @@ export async function FrontStage() {
     loadFrontPulse(),
   ]);
 
-  const ticker = board.slice(0, 16);
-  const rail = rest.slice(0, 5);
+  const ticker = board.slice(0, 8);
+  const rail = rest.slice(0, 4);
   const chips = [
     pulse.live > 0 ? { label: t('stat_live'), value: pulse.live, live: true } : null,
     pulse.matches > 0 ? { label: t('stat_matches'), value: pulse.matches, live: false } : null,
@@ -82,52 +82,54 @@ export async function FrontStage() {
 
         <div className={styles.cinema}>
           <div className={styles.lead}>
-            <div className={styles.brand}>
-              <BrandMark size={48} priority />
-              <span>{t('stage_kicker')}</span>
+            <div className={styles.leadCopy}>
+              <div className={styles.brand}>
+                <BrandMark size={36} priority />
+                <span>{t('stage_kicker')}</span>
+              </div>
+              <MetaLine
+                className={`${shell.meta} ${styles.kicker}`}
+                parts={[
+                  lead ? deskLabel(lead.category, locale) : t('kicker'),
+                  lead?.sourceName || t('source_seal'),
+                ]}
+              />
+              <h1>
+                <Link href={href}>{title}</Link>
+              </h1>
+              {lead ? (
+                <p className={shell.meta}>
+                  <FrontWhen value={lead.publishedAt} />
+                </p>
+              ) : null}
+              <p className={styles.lede}>{lead?.excerpt || t('standfirst')}</p>
+              <p className={styles.tagline}>{t('tagline')}</p>
+              {chips.length > 0 ? (
+                <ul className={styles.chips} aria-label={t('pulse_note')}>
+                  {chips.map((item) => (
+                    <li key={item.label} className={item.live ? styles.chipLive : styles.chip}>
+                      <strong>{item.value}</strong>
+                      <span>{item.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <nav className={styles.actions}>
+                <Link href={href} className={styles.btnMetal}>
+                  {t('cta_read')}
+                </Link>
+                <Link href="/matches" className={styles.btnQuiet}>
+                  {t('cta_matches')}
+                </Link>
+                <Link href="/live" className={styles.btnSilver}>
+                  {t('cta_live')}
+                </Link>
+              </nav>
             </div>
-            <p className={styles.tagline}>{t('tagline')}</p>
-            <MetaLine
-              className={`${shell.meta} ${styles.kicker}`}
-              parts={[
-                lead ? deskLabel(lead.category, locale) : t('kicker'),
-                lead?.sourceName || t('source_seal'),
-              ]}
-            />
-            <h1>
-              <Link href={href}>{title}</Link>
-            </h1>
-            {lead ? (
-              <p className={shell.meta}>
-                <FrontWhen value={lead.publishedAt} />
-              </p>
-            ) : null}
             {lead?.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img className={styles.leadImg} src={lead.image} alt="" referrerPolicy="no-referrer" />
             ) : null}
-            <p className={styles.lede}>{lead?.excerpt || t('standfirst')}</p>
-            {chips.length > 0 ? (
-              <ul className={styles.chips} aria-label={t('pulse_note')}>
-                {chips.map((item) => (
-                  <li key={item.label} className={item.live ? styles.chipLive : styles.chip}>
-                    <strong>{item.value}</strong>
-                    <span>{item.label}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <nav className={styles.actions}>
-              <Link href={href} className={styles.btnMetal}>
-                {t('cta_read')}
-              </Link>
-              <Link href="/matches" className={styles.btnQuiet}>
-                {t('cta_matches')}
-              </Link>
-              <Link href="/live" className={styles.btnSilver}>
-                {t('cta_live')}
-              </Link>
-            </nav>
           </div>
 
           {rail.length > 0 ? (

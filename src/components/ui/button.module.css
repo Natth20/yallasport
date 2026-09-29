@@ -98,6 +98,8 @@
 
 .accent:hover:not(:disabled) {
   background-color: var(--ys-orange-hover);
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
   transform: translateY(-1px);
   box-shadow: var(--ys-shadow-md);
 }
@@ -238,6 +240,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

@@ -7,6 +7,7 @@ import { isProtectedFullTextSource } from '@/lib/news/import-copy';
 import { pushProvenance } from '@/lib/news/provenance';
 import { readingTimeMinutes } from '@/lib/news/reading-time';
 import { isEditorialNewsItem, isTrustedNewsUrl } from '@/lib/news/trusted-sources';
+import { isFootballCoverage } from '@/lib/news/football-scope';
 import { prisma } from '@/lib/prisma';
 import { alertBreakingNews } from '@/lib/notifications/news-alerts';
 
@@ -114,9 +115,9 @@ export const POST = auth(async function POST(req) {
   }
 
   if (action === 'approve') {
-    if (!isTrustedNewsUrl(news.sourceUrl) || !isEditorialNewsItem(news.title, news.content)) {
+    if (!isTrustedNewsUrl(news.sourceUrl) || !isEditorialNewsItem(news.title, news.content) || !isFootballCoverage(news)) {
       return NextResponse.json(
-        { error: 'Only editorial reports from trusted sources can be published' },
+        { error: 'Only football editorial reports from trusted sources can be published' },
         { status: 400 }
       );
     }
@@ -188,6 +189,9 @@ export const POST = auth(async function POST(req) {
     }
     if (!isEditorialNewsItem(title, content)) {
       return NextResponse.json({ error: 'Content does not look like an editorial news report' }, { status: 400 });
+    }
+    if (nextStatus === 'PUBLISHED' && !isFootballCoverage({ title, content, excerpt, sourceUrl, sourceName })) {
+      return NextResponse.json({ error: 'Only football coverage can stay on the public desk' }, { status: 400 });
     }
 
     let image = featuredImage || ogImage || news.featuredImage || news.ogImage || null;

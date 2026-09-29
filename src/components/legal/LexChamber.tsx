@@ -13,6 +13,8 @@ import {
 import { Link } from '@/i18n/navigation';
 import { pick } from '@/i18n/pick';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
+import { HallFoyer } from '@/components/salon/HallFoyer';
+import { SalonStage } from '@/components/salon/SalonStage';
 import { LexProgress, LexRail, type LexRailItem } from './LexRail';
 import styles from './lex.module.css';
 import {
@@ -239,202 +241,192 @@ export function LexChamber({
 
   return (
     <LexSearchContext.Provider value={searchValue}>
-      <div className={styles['lex-chamber']} data-lex-tone={tone}>
-        <span className={styles['lex-bg-glow']} aria-hidden />
-        <span className={styles['lex-bg-grid']} aria-hidden />
-        <LexProgress />
+      <SalonStage
+        tone="deed"
+        wide
+        compact
+        kicker={instrument}
+        title={title}
+        lead={lead}
+        aside={code}
+        tools={
+          <HallFoyer
+            label={pick(locale, 'جناح الوثائق', 'Legal suite')}
+            items={LEX_GATES.map((gate) => ({
+              href: gate.href,
+              label: pick(locale, gate.ar, gate.en),
+              icon: gate.icon,
+              current: gate.href === path,
+            }))}
+          />
+        }
+      >
+        <div className={styles['lex-chamber']} data-lex-tone={tone}>
+          <span className={styles['lex-bg-glow']} aria-hidden />
+          <span className={styles['lex-bg-grid']} aria-hidden />
+          <LexProgress />
 
-        <div className={styles['lex-container']}>
-          {/* ——— Hero Header ——— */}
-          <header className={styles['lex-hero']}>
-            <div className={styles['lex-hero-badge-row']}>
-              <span className={styles['lex-pill-badge']}>
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{instrument}</span>
-              </span>
-              {date ? (
-                <span className={styles['lex-meta-badge']}>
-                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>{isAr ? `تاريخ السريان: ${date}` : `Effective: ${date}`}</span>
+          <div className={styles['lex-container']}>
+            {/* ——— Hero Header ——— */}
+            <header className={styles['lex-hero']}>
+              <div className={styles['lex-hero-badge-row']}>
+                <span className={styles['lex-pill-badge']}>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{instrument}</span>
                 </span>
-              ) : null}
-              <span className={`${styles['lex-meta-badge']} font-mono`}>
-                <span>{code}</span>
-              </span>
-            </div>
+                {date ? (
+                  <span className={styles['lex-meta-badge']}>
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>{isAr ? `سريان ${date}` : `Effective ${date}`}</span>
+                  </span>
+                ) : null}
+                <span className={`${styles['lex-meta-badge']} font-mono`}>
+                  <span>{code}</span>
+                </span>
+              </div>
 
-            <h1 className={styles['lex-hero-title']}>{wordmark}</h1>
-            <p className={styles['lex-hero-lead']}>{lead}</p>
+              <div className={styles['lex-hero-actions']}>
+                <div className={styles['lex-search-box']}>
+                  <Search className={`${styles['lex-search-icon']} w-4 h-4`} />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        jumpFirst();
+                      }
+                      if (e.key === 'Escape') setSearchQuery('');
+                    }}
+                    placeholder={isAr ? 'ابحث في بنود هذه الوثيقة...' : 'Search within this document...'}
+                    className={styles['lex-search-input']}
+                    aria-label={isAr ? 'البحث في البنود' : 'Search clauses'}
+                  />
+                  {q ? (
+                    <button
+                      type="button"
+                      className={styles['lex-search-clear']}
+                      onClick={() => setSearchQuery('')}
+                      aria-label={isAr ? 'مسح البحث' : 'Clear search'}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  ) : null}
+                  {q ? (
+                    <p className={styles['lex-search-meta']} role="status">
+                      {searchEmpty
+                        ? isAr
+                          ? 'لا بند يطابق هذا البحث'
+                          : 'No clause matches this search'
+                        : isAr
+                          ? `${hitCount} بند`
+                          : `${hitCount} clause${hitCount === 1 ? '' : 's'}`}
+                    </p>
+                  ) : null}
+                </div>
 
-            {/* Quick Action Toolbar */}
-            <div className={styles['lex-hero-actions']}>
-              <div className={styles['lex-search-box']}>
-                <Search className={`${styles['lex-search-icon']} w-4 h-4`} />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      jumpFirst();
-                    }
-                    if (e.key === 'Escape') setSearchQuery('');
-                  }}
-                  placeholder={isAr ? 'ابحث في بنود هذه الوثيقة...' : 'Search within this document...'}
-                  className={styles['lex-search-input']}
-                  aria-label={isAr ? 'البحث في البنود' : 'Search clauses'}
-                />
-                {q ? (
+                <div className={styles['lex-tool-btns']}>
                   <button
                     type="button"
-                    className={styles['lex-search-clear']}
-                    onClick={() => setSearchQuery('')}
-                    aria-label={isAr ? 'مسح البحث' : 'Clear search'}
+                    onClick={handleShare}
+                    className={styles['lex-tool-btn']}
+                    title={isAr ? 'مشاركة الرابط' : 'Share link'}
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'مشاركة' : 'Share'}</span>
                   </button>
-                ) : null}
-                {q ? (
-                  <p className={styles['lex-search-meta']} role="status">
-                    {searchEmpty
-                      ? isAr
-                        ? 'لا بند يطابق هذا البحث'
-                        : 'No clause matches this search'
-                      : isAr
-                        ? `${hitCount} بند`
-                        : `${hitCount} clause${hitCount === 1 ? '' : 's'}`}
-                  </p>
-                ) : null}
-              </div>
 
-              <div className={styles['lex-tool-btns']}>
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className={styles['lex-tool-btn']}
-                  title={isAr ? 'مشاركة الرابط' : 'Share link'}
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'مشاركة' : 'Share'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className={styles['lex-tool-btn']}
-                  title={isAr ? 'طباعة الوثيقة' : 'Print document'}
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>{isAr ? 'طباعة' : 'Print'}</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    className={styles['lex-tool-btn']}
+                    title={isAr ? 'طباعة الوثيقة' : 'Print document'}
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'طباعة' : 'Print'}</span>
+                  </button>
+                </div>
               </div>
+            </header>
+
+            {/* ——— Main Content Layout ——— */}
+            <div className={styles['lex-main-grid']}>
+              {/* Sticky Sidebar (Table of Contents & Quick Support) */}
+              <aside className={styles['lex-sidebar']}>
+                <LexRail
+                  items={visibleRail}
+                  heading={pick(locale, 'فهرس البنود', 'Article Index')}
+                  readLabel={pick(locale, 'العودة للأعلى', 'Back to top')}
+                />
+
+                {aside || (
+                  <div className={styles['lex-sidebar-contact-card']}>
+                    <h4>{pick(locale, 'هل لديك استفسار؟', 'Have questions?')}</h4>
+                    <p>
+                      {pick(
+                        locale,
+                        'فريق يلا سبورت جاهز للإجابة على أي تساؤل يتعلق بالخصوصية والشروط.',
+                        'Our team is available to address any privacy or terms concerns.'
+                      )}
+                    </p>
+                    <Link href="/contact" className={styles['lex-sidebar-btn']}>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{pick(locale, 'تواصل مع الدعم', 'Contact Support')}</span>
+                    </Link>
+                  </div>
+                )}
+              </aside>
+
+              {/* Main Document Content */}
+              <main className={styles['lex-articles-flow']} id="lex-doc-content">
+                {searchEmpty ? (
+                  <div className={styles['lex-search-empty']}>
+                    <strong>{isAr ? 'ما في بند بهالكلمات' : 'Nothing in this document matches'}</strong>
+                    <p>
+                      {isAr
+                        ? 'جرّب كلمة ثانية من نص الوثيقة، أو امسح البحث لعرض كل البنود.'
+                        : 'Try another word from the document, or clear the search to show every clause.'}
+                    </p>
+                  </div>
+                ) : null}
+                {children}
+              </main>
             </div>
-          </header>
 
-          {/* ——— Hub Navigation Ribbon ——— */}
-          <nav
-            className={styles['lex-nav-ribbon']}
-            aria-label={pick(locale, 'بوابة الوثائق القانونية', 'Legal & Trust Portal')}
-          >
-            {LEX_GATES.map((gate) => {
-              const active = gate.href === path;
-              const Icon = gate.icon;
-              return (
-                <Link
-                  key={gate.href}
-                  href={gate.href}
-                  className={styles['lex-nav-card']}
-                  data-active={active ? 'true' : 'false'}
-                >
-                  <div className={styles['lex-nav-card-icon']}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className={styles['lex-nav-card-text']}>
-                    <span className={styles['lex-nav-card-title']}>{pick(locale, gate.ar, gate.en)}</span>
-                    <span className={styles['lex-nav-card-desc']}>{pick(locale, gate.arDesc, gate.enDesc)}</span>
-                  </div>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* ——— Main Content Layout ——— */}
-          <div className={styles['lex-main-grid']}>
-            {/* Sticky Sidebar (Table of Contents & Quick Support) */}
-            <aside className={styles['lex-sidebar']}>
-              <LexRail
-                items={visibleRail}
-                heading={pick(locale, 'فهرس البنود', 'Article Index')}
-                readLabel={pick(locale, 'العودة للأعلى', 'Back to top')}
-              />
-
-              {aside || (
-                <div className={styles['lex-sidebar-contact-card']}>
-                  <h4>{pick(locale, 'هل لديك استفسار؟', 'Have questions?')}</h4>
-                  <p>
-                    {pick(
-                      locale,
-                      'فريق يلا سبورت جاهز للإجابة على أي تساؤل يتعلق بالخصوصية والشروط.',
-                      'Our team is available to address any privacy or terms concerns.'
-                    )}
-                  </p>
-                  <Link href="/contact" className={styles['lex-sidebar-btn']}>
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{pick(locale, 'تواصل مع الدعم', 'Contact Support')}</span>
-                  </Link>
+            {/* ——— Footer Colophon ——— */}
+            <footer className={styles['lex-colophon-box']}>
+              <div className={styles['lex-colophon-info']}>
+                <div className="w-10 h-10 rounded-xl bg-[var(--lex-accent-soft)] border border-[var(--lex-accent-border)] flex items-center justify-center text-[var(--lex-accent)] font-bold text-sm">
+                  YS
                 </div>
-              )}
-            </aside>
-
-            {/* Main Document Content */}
-            <main className={styles['lex-articles-flow']} id="lex-doc-content">
-              {searchEmpty ? (
-                <div className={styles['lex-search-empty']}>
-                  <strong>{isAr ? 'ما في بند بهالكلمات' : 'Nothing in this document matches'}</strong>
-                  <p>
-                    {isAr
-                      ? 'جرّب كلمة ثانية من نص الوثيقة، أو امسح البحث لعرض كل البنود.'
-                      : 'Try another word from the document, or clear the search to show every clause.'}
+                <div>
+                  <p className="font-bold text-sm text-foreground">YALLA SPORT TRUST & LEGAL</p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {date ? `${code} · ${date}` : code}
                   </p>
                 </div>
-              ) : null}
-              {children}
-            </main>
+              </div>
+
+              <p className={styles['lex-colophon-legal-text']}>
+                {pick(
+                  locale,
+                  'تخضع هذه الوثيقة لمراجعة دورية لضمان الامتثال التام لأعلى معايير حماية البيانات والشفافية الرقمية.',
+                  'This document is periodically reviewed to ensure complete adherence to digital trust and data privacy standards.'
+                )}
+              </p>
+
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className={styles['lex-mail']}
+              >
+                <span>{CONTACT_EMAIL}</span>
+                <ExternalLink className="w-3 h-3 text-muted-foreground" />
+              </a>
+            </footer>
           </div>
-
-          {/* ——— Footer Colophon ——— */}
-          <footer className={styles['lex-colophon-box']}>
-            <div className={styles['lex-colophon-info']}>
-              <div className="w-10 h-10 rounded-xl bg-[var(--lex-accent-soft)] border border-[var(--lex-accent-border)] flex items-center justify-center text-[var(--lex-accent)] font-bold text-sm">
-                YS
-              </div>
-              <div>
-                <p className="font-bold text-sm text-foreground">YALLA SPORT TRUST & LEGAL</p>
-                <p className="text-xs text-muted-foreground font-mono">
-                  {date ? `${code} · ${date}` : code}
-                </p>
-              </div>
-            </div>
-
-            <p className={styles['lex-colophon-legal-text']}>
-              {pick(
-                locale,
-                'تخضع هذه الوثيقة لمراجعة دورية لضمان الامتثال التام لأعلى معايير حماية البيانات والشفافية الرقمية.',
-                'This document is periodically reviewed to ensure complete adherence to digital trust and data privacy standards.'
-              )}
-            </p>
-
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-secondary/80 hover:bg-secondary text-foreground transition-colors border border-border"
-            >
-              <span>{CONTACT_EMAIL}</span>
-              <ExternalLink className="w-3 h-3 text-muted-foreground" />
-            </a>
-          </footer>
         </div>
-      </div>
+      </SalonStage>
     </LexSearchContext.Provider>
   );
 }

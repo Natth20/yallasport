@@ -4,6 +4,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { isAbortError } from '@/lib/ops/caught';
+import folio from './compare-folio.module.css';
 
 type Hit = { name: string; slug: string; photoUrl: string | null; teamName?: string | null };
 
@@ -22,6 +23,8 @@ function PlayerSearchField({
 }) {
   const [query, setQuery] = useState(value?.name ?? '');
   const [hits, setHits] = useState<Hit[]>([]);
+  const hitsRef = useRef<Hit[]>([]);
+  const lastQ = useRef('');
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -50,6 +53,14 @@ function PlayerSearchField({
       setOpen(false);
       return;
     }
+    const prev = lastQ.current;
+    if (prev && q.toLowerCase().startsWith(prev.toLowerCase()) && hitsRef.current.length > 0) {
+      const local = hitsRef.current.filter(
+        (hit) =>
+          hit.name.toLowerCase().includes(q.toLowerCase()) || hit.slug.toLowerCase().includes(q.toLowerCase()),
+      );
+      if (local.length) setHits(local);
+    }
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -58,7 +69,7 @@ function PlayerSearchField({
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/search/suggestions?kind=player&locale=${locale}&q=${encodeURIComponent(q)}`,
+          `/api/players/suggest?locale=${locale}&q=${encodeURIComponent(q)}`,
           { signal: controller.signal },
         );
         if (!res.ok) {
@@ -90,6 +101,8 @@ function PlayerSearchField({
             },
           ];
         });
+        hitsRef.current = next;
+        lastQ.current = q;
         setHits(next);
         setActive(0);
         setLoading(false);
@@ -98,7 +111,7 @@ function PlayerSearchField({
         setHits([]);
         setLoading(false);
       }
-    }, 200);
+    }, 120);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
@@ -113,11 +126,17 @@ function PlayerSearchField({
   };
 
   return (
-    <div className="relative" ref={wrapRef}>
-      <label className="mb-2 block text-xs font-bold">{label}</label>
-      <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3">
-        <Search className="h-4 w-4 text-muted-foreground" />
+    <div className={folio.field} ref={wrapRef}>
+      <label>{label}</label>
+      <div className={folio.fieldBox} data-picked={value ? 'true' : 'false'} data-busy={loading ? 'true' : 'false'}>
+        {value?.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value.photoUrl} alt="" className={folio.fieldFace} />
+        ) : (
+          <Search className={folio.fieldIcon} />
+        )}
         <input
+          spellCheck={false}
           value={query}
           onChange={(event) => {
             const next = event.target.value;
@@ -146,8 +165,7 @@ function PlayerSearchField({
             }
             if (event.key === 'Escape') setOpen(false);
           }}
-          placeholder={ar ? 'أي لاعب من المصدر…' : 'Any player from the source…'}
-          className="h-12 flex-1 bg-transparent text-sm outline-none"
+          placeholder={ar ? 'اكتب اسم اللاعب…' : 'Type a player name…'}
           autoComplete="off"
           role="combobox"
           aria-expanded={open}
@@ -157,38 +175,32 @@ function PlayerSearchField({
         />
       </div>
       {open ? (
-        <ul
-          id={listId}
-          role="listbox"
-          className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-2xl border border-border bg-card shadow-xl"
-        >
-          {loading ? (
-            <li className="px-3 py-3 text-xs font-bold text-muted-foreground">{ar ? 'نبحث في المصدر…' : 'Searching the source…'}</li>
+        <ul id={listId} role="listbox" className={folio.suggest}>
+          {loading && hits.length === 0 ? (
+            <li className={folio.suggestEmpty}>{ar ? 'نبحث في الدفتر…' : 'Checking the desk…'}</li>
           ) : hits.length === 0 ? (
-            <li className="px-3 py-3 text-xs font-bold text-muted-foreground">
-              {ar ? 'ما في نتيجة من المصدر بهالاسم.' : 'The source returned no player for that name.'}
+            <li className={folio.suggestEmpty}>
+              {ar ? 'ما في لاعب بهالاسم من المصدر.' : 'The source returned no player for that name.'}
             </li>
           ) : (
             hits.map((hit, index) => (
               <li key={hit.slug} role="option" id={`${listId}-${hit.slug}`} aria-selected={index === active}>
                 <button
                   type="button"
-                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm font-bold hover:bg-muted ${index === active ? 'bg-muted' : ''}`}
+                  className={index === active ? folio.suggestOn : folio.suggestBtn}
                   onMouseEnter={() => setActive(index)}
                   onClick={() => pickHit(hit)}
                 >
                   {hit.photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={hit.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
+                    <img src={hit.photoUrl} alt="" />
                   ) : (
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-muted text-xs">{hit.name.charAt(0)}</span>
+                    <span>{hit.name.charAt(0)}</span>
                   )}
-                  <span className="min-w-0">
-                    <strong className="block truncate">{hit.name}</strong>
-                    {hit.teamName ? (
-                      <em className="block truncate text-[11px] font-semibold not-italic text-muted-foreground">{hit.teamName}</em>
-                    ) : null}
-                  </span>
+                  <em>
+                    <strong>{hit.name}</strong>
+                    {hit.teamName ? <i>{hit.teamName}</i> : null}
+                  </em>
                 </button>
               </li>
             ))
@@ -204,77 +216,89 @@ export function PlayerComparePicker({
   initialP1,
   initialP2,
   faces,
+  season,
 }: {
   locale: string;
   initialP1?: Hit | null;
   initialP2?: Hit | null;
   faces?: Hit[];
+  season?: number;
 }) {
   const router = useRouter();
   const [p1, setP1] = useState<Hit | null>(initialP1 ?? null);
   const [p2, setP2] = useState<Hit | null>(initialP2 ?? null);
   const ar = locale === 'ar';
 
+  const hrefFor = (left: Hit, right: Hit) => {
+    const seasonQ = season ? `&season=${season}` : '';
+    return `/compare-players?p1=${encodeURIComponent(left.slug)}&p2=${encodeURIComponent(right.slug)}${seasonQ}`;
+  };
+
   const compare = (left = p1, right = p2) => {
     if (!left || !right || left.slug === right.slug) return;
-    router.push(`/compare-players?p1=${encodeURIComponent(left.slug)}&p2=${encodeURIComponent(right.slug)}`);
+    if (left.slug === initialP1?.slug && right.slug === initialP2?.slug) return;
+    router.push(hrefFor(left, right));
   };
+
+  useEffect(() => {
+    if (!p1 || !p2 || p1.slug === p2.slug) return;
+    if (p1.slug === initialP1?.slug && p2.slug === initialP2?.slug) return;
+    router.push(hrefFor(p1, p2));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p1?.slug, p2?.slug]);
 
   const swap = () => {
     if (!p1 && !p2) return;
     setP1(p2);
     setP2(p1);
-    if (p1 && p2) {
-      router.push(`/compare-players?p1=${encodeURIComponent(p2.slug)}&p2=${encodeURIComponent(p1.slug)}`);
-    }
+    if (p1 && p2) router.push(hrefFor(p2, p1));
   };
 
   const pickFaceHref = (hit: Hit) => {
+    const seasonQ = season ? `&season=${season}` : '';
     if (p1 && p1.slug !== hit.slug) {
-      return `/compare-players?p1=${encodeURIComponent(p1.slug)}&p2=${encodeURIComponent(hit.slug)}`;
+      return `/compare-players?p1=${encodeURIComponent(p1.slug)}&p2=${encodeURIComponent(hit.slug)}${seasonQ}`;
     }
     if (p2 && p2.slug !== hit.slug) {
-      return `/compare-players?p1=${encodeURIComponent(hit.slug)}&p2=${encodeURIComponent(p2.slug)}`;
+      return `/compare-players?p1=${encodeURIComponent(hit.slug)}&p2=${encodeURIComponent(p2.slug)}${seasonQ}`;
     }
-    return `/compare-players?p1=${encodeURIComponent(hit.slug)}`;
+    return `/compare-players?p1=${encodeURIComponent(hit.slug)}${seasonQ}`;
   };
 
   return (
-    <div className="mx-auto mb-10 max-w-3xl space-y-4 rounded-3xl border border-border bg-card p-6">
-      <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-end">
-        <PlayerSearchField locale={locale} label={ar ? 'اللاعب الأول' : 'First player'} value={p1} onPick={setP1} onClear={() => setP1(null)} />
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={swap}
-            disabled={!p1 && !p2}
-            className="h-12 rounded-2xl border border-border px-4 text-sm font-black disabled:opacity-40"
-          >
+    <div className={folio.picker}>
+      <div className={folio.pickerRow}>
+        <PlayerSearchField locale={locale} label={ar ? 'الكفة الأولى' : 'Left scale'} value={p1} onPick={setP1} onClear={() => setP1(null)} />
+        <div className={folio.pickerActions}>
+          <span className={folio.vsMark} aria-hidden>
+            VS
+          </span>
+          <button type="button" onClick={swap} disabled={!p1 && !p2} className={folio.swapBtn}>
             {ar ? 'تبديل' : 'Swap'}
           </button>
           <button
             type="button"
             onClick={() => compare()}
             disabled={!p1 || !p2 || p1.slug === p2.slug}
-            className="h-12 rounded-2xl bg-orange-500 px-5 text-sm font-black text-primary-foreground disabled:opacity-40"
+            className={folio.goBtn}
           >
-            {ar ? 'قارن' : 'Compare'}
+            {ar ? 'قارن الآن' : 'Compare now'}
           </button>
         </div>
-        <PlayerSearchField locale={locale} label={ar ? 'اللاعب الثاني' : 'Second player'} value={p2} onPick={setP2} onClear={() => setP2(null)} />
+        <PlayerSearchField locale={locale} label={ar ? 'الكفة الثانية' : 'Right scale'} value={p2} onPick={setP2} onClear={() => setP2(null)} />
       </div>
       {faces && faces.length > 0 ? (
-        <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            {ar ? 'وجوه معروفة' : 'Known names'}
-          </p>
-          <div className="flex flex-wrap gap-2">
+        <div className={folio.faces}>
+          <p>{ar ? 'وجوه من الدفتر' : 'Names on file'}</p>
+          <div>
             {faces.map((face) => (
-              <Link
-                key={face.slug}
-                href={pickFaceHref(face)}
-                className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold hover:border-primary"
-              >
+              <Link key={face.slug} href={pickFaceHref(face)} className={folio.faceChip}>
+                {face.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={face.photoUrl} alt="" />
+                ) : (
+                  <span>{face.name.charAt(0)}</span>
+                )}
                 {face.name}
               </Link>
             ))}

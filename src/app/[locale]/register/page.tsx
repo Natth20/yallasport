@@ -4,6 +4,8 @@ import { FrontSkeleton } from '@/components/front/FrontMark';
 import { Link } from '@/i18n/navigation';
 import { AuthGate } from '@/components/auth/AuthGate';
 import { AuthGoogleButton } from '@/components/auth/AuthGoogleButton';
+import styles from '@/components/auth/auth-gate.module.css';
+import { safeCallbackPath } from '@/lib/auth/next-path';
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/seo/site';
 
@@ -19,16 +21,26 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function RegisterPage() {
+export default function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   return (
     <Suspense fallback={<FrontSkeleton kind="hero" />}>
-      <RegisterPageBody />
+      <RegisterPageBody searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function RegisterPageBody() {
+async function RegisterPageBody({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   const t = await getTranslations('auth');
+  const next = safeCallbackPath((await searchParams).callbackUrl);
+  const loginHref = next === '/' ? '/login' : `/login?callbackUrl=${encodeURIComponent(next)}`;
   return (
     <AuthGate
       code={t('register_code')}
@@ -36,14 +48,17 @@ async function RegisterPageBody() {
       title={t('register_title')}
       lead={t('register_lead')}
       seals={[t('register_seal_1'), t('register_seal_2')]}
+      gate="register"
     >
-      <AuthGoogleButton intent="register" />
-      <p className="mt-5 text-[13px] leading-7 text-muted-foreground dark:text-foreground/45">{t('google_note')}</p>
-      <p className="mt-8 text-[12px] font-bold text-muted-foreground">
-        {t('register_to_login')}{' '}
-        <Link href="/login" className="text-primary hover:underline">
-          {t('register_to_login_link')}
-        </Link>
+      <AuthGoogleButton intent="register" callbackUrl={next} />
+      <p className={styles.note}>{t('google_note')}</p>
+      <p className={styles.links}>
+        <span className={styles.quiet}>
+          {t('register_to_login')}{' '}
+          <Link href={loginHref} className={styles.link}>
+            {t('register_to_login_link')}
+          </Link>
+        </span>
       </p>
     </AuthGate>
   );

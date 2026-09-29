@@ -1,8 +1,10 @@
 import { Link } from '@/i18n/navigation';
 import { CoverImage } from '@/components/common/CoverImage';
 import { ClientTime } from '@/components/datetime/ClientTime';
+import { FrontWhen } from '@/components/front/FrontWhen';
 import { pick } from '@/i18n/pick';
 import { deskLabel } from '@/lib/news/desks';
+import { listedReadingMinutes } from '@/lib/news/reading-time';
 import { galleryImageSrcSet, publicStoryImage, upgradeGalleryImageUrl } from '@/lib/news/enrich-source';
 import type { ArchiveDay, Brief, DeskChip, DeskStats, SourceTally, Story } from '@/lib/news/load-desk';
 import styles from './news-chamber.module.css';
@@ -18,13 +20,52 @@ function titleDir(title: string) {
   return /[A-Za-z]/.test(title.slice(0, 2)) ? 'ltr' : 'auto';
 }
 
+function readingStamp(story: CardStory, locale: string) {
+  const mins = listedReadingMinutes(story);
+  return mins > 0 ? ` · ${mins} ${pick(locale, 'د', 'min')}` : '';
+}
+
 export function NewsInkMast({
   locale,
   stats,
+  compact = false,
 }: {
   locale: string;
   stats: DeskStats;
+  compact?: boolean;
 }) {
+  const meters = (
+    <dl className={styles['nk-meters']}>
+      <div>
+        <dt>{pick(locale, 'تقارير', 'Reports')}</dt>
+        <dd>{stats.stories}</dd>
+      </div>
+      <div>
+        <dt>{pick(locale, 'مصادر', 'Sources')}</dt>
+        <dd>{stats.sources}</dd>
+      </div>
+      <div>
+        <dt>{pick(locale, 'أبواب', 'Desks')}</dt>
+        <dd>{stats.desks}</dd>
+      </div>
+      {compact ? null : (
+        <div>
+          <dt>{pick(locale, 'هذا الأسبوع', 'This week')}</dt>
+          <dd>{stats.weekCount}</dd>
+        </div>
+      )}
+    </dl>
+  );
+
+  if (compact) {
+    return (
+      <aside className={styles['nk-brief']} aria-label={pick(locale, 'ملخص الغرفة', 'Desk brief')}>
+        <p>{pick(locale, 'معتمد من التحرير فقط. العنوان يفتح الطبعة.', 'Desk-approved only. A title opens the edition.')}</p>
+        {meters}
+      </aside>
+    );
+  }
+
   return (
     <header className={styles['nk-mast']}>
       <div className={styles['nk-mast-copy']}>
@@ -38,24 +79,7 @@ export function NewsInkMast({
           )}
         </p>
       </div>
-      <dl className={styles['nk-meters']}>
-        <div>
-          <dt>{pick(locale, 'تقارير', 'Reports')}</dt>
-          <dd>{stats.stories}</dd>
-        </div>
-        <div>
-          <dt>{pick(locale, 'مصادر', 'Sources')}</dt>
-          <dd>{stats.sources}</dd>
-        </div>
-        <div>
-          <dt>{pick(locale, 'أبواب', 'Desks')}</dt>
-          <dd>{stats.desks}</dd>
-        </div>
-        <div>
-          <dt>{pick(locale, 'هذا الأسبوع', 'This week')}</dt>
-          <dd>{stats.weekCount}</dd>
-        </div>
-      </dl>
+      {meters}
     </header>
   );
 }
@@ -157,10 +181,10 @@ export function NewsInkFresh({ stories, locale }: { stories: Brief[]; locale: st
                     {story.publishedAt ? (
                       <>
                         {' · '}
-                        <ClientTime value={story.publishedAt} />
+                        <FrontWhen value={story.publishedAt} />
                       </>
                     ) : null}
-                    {story.readingTime ? ` · ${story.readingTime} ${pick(locale, 'د', 'min')}` : ''}
+                    {readingStamp(story, locale)}
                   </small>
                 </span>
               </Link>
@@ -210,6 +234,79 @@ export function NewsInkLedger({
   );
 }
 
+export function NewsInkCover({
+  story,
+  locale,
+  folio,
+  total,
+}: {
+  story: CardStory;
+  locale: string;
+  folio: string;
+  total: string;
+}) {
+  return (
+    <section id="news-cover" className={styles['nk-cover']} aria-live="polite">
+      <div className={styles['nk-chassis']}>
+        <div className={styles['nk-bezel']}>
+          <span className={styles['nk-bezel-left']}>
+            <span className={styles['nk-eq']} aria-hidden>
+              <span />
+              <span />
+              <span />
+            </span>
+            {pick(locale, 'غلاف الطبعة', 'Edition cover')}
+          </span>
+          <span className={styles['nk-bezel-right']}>
+            <em>HD</em>
+            <b>
+              {folio} / {total}
+            </b>
+          </span>
+        </div>
+        <NewsInkLead story={story} locale={locale} />
+      </div>
+    </section>
+  );
+}
+
+export function NewsInkQueue({
+  stories,
+  locale,
+}: {
+  stories: CardStory[];
+  locale: string;
+}) {
+  if (stories.length === 0) return null;
+  return (
+    <aside className={styles['nk-queue']} aria-label={pick(locale, 'قائمة الطبعة', 'Edition programme')}>
+      <header className={styles['nk-queue-head']}>
+        <p>{pick(locale, 'بعد الغلاف', 'After the cover')}</p>
+        <h3>{pick(locale, 'قائمة الطبعة', 'Edition programme')}</h3>
+      </header>
+      <ol className={styles['nk-queue-list']}>
+        {stories.map((story, index) => {
+          const cover = storyCover(story);
+          return (
+            <li key={story.id}>
+              <Link href={`/news/${story.slug}`} className={styles['nk-queue-item']}>
+                <span className={styles['nk-queue-num']}>{String(index + 2).padStart(2, '0')}</span>
+                <span className={styles['nk-queue-thumb']}>
+                  {cover ? <CoverImage src={cover} alt="" sizes="120px" className="object-cover" /> : null}
+                </span>
+                <span className={styles['nk-queue-copy']}>
+                  <b dir={titleDir(story.title)}>{story.title}</b>
+                  <small>{story.sourceName || deskLabel(story.category, locale)}</small>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </aside>
+  );
+}
+
 export function NewsInkLead({ story, locale }: { story: CardStory; locale: string }) {
   const cover = storyCover(story);
   const srcSet = publicStoryImage(story);
@@ -243,7 +340,7 @@ export function NewsInkLead({ story, locale }: { story: CardStory; locale: strin
           {story.publishedAt ? (
             <>
               {' · '}
-              <ClientTime value={story.publishedAt} />
+              <FrontWhen value={story.publishedAt} />
             </>
           ) : null}
         </small>
@@ -286,7 +383,7 @@ export function NewsInkTools({
 
       <div className={styles['nk-tool-row']}>
         <p>{pick(locale, 'الأبواب', 'Desks')}</p>
-        <nav className={styles['nk-index']} aria-label={pick(locale, 'أبواب التغطية', 'Coverage desks')}>
+        <nav className={`${styles['nk-index']} ${styles['is-pills']}`} aria-label={pick(locale, 'أبواب التغطية', 'Coverage desks')}>
           <Link href={hrefFor({ desk: 'all', page: 1 })} className={selectedDesk === 'all' ? styles['is-on'] : undefined}>
             <em>{pick(locale, 'الكل', 'All')}</em>
           </Link>
@@ -306,7 +403,7 @@ export function NewsInkTools({
       {sources.length > 1 ? (
         <div className={styles['nk-tool-row']}>
           <p>{pick(locale, 'المصادر', 'Sources')}</p>
-          <nav className={`${styles['nk-index']} ${styles['is-source']}`} aria-label={pick(locale, 'المصادر', 'Sources')}>
+          <nav className={`${styles['nk-index']} ${styles['is-pills']}`} aria-label={pick(locale, 'المصادر', 'Sources')}>
             <Link href={hrefFor({ source: 'all', page: 1 })} className={selectedSource === 'all' ? styles['is-on'] : undefined}>
               <em>{pick(locale, 'الكل', 'All')}</em>
             </Link>
@@ -342,13 +439,88 @@ export function NewsInkCard({ story, locale }: { story: CardStory; locale: strin
           {story.publishedAt ? (
             <>
               {' · '}
-              <ClientTime value={story.publishedAt} />
+              <FrontWhen value={story.publishedAt} />
             </>
           ) : null}
-          {'readingTime' in story && story.readingTime ? ` · ${story.readingTime} ${pick(locale, 'د', 'min')}` : ''}
+          {readingStamp(story, locale)}
           {'views' in story && story.views ? ` · ${story.views} ${pick(locale, 'مشاهدة', 'views')}` : ''}
         </small>
       </span>
     </Link>
+  );
+}
+
+export function NewsInkLanes({
+  stories,
+  desks,
+  exclude,
+  locale,
+  hrefFor,
+}: {
+  stories: Brief[];
+  desks: DeskChip[];
+  exclude: Set<string>;
+  locale: string;
+  hrefFor: (next: { desk?: string; page?: number }) => string;
+}) {
+  const countByDesk = new Map(desks.map((desk) => [desk.key, desk.count]));
+  const buckets = new Map<string, Brief[]>();
+  for (const story of stories) {
+    if (exclude.has(story.id) || story.category === 'Football') continue;
+    const items = buckets.get(story.category) ?? [];
+    if (items.length < 4) items.push(story);
+    buckets.set(story.category, items);
+  }
+  const lanes = [...buckets.entries()]
+    .map(([key, items]) => ({
+      desk: { key, label: key, count: countByDesk.get(key) ?? items.length },
+      items,
+    }))
+    .filter((lane) => lane.items.length >= 2)
+    .sort((a, b) => b.desk.count - a.desk.count)
+    .slice(0, 4);
+
+  if (lanes.length === 0) return null;
+
+  return (
+    <section className={styles['nk-lanes']} aria-label={pick(locale, 'الأبواب من الملف', 'Desks on file')}>
+      <header className={styles['nk-wall-head']}>
+        <div>
+          <p>{pick(locale, 'من الملف', 'On file')}</p>
+          <h2>{pick(locale, 'أبواب التغطية هذا الأسبوع', 'Coverage desks this week')}</h2>
+        </div>
+        <p>{pick(locale, 'تقارير معتمدة فقط، مصنّفة كما وصلت من المصدر.', 'Approved reports only, filed as they arrived from the source.')}</p>
+      </header>
+      <div className={styles['nk-lane-grid']}>
+        {lanes.map((lane) => (
+          <article key={lane.desk.key} className={styles['nk-lane']}>
+            <header>
+              <p>{deskLabel(lane.desk.key, locale)}</p>
+              <Link href={hrefFor({ desk: lane.desk.key, page: 1 })}>
+                {lane.desk.count} {pick(locale, 'تقرير', 'reports')}
+              </Link>
+            </header>
+            <ol>
+              {lane.items.map((story) => (
+                <li key={story.id}>
+                  <Link href={`/news/${story.slug}`}>
+                    <strong dir={titleDir(story.title)}>{story.title}</strong>
+                    <small>
+                      {story.sourceName || pick(locale, 'المصدر', 'Source')}
+                      {story.publishedAt ? (
+                        <>
+                          {' · '}
+                          <FrontWhen value={story.publishedAt} />
+                        </>
+                      ) : null}
+                    </small>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }

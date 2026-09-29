@@ -1,0 +1,591 @@
+.hall {
+  display: grid;
+  gap: 1.7rem;
+}
+
+.empty {
+  padding: 3.4rem 1.2rem;
+  border-radius: 1.4rem;
+  border: 1px dashed color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  text-align: center;
+}
+
+.empty i {
+  display: block;
+  width: 3.2rem;
+  height: 3.2rem;
+  margin: 0 auto 0.9rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+  background:
+    radial-gradient(circle at 30% 28%, color-mix(in srgb, var(--ys-orange) 28%, transparent), transparent 58%),
+    var(--background);
+}
+
+.empty strong,
+.empty p {
+  display: block;
+}
+
+.empty p {
+  margin: 0.4rem 0 0;
+  color: var(--muted-foreground);
+}
+
+.cinema {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  min-height: min(78vh, 42rem);
+  border-radius: 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 26%, var(--border));
+  background: #111;
+  box-shadow:
+    0 28px 70px color-mix(in srgb, var(--ys-orange) 10%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #fff 6%, transparent);
+}
+
+.print,
+.drift,
+.theaterPrint {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.drift {
+  animation: drift 8s ease-out forwards;
+}
+
+.drift :global(img),
+.theaterPrint :global(img),
+.film button :global(img),
+.tilePrint :global(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drift {
+    animation: none;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.07);
+  }
+}
+
+.veil {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, #0b0b0b 18%, transparent) 0%, transparent 28%, transparent 42%, color-mix(in srgb, #0b0b0b 92%, transparent) 100%),
+    radial-gradient(circle at 80% 12%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 36%);
+}
+
+.corners {
+  pointer-events: none;
+  position: absolute;
+  inset: 0.85rem;
+}
+
+.corners::before,
+.corners::after {
+  content: '';
+  position: absolute;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 1px solid var(--ys-orange);
+}
+
+.corners::before {
+  top: -1px;
+  inset-inline-start: -1px;
+  border-inline-end: 0;
+  border-bottom: 0;
+}
+
+.corners::after {
+  bottom: -1px;
+  inset-inline-end: -1px;
+  border-inline-start: 0;
+  border-top: 0;
+}
+
+.caption {
+  position: absolute;
+  z-index: 2;
+  inset-inline: 1.2rem 1.2rem;
+  bottom: 1.15rem;
+  display: grid;
+  gap: 0.55rem;
+  max-width: 42rem;
+  color: #fff;
+}
+
+.caption p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #fff 72%, transparent);
+}
+
+.caption b {
+  color: var(--ys-orange);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.caption em {
+  font-style: normal;
+}
+
+.caption h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 3.4vw, 2.55rem);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.caption h2 a,
+.theater figcaption a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.caption h2 a:hover,
+.theater figcaption a:hover {
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.go,
+.ghost,
+.theater figcaption button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.go {
+  border: 0;
+  background: var(--ys-orange);
+  color: #111;
+}
+
+.go:hover {
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+
+.ghost,
+.theater figcaption button {
+  border: 1px solid color-mix(in srgb, #fff 24%, transparent);
+  background: color-mix(in srgb, #0b0b0b 28%, transparent);
+  color: #fff;
+}
+
+.step {
+  position: absolute;
+  z-index: 3;
+  top: 46%;
+  width: 2.7rem;
+  height: 2.7rem;
+  border: 1px solid color-mix(in srgb, #fff 20%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #0b0b0b 58%, transparent);
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.prev {
+  inset-inline-start: 0.85rem;
+}
+
+.next {
+  inset-inline-end: 0.85rem;
+}
+
+.meter {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 2px;
+  transform-origin: left center;
+  background: var(--ys-orange);
+  animation: meter 8s linear;
+}
+
+:global([dir='rtl']) .meter {
+  transform-origin: right center;
+}
+
+.meter.held {
+  animation-play-state: paused;
+}
+
+@keyframes meter {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.film {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.1rem 0.2rem;
+  scrollbar-width: none;
+}
+
+.film::-webkit-scrollbar {
+  display: none;
+}
+
+.film button {
+  position: relative;
+  flex: 0 0 5.6rem;
+  height: 3.7rem;
+  overflow: hidden;
+  padding: 0;
+  border-radius: 0.7rem;
+  border: 1px solid var(--border);
+  background: #111;
+  cursor: pointer;
+}
+
+.film button em {
+  position: absolute;
+  inset-inline-start: 0.3rem;
+  bottom: 0.2rem;
+  font-size: 0.58rem;
+  font-style: normal;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: #fff;
+}
+
+.film button.on {
+  border-color: var(--ys-orange);
+  box-shadow: 0 0 0 1px var(--ys-orange);
+}
+
+.band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.band p {
+  margin: 0 0 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.band h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+}
+
+.band dl {
+  display: flex;
+  gap: 1.35rem;
+  margin: 0;
+}
+
+.band dt {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.band dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail button {
+  flex: 0 0 auto;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  color: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rail button.on {
+  background: var(--ys-orange);
+  border-color: var(--ys-orange);
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+
+.quiet {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.shelves {
+  display: grid;
+  gap: 1.7rem;
+}
+
+.shelf {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.shelf header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.shelf h4 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.shelf header em {
+  font-style: normal;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+  color: var(--muted-foreground);
+}
+
+.wall {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .wall {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .wall {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.cell {
+  min-width: 0;
+}
+
+.tile {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  border-radius: 1.05rem;
+  background: var(--card);
+  color: var(--foreground);
+  text-align: start;
+  cursor: zoom-in;
+}
+
+.tilePrint {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #111;
+}
+
+.tilePrint :global(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tileMeta {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.7rem 0.75rem 0.8rem;
+}
+
+.tileMeta em {
+  font-style: normal;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.64rem;
+  color: var(--ys-orange);
+}
+
+.tileMeta strong {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  min-height: 2.4em;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.tile.on {
+  border-color: var(--ys-orange);
+}
+
+.theater {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, #050505 88%, transparent);
+  cursor: pointer;
+}
+
+.theater figure {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, calc(100vw - 1.5rem));
+  max-height: 92dvh;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 24%, transparent);
+  background: #0b0b0b;
+}
+
+.theaterStage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 18rem;
+  padding: 0.9rem 3rem 0.6rem;
+  background: #0b0b0b;
+}
+
+.theaterStage img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(92dvh - 8.5rem);
+  object-fit: contain;
+  object-position: center;
+}
+
+.theater figcaption {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.85rem 1.1rem 1rem;
+  border-top: 1px solid color-mix(in srgb, #fff 10%, transparent);
+  background: #111;
+  color: #fff;
+}
+
+.theater figcaption em {
+  font-style: normal;
+  font-size: 0.72rem;
+  color: color-mix(in srgb, #fff 62%, transparent);
+}
+
+.theater figcaption strong {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.theater figcaption span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.theater figcaption a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.theater figcaption a:hover {
+  color: var(--ys-orange);
+  -webkit-text-fill-color: var(--ys-orange);
+}
+
+.theater .step {
+  top: 50%;
+  transform: translateY(-50%);
+}

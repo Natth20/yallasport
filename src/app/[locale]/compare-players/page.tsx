@@ -9,14 +9,15 @@ import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { Link } from '@/i18n/navigation';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
-import { BrandMark } from '@/components/brand/BrandMark';
 import { currentFootballSeason } from '@/lib/sports-data/season';
 import { PlayerCompareBoard } from '@/components/players/PlayerCompareBoard';
 import { listCompareFaces, loadPlayerCompareCard, type PlayerCompareCard } from '@/lib/players/load-dossier';
+import { SalonStage } from '@/components/salon/SalonStage';
+import folio from '@/components/players/compare-folio.module.css';
 
 
 
-export const revalidate = 300;
+export const revalidate = 120;
 
 export async function generateMetadata({
   searchParams,
@@ -69,37 +70,33 @@ function Portrait({
   const team = card.club ? localizePlainName(locale, card.club.name) : null;
   const position = card.position ? localizePlainName(locale, card.position) : null;
   const nation = card.nationality ? localizePlainName(locale, card.nationality) : null;
-  const ring = accent === 'cyan' ? 'border-cyan-500' : 'border-amber-500';
-  const tint = accent === 'cyan' ? 'text-cyan-500' : 'text-amber-500';
   const meta = [position, nation, card.age ? pick(locale, `${card.age} سنة`, `${card.age} yrs`) : null]
     .filter(Boolean)
     .join(' · ');
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 text-center">
-      <div className={`mx-auto mb-4 h-28 w-28 overflow-hidden rounded-full border-4 bg-muted ${ring}`}>
+    <div className={folio.portrait} data-accent={accent}>
+      <div className={folio.face}>
         {card.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={card.photoUrl} alt="" className="h-full w-full object-cover" />
+          <img src={card.photoUrl} alt="" />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-3xl font-black text-muted-foreground">
-            {name.charAt(0)}
-          </span>
+          <span>{name.charAt(0)}</span>
         )}
       </div>
-      <Link href={`/player/${card.slug}`} className="text-xl font-black text-foreground hover:text-primary">
+      <Link href={`/player/${card.slug}`} className={folio.name}>
         {name}
       </Link>
       {team && card.club?.slug ? (
-        <Link href={`/team/${card.club.slug}`} className={`mt-1 block text-sm font-bold ${tint}`}>
+        <Link href={`/team/${card.club.slug}`} className={folio.team}>
           {team}
         </Link>
       ) : team ? (
-        <span className={`mt-1 block text-sm font-bold ${tint}`}>{team}</span>
+        <span className={folio.team}>{team}</span>
       ) : null}
-      {meta ? <span className="mt-1 block text-xs text-muted-foreground">{meta}</span> : null}
+      {meta ? <span className={folio.meta}>{meta}</span> : null}
       {card.competitions[0] ? (
-        <span className="mt-2 block text-[11px] text-muted-foreground">
+        <span className={folio.comp}>
           {localizePlainName(locale, card.competitions[0])}
           {card.season ? ` · ${card.season}/${card.season + 1}` : ''}
         </span>
@@ -127,7 +124,8 @@ async function PlayerComparisonPageBody({
   const { p1: slug1, p2: slug2, season: seasonParam } = await searchParams;
   const current = currentFootballSeason();
   const seasonYear = Number.parseInt(seasonParam || '', 10);
-  const season = Number.isFinite(seasonYear) ? seasonYear : current;
+  const pinned = Number.isFinite(seasonYear);
+  const season = pinned ? seasonYear : current;
   const same = Boolean(slug1 && slug2 && slug1 === slug2);
   const facesRaw = await listCompareFaces();
   const faces = facesRaw.map((face) => ({
@@ -147,102 +145,127 @@ async function PlayerComparisonPageBody({
 
   if (!slug1 || !slug2 || same) {
     return (
-      <div className="versus-house relative min-h-screen overflow-hidden pb-16">
-        <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-full max-w-5xl -translate-x-1/2 rounded-full bg-gradient-to-b from-primary/15 via-cyan-500/10 to-transparent blur-3xl" />
-        <div className="relative mx-auto max-w-5xl space-y-8 px-4 py-16">
-          <header className="space-y-3 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <BrandMark size={28} />
-              <span className="font-mono text-xs text-muted-foreground">YS · PLAYERS</span>
+      <SalonStage
+        tone="booth"
+        wide
+        kicker={pick(locale, 'مكتب المقارنة', 'Compare desk')}
+        title={pick(locale, 'مقارنة اللاعبين', 'Compare players')}
+        lead={pick(
+          locale,
+          'ابحث عن أي لاعب من المصدر. الأرقام من إحصائيات الموسم، مو أصفار مخترعة.',
+          'Pick two players. Figures are this season’s source stats — not invented zeros.',
+        )}
+      >
+        {same ? (
+          <p className={folio.warn}>{pick(locale, 'اختَر لاعبين مختلفين.', 'Pick two different players.')}</p>
+        ) : (
+          <p className={folio.hint}>
+            {pick(
+              locale,
+              'اكتب حرفين من الاسم. النتائج تطلع من الدفتر أولاً، وبعدين من المصدر إن لزم.',
+              'Type two letters. The desk answers first; the source is asked only if the ledger is thin.',
+            )}
+          </p>
+        )}
+        <PlayerComparePicker
+          locale={locale}
+          season={season}
+          initialP1={
+            solo1
+              ? { name: localizePlainName(locale, solo1.name), slug: solo1.slug, photoUrl: null }
+              : null
+          }
+          initialP2={
+            solo2
+              ? { name: localizePlainName(locale, solo2.name), slug: solo2.slug, photoUrl: null }
+              : null
+          }
+          faces={faces}
+        />
+        {faces.length >= 2 ? (
+          <div className={folio.suggest}>
+            <p>{pick(locale, 'وجوه من الدفتر', 'Faces on the desk')}</p>
+            <div className={folio.suggestGrid}>
+              {Array.from({ length: Math.min(3, Math.floor(faces.length / 2)) }, (_, index) => {
+                const face = faces[index * 2];
+                const other = faces[index * 2 + 1];
+                if (!face || !other) return null;
+                return (
+                  <Link
+                    key={`${face.slug}-${other.slug}`}
+                    href={`/compare-players?p1=${encodeURIComponent(face.slug)}&p2=${encodeURIComponent(other.slug)}`}
+                    className={folio.suggestCard}
+                  >
+                    {face.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={face.photoUrl} alt="" />
+                    ) : (
+                      <i>{face.name.charAt(0)}</i>
+                    )}
+                    <span>
+                      <strong>{face.name}</strong>
+                      <em>{other.name}</em>
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-5xl">
-              {pick(locale, 'مقارنة اللاعبين', 'Compare players')}
-            </h1>
-            <p className="mx-auto max-w-xl text-sm text-muted-foreground">
-              {pick(
-                locale,
-                'ابحث عن أي لاعب من المصدر. الأرقام من إحصائيات الموسم، مو أصفار مخترعة.',
-                'Pick two players. Figures are this season’s source stats — not invented zeros.',
-              )}
-            </p>
-          </header>
-          {same ? (
-            <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-center text-xs text-amber-700 dark:text-amber-300">
-              {pick(locale, 'اختَر لاعبين مختلفين.', 'Pick two different players.')}
-            </p>
-          ) : null}
-          <PlayerComparePicker
-            locale={locale}
-            initialP1={
-              solo1
-                ? { name: localizePlainName(locale, solo1.name), slug: solo1.slug, photoUrl: null }
-                : null
-            }
-            initialP2={
-              solo2
-                ? { name: localizePlainName(locale, solo2.name), slug: solo2.slug, photoUrl: null }
-                : null
-            }
-            faces={faces}
-          />
-        </div>
-      </div>
+          </div>
+        ) : null}
+      </SalonStage>
     );
   }
 
   const [left, right] = await Promise.all([
-    loadPlayerCompareCard(slug1, season),
-    loadPlayerCompareCard(slug2, season),
+    loadPlayerCompareCard(slug1, pinned ? season : undefined),
+    loadPlayerCompareCard(slug2, pinned ? season : undefined),
   ]);
   if (!left || !right) notFound();
 
   const gk =
     /goalkeeper|حارس/i.test(left.position || '') || /goalkeeper|حارس/i.test(right.position || '');
   const seasonNote = left.season || right.season || season;
+  const shownSeason = left.season || right.season || season;
   const picked1 = { name: localizePlainName(locale, left.name), slug: left.slug, photoUrl: left.photoUrl };
   const picked2 = { name: localizePlainName(locale, right.name), slug: right.slug, photoUrl: right.photoUrl };
   const seasons = [current, current - 1, current - 2];
 
   return (
-    <div className="versus-house relative min-h-screen overflow-hidden pb-16">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-full max-w-5xl -translate-x-1/2 rounded-full bg-gradient-to-b from-primary/15 via-cyan-500/10 to-transparent blur-3xl" />
-      <div className="relative mx-auto max-w-6xl space-y-10 px-4 py-12">
-        <header className="space-y-3 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <BrandMark size={28} />
-            <span className="font-mono text-xs text-muted-foreground">YS · PLAYERS</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-            {picked1.name} × {picked2.name}
-          </h1>
-          <p className="mx-auto max-w-xl text-sm text-muted-foreground">
-            {pick(
-              locale,
-              `موسم ${seasonNote}/${seasonNote + 1} من المصدر. الشَرطة تعني أن الرقم ما وصل، مش صفر.`,
-              `${seasonNote}/${seasonNote + 1} season from the source. A dash means the figure did not arrive — not a fake zero.`,
-            )}
-          </p>
-          <div className="flex flex-wrap justify-center gap-2">
+    <SalonStage
+      tone="booth"
+      wide
+      kicker={pick(locale, 'مكتب المقارنة', 'Compare desk')}
+      title={`${picked1.name} × ${picked2.name}`}
+      lead={pick(
+        locale,
+        `موسم ${seasonNote}/${seasonNote + 1} من المصدر. الشَرطة تعني أن الرقم ما وصل، مش صفر.`,
+        `${seasonNote}/${seasonNote + 1} season from the source. A dash means the figure did not arrive — not a fake zero.`,
+      )}
+      tools={
+        <div className="salon-foyer">
+          <nav className="salon-tabs" aria-label={pick(locale, 'الموسم', 'Season')}>
             {seasons.map((year) => (
               <Link
                 key={year}
                 href={`/compare-players?p1=${encodeURIComponent(slug1)}&p2=${encodeURIComponent(slug2)}&season=${year}`}
-                className={`rounded-full border px-3 py-1 text-xs font-bold ${year === season ? 'border-primary bg-primary text-primary-foreground' : 'border-border'}`}
+                className={`salon-tab${year === shownSeason ? ' is-on' : ''}`}
               >
                 {year}/{year + 1}
               </Link>
             ))}
-          </div>
-        </header>
+          </nav>
+        </div>
+      }
+    >
+      <PlayerComparePicker locale={locale} season={season} initialP1={picked1} initialP2={picked2} faces={faces} />
 
-        <PlayerComparePicker locale={locale} initialP1={picked1} initialP2={picked2} faces={faces} />
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:items-start">
+      <div className={folio.grid}>
+        <div className={folio.pair}>
           <Portrait card={left} locale={locale} accent="cyan" />
-          <PlayerCompareBoard locale={locale} left={left} right={right} gk={gk} p1={slug1} p2={slug2} />
           <Portrait card={right} locale={locale} accent="amber" />
         </div>
+        <PlayerCompareBoard locale={locale} left={left} right={right} gk={gk} p1={slug1} p2={slug2} season={shownSeason} />
       </div>
-    </div>
+    </SalonStage>
   );
 }

@@ -6,21 +6,21 @@
 
 .matchdayBoard {
   isolation: isolate;
-  background:
-    radial-gradient(85% 45% at 50% 0%, color-mix(in srgb, var(--ys-orange) 6%, transparent), transparent 60%),
-    var(--background);
+  display: grid;
+  gap: 1.15rem;
+  width: 100%;
+  min-width: 0;
   color: var(--foreground);
-  padding-bottom: 6rem;
-  min-height: 100vh;
+  padding-bottom: 0.4rem;
 }
 
 /* ---- Floodlight Hero ---- */
 .floodlightHero {
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
   background:
-    radial-gradient(60% 70% at 85% -10%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 70%),
+    radial-gradient(60% 70% at 85% -10%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 70%),
     radial-gradient(50% 60% at 10% 110%, color-mix(in srgb, var(--ys-green) 10%, transparent), transparent 65%),
     color-mix(in srgb, var(--card) 95%, transparent);
 }
@@ -147,8 +147,13 @@
 }
 
 @keyframes pulseLive {
-  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-  100% { box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0.5rem rgba(239, 68, 68, 0);
+  }
 }
 
 /* ---- Signature Stats Grid ---- */
@@ -185,34 +190,174 @@
 
 /* ---- Main Content Layout ---- */
 .matchdayMain {
-  width: min(1280px, calc(100% - 2rem));
-  margin-inline: auto;
-  padding-block: 2rem 4rem;
+  width: 100%;
+  min-width: 0;
   display: grid;
-  gap: 2rem;
+  gap: 1.6rem;
+}
+
+.programmeShell,
+.fixtureProgramme {
+  position: relative;
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+  padding: 1.15rem;
+  border-radius: 1.65rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 42%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--ys-green) 7%, transparent), transparent 45%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent),
+    0 18px 44px -34px color-mix(in srgb, var(--ys-orange) 28%, transparent);
+}
+
+.fixtureProgramme {
+  gap: 1.25rem;
+  padding: 1.2rem;
+}
+
+.programmeHeader,
+.fixtureProgrammeHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.programmeHeader h2,
+.fixtureProgrammeHead h2 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.2rem, 2.4vw, 1.8rem);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.programmeHeader p,
+.fixtureProgrammeHead p {
+  max-width: 44rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.programmeEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.programmeStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(7.5rem, 1fr));
+  gap: 0.65rem;
+  min-width: min(100%, 17rem);
+}
+
+.programmeStats span,
+.fixtureProgrammeCount {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--background) 48%, transparent);
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.programmeStats b,
+.fixtureProgrammeCount {
+  color: var(--foreground);
+  font-size: 1.35rem;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.fixtureProgrammeCount {
+  min-width: 7.5rem;
+  text-align: center;
+}
+
+.fixtureProgrammeCount small {
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.rhythmGrid {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.rhythmPrimary,
+.rhythmAside,
+.ledgerShelf {
+  min-width: 0;
+}
+
+.rhythmAside:empty,
+.ledgerShelf:empty {
+  display: none;
+}
+
+@media (min-width: 1180px) {
+  .rhythmGrid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+  }
 }
 
 .contentGrid {
   display: grid;
-  gap: 1.75rem;
+  gap: 1.35rem;
   align-items: start;
 }
 
 @media (min-width: 1200px) {
   .contentGrid {
-    grid-template-columns: minmax(0, 1fr) 21rem;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 21rem);
+    gap: 1.55rem;
   }
 }
 
 /* ---- Dock (Date Navigator & Status Filter Bar) ---- */
 .dock {
   display: grid;
-  gap: 1rem;
-  padding: 1rem 1.2rem;
-  border-radius: 1.4rem;
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--foreground) 10%, transparent);
+  gap: 1.15rem;
+  padding: 1.2rem 1.3rem 1.25rem;
+  border-radius: 1.55rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--ys-orange) 9%, transparent), transparent 48%),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, #166534 8%, transparent), transparent 46%),
+    color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow:
+    0 14px 32px -18px color-mix(in srgb, var(--foreground) 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+}
+
+.dockMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
 }
 
 .dateStrip {
@@ -233,7 +378,7 @@
   align-items: center;
   justify-content: center;
   width: 2.75rem;
-  shrink: 0;
+  flex-shrink: 0;
   border-radius: 0.9rem;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--foreground) 3%, var(--card));
@@ -311,7 +456,9 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--ys-orange) 12%, var(--border));
 }
 
 .filterPills {
@@ -591,4 +738,1122 @@
   max-width: 26rem;
   margin-inline: auto;
   margin-bottom: 1.5rem;
+}
+
+/* Classes still written on the matchday page — keep them composed. */
+.matchdayBoard :global(.matchday-wordmark) {
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.75rem, 4.2vw, 3.05rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
+}
+
+.matchdayBoard :global(.matchday-section-kicker) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.matchdayBoard :global(.matchday-folio-mark) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.65rem;
+  height: 1.3rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--ys-orange);
+  color: #14110e;
+  -webkit-text-fill-color: #14110e;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.matchdayBoard :global(.matchday-status-chip) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 38%, var(--border));
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.matchdayBoard :global(.matchday-signature) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.6rem, 1fr));
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.matchdayBoard :global(.matchday-signature-tile) {
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  padding: 0.7rem 0.8rem;
+}
+
+.matchdayBoard :global(.matchday-signature-tile strong) {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.matchdayBoard :global(.matchday-signature-tile span) {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.matchdayBoard :global(.matchday-signature-tile.is-lead) {
+  border-color: color-mix(in srgb, var(--ys-orange) 48%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, var(--card));
+}
+
+.matchdayBoard :global(.matchday-spotlight) {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.55rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 36%, transparent);
+  background:
+    radial-gradient(80% 70% at 50% 0%, color-mix(in srgb, var(--ys-orange) 24%, transparent), transparent 62%),
+    #16120e;
+  color: #f7f2ea;
+  padding: 1.15rem 1.05rem 1.05rem;
+}
+
+.matchdayBoard :global(.matchday-spotlight-grid) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 820px) {
+  .matchdayBoard :global(.matchday-spotlight-grid) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .matchdayBoard :global(.matchday-spotlight-side.is-away) {
+    text-align: end;
+  }
+
+  .matchdayBoard :global(.matchday-spotlight-side.is-away .matchday-crest) {
+    margin-inline-start: auto;
+  }
+}
+
+.matchdayBoard :global(.matchday-crest) {
+  width: 4.4rem;
+  height: 4.4rem;
+}
+
+.matchdayBoard :global(.matchday-spotlight-name) {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.matchdayBoard :global(.matchday-spotlight-meta),
+.matchdayBoard :global(.matchday-spotlight-scorers) {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, #f7f2ea 68%, transparent);
+}
+
+.matchdayBoard :global(.matchday-spotlight-score) {
+  text-align: center;
+}
+
+.matchdayBoard :global(.matchday-dock) {
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+}
+
+.matchdayBoard :global(.matchday-date-chip) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  flex-shrink: 0;
+  min-width: 3.35rem;
+  min-height: 4.15rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+  text-decoration: none;
+}
+
+.matchdayBoard :global(.matchday-date-chip.is-active) {
+  background: #14110e;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  border-color: var(--ys-orange);
+}
+
+.matchdayBoard :global(.matchday-date-chip.is-live) {
+  border-color: color-mix(in srgb, #e11d48 45%, var(--border));
+}
+
+.matchdayBoard :global(.matchday-plate) {
+  border-radius: 1.2rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 1rem 1.05rem;
+}
+
+.matchdayBoard :global(.fixture-board) {
+  overflow: hidden;
+  border-radius: 1.2rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.matchdayBoard :global(.matchday-league-head) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--ys-orange) 6%, var(--card));
+}
+
+.majorHall {
+  padding: 1.1rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 24%, var(--border));
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 46%),
+    var(--card);
+}
+
+.majorHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 0.95rem;
+}
+
+.majorKicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.majorHead h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.majorHead p {
+  max-width: 36rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+}
+
+.majorHead strong {
+  display: grid;
+  justify-items: end;
+  font-size: 1.7rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.majorHead strong span {
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.majorStack {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.majorStack :global(.fixture-board):only-child {
+  max-width: 46rem;
+}
+
+.programmeCol {
+  display: grid;
+  gap: 0.95rem;
+  min-width: 0;
+}
+
+.programmeCol> :global(.fixture-board):only-of-type {
+  max-width: 46rem;
+}
+
+.daySalon {
+  gap: 1.35rem;
+}
+
+.dayFrame {
+  aspect-ratio: 2.15 / 1;
+  min-height: 23rem;
+}
+
+@media (min-width: 900px) {
+  .dayFrame {
+    min-height: 28rem;
+  }
+}
+
+.pitchStrip {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.pitchStripHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pitchStripHead p {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.pitchStripHead h3 {
+  margin: 0.2rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.pitchStripHead span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+.pitchStripList {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.1rem 0 0.35rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.pitchStripList li {
+  flex: 0 0 auto;
+}
+
+.pitchCard {
+  appearance: none;
+  font: inherit;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  width: 18.5rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.pitchCardOn {
+  border-color: color-mix(in srgb, var(--ys-orange) 48%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 10%, var(--card));
+}
+
+.pitchNum {
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--ys-orange);
+}
+
+.pitchCopy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pitchCopy b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.pitchCopy i {
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.dateChipLive {
+  border-color: color-mix(in srgb, #ef4444 45%, var(--border));
+}
+
+.dateLiveDot {
+  position: absolute;
+  inset-inline-start: 0.45rem;
+  top: 0.4rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  animation: pulseLive 1.6s ease-out infinite;
+}
+
+.leagueBoard {
+  overflow: hidden;
+  scroll-margin-top: 7rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow: 0 14px 34px -28px color-mix(in srgb, var(--foreground) 22%, transparent);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.leagueBoard:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 28%, var(--border));
+  box-shadow: 0 18px 42px -30px color-mix(in srgb, var(--ys-orange) 30%, transparent);
+  transform: translateY(-1px);
+}
+
+.leagueHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 12%, var(--border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 55%),
+    color-mix(in srgb, var(--muted) 40%, var(--card));
+}
+
+.leagueHeadCopy {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.leagueCrest {
+  display: grid;
+  place-items: center;
+  width: 2.45rem;
+  height: 2.45rem;
+  flex-shrink: 0;
+  padding: 0.3rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.leagueCrest img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.leagueMeta {
+  min-width: 0;
+}
+
+.leagueTitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.leagueTitle:hover {
+  color: var(--ys-orange);
+}
+
+.leagueMeta span {
+  display: block;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.liveChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #ef4444 16%, transparent);
+  color: #ef4444;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.livePulse {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulseLive 1.6s ease-out infinite;
+}
+
+.leagueBody {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.65rem;
+}
+
+.leagueBodyLive {
+  background: color-mix(in srgb, #ef4444 4%, transparent);
+}
+
+.fixtureCard {
+  position: relative;
+  display: block;
+  padding: 0.82rem 0.9rem;
+  border-radius: 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ys-orange) 4%, transparent), transparent 32%),
+    color-mix(in srgb, var(--card) 98%, transparent);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.fixtureCard:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ys-orange) 8%, transparent), transparent 38%),
+    color-mix(in srgb, var(--card) 100%, transparent);
+  transform: translateX(-2px);
+}
+
+.fixtureLive {
+  border-color: color-mix(in srgb, #ef4444 35%, var(--border));
+}
+
+.fixtureFt {
+  opacity: 0.92;
+}
+
+.fixtureBody {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+}
+
+.fixtureClock {
+  display: grid;
+  place-items: center;
+  width: 3.65rem;
+  min-height: 3.35rem;
+  flex-shrink: 0;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 7%, transparent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+}
+
+.fixtureClock em {
+  font-style: normal;
+  color: #ef4444;
+}
+
+.fixtureTeams {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.fixtureTeam {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.fixtureTeam strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.fixtureTeam b {
+  font-variant-numeric: tabular-nums;
+  color: #ef4444;
+}
+
+.fixtureFollowed {
+  position: absolute;
+  inset-inline-end: 0.55rem;
+  top: 0.55rem;
+  color: var(--ys-orange);
+}
+
+.rail {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+@media (min-width: 1200px) {
+  .rail {
+    position: sticky;
+    top: 6.5rem;
+  }
+}
+
+.plate {
+  padding: 1rem 1.05rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--ys-orange) 8%, transparent), transparent 50%),
+    color-mix(in srgb, var(--card) 94%, transparent);
+}
+
+.majorHall :global(.fixture-board) {
+  border-color: color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+}
+
+.matchdayBoard :global(.fixture-card) {
+  position: relative;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.92rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ys-orange) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--card) 97%, transparent);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.matchdayBoard :global(.fixture-card:hover) {
+  border-color: color-mix(in srgb, var(--ys-orange) 36%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--ys-orange) 9%, transparent), transparent 42%),
+    var(--card);
+  transform: translateY(-1px);
+}
+
+.matchdayBoard :global(.fixture-card-body) {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.matchdayBoard :global(.fixture-clock) {
+  display: grid;
+  place-items: center;
+  min-height: 4.4rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 7%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.8rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.matchdayBoard :global(.fixture-clock em) {
+  color: #ef4444;
+  font-style: normal;
+}
+
+.matchdayBoard :global(.fixture-clock strong) {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.matchdayBoard :global(.fixture-teams) {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.matchdayBoard :global(.fixture-team) {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.matchdayBoard :global(.fixture-team strong) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground);
+  font-size: 0.93rem;
+  font-weight: 900;
+}
+
+.matchdayBoard :global(.fixture-team strong.is-muted) {
+  color: color-mix(in srgb, var(--foreground) 48%, transparent);
+}
+
+.matchdayBoard :global(.fixture-team strong.is-winner) {
+  color: var(--foreground);
+}
+
+.matchdayBoard :global(.fixture-team-meta) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+  color: color-mix(in srgb, var(--foreground) 54%, transparent);
+  font-size: 0.67rem;
+  font-weight: 750;
+}
+
+.matchdayBoard :global(.fixture-form) {
+  display: inline-flex;
+  gap: 0.18rem;
+}
+
+.matchdayBoard :global(.fixture-form-pip) {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1rem;
+  height: 1rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
+  font-size: 0.55rem;
+  font-weight: 900;
+}
+
+.matchdayBoard :global(.fixture-form-pip.is-w) {
+  background: color-mix(in srgb, #22c55e 16%, transparent);
+  color: #16a34a;
+}
+
+.matchdayBoard :global(.fixture-form-pip.is-l) {
+  background: color-mix(in srgb, #ef4444 15%, transparent);
+  color: #ef4444;
+}
+
+.matchdayBoard :global(.fixture-score-n),
+.matchdayBoard :global(.fixture-vs) {
+  min-width: 1.85rem;
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 950;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.matchdayBoard :global(.fixture-vs) {
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.matchdayBoard :global(.fixture-card-foot) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--ys-orange) 12%, var(--border));
+}
+
+.matchdayBoard :global(.fixture-card-foot p) {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.matchdayBoard :global(.fixture-chip) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.65rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.matchdayBoard :global(.fixture-progress) {
+  position: absolute;
+  inset-inline: 0.9rem;
+  bottom: 0.45rem;
+  overflow: hidden;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+}
+
+.matchdayBoard :global(.fixture-progress i) {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ef4444;
+}
+
+.matchdayBoard :global(.matchday-scoreboard) {
+  border-radius: 1.2rem;
+  border: 1px solid color-mix(in srgb, #e11d48 28%, var(--border));
+  background: color-mix(in srgb, #e11d48 5%, var(--card));
+}
+
+.lensDeck {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0.95rem 0.95rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--background) 55%, var(--card));
+}
+
+.lensDeckHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.lensClear {
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: none;
+  color: var(--muted-foreground);
+  font-weight: 800;
+}
+
+.lensClear:hover {
+  color: var(--ys-orange);
+}
+
+.lensRow {
+  display: grid;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.lensLabel {
+  font-size: 0.68rem;
+  font-weight: 850;
+  color: var(--muted-foreground);
+}
+
+.lensRail {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: none;
+}
+
+.lensRail::-webkit-scrollbar {
+  display: none;
+}
+
+.lensChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.lensChip b {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  font-size: 0.68rem;
+}
+
+.lensChipOn {
+  border-color: color-mix(in srgb, var(--ys-orange) 55%, var(--border));
+  background: var(--ys-orange);
+  color: #14110e;
+}
+
+.lensChipOn b {
+  color: color-mix(in srgb, #14110e 70%, transparent);
+}
+
+.lensLogo {
+  width: 0.9rem;
+  height: 0.9rem;
+  object-fit: contain;
+}
+
+.lensTabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.dockMeters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.4rem, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dockMeters li {
+  display: grid;
+  gap: 0.12rem;
+  min-height: 3.4rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--background) 45%, transparent);
+}
+
+.dockMeters strong {
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.dockMeters span {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.railBlock {
+  min-width: 0;
+}
+
+.ledgerStack :global(> div) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.leagueJump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.1rem 0;
+}
+
+.leagueJumpChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 1 auto;
+  max-width: 13rem;
+  padding: 0.42rem 0.7rem 0.42rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: inherit;
+  text-decoration: none;
+}
+
+.leagueJumpChip img {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+}
+
+.leagueJumpChip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.leagueJumpChip b {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.68rem;
+  color: var(--muted-foreground);
+}
+
+.leagueJumpLive {
+  border-color: color-mix(in srgb, #ef4444 40%, var(--border));
+}
+
+.leagueJumpLive b {
+  color: #ef4444;
+}
+
+.leagueOrdinal {
+  display: grid;
+  place-items: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  flex-shrink: 0;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--ys-orange) 14%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.leagueHeadAside {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.stateChip,
+.countChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.7rem;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.countChip {
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+}
+
+.restHall {
+  padding: 1.05rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--muted) 28%, var(--card));
+}
+
+.restKicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.restTools {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+
+.restTools strong {
+  display: grid;
+  justify-items: end;
+  font-size: 1.7rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.restTools strong span {
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.restExpand {
+  text-decoration: none;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.restExpand:hover {
+  color: var(--ys-orange);
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+}
+
+@media (max-width: 720px) {
+  .lensRow {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
 }
