@@ -139,7 +139,9 @@ export interface NormalizedStanding {
   lost: number;
   goalsFor: number;
   goalsAgainst: number;
+  goalDiff?: number;
   points: number;
+  description?: string | null;
 }
 
 export interface NormalizedScorer {

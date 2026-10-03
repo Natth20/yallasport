@@ -4,22 +4,28 @@ export type WeightedLeague = {
   name: string;
   slug?: string;
   country?: string;
+  externalId?: string;
 };
 
 const YOUTH_OR_REGIONAL =
   /\bu1[89]\b|\bu2[0-3]\b|youth|reserves|girone|paulista|federal a|liga revela|premier league cup|copa santa|torneo federal/i;
 
+const TOP_FLIGHT_IDS = new Set(['2', '3', '39', '61', '78', '135', '140', '307', '233', '848']);
+
 export function leagueTier(league: WeightedLeague): number {
   const country = String(league.country || '').toLowerCase();
   const name = String(league.name ?? '').toLowerCase();
   const slug = String(league.slug || '').toLowerCase();
+  const id = String(league.externalId || '');
   const blob = `${name} ${slug} ${country}`;
 
   if (isFriendlyLeague(league) || YOUTH_OR_REGIONAL.test(blob)) return 0;
 
-  if (/uefa champions|fifa club world|world cup|euro 20|copa america|afc champions|caf champions/.test(blob)) {
+  if (id === '2' || id === '1' || /uefa champions|fifa club world|world cup|euro 20|copa america|afc champions|caf champions/.test(blob)) {
     return 6;
   }
+
+  if (TOP_FLIGHT_IDS.has(id) && id !== '2' && id !== '3' && id !== '848') return 5;
 
   if (/الليغا|الدوري الإسباني/.test(league.name) || ((country === 'spain' || country === '') && /^(la liga|laliga)$/.test(name))) {
     return 5;

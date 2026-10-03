@@ -159,6 +159,7 @@ function NewsHall({
   const wall = data.lead ? data.rest.filter((story) => !taken.has(story.id)) : data.rest;
   wall.forEach((story) => taken.add(story.id));
   const circulating = data.mostRead.filter((story) => story.views > 0 && !taken.has(story.id)).slice(0, 6);
+  const trending = data.freshest.filter((story) => !taken.has(story.id) && !circulating.some((row) => row.id === story.id)).slice(0, 6);
   const sameDesk = data.sameDesk.filter((story) => !taken.has(story.id)).slice(0, 6);
   const folio = '01';
   const total = String(Math.max(1, data.total)).padStart(2, '0');
@@ -202,7 +203,7 @@ function NewsHall({
             <header className={styles['nk-wall-head']}>
               <div>
                 <p>{pick(locale, 'السجل', 'The log')}</p>
-                <h2>{pick(locale, 'جدار التقارير', 'The report wall')}</h2>
+                <h2>{pick(locale, 'التقارير', 'Reports')}</h2>
               </div>
               <p>
                 {data.total} {pick(locale, 'تقرير مطابق', 'matching reports')}
@@ -266,9 +267,16 @@ function NewsHall({
           </div>
         ) : null}
 
-        {circulating.length > 0 || data.archive.length > 0 ? (
+        {circulating.length > 0 || trending.length > 0 || data.archive.length > 0 ? (
           <div className={styles['nk-floor']}>
             {circulating.length > 0 ? <MostReadRail articles={circulating} locale={locale} /> : null}
+            {trending.length > 0 ? (
+              <MostReadRail
+                articles={trending}
+                locale={locale}
+                title={pick(locale, 'الأخبار الرائجة', 'Trending')}
+              />
+            ) : null}
             <NewsInkPulse archive={data.archive} locale={locale} hrefFor={hrefFor} />
           </div>
         ) : null}

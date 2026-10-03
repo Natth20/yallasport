@@ -1,4 +1,5 @@
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
+import { localizeCompetitionTitle, localizeCountryName } from '@/lib/i18n/competition-names';
 import type { FrontMatch } from './types';
 
 export const frontMatchSelect = {
@@ -10,7 +11,7 @@ export const frontMatchSelect = {
   kickoffAt: true,
   homeTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
   awayTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
-  league: { select: { id: true, name: true, slug: true, logoUrl: true, country: true } },
+  league: { select: { id: true, name: true, slug: true, logoUrl: true, country: true, externalId: true } },
 } as const;
 
 type MatchRow = {
@@ -22,7 +23,7 @@ type MatchRow = {
   kickoffAt: Date;
   homeTeam: { id: string; name: string; slug: string; logoUrl: string | null };
   awayTeam: { id: string; name: string; slug: string; logoUrl: string | null };
-  league: { id: string; name: string; slug: string; logoUrl: string | null; country: string | null };
+  league: { id: string; name: string; slug: string; logoUrl: string | null; country: string | null; externalId?: string | null };
 };
 
 export function toFrontMatch(row: MatchRow, locale: string): FrontMatch {
@@ -33,12 +34,12 @@ export function toFrontMatch(row: MatchRow, locale: string): FrontMatch {
     awayScore: row.awayScore,
     minute: row.minute,
     kickoffAt: new Date(row.kickoffAt).toISOString(),
-    homeTeam: { ...row.homeTeam, name: localizePlainName(locale, row.homeTeam.name) },
-    awayTeam: { ...row.awayTeam, name: localizePlainName(locale, row.awayTeam.name) },
+    homeTeam: { ...row.homeTeam, name: localizeTeamName(locale, row.homeTeam.name) },
+    awayTeam: { ...row.awayTeam, name: localizeTeamName(locale, row.awayTeam.name) },
     league: {
       ...row.league,
-      name: localizePlainName(locale, row.league.name),
-      country: row.league.country ? localizePlainName(locale, row.league.country) : row.league.country,
+      name: localizeCompetitionTitle(locale, row.league),
+      country: row.league.country ? localizeCountryName(locale, row.league.country) : row.league.country,
     },
   };
 }

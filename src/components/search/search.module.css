@@ -127,9 +127,11 @@
 .chips,
 .kinds {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
 }
 
 .chipsLabel {
@@ -516,4 +518,46 @@
   .drawers {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
+}
+
+.entityCard {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.entityCrest {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: contain;
+}
+
+.entityActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+.goSmall {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--ys-orange);
+  color: #fff;
+  padding: 0.45rem 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.more,
+.hint a {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-weight: 700;
+  color: var(--ys-orange);
+}
+
+.hint {
+  margin: 0;
 }

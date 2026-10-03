@@ -12,7 +12,7 @@ export function TransferFilters({
   seasons,
 }: {
   locale: string;
-  values: { club: string; player: string; season: string; kind: string; window: string };
+  values: { club: string; player: string; season: string; kind: string; window: string; direction: string };
   clubs: Opt[];
   players: Opt[];
   seasons: Opt[];
@@ -60,9 +60,10 @@ export function TransferFilters({
         {ar ? 'النوع' : 'Type'}
         <select value={values.kind} onChange={(e) => apply({ kind: e.target.value })}>
           <option value="">{ar ? 'كل الصفقات' : 'All deals'}</option>
-          <option value="move">{ar ? 'انتقال' : 'Transfer'}</option>
+          <option value="move">{ar ? 'رسمي' : 'Official'}</option>
           <option value="loan">{ar ? 'إعارة' : 'Loan'}</option>
           <option value="free">{ar ? 'حر' : 'Free'}</option>
+          <option value="rumour">{ar ? 'غير مؤكد' : 'Unconfirmed'}</option>
         </select>
       </label>
       <label className="flex min-w-[8rem] flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
@@ -71,6 +72,14 @@ export function TransferFilters({
           <option value="">{ar ? 'كل الفترات' : 'All windows'}</option>
           <option value="summer">{ar ? 'صيف' : 'Summer'}</option>
           <option value="winter">{ar ? 'شتاء' : 'Winter'}</option>
+        </select>
+      </label>
+      <label className="flex min-w-[8rem] flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+        {ar ? 'الاتجاه' : 'Direction'}
+        <select value={values.direction} onChange={(e) => apply({ direction: e.target.value })}>
+          <option value="">{ar ? 'قادم ومغادر' : 'In and out'}</option>
+          <option value="in">{ar ? 'قادمون' : 'Incoming'}</option>
+          <option value="out">{ar ? 'مغادرون' : 'Outgoing'}</option>
         </select>
       </label>
       {Object.values(values).some(Boolean) ? (

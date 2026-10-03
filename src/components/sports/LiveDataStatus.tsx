@@ -28,7 +28,7 @@ export function LiveDataStatus() {
       <span className="flex items-center gap-2">
         <span className={`h-1.5 w-1.5 rounded-full ${config.dot} ${connection === 'connected' ? 'animate-pulse' : ''}`} />
         <Icon className={`h-3.5 w-3.5 ${connection === 'reconnecting' ? 'animate-spin' : ''}`} />
-        {freshness?.source === 'MOCK' || freshness?.source === 'EMPTY' ? t('sports.no_live_source') : config.text}
+        {freshness?.source === 'MOCK' || freshness?.source === 'EMPTY' ? t('sports.ledger_only') : config.text}
       </span>
       {syncedAt && <span>{t('sports.last_updated', { time: syncedAt })}</span>}
       {dataSaver && <span>{t('sports.data_saver_refresh')}</span>}

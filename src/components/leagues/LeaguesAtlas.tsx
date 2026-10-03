@@ -7,6 +7,8 @@ import { LeagueFilterBar } from '@/components/leagues/LeagueFilterBar';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { LeagueDeskCard } from '@/components/leagues/LeagueDeskCard';
 import { pick } from '@/i18n/pick';
+import { localizeCompetitionTitle, localizeCountryName, localizeLeagueRegion, localizeRoundName } from '@/lib/i18n/competition-names';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import styles from './leagues-atlas.module.css';
 
 type Crest = { name: string; logoUrl: string | null };
@@ -20,6 +22,7 @@ export type AtlasLeague = {
   country: string | null;
   standings: number;
   season: string | null;
+  seasonId?: string | null;
   extraLive: number;
   census: { live: number; upcoming: number; finished: number; total: number };
   nextMatch: {
@@ -48,14 +51,16 @@ export type AtlasLeague = {
     homeTeam: Crest;
     awayTeam: Crest;
   } | null;
-  leader: { team: Crest; points: number } | null;
-  runnerUp: { team: Crest; points: number } | null;
+  leader: { team: Crest; points: number; played?: number } | null;
+  runnerUp: { team: Crest; points: number; played?: number } | null;
   podium: Array<{
     id: string;
     rank: number;
     points: number;
     played: number;
     won: number;
+    drawn?: number;
+    lost?: number;
     goalsFor: number;
     goalsAgainst: number;
     team: Crest & { slug: string };
@@ -72,7 +77,7 @@ type LiveMatch = {
   venue?: Venue;
   homeTeam: Crest;
   awayTeam: Crest;
-  league: { id: string; name: string; slug: string; country: string | null };
+  league: { id: string; name: string; slug: string; country: string | null; externalId?: string | null };
   channels?: { channel: { name: string } }[];
 };
 
@@ -84,8 +89,38 @@ type DeskMatch = {
   awayScore?: number | null;
   homeTeam: Crest;
   awayTeam: Crest;
-  league: { name: string; slug?: string };
+  league: { name: string; slug?: string; country?: string | null; externalId?: string | null };
 };
+
+function leagueLabel(
+  locale: string,
+  league: { name: string; country?: string | null; externalId?: string | null },
+) {
+  return localizeCompetitionTitle(locale, league);
+}
+
+function countryLabel(locale: string, country?: string | null) {
+  return localizeLeagueRegion(locale, country) || localizeCountryName(locale, country) || pick(locale, 'غير مصنفة', 'Unclassified');
+}
+
+function teamLabel(locale: string, name: string) {
+  return localizeTeamName(locale, name);
+}
+
+function roundLabel(locale: string, round?: string | null) {
+  return round ? localizeRoundName(locale, round) : '';
+}
+
+function raceLine(locale: string, gap: number, leader: string, runner: string) {
+  if (gap === 0) {
+    return pick(locale, `يتساوى الفريقان في النقاط. ${leader} و ${runner}`, `${leader} and ${runner} are level on points.`);
+  }
+  return pick(
+    locale,
+    `الفارق بين الفريقين: ${gap} نقطة. ${leader} و ${runner}`,
+    `The gap between the two teams is ${gap} pts — ${leader} and ${runner}`
+  );
+}
 
 function hasScore(home: number | null | undefined, away: number | null | undefined) {
   return typeof home === 'number' && typeof away === 'number';
@@ -213,7 +248,7 @@ export function LeaguesAtlas({
                   href={`/match/${match.id}`}
                   className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-foreground/80 hover:text-orange-500"
                 >
-                  <span className="max-w-[8rem] truncate">{match.homeTeam.name}</span>
+                  <span className="max-w-[8rem] truncate">{teamLabel(locale, match.homeTeam.name)}</span>
                   {hasScore(match.homeScore, match.awayScore) ? (
                     <span className="tabular-nums atlas-ink">
                       {match.homeScore}–{match.awayScore}
@@ -221,7 +256,7 @@ export function LeaguesAtlas({
                   ) : (
                     <Radio className="h-3 w-3 text-rose-400" />
                   )}
-                  <span className="max-w-[8rem] truncate">{match.awayTeam.name}</span>
+                  <span className="max-w-[8rem] truncate">{teamLabel(locale, match.awayTeam.name)}</span>
                 </Link>
               ))}
             </div>
@@ -301,10 +336,15 @@ export function LeaguesAtlas({
                       <span className="rounded-full bg-orange-500 px-2.5 py-1 text-[9px] font-bold text-primary-foreground">
                         {pick(locale, 'البطولة المختارة', 'Featured league')}
                       </span>
-                      {spotlightLeague.country && (
+                      {spotlightLeague.country ? (
                         <span className="inline-flex items-center gap-1.5">
                           <Globe className="h-3.5 w-3.5 text-orange-500" />
-                          {spotlightLeague.country}
+                          {countryLabel(locale, spotlightLeague.country)}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Globe className="h-3.5 w-3.5 text-orange-500" />
+                          {pick(locale, 'غير محدد', 'Unspecified')}
                         </span>
                       )}
                       {spotlightLeague.season && <span>· {spotlightLeague.season}</span>}
@@ -357,10 +397,10 @@ export function LeaguesAtlas({
                       <span className="min-w-0">
                         <span className="block text-[10px] font-semibold text-orange-500">
                           {pick(locale, 'المباراة القادمة', 'Next match')}
-                          {spotlightLeague.nextMatch.round ? ` · ${spotlightLeague.nextMatch.round}` : ''}
+                          {spotlightLeague.nextMatch.round ? ` · ${roundLabel(locale, spotlightLeague.nextMatch.round)}` : ''}
                         </span>
                         <span className="mt-1 block font-semibold atlas-ink">
-                          {spotlightLeague.nextMatch.homeTeam.name} × {spotlightLeague.nextMatch.awayTeam.name}
+                          {teamLabel(locale, spotlightLeague.nextMatch.homeTeam.name)} × {teamLabel(locale, spotlightLeague.nextMatch.awayTeam.name)}
                         </span>
                       </span>
                       <span className="flex shrink-0 flex-col items-end gap-0.5 atlas-muted">
@@ -376,9 +416,9 @@ export function LeaguesAtlas({
                     hasScore(spotlightLeague.lastResult.homeScore, spotlightLeague.lastResult.awayScore) && (
                       <Link href={`/match/${spotlightLeague.lastResult.id}`} className="mt-3 flex items-center justify-between gap-3 text-[11px] atlas-muted">
                         <span>
-                          {pick(locale, 'آخر نتيجة:', 'Latest result:')} {spotlightLeague.lastResult.homeTeam.name}{' '}
-                          {spotlightLeague.lastResult.homeScore}–{spotlightLeague.lastResult.awayScore} {spotlightLeague.lastResult.awayTeam.name}
-                          {spotlightLeague.lastResult.round ? ` · ${spotlightLeague.lastResult.round}` : ''}
+                          {pick(locale, 'آخر نتيجة:', 'Latest result:')} {teamLabel(locale, spotlightLeague.lastResult.homeTeam.name)}{' '}
+                          {spotlightLeague.lastResult.homeScore}–{spotlightLeague.lastResult.awayScore} {teamLabel(locale, spotlightLeague.lastResult.awayTeam.name)}
+                          {spotlightLeague.lastResult.round ? ` · ${roundLabel(locale, spotlightLeague.lastResult.round)}` : ''}
                         </span>
                         <ArrowUpLeft className="h-3.5 w-3.5" />
                       </Link>
@@ -423,6 +463,9 @@ export function LeaguesAtlas({
                       {pick(locale, 'لمحة الجدول', 'Table snapshot')}
                     </span>
                     <h3 className="mt-1 text-base font-semibold atlas-ink">{pick(locale, 'المراكز الأولى', 'Top positions')}</h3>
+                    <p className="mt-2 text-[9px] atlas-muted">
+                      {pick(locale, 'المركز · الفريق · لعب · فاز · تعادل · خسر · له · عليه · الفارق · النقاط', 'Pos · Team · P · W · D · L · GF · GA · GD · Pts')}
+                    </p>
                     <div className="mt-4 space-y-2">
                       {spotlightLeague.podium.map((row) => (
                         <Link
@@ -432,24 +475,40 @@ export function LeaguesAtlas({
                         >
                           <span className={medalClass(row.rank)}>{String(row.rank).padStart(2, '0')}</span>
                           <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-border bg-card p-1.5">
-                            <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-full w-full text-sm" />
+                            <LeagueCrest name={teamLabel(locale, row.team.name)} logoUrl={row.team.logoUrl} className="h-full w-full text-sm" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <strong className="block truncate text-[11px] atlas-ink">{row.team.name}</strong>
+                            <strong className="block truncate text-[11px] atlas-ink">{teamLabel(locale, row.team.name)}</strong>
                             <span className="text-[9px] atlas-muted">
-                              {row.played} {pick(locale, 'لعب', 'played')} · {row.won} {pick(locale, 'ف', 'W')}
-                              {` · ${goalDifference(row.goalsFor, row.goalsAgainst)}`}
+                              {pick(locale, 'لعب', 'P')} {row.played}
+                              {' · '}
+                              {pick(locale, 'فاز', 'W')} {row.won}
+                              {' · '}
+                              {pick(locale, 'تعادل', 'D')} {row.drawn ?? '—'}
+                              {' · '}
+                              {pick(locale, 'خسر', 'L')} {row.lost ?? '—'}
+                              {' · '}
+                              {pick(locale, 'له', 'GF')} {row.goalsFor}
+                              {' · '}
+                              {pick(locale, 'عليه', 'GA')} {row.goalsAgainst}
+                              {' · '}
+                              {pick(locale, 'الفارق', 'GD')} {goalDifference(row.goalsFor, row.goalsAgainst)}
                             </span>
                           </div>
-                          <strong className="text-sm tabular-nums text-orange-500">{row.points}</strong>
+                          <strong className="text-sm tabular-nums text-orange-500" title={pick(locale, 'النقاط', 'Points')}>
+                            {row.points}
+                          </strong>
                         </Link>
                       ))}
                     </div>
                     {spotlightLeague.leader && spotlightLeague.runnerUp && (
                       <p className="mt-4 text-[10px] atlas-muted">
-                        {pick(locale, 'الفارق', 'Gap')} {spotlightLeague.leader.points - spotlightLeague.runnerUp.points}{' '}
-                        {pick(locale, 'نقطة بين', 'points between')} {spotlightLeague.leader.team.name} {pick(locale, 'و', 'and')}{' '}
-                        {spotlightLeague.runnerUp.team.name}
+                        {raceLine(
+                          locale,
+                          spotlightLeague.leader.points - spotlightLeague.runnerUp.points,
+                          teamLabel(locale, spotlightLeague.leader.team.name),
+                          teamLabel(locale, spotlightLeague.runnerUp.team.name)
+                        )}
                       </p>
                     )}
                   </div>
@@ -471,7 +530,7 @@ export function LeaguesAtlas({
                           className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5"
                         >
                           <span className="w-10 shrink-0 text-[10px] font-bold text-rose-600 dark:text-rose-300">{liveClock(match, locale)}</span>
-                          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold atlas-ink">{match.homeTeam.name}</span>
+                          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold atlas-ink">{teamLabel(locale, match.homeTeam.name)}</span>
                           {hasScore(match.homeScore, match.awayScore) ? (
                             <strong className="shrink-0 text-[12px] tabular-nums atlas-ink">
                               {match.homeScore}–{match.awayScore}
@@ -480,7 +539,7 @@ export function LeaguesAtlas({
                             <span className="text-[9px] text-rose-600 dark:text-rose-300">{pick(locale, 'مباشر', 'Live')}</span>
                           )}
                           <span className="min-w-0 flex-1 truncate text-start text-[11px] font-semibold atlas-ink">
-                            {match.awayTeam.name}
+                            {teamLabel(locale, match.awayTeam.name)}
                           </span>
                         </Link>
                       ))}
@@ -504,7 +563,7 @@ export function LeaguesAtlas({
                 name="q"
                 type="search"
                 defaultValue={paramsQ}
-                placeholder={pick(locale, 'ابحث عن بطولة أو دولة', 'Search league or country')}
+                placeholder={pick(locale, 'ابحث عن بطولة أو دولة أو رقم البطولة', 'Search league, country, or league ID')}
                 className="h-11 w-full rounded-full border border-border/80 bg-card/90 ps-10 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-orange-400 dark:border-border dark:bg-card/[0.04] dark:text-foreground"
               />
               {selectedCountry !== 'all' && <input type="hidden" name="country" value={selectedCountry} />}
@@ -547,7 +606,7 @@ export function LeaguesAtlas({
                   </div>
                   <div className="min-w-0">
                     <strong className="block truncate text-[11px] text-foreground dark:text-foreground">{league.name}</strong>
-                    <span className="text-[9px] text-muted-foreground">{league.liveMatch ? pick(locale, 'مباشر', 'Live') : league.country}</span>
+                    <span className="text-[9px] text-muted-foreground">{league.liveMatch ? pick(locale, 'مباشر', 'Live') : countryLabel(locale, league.country)}</span>
                   </div>
                   {league.liveMatch && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-rose-500" />}
                 </Link>
@@ -578,15 +637,15 @@ export function LeaguesAtlas({
                   <Link key={match.id} href={`/match/${match.id}`} className="atlas-live-ticket">
                     <div className="flex items-center justify-between gap-2 text-[10px]">
                       <span className="truncate text-muted-foreground">
-                        {match.league.name}
-                        {match.round ? ` · ${match.round}` : ''}
+                        {leagueLabel(locale, match.league)}
+                        {match.round ? ` · ${roundLabel(locale, match.round)}` : ''}
                         {channel ? ` · ${channel}` : ''}
                       </span>
                       <span className="shrink-0 font-bold text-rose-500">{liveClock(match, locale)}</span>
                     </div>
                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                       <span className="flex min-w-0 items-center justify-end gap-2 text-[12px] font-semibold">
-                        <span className="truncate">{match.homeTeam.name}</span>
+                        <span className="truncate">{teamLabel(locale, match.homeTeam.name)}</span>
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-card p-0.5 dark:bg-muted/10">
                           <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full" />
                         </span>
@@ -602,7 +661,7 @@ export function LeaguesAtlas({
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-card p-0.5 dark:bg-muted/10">
                           <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full" />
                         </span>
-                        <span className="truncate">{match.awayTeam.name}</span>
+                        <span className="truncate">{teamLabel(locale, match.awayTeam.name)}</span>
                       </span>
                     </div>
                     {(scorer && lastGoal) || match.venue?.name ? (
@@ -623,13 +682,13 @@ export function LeaguesAtlas({
           <>
             <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
               <div>
-                <span className="atlas-section-kicker">{pick(locale, 'حسب الدولة', 'By country')}</span>
+                <span className="atlas-section-kicker">{pick(locale, 'حسب العالم والقارات والدول', 'By world, continents and countries')}</span>
                 <h2 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">
                   {selectedCountry === 'all'
                     ? directoryCapped
                       ? pick(locale, 'أبرز البطولات', 'Featured leagues')
                       : pick(locale, 'دليل البطولات', 'League directory')
-                    : selectedCountry}
+                    : countryLabel(locale, selectedCountry)}
                 </h2>
               </div>
               <span className="text-[12px] text-muted-foreground">
@@ -678,7 +737,7 @@ export function LeaguesAtlas({
                         }`}
                     >
                       {liveHere > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />}
-                      {country}
+                      {countryLabel(locale, country)}
                     </Link>
                   );
                 })}
@@ -702,7 +761,7 @@ export function LeaguesAtlas({
                             <span className="atlas-section-kicker">
                               {pick(locale, 'دولة', 'Country')} {String(chapterIndex + 1).padStart(2, '0')}
                             </span>
-                            <h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">{country}</h3>
+                            <h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">{countryLabel(locale, country)}</h3>
                           </div>
                           <span className="text-[11px] text-muted-foreground">
                             {total} {pick(locale, 'بطولة', 'leagues')}
@@ -735,7 +794,7 @@ export function LeaguesAtlas({
                           href={countryHref(country)}
                           className="text-[12px] font-semibold text-orange-500 hover:underline"
                         >
-                          {pick(locale, `كل بطولات ${country} · ${total}`, `All ${country} leagues · ${total}`)}
+                          {pick(locale, `كل بطولات ${countryLabel(locale, country)} · ${total}`, `All ${countryLabel(locale, country)} leagues · ${total}`)}
                         </Link>
                       </div>
                     ) : null}
@@ -746,7 +805,7 @@ export function LeaguesAtlas({
               {unlocated.length > 0 && (
                 <section className="atlas-chapter">
                   <h3 className="mb-4 text-sm font-semibold text-muted-foreground">
-                    {pick(locale, 'بدون بلد في المصدر', 'No country in source')}
+                    {pick(locale, 'بطولات غير مصنفة', 'Unclassified competitions')}
                   </h3>
                   <div className="atlas-directory">
                     {unlocated.map((league) => (
@@ -787,14 +846,14 @@ export function LeaguesAtlas({
                     <Link key={match.id} href={`/match/${match.id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-card/[0.04]">
                       <div className="hidden w-32 sm:block">
                         <span className="block truncate text-[9px] text-muted-foreground">
-                          {match.league.name}
-                          {match.round ? ` · ${match.round}` : ''}
+                          {leagueLabel(locale, match.league)}
+                          {match.round ? ` · ${roundLabel(locale, match.round)}` : ''}
                         </span>
                         <ClientTime value={match.kickoffAt} className="mt-1 block text-[11px] font-bold text-orange-500" />
                       </div>
-                      <span className="min-w-0 flex-1 truncate text-end text-[12px] font-semibold">{match.homeTeam.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-end text-[12px] font-semibold">{teamLabel(locale, match.homeTeam.name)}</span>
                       <span className="text-[9px] text-muted-foreground">×</span>
-                      <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">{match.awayTeam.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">{teamLabel(locale, match.awayTeam.name)}</span>
                     </Link>
                   ))}
                 </div>
@@ -805,7 +864,7 @@ export function LeaguesAtlas({
               <div className={`${styles.atlasDesk} atlas-desk is-race`}>
                 <div className="border-b border-border px-5 py-4 dark:border-border">
                   <h2 className="text-base font-bold text-foreground dark:text-foreground">
-                    {pick(locale, 'أضيق سباقات الصدارة', 'Closest title races')}
+                    {pick(locale, 'أقرب المنافسات على الصدارة', 'Closest races for first place')}
                   </h2>
                 </div>
                 <div className="divide-y divide-slate-100 dark:divide-white/10">
@@ -816,17 +875,21 @@ export function LeaguesAtlas({
                       className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-card p-1.5">
-                        <LeagueCrest name={race.leader.team.name} logoUrl={race.leader.team.logoUrl} className="h-full w-full" />
+                        <LeagueCrest name={teamLabel(locale, race.leader.team.name)} logoUrl={race.leader.team.logoUrl} className="h-full w-full" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <strong className="block truncate text-[12px] text-foreground dark:text-foreground">{race.leader.team.name}</strong>
+                        <strong className="block truncate text-[12px] text-foreground dark:text-foreground">{teamLabel(locale, race.leader.team.name)}</strong>
                         <span className="mt-1 block truncate text-[10px] text-muted-foreground">
-                          {race.league.name} · {pick(locale, 'أمام', 'ahead of')} {race.runnerUp.team.name}
+                          {race.league.name} · {raceLine(locale, race.gap, teamLabel(locale, race.leader.team.name), teamLabel(locale, race.runnerUp.team.name))}
                         </span>
                       </div>
                       <div className="text-start">
                         <strong className="block text-lg tabular-nums text-orange-500">{race.gap}</strong>
-                        <span className="text-[10px] text-muted-foreground">{pick(locale, 'نقطة فارق', 'point gap')}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {race.gap === 0
+                            ? pick(locale, 'الفارق بين المتصدر والمنافس: 0 نقطة', 'Gap to second: 0 pts')
+                            : pick(locale, 'نقطة فارق', 'point gap')}
+                        </span>
                       </div>
                     </Link>
                   ))}
@@ -851,8 +914,8 @@ export function LeaguesAtlas({
                     <Link key={match.id} href={`/match/${match.id}`} className="atlas-result-slip">
                       <div className="atlas-result-slip-meta">
                         <span className="truncate pe-10">
-                          {match.league.name}
-                          {match.round ? ` · ${match.round}` : ''}
+                          {leagueLabel(locale, match.league)}
+                          {match.round ? ` · ${roundLabel(locale, match.round)}` : ''}
                         </span>
                         <ClientTime value={match.kickoffAt} />
                       </div>
@@ -861,7 +924,7 @@ export function LeaguesAtlas({
                           <span className="atlas-result-crest">
                             <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full" />
                           </span>
-                          <strong className="truncate">{match.homeTeam.name}</strong>
+                          <strong className="truncate">{teamLabel(locale, match.homeTeam.name)}</strong>
                         </span>
                         <span className="atlas-result-score" aria-label={`${match.homeScore}-${match.awayScore}`}>
                           <b className="tabular-nums">{match.homeScore}</b>
@@ -872,7 +935,7 @@ export function LeaguesAtlas({
                           <span className="atlas-result-crest">
                             <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full" />
                           </span>
-                          <strong className="truncate">{match.awayTeam.name}</strong>
+                          <strong className="truncate">{teamLabel(locale, match.awayTeam.name)}</strong>
                         </span>
                       </div>
                       <span className="atlas-result-slip-mark">{pick(locale, 'نهاية', 'FT')}</span>

@@ -16,8 +16,9 @@ import styles from './search.module.css';
 
 type Suggestion = {
   label: string;
-  typeKey: 'team' | 'player' | 'league' | 'news';
+  typeKey: 'team' | 'player' | 'league' | 'news' | 'coach' | 'video' | 'photo';
   url: string;
+  photoUrl?: string | null;
 };
 
 export function SearchTicket({
@@ -85,6 +86,9 @@ export function SearchTicket({
     if (key === 'team') return t('type_team');
     if (key === 'player') return t('type_player');
     if (key === 'league') return t('type_league');
+    if (key === 'coach') return t('type_coach');
+    if (key === 'video') return t('type_video');
+    if (key === 'photo') return t('type_photo');
     return t('type_news');
   };
 
@@ -137,17 +141,20 @@ export function SearchTicket({
       {open && !isLoading && (suggestions.length > 0 || query.trim().length >= 2) ? (
         <div className={styles.suggest} role="listbox">
           {suggestions.length > 0 ? (
-            suggestions.map((item) => (
-              <Link
-                key={`${item.typeKey}-${item.url}`}
-                href={item.url}
-                className={styles.suggestRow}
-                onClick={() => setOpen(false)}
-              >
-                <span className={styles.suggestLabel}>{item.label}</span>
-                <Badge variant="accent" size="sm">{typeLabel(item.typeKey)}</Badge>
-              </Link>
-            ))
+            suggestions.map((item, index) => {
+              const prev = suggestions[index - 1];
+              return (
+                <div key={`${item.typeKey}-${item.url}`}>
+                  {!prev || prev.typeKey !== item.typeKey ? (
+                    <p className={styles.suggestEmpty}>{typeLabel(item.typeKey)}</p>
+                  ) : null}
+                  <Link href={item.url} className={styles.suggestRow} onClick={() => setOpen(false)}>
+                    <span className={styles.suggestLabel}>{item.label}</span>
+                    <Badge variant="accent" size="sm">{typeLabel(item.typeKey)}</Badge>
+                  </Link>
+                </div>
+              );
+            })
           ) : (
             <p className={styles.suggestEmpty}>{t('no_suggest', { q: query.trim() })}</p>
           )}

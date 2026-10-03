@@ -11,7 +11,7 @@ import { walkLocalizeNames, localizePlainName } from '@/lib/i18n/sports-lexicon'
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
-import { CalendarDays, Radio, Shield, Trophy } from 'lucide-react';
+import { ArrowLeftRight, CalendarDays, Radio, Shield, Trophy } from 'lucide-react';
 
 export const revalidate = 180;
 
@@ -34,24 +34,20 @@ export async function generateMetadata({
     });
   }
   const displayName = localizePlainName(locale, player.name);
-  const bits = [player.position, player.nationality]
-    .filter(Boolean)
-    .map((part) => localizePlainName(locale, String(part)))
-    .join(' · ');
+  const latinName = player.name;
+  const title =
+    locale === 'ar' && displayName !== latinName
+      ? `${latinName} | ${displayName} — ${pick(locale, 'الإحصائيات والانتقالات | يلا سبورت', 'stats and transfers | Yalla Sport')}`
+      : `${displayName} — ${pick(locale, 'الإحصائيات والانتقالات | يلا سبورت', 'stats and transfers | Yalla Sport')}`;
   return pageMetadata({
     locale,
-    title: displayName,
-    description: bits
-      ? pick(
-        locale,
-        `${displayName} — ${bits}. ملف اللاعب في يلا سبورت من بيانات المباريات الحقيقية.`,
-        `${displayName} — ${bits}. Player profile on Yalla Sport from real match data.`
-      )
-      : pick(
-        locale,
-        `ملف ${displayName} في يلا سبورت: الأهداف، البطاقات، والانتقالات المسجّلة.`,
-        `${displayName} on Yalla Sport: goals, cards, and recorded transfers.`
-      ),
+    title,
+    absolute: true,
+    description: pick(
+      locale,
+      `تعرف على ${displayName}${player.position ? `، ${localizePlainName(locale, player.position)}` : ''}، إحصائياته، الأندية التي لعب لها، وسجل انتقالاته مع أحدث البيانات المتاحة من مصدر البيانات الرياضي.`,
+      `See ${displayName}${player.position ? `, ${player.position}` : ''}, stats, clubs, and the transfer record from the sports data source.`,
+    ),
     path: `/player/${slug}`,
     images: [player.photoUrl],
   });
@@ -78,12 +74,14 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
     name: dossier.player.name,
     jobTitle: dossier.player.position,
     nationality: dossier.player.nationality,
+    ...(dossier.player.birthDate ? { birthDate: dossier.player.birthDate.toISOString().slice(0, 10) } : {}),
     image: dossier.player.photoUrl,
     ...(dossier.currentClub
       ? {
         memberOf: {
           '@type': 'SportsTeam',
           name: dossier.currentClub.name,
+          ...(dossier.currentClub.slug ? { url: `/team/${dossier.currentClub.slug}` } : {}),
         },
       }
       : {}),
@@ -100,8 +98,8 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
         title={localizePlainName(locale, dossier.player.name)}
         lead={pick(
           locale,
-          'الإطار على الشاشة، والزملاء في قائمة العرض، والإحصاءات والجدران من المصدر فقط.',
-          'The frame sits on the screen, teammates sit in the programme, and the walls hold source numbers only.',
+          'النادي الحالي، الإحصائيات، والانتقالات من مصدر البيانات فقط — بلا اختراع.',
+          'Current club, stats, and transfers from the data source only — nothing invented.',
         )}
         aside={dossier.currentClub?.name || dossier.player.position || undefined}
         tools={
@@ -109,6 +107,7 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
             label={pick(locale, 'جناح اللاعب', 'Player suite')}
             items={[
               { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
+              { href: '/transfers', label: pick(locale, 'الانتقالات', 'Transfers'), icon: ArrowLeftRight },
               { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
               { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
               {

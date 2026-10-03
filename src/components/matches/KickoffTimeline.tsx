@@ -108,8 +108,8 @@ export async function KickoffTimeline({
                               : 'text-foreground dark:text-muted-foreground'
                         }`}>
                           {typeof match.homeScore === 'number' && typeof match.awayScore === 'number'
-                            ? `${match.homeScore}:${match.awayScore} ${match.homeTeam.name} × ${match.awayTeam.name}`
-                            : `${match.homeTeam.name} × ${match.awayTeam.name}`}
+                            ? `${slot.label} — ${match.homeTeam.name} ${match.homeScore} × ${match.awayScore} ${match.awayTeam.name}`
+                            : `${slot.label} — ${match.homeTeam.name} × ${match.awayTeam.name}`}
                         </span>
                       </Link>
                     );

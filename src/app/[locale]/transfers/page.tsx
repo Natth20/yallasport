@@ -7,6 +7,7 @@ import { pageMetadata } from '@/lib/seo/site';
 import { Link } from '@/i18n/navigation';
 import { loadTransferDesk } from '@/lib/transfers/load-desk';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizeTransferType } from '@/lib/transfers/fee';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { TransferFace } from '@/components/transfers/TransferFace';
@@ -20,11 +21,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   return pageMetadata({
     locale,
-    title: pick(locale, 'الانتقالات', 'Transfers'),
+    title: pick(locale, 'الانتقالات وأخبار الميركاتو اليوم', 'Transfers and mercato moves today'),
     description: pick(
       locale,
-      'صفقات اللاعبين كما وصلت من المصدر: من وإلى، بلا اختراع.',
-      'Player moves as they arrived from the source — from, to, no invented deals.',
+      'انتقالات مؤكدة من المصدر: القادمون والمغادرون والإعارات والقيمة عند توفرها، بلا اختراع.',
+      'Confirmed source moves: incoming, outgoing, loans, and fees when known — nothing invented.',
     ),
     path: '/transfers',
   });
@@ -55,7 +56,7 @@ function groupByMonth<T extends { date: Date }>(rows: T[]) {
 }
 
 export default function TransfersPage(props: {
-  searchParams: Promise<{ club?: string; player?: string; season?: string; kind?: string; window?: string }>;
+  searchParams: Promise<{ club?: string; player?: string; season?: string; kind?: string; window?: string; direction?: string }>;
 }) {
   return (
     <Suspense fallback={<FrontSkeleton kind="hero" />}>
@@ -67,7 +68,7 @@ export default function TransfersPage(props: {
 async function TransfersPageBody({
   searchParams,
 }: {
-  searchParams: Promise<{ club?: string; player?: string; season?: string; kind?: string; window?: string }>;
+  searchParams: Promise<{ club?: string; player?: string; season?: string; kind?: string; window?: string; direction?: string }>;
 }) {
   const locale = await getLocale();
   const params = await searchParams;
@@ -76,13 +77,14 @@ async function TransfersPageBody({
   const season = params.season?.trim() || '';
   const kind = params.kind?.trim() || '';
   const window = params.window?.trim() || '';
-  const desk = await loadTransferDesk({ club, player, season, kind, window });
+  const direction = params.direction?.trim() || '';
+  const desk = await loadTransferDesk({ club, player, season, kind, window, direction });
   const groups = groupByMonth(desk.rows);
   const paid = desk.rows.filter((row) => row.fee).length;
   const loans = desk.rows.filter((row) => row.kind === 'loan').length;
   const frees = desk.rows.filter((row) => row.kind === 'free').length;
   const tally = [
-    { value: desk.rows.length, label: pick(locale, 'صفقة ظاهرة', 'Moves shown') },
+    { value: desk.rows.length, label: pick(locale, 'حركة انتقالية ظاهرة', 'Recorded moves shown') },
     ...(paid > 0 ? [{ value: paid, label: pick(locale, 'برسم', 'With a fee') }] : []),
     ...(loans > 0 ? [{ value: loans, label: pick(locale, 'إعارة', 'Loans') }] : []),
     ...(frees > 0 ? [{ value: frees, label: pick(locale, 'انتقال حر', 'Free moves') }] : []),
@@ -98,7 +100,7 @@ async function TransfersPageBody({
         `موسم ${desk.fromSeason}/${desk.fromSeason + 1} وموسم ${desk.seasonLabel}/${desk.seasonLabel + 1} من دفتر المصدر.`,
         `Seasons ${desk.fromSeason}/${desk.fromSeason + 1} and ${desk.seasonLabel}/${desk.seasonLabel + 1} from the source ledger.`,
       )}
-      aside={pick(locale, `${desk.rows.length} صفقة`, `${desk.rows.length} moves`)}
+      aside={pick(locale, `${desk.rows.length} حركة ظاهرة`, `${desk.rows.length} recorded moves`)}
       wide
       compact
       tools={
@@ -115,7 +117,7 @@ async function TransfersPageBody({
           />
           <TransferFilters
             locale={locale}
-            values={{ club, player, season, kind, window }}
+            values={{ club, player, season, kind, window, direction }}
             clubs={[
               { value: '', label: pick(locale, 'كل الأندية', 'All clubs') },
               ...desk.clubs.map((name) => ({ value: name, label: localizePlainName(locale, name) })),
@@ -151,6 +153,43 @@ async function TransfersPageBody({
             </article>
           ))}
         </div>
+      ) : null}
+
+      {desk.topFees.length > 1 ? (
+        <section className="xfer-month">
+          <h2>{pick(locale, 'أغلى الانتقالات الموثقة', 'Largest verified fees')}</h2>
+          <ul className="xfer-list">
+            {desk.topFees.map((row) => (
+              <li key={`fee-${row.id}`}>
+                <div className="xfer-row is-fee">
+                  <strong>{localizePlainName(locale, row.playerName)}</strong>
+                  <span className="xfer-path">
+                    {localizePlainName(locale, row.fromTeam || '—')} → {localizePlainName(locale, row.toTeam || '—')}
+                  </span>
+                  <em className="xfer-fee">{row.fee}</em>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {desk.busiest.length > 0 ? (
+        <section className="xfer-month">
+          <h2>{pick(locale, 'أكثر الأندية نشاطًا', 'Busiest clubs')}</h2>
+          <ul className="xfer-list">
+            {desk.busiest.map((row) => (
+              <li key={row.name}>
+                <div className="xfer-row">
+                  <strong>{localizePlainName(locale, row.name)}</strong>
+                  <span className="xfer-meta">
+                    {pick(locale, `${row.in} قادم · ${row.out} مغادر`, `${row.in} in · ${row.out} out`)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       {desk.headline ? (
@@ -223,8 +262,8 @@ async function TransfersPageBody({
                             timeZone: 'UTC',
                           }).format(row.date)}
                         </time>
-                        {row.type ? <em className={`xfer-kind is-${row.kind}`}>{localizePlainName(locale, row.type)}</em> : null}
-                        {row.fee ? <em className="xfer-fee">{row.fee}</em> : null}
+                        <em className={`xfer-kind is-${row.kind}`}>{localizeTransferType(locale, row.type, row.kind)}</em>
+                        <em className="xfer-fee">{row.fee || pick(locale, 'غير معلنة', 'Undisclosed')}</em>
                       </span>
                     </>
                   );

@@ -87,7 +87,7 @@ export function MatchdayConsole({
     <div id="hall-screen" className={`${hall.wideScreen} ${hall.stadiumHall} ${board.daySalon}`}>
       <div className={hall.chassis}>
         <HallBezel
-          label={pick(locale, 'صالة اليوم', "Today's salon")}
+          label={pick(locale, 'مباريات اليوم', "Today's matches")}
           clock={`${folio(currentIndex)} / ${folio(reel.length - 1)}`}
         />
         <div className={`${hall.frame} ${board.dayFrame}`}>
@@ -106,7 +106,7 @@ export function MatchdayConsole({
                 {live ? <span className={hall.liveDot} aria-hidden /> : null}
                 {statusWord(current, locale)}
               </em>
-              <b>{scored ? `${current.homeScore} – ${current.awayScore}` : 'VS'}</b>
+              <b>{scored ? `${current.homeScore} — ${current.awayScore}` : 'VS'}</b>
             </div>
             <Link href={`/team/${current.awayTeam.slug}`} className={hall.side}>
               <LeagueCrest name={current.awayTeam.name} logoUrl={current.awayTeam.logoUrl} className="h-24 w-24" />
@@ -151,11 +151,11 @@ export function MatchdayConsole({
         </div>
       </div>
 
-      <aside className={board.pitchStrip} aria-label={pick(locale, 'قائمة الملعب', 'Pitch queue')}>
+      <aside className={board.pitchStrip} aria-label={pick(locale, 'مباريات مختارة', 'Selected fixtures')}>
         <header className={board.pitchStripHead}>
           <div>
-            <p>{pick(locale, 'الآن على الصالة', 'On the easel')}</p>
-            <h3>{pick(locale, 'قائمة الملعب', 'Pitch queue')}</h3>
+            <p>{pick(locale, 'مباريات مختارة', 'Selected fixtures')}</p>
+            <h3>{pick(locale, 'مباريات مختارة', 'Selected fixtures')}</h3>
           </div>
           <span>{folio(reel.length - 1)}</span>
         </header>
@@ -215,7 +215,7 @@ export function MatchdayConsole({
             <ArrowUpRight size={14} />
           </Link>
           <Link href={`/league/${current.league.slug}`} className={hall.ghost}>
-            {pick(locale, 'قاعة البطولة', 'League hall')}
+            {pick(locale, 'البطولة', 'Competition')}
           </Link>
         </div>
       </div>

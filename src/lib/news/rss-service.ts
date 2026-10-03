@@ -6,6 +6,7 @@ import { pickRssBody, pickRssImage } from '@/lib/news/rss-fields';
 import { resolveNewsImage, upgradeNewsImageUrl } from '@/lib/news/enrich-source';
 import { canonicalNewsUrl, newsUrlAliases } from '@/lib/news/canonical-url';
 import { clipImportedNewsCopy } from '@/lib/news/import-copy';
+import { validateArticleHtml } from '@/lib/news/article-clean';
 import { readingTimeMinutes } from '@/lib/news/reading-time';
 import { pushProvenance } from '@/lib/news/provenance';
 import {
@@ -151,6 +152,12 @@ export async function importFromRSS(url: string) {
     const publishedAt = parseRssPublishedAt({ pubDate: item.pubDate });
     if (!publishedAt || !shouldImportRssStory(publishedAt)) continue;
 
+    const articleCheck = validateArticleHtml(copy.content);
+    const autoPublish =
+      articleCheck.ok ||
+      copy.protectedSource ||
+      articleCheck.reasons.every((reason) => reason === 'too-short');
+
     const created = await prisma.news.create({
       data: {
         title: item.title,
@@ -163,8 +170,8 @@ export async function importFromRSS(url: string) {
         canonical: canonicalNewsUrl(item.link),
         slug: uniqueSlug,
         category: classifyDesk(item.title, copy.content),
-        tags: ['football', 'rss', 'trusted', ...competitionTags(item.title, copy.content)],
-        status: 'PUBLISHED',
+        tags: competitionTags(item.title, copy.content),
+        status: autoPublish ? 'PUBLISHED' : 'PENDING_REVIEW',
         publishedAt,
         breaking,
         featured: false,
@@ -182,7 +189,7 @@ export async function importFromRSS(url: string) {
           aiAssisted: false,
           fullTextCopied: copy.fullTextCopied,
           protectedSource: copy.protectedSource,
-          breaking,
+          origin: copy.protectedSource ? 'aggregated' : copy.fullTextCopied ? 'syndicated' : 'aggregated',
         }),
       },
     });

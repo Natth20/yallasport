@@ -128,6 +128,16 @@ export function NewsShareMenu({ title }: { title: string }) {
     setOpen(false);
   };
 
+  const openTelegram = () => {
+    const { encodedUrl, encodedTitle } = sharePayload();
+    window.open(
+      `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+    setOpen(false);
+  };
+
   const panel =
     open && mounted && coords
       ? createPortal(
@@ -164,6 +174,18 @@ export function NewsShareMenu({ title }: { title: string }) {
                 X
               </span>
               <span>منصة إكس (X)</span>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={openTelegram}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground transition-colors hover:bg-blue-500/10 hover:text-blue-400"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
+                T
+              </span>
+              <span>تيليجرام (Telegram)</span>
             </button>
 
             <button

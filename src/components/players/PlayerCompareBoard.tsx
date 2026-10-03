@@ -115,19 +115,19 @@ export function PlayerCompareBoard({
 
   const radarKeys = gk
     ? ([
-        [ar ? 'تصدي' : 'Saves', left.totals?.saves ?? 0, right.totals?.saves ?? 0],
-        [ar ? 'تمرير' : 'Pass', left.totals?.passAccuracy ?? 0, right.totals?.passAccuracy ?? 0],
-        [ar ? 'تقييم' : 'Rate', Number(left.totals?.rating || 0), Number(right.totals?.rating || 0)],
-        [ar ? 'دقائق' : 'Mins', left.totals?.minutes ?? 0, right.totals?.minutes ?? 0],
-      ] as const)
+      [ar ? 'تصدي' : 'Saves', left.totals?.saves ?? 0, right.totals?.saves ?? 0],
+      [ar ? 'تمرير' : 'Pass', left.totals?.passAccuracy ?? 0, right.totals?.passAccuracy ?? 0],
+      [ar ? 'تقييم' : 'Rate', Number(left.totals?.rating || 0), Number(right.totals?.rating || 0)],
+      [ar ? 'دقائق' : 'Mins', left.totals?.minutes ?? 0, right.totals?.minutes ?? 0],
+    ] as const)
     : ([
-        [ar ? 'أهداف' : 'Goals', left.totals?.goals ?? 0, right.totals?.goals ?? 0],
-        [ar ? 'صناعة' : 'Ast', left.totals?.assists ?? 0, right.totals?.assists ?? 0],
-        [ar ? 'تمرير' : 'Pass', left.totals?.passAccuracy ?? 0, right.totals?.passAccuracy ?? 0],
-        [ar ? 'التحام' : 'Duel', left.rates?.duelWinPct ?? 0, right.rates?.duelWinPct ?? 0],
-        [ar ? 'مراوغة' : 'Drib', left.rates?.dribbleSuccessPct ?? 0, right.rates?.dribbleSuccessPct ?? 0],
-        [ar ? 'تقييم' : 'Rate', Number(left.totals?.rating || 0), Number(right.totals?.rating || 0)],
-      ] as const);
+      [ar ? 'أهداف' : 'Goals', left.totals?.goals ?? 0, right.totals?.goals ?? 0],
+      [ar ? 'صناعة' : 'Ast', left.totals?.assists ?? 0, right.totals?.assists ?? 0],
+      [ar ? 'تمرير' : 'Pass', left.totals?.passAccuracy ?? 0, right.totals?.passAccuracy ?? 0],
+      [ar ? 'التحام' : 'Duel', left.rates?.duelWinPct ?? 0, right.rates?.duelWinPct ?? 0],
+      [ar ? 'مراوغة' : 'Drib', left.rates?.dribbleSuccessPct ?? 0, right.rates?.dribbleSuccessPct ?? 0],
+      [ar ? 'تقييم' : 'Rate', Number(left.totals?.rating || 0), Number(right.totals?.rating || 0)],
+    ] as const);
   const max = radarKeys.map((row) => Math.max(row[1], row[2], 0.01));
 
   const qs = (leftSlug: string, rightSlug: string) => {
@@ -149,23 +149,25 @@ export function PlayerCompareBoard({
           {per90 ? (ar ? 'إجمالي الموسم' : 'Season totals') : (ar ? 'لكل 90 دقيقة' : 'Per 90')}
         </button>
         <button type="button" onClick={() => router.push(qs(p2, p1))}>
-          {ar ? 'تبديل الكفتين' : 'Swap sides'}
+          {ar ? '⇄ تبديل' : '⇄ Swap'}
         </button>
         <button type="button" onClick={copyLink} data-on={copied}>
           {copied ? (ar ? 'تم النسخ ✓' : 'Copied ✓') : (ar ? 'نسخ الرابط' : 'Copy link')}
         </button>
       </div>
       {left.totals || right.totals ? (
-        <Radar
-          labels={radarKeys.map((row) => row[0])}
-          left={radarKeys.map((row, i) => row[1] / max[i])}
-          right={radarKeys.map((row, i) => row[2] / max[i])}
-        />
+        radarKeys.filter((row) => row[1] > 0 || row[2] > 0).length >= 3 ? (
+          <Radar
+            labels={radarKeys.map((row) => row[0])}
+            left={radarKeys.map((row, i) => row[1] / max[i])}
+            right={radarKeys.map((row, i) => row[2] / max[i])}
+          />
+        ) : null
       ) : (
         <p className={folio.hint}>
           {ar
-            ? 'المصدر ما رجّع ورقة موسم لهذين اللاعبين. الشرطة لا تُعرض كصفر.'
-            : 'The source has not returned a season sheet for these two. A missing figure is not shown as zero.'}
+            ? 'لا تتوفر بيانات لهذا اللاعب في الموسم المحدد.'
+            : 'No stats are available for these players in the selected season.'}
         </p>
       )}
       <div className={folio.statList}>
@@ -201,6 +203,15 @@ export function PlayerCompareBoard({
           );
         })}
       </div>
+      <p className={folio.hint}>
+        {ar
+          ? `مصدر البيانات: ${left.provider === 'api-football' || right.provider === 'api-football' ? 'API-Football' : 'السجلات المحفوظة'} · آخر تحديث: ${new Date(
+            Math.max(new Date(left.fetchedAt).getTime(), new Date(right.fetchedAt).getTime()),
+          ).toLocaleString(locale === 'ar' ? 'ar' : 'en')}`
+          : `Source: ${left.provider === 'api-football' || right.provider === 'api-football' ? 'API-Football' : 'stored records'} · Updated: ${new Date(
+            Math.max(new Date(left.fetchedAt).getTime(), new Date(right.fetchedAt).getTime()),
+          ).toLocaleString('en')}`}
+      </p>
     </div>
   );
 }

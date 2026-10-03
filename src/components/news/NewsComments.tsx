@@ -17,10 +17,12 @@ export function NewsComments({
   newsId,
   isLoggedIn,
   initialComments,
+  loginHref = '/login',
 }: {
   newsId: string;
   isLoggedIn: boolean;
   initialComments: NewsCommentRow[];
+  loginHref?: string;
 }) {
   const locale = useLocale();
   const t = useTranslations('sports');
@@ -190,13 +192,13 @@ export function NewsComments({
         ) : (
           <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 p-4 text-center">
             <p className="text-xs font-semibold text-muted-foreground">
-              {pick(locale, 'للمشاركة في النقاش وإضافة تعليق:', 'To join the discussion and post a comment:')}
+              {pick(locale, 'سجل الدخول لإضافة تعليق', 'Sign in to add a comment')}
             </p>
             <Link
-              href="/login"
+              href={loginHref}
               className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
             >
-              {pick(locale, 'تسجيل الدخول الآن', 'Sign in now')}
+              <span>{pick(locale, 'تسجيل الدخول', 'Sign in')}</span>
             </Link>
           </div>
         )}

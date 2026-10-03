@@ -25,7 +25,7 @@ export async function HomeScreen() {
   const friendly = isFriendlyLeague(match.league);
   const special = specialStatusLabel(match.status, locale);
   const clock = live && match.minute != null ? `${match.minute}′` : live ? t('live_badge') : pick(locale, 'الشاشة', 'Screen');
-  const seal = friendly ? pick(locale, 'صالون الودية', 'Exhibition salon') : match.league.name;
+  const seal = friendly ? pick(locale, 'ودية', 'Friendly') : match.league.name;
 
   return (
     <section id="hall-screen" className={hall.wideScreen} aria-label={t('stage_kicker')}>
@@ -44,7 +44,7 @@ export async function HomeScreen() {
             <div className={hall.score}>
               {live || finished ? (
                 <b>
-                  {match.homeScore ?? '–'} : {match.awayScore ?? '–'}
+                  {match.homeScore ?? '–'} — {match.awayScore ?? '–'}
                 </b>
               ) : (
                 <span className={styles.kickoffBlock}>

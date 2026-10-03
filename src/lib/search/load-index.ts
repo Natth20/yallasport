@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { newsVisibleWhere } from '@/lib/i18n/localized-content';
 import { swallow } from '@/lib/ops/caught';
+import { liveKickoffFloor } from '@/lib/sports-data/match-window';
 
 const emptyChips: Array<{
   homeTeam: { name: string };
@@ -16,7 +17,11 @@ export const loadSeekIndex = cache(async function loadSeekIndex(locale: string) 
     prisma.player.count().catch(swallow('seek.players', 0)),
     prisma.league.count().catch(swallow('seek.leagues', 0)),
     prisma.match.count().catch(swallow('seek.matches', 0)),
-    prisma.match.count({ where: { status: 'LIVE' } }).catch(swallow('seek.live', 0)),
+    prisma.match
+      .count({
+        where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
+      })
+      .catch(swallow('seek.live', 0)),
     prisma.match
       .findMany({
         orderBy: { kickoffAt: 'desc' },

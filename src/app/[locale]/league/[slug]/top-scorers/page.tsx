@@ -9,8 +9,8 @@ import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ChapterSectionHead, LeagueChapterShell } from '@/components/leagues/LeagueChapterShell';
 import { pick } from '@/i18n/pick';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
-import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
+import { formatLeagueSeason, localizeCompetitionTitle } from '@/lib/i18n/competition-names';
 
 export const revalidate = 90;
 
@@ -21,11 +21,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = await getLocale();
   const { slug } = await params;
-  const league = await prisma.league.findUnique({
-    where: { slug },
-    select: { name: true },
-  });
-  if (!league) {
+  const dossier = await loadLeagueDossier(slug);
+  if (!dossier) {
     return pageMetadata({
       locale,
       title: pick(locale, 'الهدافون', 'Top scorers'),
@@ -34,10 +31,17 @@ export async function generateMetadata({
       noIndex: true,
     });
   }
+  const name = localizeCompetitionTitle(locale, dossier.league);
+  const season = formatLeagueSeason(dossier.seasonId);
+  const seasonBit = season ? ` ${season}` : '';
   return pageMetadata({
     locale,
-    title: `${pick(locale, 'هدافو', 'Top scorers in')} ${league.name}`,
-    description: `${pick(locale, 'سباق الحذاء الذهبي في', 'The golden boot race in')} ${league.name} — ${pick(locale, 'من بيانات المباريات والمصدر الحقيقي فقط.', 'from real match data and the live source only.')}`,
+    title: pick(locale, `هدافو ${name}${seasonBit} | يلا سبورت`, `${name}${seasonBit} top scorers | Yalla Sport`),
+    description: pick(
+      locale,
+      `هدافو ${name}${seasonBit} من أحداث المباريات أو لوحة المصدر لنفس الموسم.`,
+      `Top scorers in ${name}${seasonBit} from match events or the source board for the same season.`
+    ),
     path: `/league/${slug}/top-scorers`,
   });
 }
@@ -96,6 +100,7 @@ async function TopScorersPageBody({
       subtitle={`${league.name}${seasonId ? ` · ${pick(locale, 'الموسم', 'Season')} ${seasonId}` : ''} — ${pick(locale, 'أهداف وصناعات وبطاقات من المصدر فقط.', 'goals, assists and cards from source only.')}`}
       leagueName={league.name}
       logoUrl={league.logoUrl}
+      statsLeagueId={league.externalId}
       seasonId={seasonId}
       seasons={seasons}
       seasonHref={(value) => `/league/${slug}/top-scorers?season=${value}`}

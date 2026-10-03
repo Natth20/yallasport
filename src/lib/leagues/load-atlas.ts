@@ -8,6 +8,31 @@ import { liveKickoffFloor } from '@/lib/sports-data/match-window';
 
 const GOAL_TYPES = ['GOAL', 'PENALTY', 'OWN_GOAL'] as const;
 
+const leagueLite = {
+  id: true,
+  name: true,
+  slug: true,
+  logoUrl: true,
+  country: true,
+  externalId: true,
+} as const;
+
+const standingLite = {
+  id: true,
+  rank: true,
+  points: true,
+  played: true,
+  won: true,
+  drawn: true,
+  lost: true,
+  goalsFor: true,
+  goalsAgainst: true,
+  seasonId: true,
+  leagueId: true,
+  league: { select: { id: true, name: true, slug: true, externalId: true } },
+  team: { select: { name: true, logoUrl: true, slug: true } },
+} as const;
+
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -54,7 +79,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
         () =>
           prisma.league.findMany({
             orderBy: { name: 'asc' },
-            select: { id: true, name: true, slug: true, logoUrl: true, country: true },
+            select: leagueLite,
           }),
         []
       ),
@@ -76,7 +101,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
               venue: { select: { name: true, city: true } },
               homeTeam: { select: { name: true, logoUrl: true } },
               awayTeam: { select: { name: true, logoUrl: true } },
-              league: { select: { id: true, name: true, slug: true, logoUrl: true, country: true } },
+              league: { select: leagueLite },
               channels: { take: 2, select: { channel: { select: { name: true } } } },
             },
           }),
@@ -86,7 +111,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
       soft(
         () =>
           prisma.standing.groupBy({
-            by: ['leagueId'],
+            by: ['leagueId', 'seasonId'],
             _count: { _all: true },
           }),
         []
@@ -135,7 +160,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
               venue: { select: { name: true, city: true } },
               homeTeam: { select: { name: true, logoUrl: true } },
               awayTeam: { select: { name: true, logoUrl: true } },
-              league: { select: { id: true, name: true, slug: true, logoUrl: true, country: true } },
+              league: { select: leagueLite },
               channels: { take: 2, select: { channel: { select: { name: true } } } },
             },
           }),
@@ -145,7 +170,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
         () =>
           prisma.league.findMany({
             orderBy: { name: 'asc' },
-            select: { id: true, name: true, slug: true, logoUrl: true, country: true },
+            select: leagueLite,
           }),
         leagueRows
       );
@@ -157,7 +182,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
       soft(
         () =>
           prisma.match.groupBy({
-            by: ['leagueId', 'status'],
+            by: ['leagueId', 'status', 'seasonId'],
             _count: { _all: true },
           }),
         []
@@ -219,7 +244,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
                 venue: { select: { name: true, city: true } },
                 homeTeam: { select: { name: true, logoUrl: true } },
                 awayTeam: { select: { name: true, logoUrl: true } },
-                league: { select: { name: true, slug: true, logoUrl: true } },
+                league: { select: { name: true, slug: true, logoUrl: true, country: true, externalId: true } },
               },
             }),
           []
@@ -245,7 +270,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
                 awayScore: true,
                 homeTeam: { select: { name: true, logoUrl: true } },
                 awayTeam: { select: { name: true, logoUrl: true } },
-                league: { select: { name: true, slug: true } },
+                league: { select: { name: true, slug: true, country: true, externalId: true } },
               },
             }),
           []
@@ -257,19 +282,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
           prisma.standing.findMany({
             where: { rank: { in: [1, 2] } },
             orderBy: [{ seasonId: 'desc' }, { rank: 'asc' }],
-            select: {
-              id: true,
-              rank: true,
-              points: true,
-              played: true,
-              won: true,
-              goalsFor: true,
-              goalsAgainst: true,
-              seasonId: true,
-              leagueId: true,
-              league: { select: { id: true, name: true, slug: true } },
-              team: { select: { name: true, logoUrl: true, slug: true } },
-            },
+            select: standingLite,
           }),
         []
       ),
@@ -391,19 +404,7 @@ export async function loadSpotlightPodium(leagueId: string) {
         where: { leagueId },
         orderBy: [{ seasonId: 'desc' }, { rank: 'asc' }],
         take: 4,
-        select: {
-          id: true,
-          rank: true,
-          points: true,
-          played: true,
-          won: true,
-          goalsFor: true,
-          goalsAgainst: true,
-          seasonId: true,
-          leagueId: true,
-          league: { select: { id: true, name: true, slug: true } },
-          team: { select: { name: true, logoUrl: true, slug: true } },
-        },
+        select: standingLite,
       }),
     []
   );

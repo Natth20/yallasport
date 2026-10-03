@@ -190,6 +190,18 @@ export function VersusPair({
         >
           {t('open_scale')}
         </Button>
+        {ready ? (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              if (!left || !right) return;
+              router.push(versusHref(right.slug, left.slug));
+            }}
+          >
+            {t('swap')}
+          </Button>
+        ) : null}
         {left && right && left.slug === right.slug ? <p className={styles.warn}>{t('same')}</p> : null}
         {left && !right ? (
           <Link href={`/team/${left.slug}`} className={styles.fileLink}>

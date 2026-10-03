@@ -255,13 +255,10 @@ export function NewsInkCover({
               <span />
               <span />
             </span>
-            {pick(locale, 'غلاف الطبعة', 'Edition cover')}
+            {pick(locale, 'أبرز الأخبار', 'Lead stories')}
           </span>
           <span className={styles['nk-bezel-right']}>
-            <em>HD</em>
-            <b>
-              {folio} / {total}
-            </b>
+            <b>{pick(locale, 'غرفة الأخبار', 'Newsroom')}</b>
           </span>
         </div>
         <NewsInkLead story={story} locale={locale} />

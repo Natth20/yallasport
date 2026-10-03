@@ -20,11 +20,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   return pageMetadata({
     locale,
-    title: pick(locale, 'ريلز', 'Reels'),
+    title: pick(locale, 'ريلز وشورتس رياضية | أحدث المقاطع الرياضية', 'Sports reels and shorts'),
     description: pick(
       locale,
-      'شورتس كرة قدم من قنوات يوتيوب عربية وعالمية. الرف يتبدّل؛ القديم في الأرشيف.',
-      'Football Shorts from Arabic and international YouTube channels. The shelf rotates; older clips go to the archive.',
+      'أحدث المقاطع الرياضية العمودية القصيرة من قنوات يوتيوب الرسمية والمصادر المعتمدة.',
+      'The latest vertical football clips from official YouTube channels and approved sources.',
     ),
     path: '/videos/reels',
   });
@@ -55,13 +55,13 @@ async function ReelsPageBody({
       tone="gallery"
       wide
       kicker={pick(locale, 'عمودي', 'Vertical')}
-      title={pick(locale, 'ريلز', 'Reels')}
+      title={pick(locale, 'ريلز وشورتس', 'Reels & Shorts')}
       lead={pick(
         locale,
-        'كليبات عمودية (شورتس) من نفس دفتر القنوات. المشغّل داخل الصفحة. كل قناة تُبقي أحدث ريلين؛ الباقي يروح الأرشيف.',
-        'Vertical Shorts from the same channel roster. Playback stays on this page. Each channel keeps its two newest reels; the rest go to the archive.',
+        'أحدث المقاطع الرياضية العمودية القصيرة من قنوات يوتيوب الرسمية. يعرض القسم أحدث مقطعين من كل قناة، وبقية المقاطع في الأرشيف.',
+        'The latest vertical sports clips from official YouTube channels. The page shows the two newest clips per channel; the rest live in the archive.',
       )}
-      aside={pick(locale, `${stats.reels} ريل`, `${stats.reels} reels`)}
+      aside={pick(locale, `${stats.reels} ريلز وشورتس`, `${stats.reels} reels & shorts`)}
       tools={
         <YoutubeFoyer>
           <YoutubeClipNav locale={locale} current="reels" />
@@ -77,7 +77,7 @@ async function ReelsPageBody({
         clips={toYoutubeCards(pinThenRotate(clips, (clip) => clip.youtubeId === v), locale)}
         empty={pick(locale, 'لا ريلز على الرف بعد. الشورتس تُصنَّف من العنوان أو من مدة الفيديو إن وُجد مفتاح يوتيوب.', 'No reels on the shelf yet. Shorts are classified from the title, or from duration when a YouTube API key is set.')}
         archiveHref="/videos/archive"
-        archiveLabel={pick(locale, 'الأرشيف', 'Archive')}
+        archiveLabel={pick(locale, 'أرشيف الريلز والشورتس', 'Reels & shorts archive')}
       />
     </SalonStage>
   );

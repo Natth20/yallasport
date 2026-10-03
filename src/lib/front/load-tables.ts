@@ -1,10 +1,12 @@
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
-import { STAT_BOARDS, statBoardLabel } from '@/lib/stats/load-desk';
+import { STAT_BOARDS } from '@/lib/stats/load-desk';
 import { standingZone } from '@/lib/leagues/load-dossier';
 import { currentFootballSeason } from '@/lib/sports-data/season';
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
+import { localizeCompetitionTitle, localizeCountryName } from '@/lib/i18n/competition-names';
+import { maybeRefreshFeaturedStandings } from '@/lib/sports-data/standings-persist';
 import type { FrontTable } from './types';
 
 export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
@@ -12,7 +14,9 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
   const previous = String(currentFootballSeason() - 1);
   const ids = STAT_BOARDS.map((board) => board.id);
 
-  const packed = await cachedJson(`front:tables:${season}:v4`, 90, async () => {
+  const packed = await cachedJson(`front:tables:${season}:v5`, 90, async () => {
+    await maybeRefreshFeaturedStandings().catch(swallow('front.tables.refresh', { boards: 0, rows: 0, skipped: true }));
+
     const leagues = await prisma.league
       .findMany({
         where: { externalId: { in: [...ids] } },
@@ -31,7 +35,6 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
         .findMany({
           where: { leagueId: league.id, seasonId },
           orderBy: { rank: 'asc' },
-          take: 10,
           include: { team: { select: { id: true, name: true, slug: true, logoUrl: true } } },
         })
         .catch(swallow(`front.tables.${board.id}`, []));
@@ -41,15 +44,12 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
           .findMany({
             where: { leagueId: league.id, seasonId },
             orderBy: { rank: 'asc' },
-            take: 10,
             include: { team: { select: { id: true, name: true, slug: true, logoUrl: true } } },
           })
           .catch(swallow(`front.tables.${board.id}.prev`, []));
       }
       if (rows.length === 0) continue;
-      const total = await prisma.standing
-        .count({ where: { leagueId: league.id, seasonId } })
-        .catch(swallow(`front.tables.${board.id}.count`, rows.length));
+      const total = rows.length;
       tables.push({
         league: {
           id: league.id,
@@ -68,6 +68,7 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
           lost: row.lost,
           goalsFor: row.goalsFor,
           goalsAgainst: row.goalsAgainst,
+          goalDiff: row.goalsFor - row.goalsAgainst,
           points: row.points,
           zone: standingZone(row.rank, total, league.name),
           team: {
@@ -88,16 +89,13 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
       id: table.league.id,
       slug: table.league.slug,
       logoUrl: table.league.logoUrl,
-      name: statBoardLabel(
-        locale,
-        'externalId' in table.league ? String((table.league as { externalId?: string }).externalId ?? '') : null,
-        localizePlainName(locale, table.league.name),
-      ),
-      country: table.league.country ? localizePlainName(locale, table.league.country) : table.league.country,
+      name: localizeCompetitionTitle(locale, table.league),
+      country: table.league.country ? localizeCountryName(locale, table.league.country) : table.league.country,
     },
     rows: table.rows.map((row) => ({
       ...row,
-      team: { ...row.team, name: localizePlainName(locale, row.team.name) },
+      goalDiff: row.goalDiff ?? row.goalsFor - row.goalsAgainst,
+      team: { ...row.team, name: localizeTeamName(locale, row.team.name) },
     })),
   }));
 }

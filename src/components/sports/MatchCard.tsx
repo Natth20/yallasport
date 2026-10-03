@@ -5,7 +5,9 @@ import { ClientTime } from '@/components/datetime/ClientTime';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CrestImage } from '@/components/common/CrestImage';
 import { Heart } from 'lucide-react';
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
+import { localizeRoundName } from '@/lib/i18n/competition-names';
+import { formatScore } from '@/lib/sports-data/score-format';
 
 export type MatchCardEvent = Pick<NormalizedMatchEvent, 'type' | 'minute' | 'teamId'> & {
   extraMinute?: number;
@@ -88,8 +90,8 @@ export async function MatchCard({
 }: MatchCardProps) {
   const locale = await getLocale();
   const t = await getTranslations('sports');
-  const homeName = localizePlainName(locale, match.homeTeam.name);
-  const awayName = localizePlainName(locale, match.awayTeam.name);
+  const homeName = localizeTeamName(locale, match.homeTeam.name);
+  const awayName = localizeTeamName(locale, match.awayTeam.name);
   const isLive = match.status === 'LIVE' || match.status === 'HALFTIME';
   const isHalftime = match.status === 'HALFTIME';
   const finished = match.status === 'FINISHED';
@@ -97,21 +99,29 @@ export async function MatchCard({
   const hasScore = hasNumericScore && (isLive || finished);
   const statusText =
     finished
-      ? 'FT'
+      ? t('finished')
       : match.status === 'POSTPONED'
         ? t('postponed')
         : match.status === 'CANCELLED'
           ? t('cancelled')
-          : null;
+          : isHalftime
+            ? t('halftime')
+            : isLive
+              ? match.minute != null
+                ? `${t('live')} · ${match.minute}′`
+                : t('live')
+              : null;
   const liveProgress =
     typeof match.minute === 'number' ? Math.min(100, Math.max(2, (match.minute / 90) * 100)) : null;
   const homeWon = hasScore && match.homeScore! > match.awayScore!;
   const awayWon = hasScore && match.awayScore! > match.homeScore!;
   const scorers = events.filter((event) => goalTypes.has(event.type));
-  const isHomeEvent = (teamId: string) =>
-    teamId === match.homeTeam.id || teamId === match.homeTeam.externalId;
-  const homeScorers = scorers.filter((event) => isHomeEvent(event.teamId));
-  const awayScorers = scorers.filter((event) => !isHomeEvent(event.teamId));
+  const isHomeEvent = (event: MatchCardEvent) => {
+    const playerTeamIsHome = event.teamId === match.homeTeam.id || event.teamId === match.homeTeam.externalId;
+    return event.type === 'OWN_GOAL' ? !playerTeamIsHome : playerTeamIsHome;
+  };
+  const homeScorers = scorers.filter((event) => isHomeEvent(event));
+  const awayScorers = scorers.filter((event) => !isHomeEvent(event));
   const formatMinute = (event: MatchCardEvent) =>
     `${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ''}`;
   const homePlace = homeTable ?? (homeRank ? { rank: homeRank } : undefined);
@@ -147,7 +157,7 @@ export async function MatchCard({
 
         <div className="fixture-teams">
           <div className="fixture-team is-home">
-            <CrestImage src={match.homeTeam.logoUrl} alt="" size={28} />
+            <CrestImage src={match.homeTeam.logoUrl} alt={homeName} name={homeName} size={28} />
             <div className="min-w-0">
               <strong className={homeWon ? 'is-winner' : awayWon ? 'is-muted' : undefined}>
                 {homeName}
@@ -172,7 +182,7 @@ export async function MatchCard({
           </div>
 
           <div className="fixture-team is-away">
-            <CrestImage src={match.awayTeam.logoUrl} alt="" size={28} />
+            <CrestImage src={match.awayTeam.logoUrl} alt={awayName} name={awayName} size={28} />
             <div className="min-w-0">
               <strong className={awayWon ? 'is-winner' : homeWon ? 'is-muted' : undefined}>
                 {awayName}
@@ -252,7 +262,7 @@ export async function MatchCard({
                 (homePossession != null && awayPossession != null)) && (
                   <p>
                     {[
-                      round ? t('round_label', { round }) : '',
+                      round ? localizeRoundName(locale, round) : '',
                       homeFormation || awayFormation
                         ? [homeFormation, awayFormation].filter(Boolean).join(' × ')
                         : '',

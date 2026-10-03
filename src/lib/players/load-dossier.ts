@@ -2,6 +2,8 @@ import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { sportsData } from '@/lib/sports-data';
 import { apiSportsPlayerPhoto } from '@/lib/sports-data/media';
+import { resolveCurrentClub } from '@/lib/players/current-club';
+import { ageFromBirthDate, footballSeasonLabel, splitTransferType } from '@/lib/transfers/fee';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
   let lastError: unknown;
@@ -63,35 +65,35 @@ export type PlayerSeasonBlock = {
 
 export type PlayerSeasonTotals = {
   season: number | null;
-  appearances: number;
-  lineups: number;
-  minutes: number;
-  goals: number;
-  assists: number;
-  shots: number;
-  shotsOn: number;
-  passes: number;
-  keyPasses: number;
+  appearances: number | null;
+  lineups: number | null;
+  minutes: number | null;
+  goals: number | null;
+  assists: number | null;
+  shots: number | null;
+  shotsOn: number | null;
+  passes: number | null;
+  keyPasses: number | null;
   passAccuracy: number | null;
-  tackles: number;
-  blocks: number;
-  interceptions: number;
-  duels: number;
-  duelsWon: number;
-  dribbles: number;
-  dribbleAttempts: number;
-  foulsDrawn: number;
-  foulsCommitted: number;
-  yellow: number;
-  yellowRed: number;
-  red: number;
-  penaltiesScored: number;
-  penaltiesMissed: number;
-  saves: number;
-  conceded: number;
-  subsIn: number;
-  subsOut: number;
-  bench: number;
+  tackles: number | null;
+  blocks: number | null;
+  interceptions: number | null;
+  duels: number | null;
+  duelsWon: number | null;
+  dribbles: number | null;
+  dribbleAttempts: number | null;
+  foulsDrawn: number | null;
+  foulsCommitted: number | null;
+  yellow: number | null;
+  yellowRed: number | null;
+  red: number | null;
+  penaltiesScored: number | null;
+  penaltiesMissed: number | null;
+  saves: number | null;
+  conceded: number | null;
+  subsIn: number | null;
+  subsOut: number | null;
+  bench: number | null;
   rating: string | null;
 };
 
@@ -138,6 +140,14 @@ export type PlayerDossierData = {
     logoUrl: string | null;
     shirtNumber: number | null;
   } | null;
+  onLoanFrom: {
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  } | null;
+  confirmedFreeAgent: boolean;
+  transfersUpdatedAt: Date | null;
   clubHistory: Array<{
     id: string;
     name: string;
@@ -187,11 +197,17 @@ export type PlayerDossierData = {
   }>;
   transfers: Array<{
     id: string;
-    date: Date;
+    date: Date | null;
     fee: string | null;
     type: string | null;
+    kind: 'loan' | 'free' | 'move' | 'ended' | 'retired' | 'rumour' | 'unknown';
     fromTeam: string | null;
     toTeam: string | null;
+    fromLogo: string | null;
+    toLogo: string | null;
+    fromSlug: string | null;
+    toSlug: string | null;
+    season: string | null;
   }>;
   news: Array<{
     id: string;
@@ -283,7 +299,10 @@ type ApiTransferPayload = {
     transfers?: Array<{
       date?: string;
       type?: string;
-      teams?: { in?: { name?: string }; out?: { name?: string } };
+      teams?: {
+        in?: { id?: number; name?: string; logo?: string };
+        out?: { id?: number; name?: string; logo?: string };
+      };
     }>;
   }>;
 };
@@ -381,125 +400,77 @@ function mapSeasonBlock(row: ApiStatRow): PlayerSeasonBlock | null {
   };
 }
 
+function sumKnown(values: Array<number | null | undefined>): number | null {
+  const present = values.filter((value): value is number => value != null);
+  if (present.length === 0) return null;
+  return present.reduce((total, value) => total + value, 0);
+}
+
 function sumSeason(blocks: PlayerSeasonBlock[], seasonHint: number | null = null): PlayerSeasonTotals | null {
   if (blocks.length === 0) return null;
-  let appearances = 0;
-  let lineups = 0;
-  let minutes = 0;
-  let goals = 0;
-  let assists = 0;
-  let shots = 0;
-  let shotsOn = 0;
-  let passes = 0;
-  let keyPasses = 0;
-  let passAccSum = 0;
-  let passAccCount = 0;
-  let tackles = 0;
-  let tackleBlocks = 0;
-  let interceptions = 0;
-  let duels = 0;
-  let duelsWon = 0;
-  let dribbles = 0;
-  let dribbleAttempts = 0;
-  let foulsDrawn = 0;
-  let foulsCommitted = 0;
-  let yellow = 0;
-  let yellowRed = 0;
-  let red = 0;
-  let penaltiesScored = 0;
-  let penaltiesMissed = 0;
-  let saves = 0;
-  let conceded = 0;
-  let subsIn = 0;
-  let subsOut = 0;
-  let bench = 0;
   const ratings: number[] = [];
   const seasons = new Set<number>();
-
   for (const block of blocks) {
     if (block.league.season != null) seasons.add(block.league.season);
-    appearances += block.games.appearances || 0;
-    lineups += block.games.lineups || 0;
-    minutes += block.games.minutes || 0;
-    goals += block.goals.total || 0;
-    assists += block.goals.assists || 0;
-    shots += block.shots.total || 0;
-    shotsOn += block.shots.on || 0;
-    passes += block.passes.total || 0;
-    keyPasses += block.passes.key || 0;
-    if (block.passes.accuracy != null) {
-      passAccSum += block.passes.accuracy;
-      passAccCount += 1;
-    }
-    tackles += block.tackles.total || 0;
-    tackleBlocks += block.tackles.blocks || 0;
-    interceptions += block.tackles.interceptions || 0;
-    duels += block.duels.total || 0;
-    duelsWon += block.duels.won || 0;
-    dribbles += block.dribbles.success || 0;
-    dribbleAttempts += block.dribbles.attempts || 0;
-    foulsDrawn += block.fouls.drawn || 0;
-    foulsCommitted += block.fouls.committed || 0;
-    yellow += block.cards.yellow || 0;
-    yellowRed += block.cards.yellowRed || 0;
-    red += block.cards.red || 0;
-    penaltiesScored += block.penalty.scored || 0;
-    penaltiesMissed += block.penalty.missed || 0;
-    saves += block.goals.saves || 0;
-    conceded += block.goals.conceded || 0;
-    subsIn += block.substitutes.in || 0;
-    subsOut += block.substitutes.out || 0;
-    bench += block.substitutes.bench || 0;
     const rating = block.games.rating ? Number(block.games.rating) : NaN;
     if (!Number.isNaN(rating) && rating > 0) ratings.push(rating);
   }
 
   return {
     season: seasonHint ?? (seasons.size === 1 ? [...seasons][0] : null),
-    appearances,
-    lineups,
-    minutes,
-    goals,
-    assists,
-    shots,
-    shotsOn,
-    passes,
-    keyPasses,
-    passAccuracy: passAccCount > 0 ? Math.round(passAccSum / passAccCount) : null,
-    tackles,
-    blocks: tackleBlocks,
-    interceptions,
-    duels,
-    duelsWon,
-    dribbles,
-    dribbleAttempts,
-    foulsDrawn,
-    foulsCommitted,
-    yellow,
-    yellowRed,
-    red,
-    penaltiesScored,
-    penaltiesMissed,
-    saves,
-    conceded,
-    subsIn,
-    subsOut,
-    bench,
+    appearances: sumKnown(blocks.map((block) => block.games.appearances)),
+    lineups: sumKnown(blocks.map((block) => block.games.lineups)),
+    minutes: sumKnown(blocks.map((block) => block.games.minutes)),
+    goals: sumKnown(blocks.map((block) => block.goals.total)),
+    assists: sumKnown(blocks.map((block) => block.goals.assists)),
+    shots: sumKnown(blocks.map((block) => block.shots.total)),
+    shotsOn: sumKnown(blocks.map((block) => block.shots.on)),
+    passes: sumKnown(blocks.map((block) => block.passes.total)),
+    keyPasses: sumKnown(blocks.map((block) => block.passes.key)),
+    passAccuracy: (() => {
+      const present = blocks.map((block) => block.passes.accuracy).filter((value): value is number => value != null);
+      return present.length > 0 ? Math.round(present.reduce((a, b) => a + b, 0) / present.length) : null;
+    })(),
+    tackles: sumKnown(blocks.map((block) => block.tackles.total)),
+    blocks: sumKnown(blocks.map((block) => block.tackles.blocks)),
+    interceptions: sumKnown(blocks.map((block) => block.tackles.interceptions)),
+    duels: sumKnown(blocks.map((block) => block.duels.total)),
+    duelsWon: sumKnown(blocks.map((block) => block.duels.won)),
+    dribbles: sumKnown(blocks.map((block) => block.dribbles.success)),
+    dribbleAttempts: sumKnown(blocks.map((block) => block.dribbles.attempts)),
+    foulsDrawn: sumKnown(blocks.map((block) => block.fouls.drawn)),
+    foulsCommitted: sumKnown(blocks.map((block) => block.fouls.committed)),
+    yellow: sumKnown(blocks.map((block) => block.cards.yellow)),
+    yellowRed: sumKnown(blocks.map((block) => block.cards.yellowRed)),
+    red: sumKnown(blocks.map((block) => block.cards.red)),
+    penaltiesScored: sumKnown(blocks.map((block) => block.penalty.scored)),
+    penaltiesMissed: sumKnown(blocks.map((block) => block.penalty.missed)),
+    saves: sumKnown(blocks.map((block) => block.goals.saves)),
+    conceded: sumKnown(blocks.map((block) => block.goals.conceded)),
+    subsIn: sumKnown(blocks.map((block) => block.substitutes.in)),
+    subsOut: sumKnown(blocks.map((block) => block.substitutes.out)),
+    bench: sumKnown(blocks.map((block) => block.substitutes.bench)),
     rating: ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2) : null,
   };
 }
 
 function buildRates(totals: PlayerSeasonTotals): PlayerRates {
-  const per90 = (value: number) =>
-    totals.minutes > 0 ? Number(((value * 90) / totals.minutes).toFixed(2)) : null;
+  const minutes = totals.minutes ?? 0;
+  const per90 = (value: number | null) =>
+    value != null && minutes > 0 ? Number(((value * 90) / minutes).toFixed(2)) : null;
   return {
-    goalsPer90: totals.goals > 0 || totals.minutes > 0 ? per90(totals.goals) : null,
-    assistsPer90: totals.assists > 0 || totals.minutes > 0 ? per90(totals.assists) : null,
+    goalsPer90: per90(totals.goals),
+    assistsPer90: per90(totals.assists),
     shotAccuracy:
-      totals.shots > 0 ? Math.round((totals.shotsOn / totals.shots) * 100) : null,
-    duelWinPct: totals.duels > 0 ? Math.round((totals.duelsWon / totals.duels) * 100) : null,
+      totals.shots != null && totals.shots > 0 && totals.shotsOn != null
+        ? Math.round((totals.shotsOn / totals.shots) * 100)
+        : null,
+    duelWinPct:
+      totals.duels != null && totals.duels > 0 && totals.duelsWon != null
+        ? Math.round((totals.duelsWon / totals.duels) * 100)
+        : null,
     dribbleSuccessPct:
-      totals.dribbleAttempts > 0
+      totals.dribbleAttempts != null && totals.dribbleAttempts > 0 && totals.dribbles != null
         ? Math.round((totals.dribbles / totals.dribbleAttempts) * 100)
         : null,
   };
@@ -511,67 +482,67 @@ function buildProfileBars(totals: PlayerSeasonTotals): PlayerProfileBar[] {
       key: 'goals',
       labelAr: 'الأهداف',
       labelEn: 'Goals',
-      value: totals.goals,
-      max: Math.max(totals.goals, 10),
+      value: totals.goals ?? 0,
+      max: Math.max(totals.goals ?? 0, 10),
     },
     {
       key: 'assists',
       labelAr: 'الصناعات',
       labelEn: 'Assists',
-      value: totals.assists,
-      max: Math.max(totals.assists, 8),
+      value: totals.assists ?? 0,
+      max: Math.max(totals.assists ?? 0, 8),
     },
     {
       key: 'shots',
       labelAr: 'التسديدات',
       labelEn: 'Shots',
-      value: totals.shots,
-      max: Math.max(totals.shots, 30),
+      value: totals.shots ?? 0,
+      max: Math.max(totals.shots ?? 0, 30),
     },
     {
       key: 'shotsOn',
       labelAr: 'على المرمى',
       labelEn: 'Shots on',
-      value: totals.shotsOn,
-      max: Math.max(totals.shotsOn, 20),
+      value: totals.shotsOn ?? 0,
+      max: Math.max(totals.shotsOn ?? 0, 20),
     },
     {
       key: 'key',
       labelAr: 'تمريرات حاسمة',
       labelEn: 'Key passes',
-      value: totals.keyPasses,
-      max: Math.max(totals.keyPasses, 20),
+      value: totals.keyPasses ?? 0,
+      max: Math.max(totals.keyPasses ?? 0, 20),
     },
     {
       key: 'tackles',
       labelAr: 'قطع الكرات',
       labelEn: 'Tackles',
-      value: totals.tackles,
-      max: Math.max(totals.tackles, 20),
+      value: totals.tackles ?? 0,
+      max: Math.max(totals.tackles ?? 0, 20),
     },
     {
       key: 'duels',
       labelAr: 'ثنائيات فائزة',
       labelEn: 'Duels won',
-      value: totals.duelsWon,
-      max: Math.max(totals.duelsWon, 40),
+      value: totals.duelsWon ?? 0,
+      max: Math.max(totals.duelsWon ?? 0, 40),
     },
     {
       key: 'dribbles',
       labelAr: 'مراوغات ناجحة',
       labelEn: 'Dribbles',
-      value: totals.dribbles,
-      max: Math.max(totals.dribbles, 20),
+      value: totals.dribbles ?? 0,
+      max: Math.max(totals.dribbles ?? 0, 20),
     },
     {
       key: 'minutes',
       labelAr: 'الدقائق',
       labelEn: 'Minutes',
-      value: totals.minutes,
-      max: Math.max(totals.minutes, 900),
+      value: totals.minutes ?? 0,
+      max: Math.max(totals.minutes ?? 0, 900),
     },
   ];
-  return candidates.filter((row) => row.value > 0);
+  return candidates.filter((row) => (row.value ?? 0) > 0);
 }
 
 const playerRowSelect = {
@@ -715,8 +686,20 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
           prisma.transfer.findMany({
             where: { playerId: playerRow.id },
             orderBy: { date: 'desc' },
-            take: 24,
-            select: { id: true, date: true, fee: true, fromTeam: true, toTeam: true },
+            take: 100,
+            select: {
+              id: true,
+              date: true,
+              fee: true,
+              type: true,
+              fromTeam: true,
+              toTeam: true,
+              fromLogo: true,
+              toLogo: true,
+              fromTeamId: true,
+              toTeamId: true,
+              syncedAt: true,
+            },
           }),
         []
       ),
@@ -785,12 +768,11 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
   const birthDate =
     playerRow.birthDate ||
     (apiProfile?.birth?.date ? new Date(apiProfile.birth.date) : null);
-  const age =
-    typeof apiProfile?.age === 'number'
+  const age = birthDate
+    ? ageFromBirthDate(birthDate)
+    : typeof apiProfile?.age === 'number'
       ? apiProfile.age
-      : birthDate
-        ? Math.max(15, new Date().getFullYear() - birthDate.getFullYear())
-        : null;
+      : null;
 
   if (apiProfile) {
     const patch: {
@@ -812,7 +794,6 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
     }
   }
 
-  const current = teams.find((row) => row.to == null) || teams[0] || null;
   const clubHistory = teams.map((row) => ({
     id: row.team.id,
     name: row.team.name,
@@ -873,10 +854,10 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
 
   const assists = seasonTotals?.assists || 0;
   if (seasonTotals) {
-    if (goals === 0 && seasonTotals.goals > 0) goals = seasonTotals.goals;
-    if (penalties === 0 && seasonTotals.penaltiesScored > 0) penalties = seasonTotals.penaltiesScored;
-    if (yellow === 0 && seasonTotals.yellow > 0) yellow = seasonTotals.yellow;
-    if (red === 0 && seasonTotals.red > 0) red = seasonTotals.red;
+    if (goals === 0 && (seasonTotals.goals ?? 0) > 0) goals = seasonTotals.goals ?? 0;
+    if (penalties === 0 && (seasonTotals.penaltiesScored ?? 0) > 0) penalties = seasonTotals.penaltiesScored ?? 0;
+    if (yellow === 0 && (seasonTotals.yellow ?? 0) > 0) yellow = seasonTotals.yellow ?? 0;
+    if (red === 0 && (seasonTotals.red ?? 0) > 0) red = seasonTotals.red ?? 0;
   }
 
   const profileBars = seasonTotals ? buildProfileBars(seasonTotals) : [];
@@ -910,38 +891,184 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       .slice(0, 14) || [];
 
   const apiTransferRows =
-    apiTransfers?.response?.[0]?.transfers?.map((row, index) => ({
-      id: `api-${index}-${row.date || index}`,
-      date: row.date ? new Date(row.date) : new Date(0),
-      fee: null as string | null,
-      type: row.type || null,
-      fromTeam: row.teams?.out?.name || null,
-      toTeam: row.teams?.in?.name || null,
-    })) || [];
+    apiTransfers?.response?.[0]?.transfers?.map((row, index) => {
+      const date = row.date ? new Date(row.date) : null;
+      const parsed = splitTransferType(row.type);
+      return {
+        id: `api-${index}-${row.date || index}`,
+        date: date && !Number.isNaN(date.getTime()) ? date : null,
+        fee: parsed.fee,
+        type: parsed.type,
+        kind: parsed.kind,
+        fromTeam: row.teams?.out?.name || null,
+        toTeam: row.teams?.in?.name || null,
+        fromLogo: row.teams?.out?.logo || null,
+        toLogo: row.teams?.in?.logo || null,
+        fromExt: row.teams?.out?.id != null ? String(row.teams.out.id) : null,
+        toExt: row.teams?.in?.id != null ? String(row.teams.in.id) : null,
+        fromTeamId: null as string | null,
+        toTeamId: null as string | null,
+      };
+    }) || [];
 
   const feeByKey = new Map(
     transfersDb.map((row) => [
       `${row.date.toISOString().slice(0, 10)}|${row.fromTeam || ''}|${row.toTeam || ''}`,
-      row.fee,
+      row,
     ]),
   );
-  const transfers = (
+  const mergedTransfers = (
     apiTransferRows.length > 0
       ? apiTransferRows.map((row) => {
-        const key = `${row.date.toISOString().slice(0, 10)}|${row.fromTeam || ''}|${row.toTeam || ''}`;
-        return { ...row, fee: row.fee || feeByKey.get(key) || null };
+        const key = `${row.date ? row.date.toISOString().slice(0, 10) : ''}|${row.fromTeam || ''}|${row.toTeam || ''}`;
+        const db = feeByKey.get(key);
+        const parsed = splitTransferType(row.type || db?.type);
+        return {
+          ...row,
+          fee: parsed.fee || db?.fee || null,
+          type: parsed.type || db?.type || row.type,
+          kind: parsed.kind,
+          fromLogo: row.fromLogo || db?.fromLogo || null,
+          toLogo: row.toLogo || db?.toLogo || null,
+          fromTeamId: db?.fromTeamId || null,
+          toTeamId: db?.toTeamId || null,
+        };
       })
-      : transfersDb.map((row) => ({
+      : transfersDb.map((row) => {
+        const parsed = splitTransferType(row.type || row.fee);
+        return {
+          id: row.id,
+          date: row.date,
+          fee: parsed.fee || row.fee,
+          type: parsed.type || row.type,
+          kind: parsed.kind,
+          fromTeam: row.fromTeam,
+          toTeam: row.toTeam,
+          fromLogo: row.fromLogo,
+          toLogo: row.toLogo,
+          fromExt: null as string | null,
+          toExt: null as string | null,
+          fromTeamId: row.fromTeamId,
+          toTeamId: row.toTeamId,
+        };
+      })
+  ).filter((row) => row.fromTeam || row.toTeam);
+
+  const teamLookupIds = [
+    ...new Set(
+      mergedTransfers.flatMap((row) => [row.fromExt, row.toExt, row.fromTeamId, row.toTeamId]).filter(Boolean) as string[],
+    ),
+  ];
+  const teamLookupNames = [
+    ...new Set(mergedTransfers.flatMap((row) => [row.fromTeam, row.toTeam]).filter(Boolean) as string[]),
+  ];
+  const mappedTeams =
+    teamLookupIds.length || teamLookupNames.length
+      ? await soft(
+        () =>
+          prisma.team.findMany({
+            where: {
+              OR: [
+                ...(teamLookupIds.length ? [{ id: { in: teamLookupIds } }, { externalId: { in: teamLookupIds } }] : []),
+                ...(teamLookupNames.length ? [{ name: { in: teamLookupNames } }] : []),
+              ],
+            },
+            select: { id: true, externalId: true, name: true, slug: true, logoUrl: true },
+          }),
+        [],
+      )
+      : [];
+  const teamByExt = new Map(mappedTeams.map((row) => [row.externalId, row]));
+  const teamById = new Map(mappedTeams.map((row) => [row.id, row]));
+  const teamByName = new Map(mappedTeams.map((row) => [row.name.toLowerCase(), row]));
+  const clubRef = (name: string | null, ext: string | null, id: string | null, logo: string | null) => {
+    const hit =
+      (ext && teamByExt.get(ext)) ||
+      (id && teamById.get(id)) ||
+      (name ? teamByName.get(name.toLowerCase()) : null) ||
+      null;
+    return {
+      slug: hit?.slug || '',
+      logo: hit?.logoUrl || logo,
+      id: hit?.id || ext || id || '',
+      name: hit?.name || name,
+    };
+  };
+
+  const transfers = mergedTransfers
+    .sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0))
+    .map((row) => {
+      const from = clubRef(row.fromTeam, row.fromExt, row.fromTeamId, row.fromLogo);
+      const to = clubRef(row.toTeam, row.toExt, row.toTeamId, row.toLogo);
+      return {
         id: row.id,
         date: row.date,
         fee: row.fee,
-        type: null as string | null,
+        type: row.type,
+        kind: row.kind,
         fromTeam: row.fromTeam,
         toTeam: row.toTeam,
-      }))
-  ).filter((row) => !Number.isNaN(row.date.getTime()) && row.date.getTime() > 0);
+        fromLogo: from.logo,
+        toLogo: to.logo,
+        fromSlug: from.slug || null,
+        toSlug: to.slug || null,
+        season: row.date ? footballSeasonLabel(row.date) : null,
+      };
+    });
+  const transfersUpdatedAt = transfersDb.reduce<Date | null>((latest, row) => {
+    if (!latest || row.syncedAt > latest) return row.syncedAt;
+    return latest;
+  }, null);
 
-  const clubId = current?.team.id;
+  const resolvedClub = resolveCurrentClub({
+    currentSeason: footballSeason(),
+    seasonTeams: seasonBlocks.map((block) => ({
+      id: block.team.id,
+      name: block.team.name,
+      logoUrl: block.team.logoUrl,
+      season: block.league.season,
+      appearances: block.games.appearances,
+    })),
+    transfers: transfers
+      .filter((row) => row.date)
+      .map((row) => ({
+        date: row.date as Date,
+        type: row.type,
+        fromTeam: row.fromTeam,
+        toTeam: row.toTeam,
+      })),
+    openStints: teams
+      .filter((row) => row.to == null)
+      .map((row) => ({
+        id: row.team.id,
+        name: row.team.name,
+        slug: row.team.slug,
+        logoUrl: row.team.logoUrl,
+        shirtNumber: row.shirtNumber,
+      })),
+  });
+  const hydrateClub = (club: { id: string; name: string; slug: string; logoUrl: string | null; shirtNumber?: number | null } | null) => {
+    if (!club) return null;
+    const hit = clubRef(club.name, club.id, club.id, club.logoUrl);
+    return {
+      id: hit.id || club.id,
+      name: hit.name || club.name,
+      slug: hit.slug || club.slug,
+      logoUrl: hit.logo || club.logoUrl,
+      shirtNumber: club.shirtNumber ?? shirtFromApi,
+    };
+  };
+  const currentClub = hydrateClub(resolvedClub.club);
+  const onLoanFrom = resolvedClub.onLoanFrom
+    ? {
+      id: resolvedClub.onLoanFrom.id,
+      name: resolvedClub.onLoanFrom.name,
+      slug: clubRef(resolvedClub.onLoanFrom.name, resolvedClub.onLoanFrom.id, resolvedClub.onLoanFrom.id, resolvedClub.onLoanFrom.logoUrl).slug,
+      logoUrl: clubRef(resolvedClub.onLoanFrom.name, resolvedClub.onLoanFrom.id, resolvedClub.onLoanFrom.id, resolvedClub.onLoanFrom.logoUrl).logo,
+    }
+    : null;
+
+  const clubId = currentClub?.slug ? currentClub.id : undefined;
   const matchLite = {
     id: true,
     status: true,
@@ -1042,15 +1169,10 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       weight: apiProfile?.weight || null,
       injured: typeof apiProfile?.injured === 'boolean' ? apiProfile.injured : null,
     },
-    currentClub: current
-      ? {
-        id: current.team.id,
-        name: current.team.name,
-        slug: current.team.slug,
-        logoUrl: current.team.logoUrl,
-        shirtNumber: current.shirtNumber ?? shirtFromApi,
-      }
-      : null,
+    currentClub,
+    onLoanFrom,
+    confirmedFreeAgent: resolvedClub.confirmedFreeAgent,
+    transfersUpdatedAt,
     clubHistory,
     apiClubs: apiClubs as PlayerDossierData['apiClubs'],
     totals: {
@@ -1098,13 +1220,16 @@ export type PlayerCompareCard = {
   season: number | null;
   totals: PlayerSeasonTotals | null;
   rates: PlayerRates | null;
-  competitions: string[];
+  competitions: Array<{ id: string; name: string }>;
+  provider: 'api-football' | 'database';
+  fetchedAt: Date;
 };
 
 /** Season stats from the football API — not sparse local match-event counts. */
 export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
   slug: string,
   seasonYear?: number,
+  competitionId?: string,
 ): Promise<PlayerCompareCard | null> {
   const playerRow = await findPlayerRowBySlug(slug);
   if (!playerRow) return null;
@@ -1139,17 +1264,20 @@ export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
   const prevBlocks = (apiPlayerPrev?.response?.[0]?.statistics || [])
     .map((row) => mapSeasonBlock(row))
     .filter(Boolean) as PlayerSeasonBlock[];
-  const blocks = currentBlocks.length > 0 ? currentBlocks : prevBlocks;
+  const rawBlocks = currentBlocks.length > 0 ? currentBlocks : prevBlocks;
+  const blocks =
+    competitionId && competitionId !== 'all'
+      ? rawBlocks.filter((block) => block.league.id === competitionId)
+      : rawBlocks;
   const totals = sumSeason(blocks, currentBlocks.length > 0 ? season : season - 1);
   const apiProfile = apiPlayer?.response?.[0]?.player || apiPlayerPrev?.response?.[0]?.player;
   const birthDate =
     playerRow.birthDate || (apiProfile?.birth?.date ? new Date(apiProfile.birth.date) : null);
-  const age =
-    typeof apiProfile?.age === 'number'
+  const age = birthDate
+    ? ageFromBirthDate(birthDate)
+    : typeof apiProfile?.age === 'number'
       ? apiProfile.age
-      : birthDate
-        ? Math.max(15, new Date().getFullYear() - birthDate.getFullYear())
-        : null;
+      : null;
   const clubFromApi = blocks[0]?.team;
   const clubFromLedger = clubRows[0]?.team ?? null;
   let club = clubFromLedger;
@@ -1179,7 +1307,9 @@ export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
     season: totals?.season ?? (blocks.length ? blocks[0]?.league.season ?? null : null),
     totals,
     rates: totals ? buildRates(totals) : null,
-    competitions: [...new Set(blocks.map((block) => block.league.name).filter(Boolean))],
+    competitions: [...new Map(rawBlocks.map((block) => [block.league.id, { id: block.league.id, name: block.league.name }])).values()],
+    provider: apiPlayer || apiPlayerPrev ? 'api-football' : 'database',
+    fetchedAt: new Date(),
   };
 });
 

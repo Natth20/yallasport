@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { redis } from '@/lib/redis';
 import { logSystemAlert, AlertType, AlertSeverity } from '@/lib/monitoring';
 import { persistMatchDetail, persistNormalizedMatch } from '@/lib/sports-data/persistence';
+import { maybeRefreshFeaturedStandings } from '@/lib/sports-data/standings-persist';
+import { syncLeagueCatalog } from '@/lib/sports-data/league-catalog';
 import { cronFixtureDateKeys, liveKickoffFloor } from '@/lib/sports-data/match-window';
 import { alertMatchFans } from '@/lib/notifications/match-alerts';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
@@ -86,6 +88,16 @@ export async function GET(req: Request) {
       ? await settleFinishedPredictions(finishedIds).catch(swallow("src/app/api/sports/sync/route.ts:94", ({ matches: 0, settled: 0, awarded: 0 })))
       : { matches: 0, settled: 0, awarded: 0 };
 
+    const tables = await maybeRefreshFeaturedStandings().catch(swallow('src/app/api/sports/sync/route.ts:standings', { boards: 0, rows: 0, skipped: true as const }));
+
+    // Opportunistically refresh the full competition catalog once a day.
+    // No-ops without a live key, so it is safe here.
+    const catalogDue = (await redis.get('sports:meta:catalog')) == null;
+    if (catalogDue) {
+      const catalog = await syncLeagueCatalog().catch(swallow('src/app/api/sports/sync/route.ts:catalog', { upserted: 0, skipped: true }));
+      await redis.set('sports:meta:catalog', { syncedAt: new Date().toISOString(), upserted: catalog.upserted }, { ex: 86400 });
+    }
+
     const staleLive = await prisma.match.updateMany({
       where: {
         status: { in: ['LIVE', 'HALFTIME'] },
@@ -118,6 +130,8 @@ export async function GET(req: Request) {
       syncedCount: persistedMatches.length,
       liveCount: liveMatches.length,
       staleLiveClosed: staleLive.count,
+      standingsBoards: tables.boards,
+      standingsRows: tables.rows,
       predictionsSettled: settlement.settled,
       pointsAwarded: settlement.awarded,
       timestamp: syncedAt,

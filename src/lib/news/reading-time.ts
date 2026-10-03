@@ -33,6 +33,15 @@ export function readingTimeMinutes(htmlOrText?: string | null) {
   return Math.max(1, Math.ceil(words / LATIN_WPM));
 }
 
+export function readingTimeLabel(locale: string, minutes: number) {
+  const mins = Math.max(1, Math.round(minutes));
+  if (locale !== 'ar') return `${mins} min read`;
+  if (mins === 1) return 'دقيقة قراءة';
+  if (mins === 2) return 'دقيقتان قراءة';
+  if (mins >= 3 && mins <= 10) return `${mins} دقائق قراءة`;
+  return `${mins} دقيقة قراءة`;
+}
+
 /** List cards often only have a teaser. Trust a stored value only when it looks like a full read. */
 export function listedReadingMinutes(story: {
   readingTime?: number | null;

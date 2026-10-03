@@ -6,7 +6,7 @@ import { BrandMark } from '@/components/brand/BrandMark';
 import { prisma } from '@/lib/prisma';
 import { swallow } from '@/lib/ops/caught';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
-import { liveKickoffFloor } from '@/lib/sports-data/match-window';
+import { countLiveMatches } from '@/lib/sports-data/live-census';
 import { FooterBrief } from './FooterBrief';
 import styles from './footer.module.css';
 
@@ -31,11 +31,7 @@ async function loadFooterDesk(): Promise<FooterDesk> {
         select: { name: true, slug: true, externalId: true },
       })
       .catch(swallow('footer.leagues', empty, { persist: false })),
-    prisma.match
-      .count({
-        where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
-      })
-      .catch(swallow('footer.live', 0, { persist: false })),
+    countLiveMatches(),
     prisma.news
       .count({
         where: {
@@ -129,7 +125,6 @@ export async function Footer() {
           {ar ? 'دليل القاعة' : 'Hall directory'}
         </span>
         <span className={styles.bezelMeta}>
-          <span className={styles.hd}>HD</span>
           <span>YS</span>
         </span>
       </div>

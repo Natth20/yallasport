@@ -1,4 +1,5 @@
 import { pick } from '@/i18n/pick';
+import { arabicCountLabel } from '@/lib/i18n/arabic-count';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { FOOTBALL_YOUTUBE_CHANNELS } from '@/lib/youtube/channels';
 import type { YoutubeDeskStats } from '@/lib/youtube/ingest';
@@ -16,34 +17,38 @@ export function YoutubeBrief({
 
   const cells = [
     {
-      dt: pick(locale, 'القنوات المعتمدة', 'Roster Channels'),
+      dt: pick(locale, 'قنوات يوتيوب المعتمدة', 'Approved YouTube sources'),
       dd: String(stats.channels),
       icon: Tv,
-      hint: pick(locale, 'قناة رسمية', 'Official channels'),
+      hint: pick(locale, 'مصدر فيديو معتمد', 'Approved video source'),
     },
     {
-      dt: pick(locale, 'عروض الفيديو', 'Video Titles'),
+      dt: pick(locale, 'فيديو', 'Videos'),
       dd: String(stats.videos),
       icon: Video,
       hint: pick(locale, 'ملخصات وتحليلات', 'Highlights & analysis'),
     },
     {
-      dt: pick(locale, 'ريلز وشورتس', 'Shorts & Reels'),
+      dt: locale === 'ar' ? arabicCountLabel(stats.reels, 'reel') : 'Reels',
       dd: String(stats.reels),
       icon: Flame,
       hint: pick(locale, 'كليبات سريعة', 'Fast clips'),
     },
+    ...(stats.arabic > 0 && stats.arabic !== stats.videos
+      ? [
+        {
+          dt: pick(locale, 'قنوات عربية', 'Arabic channels'),
+          dd: String(stats.arabic),
+          icon: Globe2,
+          hint: pick(locale, 'قنوات ناطقة بالعربية', 'Arabic-language channels'),
+        },
+      ]
+      : []),
     {
-      dt: pick(locale, 'المحتوى العربي', 'Arabic Content'),
-      dd: String(stats.arabic),
-      icon: Globe2,
-      hint: pick(locale, 'أحدث الإصدارات', 'Latest editions'),
-    },
-    {
-      dt: pick(locale, 'خزينة الأرشيف', 'Archive Vault'),
+      dt: pick(locale, 'فيديو في الأرشيف', 'Videos in archive'),
       dd: String(stats.archived),
       icon: Archive,
-      hint: pick(locale, 'محفوظات دائمة', 'Permanent storage'),
+      hint: pick(locale, 'خارج الرف الحالي', 'Off the current shelf'),
     },
   ];
 
@@ -61,7 +66,7 @@ export function YoutubeBrief({
         {stats.fetchedAt ? (
           <div className={styles['yt-brief-clock']}>
             <Clock3 size={13} aria-hidden />
-            <span>{pick(locale, 'آخر تحديث للرف:', 'Last shelf refresh:')}</span>
+            <span>{pick(locale, 'آخر مزامنة للمحتوى:', 'Last content sync:')}</span>
             <ClientTime
               locale={locale}
               value={stats.fetchedAt}
@@ -95,8 +100,8 @@ export function YoutubeBrief({
           <p>
             {pick(
               locale,
-              'تغطية فيديو رسمية منتقاة بعناية من قنوات الأندية والاتحادات والشبكات الرياضية المرخصة. تُعرض المقاطع عبر مشغل يوتيوب الرسمي مع حفظ كامل حقوق أصحاب البث.',
-              'Curated official video coverage directly from verified club, federation, and broadcaster channels. Played via the official YouTube player respecting all rights holders.',
+              'محتوى فيديو مضمّن من قنوات يوتيوب المعتمدة عبر المشغّل الرسمي. يلا سبورت لا تعيد رفع المقاطع ولا تختلق مدتها.',
+              'Embedded video from approved YouTube channels via the official player. Yalla Sport does not re-upload clips or invent durations.',
             )}
           </p>
         </div>

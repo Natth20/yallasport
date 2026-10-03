@@ -5,6 +5,9 @@ import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { pick } from '@/i18n/pick';
+import { localizeLeagueRegion, localizeRoundName } from '@/lib/i18n/competition-names';
+import { arabicCountLabel, countLabel } from '@/lib/i18n/arabic-count';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 
 type Crest = { name: string; logoUrl: string | null };
 
@@ -14,6 +17,7 @@ export type DeskCardLeague = {
   slug: string;
   logoUrl: string | null;
   country: string | null;
+  externalId?: string | null;
   standings: number;
   season: string | null;
   extraLive: number;
@@ -61,11 +65,13 @@ function FaceOff({
   away,
   centre,
   href,
+  locale,
 }: {
   home: { name: string; logoUrl: string | null };
   away: { name: string; logoUrl: string | null };
   centre: React.ReactNode;
   href: string;
+  locale: string;
 }) {
   return (
     <Link href={href} className="league-desk-faceoff">
@@ -73,14 +79,14 @@ function FaceOff({
         <span className="league-desk-badge">
           <LeagueCrest name={home.name} logoUrl={home.logoUrl} className="h-full w-full" />
         </span>
-        <span className="truncate">{home.name}</span>
+        <span className="truncate">{localizeTeamName(locale, home.name)}</span>
       </span>
       <span className="league-desk-score">{centre}</span>
       <span className="league-desk-side is-away">
         <span className="league-desk-badge">
           <LeagueCrest name={away.name} logoUrl={away.logoUrl} className="h-full w-full" />
         </span>
-        <span className="truncate">{away.name}</span>
+        <span className="truncate">{localizeTeamName(locale, away.name)}</span>
       </span>
     </Link>
   );
@@ -103,16 +109,30 @@ export function LeagueDeskCard({
     Boolean(league.lastResult) && hasScore(league.lastResult?.homeScore, league.lastResult?.awayScore);
   const gap =
     league.leader && league.runnerUp ? league.leader.points - league.runnerUp.points : null;
+  const leaderName = league.leader ? localizeTeamName(locale, league.leader.team.name) : '';
+  const runnerName = league.runnerUp ? localizeTeamName(locale, league.runnerUp.team.name) : '';
+  const roundText = localizeRoundName(
+    locale,
+    league.liveMatch?.round || league.nextMatch?.round || null
+  );
 
   const meta = [
-    league.country,
+    localizeLeagueRegion(locale, league.country, league.externalId) || pick(locale, 'غير مصنفة', 'Unclassified'),
     league.season,
-    league.standings > 0 ? `${league.standings} ${pick(locale, 'فريق', 'teams')}` : null,
+    league.standings > 0
+      ? locale === 'ar'
+        ? arabicCountLabel(league.standings, 'team')
+        : `${league.standings} ${countLabel(locale, league.standings, 'team', 'teams')}`
+      : null,
     !live && league.census.live > 0
-      ? `${league.census.live} ${pick(locale, 'مباشرة', 'live')}`
+      ? locale === 'ar'
+        ? arabicCountLabel(league.census.live, 'liveMatch')
+        : `${league.census.live} live`
       : null,
     league.census.upcoming > 0
-      ? `${league.census.upcoming} ${pick(locale, 'قادمة', 'upcoming')}`
+      ? locale === 'ar'
+        ? arabicCountLabel(league.census.upcoming, 'match')
+        : `${league.census.upcoming} upcoming`
       : null,
   ].filter((item): item is string => Boolean(item));
 
@@ -150,6 +170,7 @@ export function LeagueDeskCard({
       <div className="league-desk-card-body">
         {league.liveMatch ? (
           <FaceOff
+            locale={locale}
             home={league.liveMatch.homeTeam}
             away={league.liveMatch.awayTeam}
             href={`/match/${league.liveMatch.id}`}
@@ -167,6 +188,7 @@ export function LeagueDeskCard({
           />
         ) : league.nextMatch ? (
           <FaceOff
+            locale={locale}
             home={league.nextMatch.homeTeam}
             away={league.nextMatch.awayTeam}
             href={`/match/${league.nextMatch.id}`}
@@ -179,6 +201,7 @@ export function LeagueDeskCard({
           />
         ) : hasResult && league.lastResult ? (
           <FaceOff
+            locale={locale}
             home={league.lastResult.homeTeam}
             away={league.lastResult.awayTeam}
             href={`/match/${league.lastResult.id}`}
@@ -201,30 +224,26 @@ export function LeagueDeskCard({
             </span>
             <span className="min-w-0">
               <em>{pick(locale, 'الصدارة', 'Leader')}</em>
-              <strong className="truncate">{league.leader.team.name}</strong>
+              <strong className="truncate">{leaderName}</strong>
             </span>
             <b className="tabular-nums">{league.leader.points}</b>
           </Link>
         ) : null}
 
-        {league.leader && league.runnerUp && !live ? (
+        {league.leader && league.runnerUp && !live && gap != null ? (
           <p className="league-desk-race">
             <span>
-              {pick(locale, 'الفارق', 'Gap')} {gap} {pick(locale, 'نقطة', 'pts')}
+              {gap === 0
+                ? pick(locale, 'يتساوى الفريقان في النقاط.', 'The two teams are level on points.')
+                : pick(locale, `الفارق بين الفريقين: ${gap} نقطة.`, `The gap between the two teams is ${gap} pts.`)}
             </span>
             <span className="truncate">
-              {league.leader.team.name} · {league.runnerUp.team.name}
+              {leaderName} · {runnerName}
             </span>
           </p>
         ) : null}
 
-        {league.nextMatch?.round && league.liveMatch ? (
-          <p className="league-desk-round">{league.nextMatch.round}</p>
-        ) : league.liveMatch?.round ? (
-          <p className="league-desk-round">{league.liveMatch.round}</p>
-        ) : league.nextMatch?.round ? (
-          <p className="league-desk-round">{league.nextMatch.round}</p>
-        ) : null}
+        {roundText ? <p className="league-desk-round">{roundText}</p> : null}
       </div>
 
       <footer className="league-desk-card-foot">
@@ -235,7 +254,7 @@ export function LeagueDeskCard({
           <Link href={`/league/${league.slug}/archive`}>{pick(locale, 'الأرشيف', 'Archive')}</Link>
         ) : null}
         <Link href={`/league/${league.slug}`} className="is-primary">
-          {pick(locale, 'الملف', 'Profile')}
+          {pick(locale, 'فتح البطولة', 'Open league')}
           <ArrowUpLeft className="h-3 w-3" />
         </Link>
       </footer>

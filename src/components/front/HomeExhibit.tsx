@@ -24,11 +24,11 @@ export async function HomeExhibit() {
       <div className={shell.inner}>
         <FrontMark
           num="◇"
-          title={pick(locale, 'صالون الودية', 'Exhibition salon')}
+          title={pick(locale, 'المباريات الودية', 'Friendlies')}
           note={pick(
             locale,
-            'لقاءات ودية كما وصلت من المصدر — ليست بطولة، بل صالون.',
-            'Friendlies as stored — not a competition, a salon.',
+            'لقاءات ودية كما وصلت من المصدر — ليست بطولة رسمية.',
+            'Friendlies as stored — not an official competition.',
           )}
         />
         <ul className={`${styles.exhibitList}${solo ? ` ${styles.exhibitListSolo}` : ''}`}>
@@ -46,7 +46,7 @@ export async function HomeExhibit() {
                   <span className={styles.exhibitCorner} aria-hidden />
                   <span className={styles.exhibitLedger}>
                     <i className={styles.exhibitWax} aria-hidden />
-                    <b>{pick(locale, 'دعوة إلى الصالون', 'Salon invitation')}</b>
+                    <b>{pick(locale, 'ودية', 'Friendly')}</b>
                     <p>
                       {pick(
                         locale,

@@ -17,11 +17,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   return pageMetadata({
     locale,
-    title: pick(locale, 'قاعة الصور', 'Photo salon'),
+    title: pick(locale, 'الصور', 'Photos'),
     description: pick(
       locale,
-      'قاعة صور من التقارير المنشورة فقط. الإطار يصعد إلى الصالة، والتقرير يفتح من المصدر.',
-      'A football photo salon from published reports only. Raise a frame, then open the story from the source.',
+      'صور من التقارير المنشورة فقط. افتح الصورة ثم التقرير من المصدر.',
+      'Photos from published reports only. Open the image, then the story from the source.',
     ),
     path: '/photos',
   });
@@ -45,14 +45,14 @@ async function PhotosPageBody() {
       tone="frame"
       wide
       compact
-      kicker={pick(locale, 'قاعة الصور', 'Photo salon')}
+      kicker={pick(locale, 'الصور', 'Photos')}
       title={pick(locale, 'الصور', 'Photos')}
       lead={pick(
         locale,
-        'إطارات من التقارير المعتمدة. اضغط الصورة فتُعرض على الصالة، وافتح التقرير من المصدر.',
-        'Prints from approved reports. Tap a frame onto the easel, then open the story from the source.',
+        'صور من التقارير المعتمدة. اضغط الصورة للعرض، وافتح التقرير من المصدر.',
+        'Photos from approved reports. Tap to view, then open the story from the source.',
       )}
-      aside={pick(locale, `${frames.length} إطار`, `${frames.length} frames`)}
+      aside={pick(locale, `${frames.length} صورة`, `${frames.length} photos`)}
       tools={
         <YoutubeFoyer>
           <PhotoNav locale={locale} />
@@ -63,8 +63,8 @@ async function PhotosPageBody() {
       <PhotoHall
         locale={locale}
         frames={frames}
-        emptyTitle={pick(locale, 'القاعة مظلمة الآن', 'The hall is dark for now')}
-        emptyLead={pick(locale, 'ما في صور من تقارير منشورة حالياً.', 'No photos from published reports yet.')}
+        emptyTitle={pick(locale, 'لا صور من التقارير بعد', 'No report photos yet')}
+        emptyLead={pick(locale, 'عندما يصل تقرير منشور بصورة من المصدر تظهر هنا.', 'When a published report includes a source image, it appears here.')}
       />
     </SalonStage>
   );

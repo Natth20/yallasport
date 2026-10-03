@@ -2,6 +2,7 @@ import { reportCaughtError } from '@/lib/ops/caught';
 import { sportsData } from '@/lib/sports-data';
 import { persistNormalizedMatch } from '@/lib/sports-data/persistence';
 import { cronFixtureDateKeys } from '@/lib/sports-data/match-window';
+import { maybeRefreshFeaturedStandings } from '@/lib/sports-data/standings-persist';
 
 export async function runSportsSync() {
   const dateKeys = cronFixtureDateKeys();
@@ -21,8 +22,11 @@ export async function runSportsSync() {
       synced += 1;
     } catch (error) {
       reportCaughtError("src/lib/sports-data/run-sync.ts:21", error);
-      // skip one fixture
     }
   }
-  return { synced, live: liveMatches.length };
+  const tables = await maybeRefreshFeaturedStandings().catch((error) => {
+    reportCaughtError('src/lib/sports-data/run-sync.ts:standings', error);
+    return { boards: 0, rows: 0, skipped: true as const };
+  });
+  return { synced, live: liveMatches.length, tables };
 }

@@ -9,8 +9,8 @@ import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ChapterSectionHead, LeagueChapterShell } from '@/components/leagues/LeagueChapterShell';
 import { pick } from '@/i18n/pick';
 import { loadLeagueDossier, type StandingZone } from '@/lib/leagues/load-dossier';
-import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
+import { formatLeagueSeason, localizeCompetitionTitle } from '@/lib/i18n/competition-names';
 
 export const revalidate = 90;
 
@@ -21,11 +21,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = await getLocale();
   const { slug } = await params;
-  const league = await prisma.league.findUnique({
-    where: { slug },
-    select: { name: true },
-  });
-  if (!league) {
+  const dossier = await loadLeagueDossier(slug);
+  if (!dossier) {
     return pageMetadata({
       locale,
       title: pick(locale, 'جدول الترتيب', 'Standings'),
@@ -34,10 +31,17 @@ export async function generateMetadata({
       noIndex: true,
     });
   }
+  const name = localizeCompetitionTitle(locale, dossier.league);
+  const season = formatLeagueSeason(dossier.seasonId);
+  const seasonBit = season ? ` ${season}` : '';
   return pageMetadata({
     locale,
-    title: `${pick(locale, 'ترتيب', 'Standings')} ${league.name}`,
-    description: `${pick(locale, 'جدول ترتيب', 'Standings for')} ${league.name} ${pick(locale, 'بالنقاط، فارق الأهداف، ومناطق التأهل من المصدر الحقيقي.', 'with points, goal difference and qualification zones from the real source.')}`,
+    title: pick(locale, `ترتيب ${name}${seasonBit} | يلا سبورت`, `${name}${seasonBit} standings | Yalla Sport`),
+    description: pick(
+      locale,
+      `جدول ترتيب ${name}${seasonBit} بالنقاط وفارق الأهداف ومناطق التأهل من المصدر.`,
+      `Standings for ${name}${seasonBit} with points, goal difference and qualification zones from the source.`
+    ),
     path: `/league/${slug}/standings`,
   });
 }
@@ -120,7 +124,7 @@ async function StandingsPageBody({
         label: pick(locale, 'فارق المتصدر', 'Leader GD'),
       }
       : null,
-    seasonId ? { value: seasonId, label: pick(locale, 'الموسم', 'Season') } : null,
+    seasonId ? { value: formatLeagueSeason(seasonId) || seasonId, label: pick(locale, 'الموسم', 'Season') } : null,
   ].filter(Boolean) as Array<{ value: string | number; label: string }>;
 
   return (
@@ -137,6 +141,7 @@ async function StandingsPageBody({
       )}
       leagueName={league.name}
       logoUrl={league.logoUrl}
+      statsLeagueId={league.externalId}
       seasonId={seasonId}
       seasons={seasons}
       seasonHref={(value) => `/league/${slug}/standings?season=${value}`}
@@ -147,10 +152,14 @@ async function StandingsPageBody({
         <div className="league-plate px-6 py-16 text-center">
           <Trophy className="mx-auto h-8 w-8 text-muted-foreground" />
           <h2 className="mt-5 text-lg font-bold">
-            {pick(locale, 'لا يوجد جدول ترتيب لهذا الموسم', 'No standings for this season')}
+            {pick(locale, 'البيانات غير متاحة من المصدر', 'Data is not available from the source')}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {pick(locale, 'سيظهر الجدول فور مزامنة بيانات الترتيب.', 'The table will appear once standings data is synchronized.')}
+            {pick(
+              locale,
+              'مزود البيانات لم يُرجع جدول ترتيب لهذا الموسم. هذا لا يعني أن البطولة بلا ترتيب.',
+              'The data provider did not return a table for this season. That does not mean the competition has no standings.'
+            )}
           </p>
         </div>
       ) : (
@@ -204,16 +213,16 @@ async function StandingsPageBody({
 
             <div className="lch-table-scroll">
               <div className="lch-table-head" aria-hidden>
-                <span>#</span>
+                <span>{pick(locale, 'المركز', 'Pos')}</span>
                 <span>{pick(locale, 'الفريق', 'Club')}</span>
-                <span>{pick(locale, 'ل', 'P')}</span>
-                <span>{pick(locale, 'ف', 'W')}</span>
-                <span>{pick(locale, 'ت', 'D')}</span>
-                <span>{pick(locale, 'خ', 'L')}</span>
+                <span>{pick(locale, 'لعب', 'P')}</span>
+                <span>{pick(locale, 'فاز', 'W')}</span>
+                <span>{pick(locale, 'تعادل', 'D')}</span>
+                <span>{pick(locale, 'خسر', 'L')}</span>
                 <span>{pick(locale, 'له', 'GF')}</span>
                 <span>{pick(locale, 'عليه', 'GA')}</span>
-                <span>{pick(locale, 'ف ر', 'GD')}</span>
-                <span>{pick(locale, 'ن', 'Pts')}</span>
+                <span>{pick(locale, 'الفارق', 'GD')}</span>
+                <span>{pick(locale, 'النقاط', 'Pts')}</span>
                 <span>{pick(locale, 'فرق', 'Gap')}</span>
               </div>
 

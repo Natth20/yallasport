@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from '@/i18n/navigation';
-import { CalendarDays, History, ListOrdered, Target, Trophy } from 'lucide-react';
+import { BarChart3, CalendarDays, History, ListOrdered, Target, Trophy } from 'lucide-react';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage, type SalonTone } from '@/components/salon/SalonStage';
 import { pick } from '@/i18n/pick';
+import { formatLeagueSeason } from '@/lib/i18n/competition-names';
 import styles from './league-house.module.css';
 
 type Chapter = 'hub' | 'standings' | 'scorers' | 'fixtures' | 'archive';
@@ -27,6 +28,7 @@ export function LeagueChapterShell({
   seasonId,
   seasons,
   seasonHref,
+  statsLeagueId,
   signature,
   ghost,
   children,
@@ -42,6 +44,7 @@ export function LeagueChapterShell({
   seasonId?: string | null;
   seasons?: string[];
   seasonHref?: (season: string) => string;
+  statsLeagueId?: string | null;
   signature?: Array<{ value: string | number; label: string }>;
   ghost?: string;
   children: React.ReactNode;
@@ -58,15 +61,20 @@ export function LeagueChapterShell({
       kicker={kicker}
       title={title}
       lead={subtitle || leagueName}
-      aside={seasonId || undefined}
+      aside={formatLeagueSeason(seasonId) || seasonId || undefined}
       tools={
         <HallFoyer
           label={pick(locale, 'فصول البطولة', 'Competition chapters')}
           items={[
-            { href: `/league/${slug}`, label: pick(locale, 'الملف', 'Hub'), icon: CalendarDays, current: current === 'hub' },
-            { href: `/league/${slug}/fixtures`, label: pick(locale, 'الجدول', 'Fixtures'), icon: ListOrdered, current: current === 'fixtures' },
+            { href: `/league/${slug}`, label: pick(locale, 'نظرة عامة', 'Overview'), icon: CalendarDays, current: current === 'hub' },
+            { href: `/league/${slug}/fixtures`, label: pick(locale, 'المباريات', 'Matches'), icon: ListOrdered, current: current === 'fixtures' },
             { href: `/league/${slug}/standings`, label: pick(locale, 'الترتيب', 'Table'), icon: Trophy, current: current === 'standings' },
             { href: `/league/${slug}/top-scorers`, label: pick(locale, 'الهدافون', 'Scorers'), icon: Target, current: current === 'scorers' },
+            {
+              href: statsLeagueId ? `/stats/${encodeURIComponent(statsLeagueId)}` : '/stats',
+              label: pick(locale, 'الإحصائيات', 'Stats'),
+              icon: BarChart3,
+            },
             { href: `/league/${slug}/archive`, label: pick(locale, 'الأرشيف', 'Archive'), icon: History, current: current === 'archive' },
           ]}
         />
@@ -77,7 +85,7 @@ export function LeagueChapterShell({
           <div className="league-season-switch">
             {seasons.slice(0, 8).map((season) => (
               <Link key={season} href={seasonHref(season)} className={season === seasonId ? 'is-active' : ''}>
-                {season}
+                {formatLeagueSeason(season) || season}
               </Link>
             ))}
           </div>
@@ -109,7 +117,7 @@ export function ChapterSectionHead({
   title,
   note,
 }: {
-  folio: string;
+  folio?: string;
   kicker: string;
   title: string;
   note?: string;
@@ -117,9 +125,11 @@ export function ChapterSectionHead({
   return (
     <div className="league-section-head mb-5">
       <div className="league-section-kicker-row">
-        <span className="league-folio-mark" aria-hidden>
-          {folio}
-        </span>
+        {folio ? (
+          <span className="league-folio-mark" aria-hidden>
+            {folio}
+          </span>
+        ) : null}
         <span className="league-section-kicker">{kicker}</span>
       </div>
       <h2 className="league-section-title">{title}</h2>

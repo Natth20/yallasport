@@ -5,7 +5,7 @@ import { ClientTime } from '@/components/datetime/ClientTime';
 import { NewsAudioReader } from '@/components/news/NewsAudioReader';
 import { NewsComments, type NewsCommentRow } from '@/components/news/NewsComments';
 import { NewsShareMenu } from '@/components/news/NewsShareMenu';
-import { StoryShareCard } from '@/components/news/StoryShareCard';
+import { SiteAd } from '@/components/ads/SiteAd';
 import styles from './story-folio.module.css';
 
 export type StoryRelated = {
@@ -20,6 +20,7 @@ export type StoryRelated = {
 export function StoryFolio({
   locale,
   newsId,
+  slug,
   title,
   excerpt,
   showExcerpt,
@@ -33,7 +34,7 @@ export function StoryFolio({
   sourceUrl,
   deskAuthor,
   publishedLabel,
-  readMins,
+  readLabel,
   bodyHtml,
   clippedCopy,
   protectedSource,
@@ -42,11 +43,13 @@ export function StoryFolio({
   related,
   latest = [],
   popular = [],
+  trendingIsLive = false,
   comments,
   isLoggedIn,
 }: {
   locale: string;
   newsId: string;
+  slug: string;
   title: string;
   excerpt: string | null;
   showExcerpt: boolean;
@@ -60,7 +63,7 @@ export function StoryFolio({
   sourceUrl: string | null;
   deskAuthor: string;
   publishedLabel: string;
-  readMins: number | null;
+  readLabel: string | null;
   bodyHtml: string;
   clippedCopy: boolean;
   protectedSource: boolean;
@@ -69,6 +72,7 @@ export function StoryFolio({
   related: StoryRelated[];
   latest?: StoryRelated[];
   popular?: StoryRelated[];
+  trendingIsLive?: boolean;
   comments: NewsCommentRow[];
   isLoggedIn: boolean;
 }) {
@@ -98,18 +102,20 @@ export function StoryFolio({
             </p>
           ) : null}
           <ul className={styles['ed-by']}>
-            <li>{sourceLabel}</li>
-            <li>{deskAuthor}</li>
+            <li>{pick(locale, 'المصدر', 'Source')}: {sourceLabel}</li>
+            {deskAuthor ? <li>{deskAuthor}</li> : null}
             <li>{publishedLabel}</li>
-            {readMins ? (
-              <li>
-                {readMins} {pick(locale, 'دقيقة قراءة', 'min read')}
-              </li>
-            ) : null}
+            {readLabel ? <li>{readLabel}</li> : null}
           </ul>
+          <p className={styles['ed-stand']}>
+            {pick(
+              locale,
+              'المحتوى منشور كما ورد من المصدر. يلا سبورت تجمع الخبر ولا تختلق النص.',
+              'Published as received from the source. Yalla Sport aggregates the story and does not invent the copy.',
+            )}
+          </p>
           {canAccess ? (
             <div className={styles['ed-toolbar']}>
-              <NewsShareMenu title={title} />
               <NewsAudioReader text={bodyHtml} />
             </div>
           ) : null}
@@ -160,31 +166,29 @@ export function StoryFolio({
                   ◆
                 </p>
               )}
+              {canAccess ? <SiteAd placement="article-inline" locale={locale} /> : null}
 
               {canAccess && sourceUrl ? (
                 <a className={styles['ed-source']} href={sourceUrl} target="_blank" rel="noopener noreferrer">
                   <span>
+                    {pick(locale, `المصدر: ${sourceLabel}`, `Source: ${sourceLabel}`)}
                     {clippedCopy
                       ? pick(
                         locale,
                         protectedSource
-                          ? 'المصدر لا يسمح بنسخ النص الكامل هنا. هذا ما وصل على المكتب.'
-                          : 'هذا ما وصل من المصدر على المكتب. إن وُجد باقي النص فهو على الأصل.',
+                          ? ' — النص الكامل على الأصل لأن المصدر لا يسمح بنسخه هنا.'
+                          : ' — هذا متن الخبر كما استُخرج من المصدر.',
                         protectedSource
-                          ? 'The outlet does not allow the full text here. This is the filing on the desk.'
-                          : 'This is the filing on the desk. Any remaining text lives on the original.',
+                          ? ' — full text remains on the original because the outlet does not allow copying it here.'
+                          : ' — this is the extracted article body from the source.',
                       )
-                      : pick(
-                        locale,
-                        'النص أعلاه منشور على يلا سبورت كما وصل من المصدر.',
-                        'The text above is published on Yalla Sport as it arrived from the source.',
-                      )}
+                      : ''}
                   </span>
-                  <em>{pick(locale, 'افتح الأصل', 'Open original')}</em>
+                  <em>{pick(locale, 'قراءة الخبر الأصلي', 'Read original story')}</em>
                 </a>
               ) : null}
 
-              {canAccess ? <StoryShareCard title={title} locale={locale} /> : null}
+              {canAccess ? <NewsShareMenu title={title} /> : null}
 
               {entities.length > 0 || tags.length > 0 ? (
                 <div className={styles['ed-chips']}>
@@ -201,7 +205,12 @@ export function StoryFolio({
 
               {canAccess ? (
                 <section className={styles['ed-talk']}>
-                  <NewsComments newsId={newsId} isLoggedIn={isLoggedIn} initialComments={comments} />
+                  <NewsComments
+                    newsId={newsId}
+                    isLoggedIn={isLoggedIn}
+                    initialComments={comments}
+                    loginHref={`/login?callbackUrl=${encodeURIComponent(`/news/${slug}`)}`}
+                  />
                 </section>
               ) : null}
             </div>
@@ -216,8 +225,8 @@ export function StoryFolio({
             />
             <StoryRail
               locale={locale}
-              kicker={pick(locale, 'الأكثر قراءة', 'Most read')}
-              title={pick(locale, 'ما يتداول الآن', 'In circulation')}
+              kicker={trendingIsLive ? pick(locale, 'ما يتداول الآن', 'In circulation') : pick(locale, 'أحدث الأخبار', 'Latest')}
+              title={trendingIsLive ? pick(locale, 'آخر ست ساعات', 'Last six hours') : pick(locale, 'أحدث التقارير', 'Newest reports')}
               stories={popular.slice(0, 5)}
             />
           </aside>

@@ -7,7 +7,15 @@ import { pick } from '@/i18n/pick';
 import type { Brief, PitchMatch, SourceTally, TeamInNews } from '@/lib/news/load-desk';
 import { Radio, Flame, Sparkles } from 'lucide-react';
 
-export function MostReadRail({ articles, locale }: { articles: Brief[]; locale: string }) {
+export function MostReadRail({
+  articles,
+  locale,
+  title,
+}: {
+  articles: Brief[];
+  locale: string;
+  title?: string;
+}) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-sm shadow-sm transition-all hover:border-border/90">
       <div className="border-b border-border/70 px-5 py-4 flex items-center justify-between">
@@ -16,7 +24,9 @@ export function MostReadRail({ articles, locale }: { articles: Brief[]; locale: 
             <Flame className="h-3 w-3" />
             {pick(locale, 'التداول', 'Circulation')}
           </p>
-          <h2 className="mt-0.5 text-base font-black text-foreground">{pick(locale, 'الأكثر قراءة', 'Most read')}</h2>
+          <h2 className="mt-0.5 text-base font-black text-foreground">
+            {title || pick(locale, 'الأكثر قراءة', 'Most read')}
+          </h2>
         </div>
         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-extrabold text-primary">
           TOP {articles.length || 5}
@@ -39,7 +49,7 @@ export function MostReadRail({ articles, locale }: { articles: Brief[]; locale: 
                   </strong>
                   <span className="mt-1 flex items-center gap-2 text-[10px] font-semibold text-muted-foreground">
                     <span className="text-primary font-bold">{deskLabel(article.category, locale)}</span>
-                    {article.views > 0 && <span>· {article.views} {pick(locale, 'مشاهدة', 'views')}</span>}
+                    {article.views >= 10 && <span>· {article.views} {pick(locale, 'مشاهدة', 'views')}</span>}
                   </span>
                 </span>
               </Link>
@@ -95,9 +105,8 @@ export function SourceLedger({
             <li key={source.name}>
               <Link
                 href={hrefFor({ source: isSelected ? 'all' : source.name, page: 1 })}
-                className={`group flex items-center justify-between gap-3 px-5 py-3 transition-colors ${
-                  isSelected ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-primary/5'
-                }`}
+                className={`group flex items-center justify-between gap-3 px-5 py-3 transition-colors ${isSelected ? 'bg-primary/10 text-primary font-bold' : 'hover:bg-primary/5'
+                  }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

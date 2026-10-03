@@ -7,6 +7,7 @@ import { currentFootballSeason, footballSeasonStart } from '@/lib/sports-data/se
 import { playerSlugFor } from '@/lib/players/search';
 import { STAT_BOARDS } from '@/lib/stats/load-desk';
 import { splitTransferType } from './fee';
+import { transferDedupeKey, validateTransferMove } from './validate';
 
 type ApiTeamTransfers = {
   response?: Array<{
@@ -83,7 +84,19 @@ export async function persistTransfers() {
   if (clubs.length === 0) return { upserted: 0, clubs: 0 };
 
   const teamByExt = new Map(clubs.map((club) => [club.externalId, club]));
+  async function clubByExternal(id: string) {
+    if (!id) return null;
+    const cached = teamByExt.get(id);
+    if (cached) return cached;
+    const row = await prisma.team.findUnique({
+      where: { externalId: id },
+      select: { id: true, externalId: true, name: true, logoUrl: true },
+    });
+    if (row) teamByExt.set(id, row);
+    return row;
+  }
   let upserted = 0;
+  const seen = new Set<string>();
 
   for (let i = 0; i < clubs.length; i += 8) {
     const chunk = clubs.slice(i, i + 8);
@@ -105,25 +118,29 @@ export async function persistTransfers() {
           if (Number.isNaN(date.getTime()) || date < since) continue;
           const fromTeam = move.teams?.out?.name || null;
           const toTeam = move.teams?.in?.name || null;
-          if (fromTeam && toTeam && fromTeam.toLowerCase() === toTeam.toLowerCase()) continue;
-          if (!fromTeam && !toTeam) continue;
           if (isSideSquad(fromTeam) || isSideSquad(toTeam)) continue;
+          if (!validateTransferMove({ playerName, fromTeam, toTeam, date, type: move.type }).ok) continue;
           const parsed = splitTransferType(move.type);
+          const dup = transferDedupeKey({ playerId, fromTeam, toTeam, date, type: move.type });
+          if (seen.has(dup)) continue;
+          seen.add(dup);
           const externalId = `${playerExt}-${move.date}-${move.teams?.in?.id || ''}-${move.teams?.out?.id || ''}`;
           const fromExt = move.teams?.out?.id != null ? String(move.teams.out.id) : '';
           const toExt = move.teams?.in?.id != null ? String(move.teams.in.id) : '';
+          const fromClub = await clubByExternal(fromExt);
+          const toClub = await clubByExternal(toExt);
           await prisma.transfer
             .upsert({
               where: { externalId },
               update: {
                 fromTeam,
                 toTeam,
-                fromLogo: move.teams?.out?.logo || teamByExt.get(fromExt)?.logoUrl || null,
-                toLogo: move.teams?.in?.logo || teamByExt.get(toExt)?.logoUrl || null,
-                fromTeamId: teamByExt.get(fromExt)?.id || null,
-                toTeamId: teamByExt.get(toExt)?.id || null,
+                fromLogo: move.teams?.out?.logo || fromClub?.logoUrl || null,
+                toLogo: move.teams?.in?.logo || toClub?.logoUrl || null,
+                fromTeamId: fromClub?.id || null,
+                toTeamId: toClub?.id || null,
                 fee: parsed.fee,
-                type: parsed.type,
+                type: parsed.type || 'unknown',
                 syncedAt: new Date(),
               },
               create: {
@@ -132,13 +149,13 @@ export async function persistTransfers() {
                 playerExternalId: playerExt,
                 fromTeam,
                 toTeam,
-                fromLogo: move.teams?.out?.logo || teamByExt.get(fromExt)?.logoUrl || null,
-                toLogo: move.teams?.in?.logo || teamByExt.get(toExt)?.logoUrl || null,
-                fromTeamId: teamByExt.get(fromExt)?.id || null,
-                toTeamId: teamByExt.get(toExt)?.id || null,
+                fromLogo: move.teams?.out?.logo || fromClub?.logoUrl || null,
+                toLogo: move.teams?.in?.logo || toClub?.logoUrl || null,
+                fromTeamId: fromClub?.id || null,
+                toTeamId: toClub?.id || null,
                 date,
                 fee: parsed.fee,
-                type: parsed.type,
+                type: parsed.type || 'unknown',
               },
             })
             .catch(swallow('persistTransfers.upsert', null));

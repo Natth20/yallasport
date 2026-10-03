@@ -20,6 +20,8 @@ import {
 import { toNormalizedMatch } from '@/lib/sports-data/from-db';
 import { sportsData } from '@/lib/sports-data';
 import { belongsOnTodayBoard, liveKickoffFloor, todayOrLiveWhere } from '@/lib/sports-data/match-window';
+import { formatKickoff } from '@/lib/datetime/format';
+import { foldSearch } from '@/lib/search/text';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LiveDataStatus } from '@/components/sports/LiveDataStatus';
 import { TimezoneSelector } from '@/components/layout/TimezoneSelector';
@@ -44,6 +46,10 @@ import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { localizeEntityMap } from '@/lib/i18n/localized-content';
+import { localizePlainName, localizeTeamName, sourceSearchQuery } from '@/lib/i18n/sports-lexicon';
+import { localizeLeagueName, localizeRoundName } from '@/lib/i18n/competition-names';
+import { countLabel } from '@/lib/i18n/arabic-count';
+import { formatScore } from '@/lib/sports-data/score-format';
 import { STREAMING_ENABLED } from '@/lib/streaming';
 import { compareMatchdayGroups, isMajorLeague, leagueTier, matchdayWeight } from '@/lib/sports-data/matchday-weight';
 import { pageMetadata } from '@/lib/seo/site';
@@ -60,13 +66,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   return pageMetadata({
     locale,
-    title: pick(locale, 'المباريات', 'Matches'),
+    title: pick(locale, 'المباريات اليوم مباشر والنتائج | يلا سبورت', "Today's live matches and results | Yalla Sport"),
     description: pick(
       locale,
-      'برنامج اليوم من يلا سبورت: النتائج المباشرة، مواعيد الركلات، المباريات الكبرى، وأهداف اليوم من مصدر البيانات الحقيقي فقط.',
-      "Today's Yalla Sport programme: live results, kickoff times, major fixtures, and goals from the real data source only."
+      'تابع مباريات اليوم ونتائج كرة القدم المباشرة، مواعيد المباريات، البطولات، النتائج النهائية وسجل الأهداف عبر يلا سبورت.',
+      "Follow today's football matches and live scores, kickoff times, competitions, full-time results and the goal log on Yalla Sport.",
     ),
     path: '/matches',
+    absolute: true,
   });
 }
 
@@ -210,12 +217,28 @@ function toReelItem(match: DayMatch): MatchdayReelItem {
 function CompactFixture({
   match,
   followed,
+  locale,
 }: {
   match: DayMatch;
   followed?: boolean;
+  locale: string;
 }) {
   const live = isLiveStatus(match.status);
-  const hasScore = typeof match.homeScore === 'number' && typeof match.awayScore === 'number';
+  const score = formatScore(match.homeScore, match.awayScore);
+  const status =
+    match.status === 'HALFTIME'
+      ? pick(locale, 'استراحة', 'HT')
+      : live
+        ? match.minute
+          ? pick(locale, `مباشر · ${match.minute}′`, `LIVE · ${match.minute}′`)
+          : pick(locale, 'مباشر', 'LIVE')
+        : match.status === 'FINISHED'
+          ? pick(locale, 'انتهت', 'FT')
+          : match.status === 'POSTPONED'
+            ? pick(locale, 'مؤجلة', 'Postponed')
+            : match.status === 'CANCELLED'
+              ? pick(locale, 'ملغاة', 'Cancelled')
+              : null;
   return (
     <Link
       href={`/match/${match.id}`}
@@ -224,9 +247,9 @@ function CompactFixture({
       <div className={styles.fixtureBody}>
         <div className={styles.fixtureClock}>
           {live ? (
-            <em>{match.minute ? `${match.minute}'` : 'LIVE'}</em>
+            <em>{status}</em>
           ) : match.status === 'FINISHED' ? (
-            <span dir="ltr">{hasScore ? `${match.homeScore}–${match.awayScore}` : '–'}</span>
+            <span dir="ltr">{score ?? '—'}</span>
           ) : (
             <ClientTime value={match.kickoffAt} />
           )}
@@ -235,15 +258,18 @@ function CompactFixture({
           <div className={styles.fixtureTeam}>
             <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-7 w-7" />
             <strong>{match.homeTeam.name}</strong>
-            {live && hasScore ? <b>{match.homeScore}</b> : null}
+            {live && score ? <b>{match.homeScore}</b> : null}
           </div>
           <div className={styles.fixtureTeam}>
             <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-7 w-7" />
             <strong>{match.awayTeam.name}</strong>
-            {live && hasScore ? <b>{match.awayScore}</b> : null}
+            {live && score ? <b>{match.awayScore}</b> : null}
           </div>
         </div>
       </div>
+      {match.league.name ? (
+        <span className={styles.fixtureLeague}>{match.league.name}</span>
+      ) : null}
       {followed ? (
         <span className={styles.fixtureFollowed}>
           <Heart className="h-2.5 w-2.5 fill-current" />
@@ -370,7 +396,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
             homeTeamId: true,
             homeTeam: { select: { id: true, externalId: true, name: true, logoUrl: true } },
             awayTeam: { select: { id: true, externalId: true, name: true, logoUrl: true } },
-            league: { select: { name: true } },
+            league: { select: { name: true, externalId: true, country: true } },
           },
         },
       },
@@ -457,7 +483,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       const awayStats = statistics.find((stat) => belongsToTeam(stat.teamId, row.awayTeam));
       return {
         ...toNormalizedMatch(row),
-        round: roundById.get(row.id),
+        round: localizeRoundName(locale, roundById.get(row.id)),
         venueCity: row.venue?.city ?? undefined,
         venueCapacity: row.venue?.capacity ?? undefined,
         channels: (row.channels ?? []).map((entry: { channel: { name: string; logoUrl?: string | null } }) => entry.channel),
@@ -509,10 +535,37 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     ]),
     locale,
   );
+  const searchIndex = new Map<string, string>();
   for (const match of allMatches) {
-    match.homeTeam.name = nameLabels.get(`TEAM:${match.homeTeam.id}`) || match.homeTeam.name;
-    match.awayTeam.name = nameLabels.get(`TEAM:${match.awayTeam.id}`) || match.awayTeam.name;
-    match.league.name = nameLabels.get(`LEAGUE:${match.league.id}`) || match.league.name;
+    const sourceHome = match.homeTeam.name;
+    const sourceAway = match.awayTeam.name;
+    const sourceLeague = match.league.name;
+    match.homeTeam.name = localizeTeamName(locale, nameLabels.get(`TEAM:${match.homeTeam.id}`) || sourceHome);
+    match.awayTeam.name = localizeTeamName(locale, nameLabels.get(`TEAM:${match.awayTeam.id}`) || sourceAway);
+    match.league.name = localizeLeagueName(
+      locale,
+      match.league,
+      nameLabels.get(`LEAGUE:${match.league.id}`) || sourceLeague,
+    );
+    if (match.leagueCountry) match.leagueCountry = localizePlainName(locale, match.leagueCountry);
+    if (match.round) match.round = localizeRoundName(locale, match.round);
+    searchIndex.set(
+      match.id,
+      [
+        sourceHome,
+        sourceAway,
+        sourceLeague,
+        match.homeTeam.name,
+        match.awayTeam.name,
+        match.league.name,
+        match.homeTeam.slug,
+        match.awayTeam.slug,
+        match.league.slug,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase(),
+    );
   }
 
   const daySheet = new Map<string, { total: number; live: number }>();
@@ -685,10 +738,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
 
   const queryMatches = allMatches.filter((match) => {
     if (!match.homeTeam || !match.awayTeam || !match.league) return false;
-    const matchesSearch = !query ||
-      match.homeTeam.name.toLowerCase().includes(query) ||
-      match.awayTeam.name.toLowerCase().includes(query) ||
-      match.league.name.toLowerCase().includes(query);
+    const haystack = `${searchIndex.get(match.id) || ''} ${sourceSearchQuery(query)}`.toLowerCase();
+    const matchesSearch = !query || haystack.includes(query) || haystack.includes(sourceSearchQuery(query).toLowerCase());
     const matchesFavorites = !favoritesOnly || (
       favoriteTeamExternalIds.has(match.homeTeam.externalId) ||
       favoriteTeamExternalIds.has(match.awayTeam.externalId) ||
@@ -729,11 +780,9 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   const liveCount = scopedMatches.filter((match) => isLiveStatus(match.status)).length;
   const finishedCount = scopedMatches.filter((match) => match.status === 'FINISHED').length;
   const upcomingCount = scopedMatches.filter((match) => match.status === 'NOT_STARTED').length;
-  const totalGoals = queryMatches.reduce((total, match) => {
-    if (typeof match.homeScore !== 'number' || typeof match.awayScore !== 'number') return total;
-    if (match.status === 'NOT_STARTED' || match.status === 'POSTPONED' || match.status === 'CANCELLED') return total;
-    return total + match.homeScore + match.awayScore;
-  }, 0);
+  const totalGoals = dayEvents.filter(
+    (event) => event.type === 'GOAL' || event.type === 'OWN_GOAL' || event.type === 'PENALTY',
+  ).length;
   const leagueCount = new Set(queryMatches.map((match) => match.league.id)).size;
   const nextMatches = scopedMatches
     .filter((match) => match.status === 'NOT_STARTED')
@@ -844,10 +893,21 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   const dates = stripDates.map((value) => {
     const date = parseISO(value);
     const sheet = daySheet.get(value);
+    const todayKey = format(today, 'yyyy-MM-dd');
+    const tomorrowKey = format(addDays(today, 1), 'yyyy-MM-dd');
+    const afterKey = format(addDays(today, 2), 'yyyy-MM-dd');
+    const dayName =
+      value === todayKey
+        ? pick(locale, 'اليوم', 'Today')
+        : value === tomorrowKey
+          ? pick(locale, 'غدًا', 'Tomorrow')
+          : value === afterKey
+            ? pick(locale, 'بعد غد', 'In two days')
+            : format(date, 'EEEE', { locale: locale === 'ar' ? ar : enUS });
     return {
       value,
-      isToday: value === format(today, 'yyyy-MM-dd'),
-      dayName: value === format(today, 'yyyy-MM-dd') ? pick(locale, 'اليوم', 'Today') : format(date, 'EEEE', { locale: locale === 'ar' ? ar : enUS }),
+      isToday: value === todayKey,
+      dayName,
       dayNumber: format(date, 'd'),
       month: format(date, 'MMM', { locale: locale === 'ar' ? ar : enUS }),
       fixtures: sheet?.total ?? 0,
@@ -915,25 +975,31 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
 
   const scorers = dayEvents
     .filter((event) => event.type === 'GOAL' || event.type === 'OWN_GOAL' || event.type === 'PENALTY')
-    .filter((event) => Boolean(namedActor(event.playerName)))
-    .slice(0, 14)
+    .slice(0, 24)
     .map((event) => {
-      const isHome =
+      const concedingHome =
         event.teamId === event.match.homeTeamId ||
         event.teamId === event.match.homeTeam.id ||
         event.teamId === event.match.homeTeam.externalId;
+      const isHome = event.type === 'OWN_GOAL' ? !concedingHome : concedingHome;
       const team = isHome ? event.match.homeTeam : event.match.awayTeam;
       const minuteLabel = event.extraMinute ? `${event.minute}+${event.extraMinute}` : `${event.minute}`;
       return {
         id: event.id,
         matchId: event.match.id,
-        player: namedActor(event.playerName) as string,
+        player: namedActor(event.playerName)
+          ? localizeTeamName(locale, namedActor(event.playerName) as string)
+          : pick(locale, 'هدف', 'Goal'),
         minute: minuteLabel,
         type: event.type,
-        teamName: team.name,
+        teamName: localizeTeamName(locale, team.name),
         teamLogo: team.logoUrl,
-        leagueName: event.match.league.name,
-        assist: namedActor(event.assistName),
+        leagueName: localizeLeagueName(locale, event.match.league, event.match.league.name),
+        assist:
+          namedActor(event.assistName) &&
+          foldSearch(event.assistName || '') !== foldSearch(event.playerName || '')
+            ? namedActor(event.assistName)
+            : undefined,
       };
     });
 
@@ -1106,10 +1172,10 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   }
 
   const heroStats = [
-    { value: queryMatches.length, label: pick(locale, 'مباراة', 'Matches') },
-    ...(liveCount > 0 ? [{ value: liveCount, label: t('live') }] : []),
-    ...(totalGoals > 0 ? [{ value: totalGoals, label: t('goal') }] : []),
-    ...(leagueCount > 0 ? [{ value: leagueCount, label: pick(locale, 'بطولة', 'Leagues') }] : []),
+    { value: queryMatches.length, label: countLabel(locale, queryMatches.length, 'match', 'matches') },
+    ...(liveCount > 0 ? [{ value: liveCount, label: countLabel(locale, liveCount, 'live', 'live') }] : []),
+    ...(totalGoals > 0 ? [{ value: totalGoals, label: countLabel(locale, totalGoals, 'goal', 'goals') }] : []),
+    ...(leagueCount > 0 ? [{ value: leagueCount, label: countLabel(locale, leagueCount, 'league', 'leagues') }] : []),
     ...(eventCount('YELLOW_CARD') > 0 ? [{ value: eventCount('YELLOW_CARD'), label: t('yellow_card') }] : []),
     ...(eventCount('RED_CARD') > 0 ? [{ value: eventCount('RED_CARD'), label: t('red_card') }] : []),
     ...(broadcasts.length > 0 ? [{ value: broadcasts.length, label: pick(locale, 'قناة', 'Channels') }] : []),
@@ -1235,7 +1301,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         <div className={`${styles.leagueBody} ${liveInLeague > 0 ? styles.leagueBodyLive : ''}`}>
           {compact
             ? group.matches.map((match) => (
-              <CompactFixture key={match.id} match={match} followed={isFollowedMatch(match)} />
+              <CompactFixture key={match.id} match={match} followed={isFollowedMatch(match)} locale={locale} />
             ))
             : group.matches.map((match) => matchCardFor(match))}
         </div>
@@ -1254,7 +1320,13 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   pushReel(spotlightMatch);
   soonDayMatches.forEach(pushReel);
   (programmeScope === 'major' ? majorScoped : scopedMatches).slice(0, 8).forEach(pushReel);
-  const dateLabel = format(selectedDate, 'EEEE d MMMM', { locale: locale === 'ar' ? ar : enUS });
+  const dateLabel = formatKickoff(selectedDate, timezone, locale === 'en' ? 'en' : 'ar', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: undefined,
+    minute: undefined,
+  });
 
   const dayCensus = [
     ...(totalGoals > 0 ? [{ value: totalGoals, label: t('goal') }] : []),
@@ -1268,8 +1340,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       tone="wire"
       wide
       compact
-      kicker={pick(locale, 'صالة الملعب', 'Stadium hall')}
-      title={pick(locale, 'المباريات', 'Matches')}
+      kicker={pick(locale, 'المباريات', 'Matches')}
+      title={pick(locale, 'مباريات اليوم', "Today's matches")}
       lead={pick(
         locale,
         'النتائج والمواعيد من المصدر الحي فقط. لا أرقام مخترعة — المباشر يظهر إن وصلت الحالة من المكتب.',
@@ -1282,7 +1354,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       }
       tools={
         <HallFoyer
-          label={pick(locale, 'جناح الملعب', 'Pitch suite')}
+          label={pick(locale, 'المباريات', 'Matches')}
           items={[
             { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays, current: true },
             { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
@@ -1322,7 +1394,9 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                   {date.live > 0 && !active ? <span className={styles.dateLiveDot} /> : null}
                   <span className={styles.chipDay}>{date.dayName}</span>
                   <span className={styles.chipNumber}>{date.dayNumber}</span>
-                  <span className={styles.chipCount}>{date.fixtures > 0 ? date.fixtures : '—'}</span>
+                  <span className={styles.chipCount}>
+                    {date.fixtures > 0 ? `(${date.fixtures})` : '—'}
+                  </span>
                 </Link>
               );
             })}
@@ -1362,7 +1436,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                 className={favoritesOnly ? styles.filterBtnActive : styles.filterBtn}
               >
                 <Heart className={`h-3.5 w-3.5 ${favoritesOnly ? 'fill-current' : ''}`} />
-                {pick(locale, 'فرقي', 'My teams')}
+                {pick(locale, session?.user ? 'فرقي المفضلة' : 'تابع فرقك', session?.user ? 'My teams' : 'Follow your teams')}
               </Link>
               {hasProgrammeSplit ? (
                 <>
@@ -1430,10 +1504,10 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
             <div className={styles.fixtureProgrammeHead}>
               <div>
                 <span className={styles.programmeEyebrow}>
-                  {pick(locale, 'قائمة المباريات', 'Fixture programme')}
+                  {pick(locale, 'البرنامج', 'Programme')}
                 </span>
                 <h2 id="fixture-programme-title">
-                  {pick(locale, 'مباريات اليوم مرتبة حسب البطولة', "Today's matches by competition")}
+                  {pick(locale, 'مباريات اليوم', "Today's matches")}
                 </h2>
               </div>
               <span className={styles.fixtureProgrammeCount}>
@@ -1468,7 +1542,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                           <div className={styles.majorHead}>
                             <div>
                               <span className={styles.majorKicker}>
-                                {pick(locale, 'قاعة الكبار', 'The hall')}
+                                {pick(locale, 'البطولات', 'Competitions')}
                               </span>
                               <h2>
                                 {pick(locale, 'البطولات الكبرى', 'Major competitions')}
@@ -1657,20 +1731,17 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                       </span>
                     </div>
                     <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                      {pick(locale, 'سجل أهداف اليوم', "Today's goals")}
+                      {pick(locale, `سجل أهداف اليوم — ${scorers.length}`, `Today's goal log — ${scorers.length}`)}
                     </h2>
                     <ul className="mt-4 space-y-3">
                       {scorers.map((scorer) => (
                         <li key={scorer.id}>
                           <Link href={`/match/${scorer.matchId}`} className="flex items-center gap-3">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <LeagueCrest name={scorer.teamName} logoUrl={scorer.teamLogo} className="h-7 w-7" />
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{scorer.player}</p>
                               <p className="truncate text-[9px] font-medium text-muted-foreground">
-                                {scorer.teamName} · {scorer.leagueName}
-                                {scorer.type === 'PENALTY' ? ` · ${t('penalty')}` : scorer.type === 'OWN_GOAL' ? ` · ${t('own_goal')}` : ''}
-                                {scorer.assist ? t('assist_by', { player: scorer.assist }) : ''}
+                                {scorer.type === 'OWN_GOAL' ? t('own_goal') : scorer.type === 'PENALTY' ? t('penalty') : scorer.teamName}
                               </p>
                             </div>
                             <span className="text-[11px] font-bold tabular-nums text-orange-500">{scorer.minute}&prime;</span>

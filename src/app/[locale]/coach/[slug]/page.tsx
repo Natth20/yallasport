@@ -88,8 +88,8 @@ async function CoachPageBody({ params }: { params: Promise<{ slug: string }> }) 
         title={localizePlainName(locale, dossier.coach.name)}
         lead={pick(
           locale,
-          'الصورة على الشاشة، والمسيرة في قائمة العرض، والقائمة والمواعيد على الجدران من المصدر.',
-          'The portrait sits on the screen, the career sits in the programme, and the squad and fixtures sit on the walls from the source.',
+          'ملف المدرب من المصدر: المسيرة والقائمة والمواعيد.',
+          'Coach file from the source: career, squad, and fixtures.',
         )}
         aside={dossier.club?.name || undefined}
         tools={

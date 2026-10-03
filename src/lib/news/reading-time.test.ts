@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { listedReadingMinutes, readingTimeMinutes } from './reading-time';
+import { listedReadingMinutes, readingTimeLabel, readingTimeMinutes } from './reading-time';
 
 test('short RSS teaser is not a one-minute read', () => {
   assert.equal(readingTimeMinutes('Celtic v Rangers: live updates from the derby.'), 0);
@@ -29,4 +29,9 @@ test('arabic copy uses character count, not a hardcoded minute', () => {
   const body = Array.from({ length: 40 }, () => 'محمد صلاح يقود طرابزون سبور لفوز كبير في الدوري التركي بعد هاتريك رائع.').join(' ');
   const mins = readingTimeMinutes(body);
   assert.ok(mins >= 2, `expected a real duration, got ${mins}`);
+});
+
+test('arabic reading-time label uses the correct plural', () => {
+  assert.equal(readingTimeLabel('ar', 1), 'دقيقة قراءة');
+  assert.equal(readingTimeLabel('ar', 3), '3 دقائق قراءة');
 });

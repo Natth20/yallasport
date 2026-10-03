@@ -44,7 +44,7 @@ export async function TablesChapter() {
                 </span>
               </Link>
               <ol className={styles.rows}>
-                {table.rows.slice(0, 8).map((row) => {
+                {table.rows.map((row) => {
                   const zone = zoneKey(row.zone);
                   const gd = row.goalsFor - row.goalsAgainst;
                   const zoneClass = row.zone && ZONE_CLASS_MAP[row.zone] ? styles[ZONE_CLASS_MAP[row.zone] as keyof typeof styles] : undefined;

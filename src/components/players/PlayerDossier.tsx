@@ -25,6 +25,7 @@ import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { HallBezel, HallBrackets } from '@/components/salon/HallBezel';
 import { pick } from '@/i18n/pick';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizeTransferType } from '@/lib/transfers/fee';
 import { formatSportFigure } from '@/lib/format/sport-figure';
 import { apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import type { PlayerDossierData, PlayerSeasonBlock } from '@/lib/players/load-dossier';
@@ -57,6 +58,9 @@ export function PlayerDossier({
   const {
     player,
     currentClub,
+    onLoanFrom,
+    confirmedFreeAgent,
+    transfersUpdatedAt,
     clubHistory,
     apiClubs,
     seasonBlocks,
@@ -76,6 +80,12 @@ export function PlayerDossier({
   const portrait = apiSportsPlayerPhoto(player.externalId, player.photoUrl);
   const shirt = currentClub?.shirtNumber ?? seasonBlocks.find((block) => block.games.number != null)?.games.number;
   const clubName = currentClub ? localizePlainName(locale, currentClub.name) : null;
+  const unavailable = pick(locale, 'غير متوفر', 'Unavailable');
+  const clubStatus = currentClub
+    ? clubName || unavailable
+    : confirmedFreeAgent
+      ? pick(locale, 'لاعب حر', 'Free agent')
+      : pick(locale, 'النادي الحالي غير متوفر في مصدر البيانات', 'Current club is not listed in the source');
   const queue = useMemo(() => teammates.slice(0, 10), [teammates]);
   const [face, setFace] = useState<string | null>(null);
   const shownShot = face || portrait;
@@ -87,7 +97,9 @@ export function PlayerDossier({
     player.weight ? { label: pick(locale, 'الوزن', 'Weight'), value: player.weight } : null,
     player.position ? { label: pick(locale, 'المركز', 'Position'), value: localizePlainName(locale, player.position) } : null,
     shirt != null ? { label: pick(locale, 'رقم القميص', 'Shirt No.'), value: `#${shirt}` } : null,
-    clubName ? { label: pick(locale, 'النادي الحالي', 'Current Club'), value: clubName } : null,
+    clubName || confirmedFreeAgent
+      ? { label: pick(locale, 'النادي الحالي', 'Current club'), value: clubStatus }
+      : { label: pick(locale, 'الحالة الحالية', 'Current status'), value: clubStatus },
     player.injured ? { label: pick(locale, 'الحالة الطبية', 'Status'), value: pick(locale, 'مصاب حالياً', 'Injured') } : null,
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
@@ -140,12 +152,10 @@ export function PlayerDossier({
               <span className={styles.foyerBadge}>{teammates.length}</span>
             </a>
           ) : null}
-          {transfers.length > 0 || clubHistory.length > 0 ? (
-            <a href="#hall-transfers" className={styles.foyerTab}>
-              <Repeat size={14} aria-hidden />
-              <span>{pick(locale, 'الانتقالات والأندية', 'Transfers & Clubs')}</span>
-            </a>
-          ) : null}
+          <a href="#hall-transfers" className={styles.foyerTab}>
+            <Repeat size={14} aria-hidden />
+            <span>{pick(locale, 'الانتقالات والأندية', 'Transfers & Clubs')}</span>
+          </a>
           {trophies.length > 0 ? (
             <a href="#hall-trophies" className={styles.foyerTab}>
               <Award size={14} aria-hidden />
@@ -168,8 +178,8 @@ export function PlayerDossier({
           <div className={styles.frame}>
             <div className={styles.chassis}>
               <HallBezel
-                label={clubName || pick(locale, 'ملف رياضي رسمي', 'Official Sports Profile')}
-                clock={player.position ? localizePlainName(locale, player.position) : pick(locale, 'لاعب محترف', 'Professional Athlete')}
+                label={clubStatus}
+                clock={player.position ? localizePlainName(locale, player.position) : pick(locale, 'لاعب', 'Player')}
               />
 
               {/* VIP Ultimate Player Platform */}
@@ -182,16 +192,29 @@ export function PlayerDossier({
 
                 <div className={styles.vipInfo}>
                   {currentClub ? (
-                    <Link href={`/team/${currentClub.slug}`} className={styles.vipTeamBadge}>
+                    <Link href={currentClub.slug ? `/team/${currentClub.slug}` : '/transfers'} className={styles.vipTeamBadge}>
                       <LeagueCrest name={currentClub.name} logoUrl={currentClub.logoUrl} className="h-6 w-6" />
-                      <span>{localizePlainName(locale, currentClub.name)}</span>
+                      <span>{clubName}</span>
                     </Link>
                   ) : (
                     <span className={styles.vipTeamBadge}>
                       <Shield size={16} />
-                      <span>{pick(locale, 'لاعب مستقل', 'Free Agent')}</span>
+                      <span>{clubStatus}</span>
                     </span>
                   )}
+                  {onLoanFrom ? (
+                    <p className={styles.clubStatus}>
+                      <span className={styles.transferKind}>{pick(locale, 'إعارة', 'Loan')}</span>
+                      <span>
+                        {pick(locale, 'مرتبط بـ', 'Parent club')}{' '}
+                        {onLoanFrom.slug ? (
+                          <Link href={`/team/${onLoanFrom.slug}`}>{localizePlainName(locale, onLoanFrom.name)}</Link>
+                        ) : (
+                          localizePlainName(locale, onLoanFrom.name)
+                        )}
+                      </span>
+                    </p>
+                  ) : null}
 
                   <h1 className={styles.vipTitle}>{name}</h1>
 
@@ -261,9 +284,9 @@ export function PlayerDossier({
             </div>
             <h2 className={styles.programTitle}>{[player.firstName, player.lastName].filter(Boolean).join(' ') || name}</h2>
             <div className={styles.acts}>
-              {currentClub ? (
+              {currentClub?.slug ? (
                 <Link href={`/team/${currentClub.slug}`} className={styles.go}>
-                  <span>{pick(locale, 'صفحة النادي الرسمية', 'Official Club Profile')}</span>
+                  <span>{pick(locale, 'صفحة النادي', 'Club page')}</span>
                   <ArrowUpRight size={14} />
                 </Link>
               ) : null}
@@ -283,7 +306,7 @@ export function PlayerDossier({
           <aside className={styles.queue} aria-label={pick(locale, 'قائمة الزملاء', 'Teammates programme')}>
             <header className={styles.queueHead}>
               <div>
-                <p>{pick(locale, 'الآن على الصالة', 'On the easel')}</p>
+                <p>{pick(locale, 'زملاء الفريق', 'Teammates')}</p>
                 <h3>{pick(locale, 'قائمة الزملاء', 'Teammates')}</h3>
               </div>
               <span className={styles.shelfBadge}>{folio(queue.length)}</span>
@@ -351,7 +374,7 @@ export function PlayerDossier({
                 <Zap size={18} aria-hidden />
               </div>
               <div>
-                <h3>{pick(locale, 'جدار القدرات والمهارات الفنية', 'Technical Skill Attributes & Radar')}</h3>
+                <h3>{pick(locale, 'المهارات الفنية', 'Technical attributes')}</h3>
                 <p>{pick(locale, 'مؤشرات الأداء الميداني المستخرجة رياضياً من بيانات الموسم.', 'Field performance ratings calculated from match season stats.')}</p>
               </div>
             </div>
@@ -497,7 +520,7 @@ export function PlayerDossier({
               <Layers size={18} aria-hidden />
             </div>
             <div>
-              <h3>{pick(locale, 'جدار المسابقات الرسمية', 'Official Competitions Wall')}</h3>
+              <h3>{pick(locale, 'المسابقات الرسمية', 'Official competitions')}</h3>
               <p>{pick(locale, 'أرقام وإحصاءات اللاعب في كل بطولة كما وثقها المصدر.', 'Player stats recorded in each tournament.')}</p>
             </div>
           </div>
@@ -590,7 +613,7 @@ export function PlayerDossier({
                 <Users size={18} aria-hidden />
               </div>
               <div>
-                <h3>{pick(locale, 'جدار زملاء الفريق', 'Teammates & Squad Wall')}</h3>
+                <h3>{pick(locale, 'زملاء الفريق', 'Teammates')}</h3>
                 <p>{pick(locale, 'قائمة اللاعبين المسجلين في النادي مع صورهم ومراكزهم.', 'Registered teammates in the squad.')}</p>
               </div>
             </div>
@@ -642,7 +665,7 @@ export function PlayerDossier({
                       <LeagueCrest name={club.name} logoUrl={club.logoUrl} className="h-7 w-7" />
                       <div>
                         <strong>{localizePlainName(locale, club.name)}</strong>
-                        <em>{pick(locale, 'نادي رياضي رسمي', 'Official Sports Club')}</em>
+                        <em>{pick(locale, 'نادي من سجل اللاعب', 'Club from the player record')}</em>
                       </div>
                     </Link>
                   ) : (
@@ -659,37 +682,102 @@ export function PlayerDossier({
           </section>
         ) : null}
 
-        {transfers.length > 0 ? (
-          <section className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Repeat size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'سجل الانتقالات', 'Transfers History')}</h3>
-                  <p>{pick(locale, 'حركات الانتقال المسجّلة رسمياً.', 'Documented market transfers.')}</p>
-                </div>
+        <section className={styles.shelf}>
+          <header className={styles.shelfHead}>
+            <div className={styles.shelfTitle}>
+              <div className={styles.shelfIconBox}>
+                <Repeat size={18} aria-hidden />
               </div>
-              <span className={styles.shelfBadge}>{transfers.length}</span>
-            </header>
-            <ul className={styles.people}>
-              {transfers.map((row) => (
-                <li key={row.id}>
-                  <span>
-                    <span className={styles.ghostFace}>🔄</span>
-                    <div>
-                      <strong>
-                        {[row.fromTeam, row.toTeam].filter(Boolean).map((t) => localizePlainName(locale, t as string)).join(' → ')}
-                      </strong>
-                      <em>{[row.type, row.fee].filter(Boolean).join(' · ')}</em>
-                    </div>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+              <div>
+                <h3>{pick(locale, 'الانتقالات والأندية', 'Transfers & clubs')}</h3>
+                <p>
+                  {pick(
+                    locale,
+                    'المسيرة الاحترافية وانتقالات اللاعب المسجلة في مصدر البيانات.',
+                    'Career clubs and transfers recorded in the sports data source.',
+                  )}
+                </p>
+              </div>
+            </div>
+            {transfers.length > 0 ? <span className={styles.shelfBadge}>{transfers.length}</span> : null}
+          </header>
+          {transfers.length > 0 ? (
+            <ol className={styles.transferRail}>
+              {transfers.map((row, index) => {
+                const year = row.date && !Number.isNaN(row.date.getTime()) ? row.date.getUTCFullYear() : null;
+                const prevYear =
+                  index > 0 && transfers[index - 1].date
+                    ? transfers[index - 1].date!.getUTCFullYear()
+                    : null;
+                const fromName = row.fromTeam ? localizePlainName(locale, row.fromTeam) : unavailable;
+                const toName = row.toTeam ? localizePlainName(locale, row.toTeam) : unavailable;
+                const kindLabel = localizeTransferType(locale, row.type, row.kind);
+                return (
+                  <li key={row.id}>
+                    {year && year !== prevYear ? <p className={styles.transferYear}>{year}</p> : null}
+                    <article className={`${styles.transferCard}${row.kind === 'loan' ? ` ${styles.isLoan}` : ''}`}>
+                      <span className={styles.transferKind}>{kindLabel}</span>
+                      <div className={styles.transferPath}>
+                        {row.fromSlug ? (
+                          <Link href={`/team/${row.fromSlug}`} className={styles.transferClub}>
+                            <LeagueCrest name={fromName} logoUrl={row.fromLogo} className="h-8 w-8" />
+                            <span>{fromName}</span>
+                          </Link>
+                        ) : (
+                          <span className={styles.transferClub}>
+                            <LeagueCrest name={fromName} logoUrl={row.fromLogo} className="h-8 w-8" />
+                            <span>{fromName}</span>
+                          </span>
+                        )}
+                        <span className={styles.transferArrow} aria-hidden>↓</span>
+                        {row.toSlug ? (
+                          <Link href={`/team/${row.toSlug}`} className={styles.transferClub}>
+                            <LeagueCrest name={toName} logoUrl={row.toLogo} className="h-8 w-8" />
+                            <span>{toName}</span>
+                          </Link>
+                        ) : (
+                          <span className={styles.transferClub}>
+                            <LeagueCrest name={toName} logoUrl={row.toLogo} className="h-8 w-8" />
+                            <span>{toName}</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.transferMeta}>
+                        {row.season ? <span>{pick(locale, 'الموسم', 'Season')}: {row.season}</span> : null}
+                        {row.date ? (
+                          <span>
+                            {pick(locale, 'التاريخ', 'Date')}:{' '}
+                            <ClientTime value={row.date} locale={locale} options={{ day: 'numeric', month: 'short', year: 'numeric' }} />
+                          </span>
+                        ) : (
+                          <span>{pick(locale, 'التاريخ: غير متوفر', 'Date: unavailable')}</span>
+                        )}
+                        <span>
+                          {pick(locale, 'القيمة', 'Fee')}: {row.fee || unavailable}
+                        </span>
+                      </div>
+                    </article>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <p className={styles.transferEmpty}>
+              {pick(locale, 'لا توجد انتقالات مسجلة لهذا اللاعب في مصدر البيانات.', 'No transfers are recorded for this player in the data source.')}
+            </p>
+          )}
+          <div className={styles.acts} style={{ marginTop: '0.85rem' }}>
+            <Link href={`/transfers?player=${player.slug}`} className={styles.ghost}>
+              {pick(locale, 'عرض جميع الانتقالات', 'View all transfers')}
+            </Link>
+          </div>
+          {transfersUpdatedAt ? (
+            <p className={styles.transferMeta} style={{ marginTop: '0.65rem' }}>
+              {pick(locale, 'آخر تحديث للبيانات', 'Last data update')}:{' '}
+              <ClientTime value={transfersUpdatedAt} locale={locale} options={{ day: 'numeric', month: 'long', year: 'numeric' }} />
+            </p>
+          ) : null}
+        </section>
       </div>
 
       {/* ---------------- TROPHIES & HONOURS WALL ---------------- */}
@@ -701,7 +789,7 @@ export function PlayerDossier({
                 <Award size={18} aria-hidden />
               </div>
               <div>
-                <h3>{pick(locale, 'جدار الألقاب والبطولات الذهبية', 'Trophies & Golden Honours Wall')}</h3>
+                <h3>{pick(locale, 'الألقاب والبطولات', 'Trophies')}</h3>
                 <p>{pick(locale, 'الألقاب الموثقة في السجل الرياضي من المصدر الرسمي.', 'Documented championship titles from official source.')}</p>
               </div>
             </div>

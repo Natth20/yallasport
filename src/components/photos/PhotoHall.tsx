@@ -182,10 +182,9 @@ export function PhotoHall({
                   <span />
                   <span />
                 </span>
-                <span>{pick(locale, 'صالة العرض', 'Photo salon')}</span>
+                <span>{pick(locale, 'الصور', 'Photos')}</span>
               </div>
               <div className={styles.bezelRight}>
-                <span className={styles.hd}>HD</span>
                 <span className={styles.clock}>
                   {folio(currentIndex)} / {folio(visible.length)}
                 </span>
@@ -249,7 +248,7 @@ export function PhotoHall({
             <div className={styles.chips}>
               <span className={styles.chipOn}>
                 <Camera size={13} aria-hidden />
-                <b>{current.sourceName || pick(locale, 'قاعة الصور', 'Photo hall')}</b>
+                <b>{current.sourceName || pick(locale, 'الصور', 'Photos')}</b>
               </span>
               {current.publishedAt ? (
                 <span className={styles.chip}>
@@ -303,8 +302,8 @@ export function PhotoHall({
         {queue.length > 1 ? (
           <aside className={styles.queue} aria-label={pick(locale, 'قائمة الإطارات', 'Print queue')}>
             <header className={styles.queueHead}>
-              <p>{pick(locale, 'الآن على الصالة', 'On the easel')}</p>
-              <h3>{pick(locale, 'قائمة العرض', 'Programme')}</h3>
+              <p>{pick(locale, 'الصورة الحالية', 'Current photo')}</p>
+              <h3>{pick(locale, 'المعرض', 'Gallery')}</h3>
             </header>
             <ol className={styles.queueList}>
               {queue.map((frame, index) => {
@@ -339,10 +338,10 @@ export function PhotoHall({
           <div>
             <div className={styles.shelfTitle}>
               <Sparkles size={18} aria-hidden />
-              <h3>{pick(locale, 'جدار الصور', 'Photo wall')}</h3>
+              <h3>{pick(locale, 'معرض الصور', 'Photo gallery')}</h3>
               <span>{visible.length}</span>
             </div>
-            <p>{pick(locale, 'شبكة واحدة. صفِّ بالمصدر أو بالعنوان، واضغط الإطار ليُعرض.', 'One grid. Filter by source or title, then tap a print onto the easel.')}</p>
+            <p>{pick(locale, 'شبكة واحدة. صفِّ بالمصدر أو بالعنوان، ثم اضغط الصورة للعرض.', 'One grid. Filter by source or title, then tap a photo to view.')}</p>
           </div>
         </header>
 

@@ -14,7 +14,7 @@ export function YoutubeClipNav({
     {
       href: '/photos' as const,
       id: 'photos' as const,
-      label: pick(locale, 'قاعة الصور', 'Photos'),
+      label: pick(locale, 'الصور', 'Photos'),
       icon: Camera,
       badge: pick(locale, 'إطارات', 'Prints'),
     },

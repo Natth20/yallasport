@@ -109,11 +109,11 @@ export class CachedSportsDataProvider implements SportsDataProvider {
   }
 
   async getStandings(leagueId: string, season: string): Promise<NormalizedStanding[]> {
-    const cacheKey = `standings_${leagueId}_${season}`;
+    const cacheKey = `standings_v2_${leagueId}_${season}`;
     const cached = await safeRedisGet<NormalizedStanding[]>(cacheKey);
     if (cached) return cached;
 
-    const fresh = await withBudget(this.baseProvider.getStandings(leagueId, season), []);
+    const fresh = await withBudget(this.baseProvider.getStandings(leagueId, season), [], 12000);
     if (fresh.length > 0) {
       await safeRedisSet(cacheKey, fresh, { ex: this.TABLE_TTL });
     }
@@ -190,6 +190,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
         /players\?(search|id)=/i.test(path) ||
         /\/transfers\?/i.test(path) ||
         /\/players\/top/i.test(path) ||
+        /\/standings/i.test(path) ||
         /\/fixtures\?id=/i.test(path) ||
         /\/fixtures\/(events|lineups|statistics)/i.test(path)
           ? 12000
@@ -203,6 +204,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
         rows.length === 0;
       if (fresh != null && !emptySearch && !emptyBoard) {
         await safeRedisSet(cacheKey, fresh, { ex: ttl });
+        await safeRedisSet(`sports:raw:meta:${path}`, { syncedAt: new Date().toISOString() }, { ex: ttl });
         return fresh;
       }
     } catch (error) {

@@ -8,7 +8,7 @@ export function PhotoNav({ locale }: { locale: string }) {
     {
       href: '/photos' as const,
       current: true,
-      label: pick(locale, 'قاعة الصور', 'Photos'),
+      label: pick(locale, 'الصور', 'Photos'),
       icon: Camera,
       badge: pick(locale, 'إطارات', 'Prints'),
     },

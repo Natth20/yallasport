@@ -3,6 +3,8 @@ import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 import { publishedNewsWhere } from '@/lib/i18n/localized-content';
 import { SITE_URL } from '@/lib/seo/site';
+import { STAT_BOARDS } from '@/lib/stats/load-desk';
+import { currentFootballSeason } from '@/lib/sports-data/season';
 
 const LOCALES = ['ar', 'en'] as const;
 
@@ -115,6 +117,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     for (const league of leagues) {
       entries.push(...localizedUrl(`/league/${league.slug}`, 'daily', 0.65, now));
+    }
+
+    const season = currentFootballSeason();
+    for (const board of STAT_BOARDS) {
+      entries.push(...localizedUrl(`/stats/${board.slug}/${season}`, 'hourly', 0.55, now));
     }
 
     for (const match of matches) {

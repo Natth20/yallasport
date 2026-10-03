@@ -4,7 +4,8 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma';
 import { hostFromUrl, isTrustedNewsHost, TRUSTED_NEWS_HOSTS } from '@/lib/news/trusted-sources';
 import { footballCoverageWhere } from '@/lib/news/football-scope';
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
+import { localizeLeagueName, localizeRoundName } from '@/lib/i18n/competition-names';
 
 function trustedSourceUrlClause(): Prisma.NewsWhereInput {
   return {
@@ -141,13 +142,19 @@ export async function localizeEntityMap(
   const approved = new Map(rows.map((row) => [`${row.entityType}:${row.entityId}`, row.name]));
   for (const entity of entities) {
     const key = `${entity.entityType}:${entity.entityId}`;
-    map.set(key, approved.get(key) || localizePlainName(locale, entity.fallback));
+    map.set(
+      key,
+      approved.get(key) ||
+        (entity.entityType === 'TEAM' || entity.entityType === 'PLAYER'
+          ? localizeTeamName(locale, entity.fallback)
+          : localizePlainName(locale, entity.fallback)),
+    );
   }
   return map;
 }
 
 type NamedTeam = { id: string; name: string };
-type NamedLeague = { id: string; name: string; country?: string | null };
+type NamedLeague = { id: string; name: string; country?: string | null; externalId?: string | null };
 type NamedMatch = {
   homeTeam: NamedTeam;
   awayTeam: NamedTeam;
@@ -172,10 +179,17 @@ export async function paintNormalizedMatches(locale: string, matches: NamedMatch
   ]);
   const map = await localizeEntityMap(entities, locale);
   for (const match of matches) {
-    match.homeTeam.name = map.get(`TEAM:${match.homeTeam.id}`) || match.homeTeam.name;
-    match.awayTeam.name = map.get(`TEAM:${match.awayTeam.id}`) || match.awayTeam.name;
-    match.league.name = map.get(`LEAGUE:${match.league.id}`) || match.league.name;
+    match.homeTeam.name = localizeTeamName(locale, map.get(`TEAM:${match.homeTeam.id}`) || match.homeTeam.name);
+    match.awayTeam.name = localizeTeamName(locale, map.get(`TEAM:${match.awayTeam.id}`) || match.awayTeam.name);
+    match.league.name = localizeLeagueName(
+      locale,
+      match.league,
+      map.get(`LEAGUE:${match.league.id}`),
+    );
     if (match.league.country) match.league.country = localizePlainName(locale, match.league.country);
+    if ('round' in match && typeof (match as { round?: string }).round === 'string') {
+      (match as { round?: string }).round = localizeRoundName(locale, (match as { round?: string }).round);
+    }
     if (match.venue) match.venue = localizePlainName(locale, match.venue);
     if (match.referee) match.referee.name = localizePlainName(locale, match.referee.name);
     if (match.venueDetail) {
@@ -186,12 +200,12 @@ export async function paintNormalizedMatches(locale: string, matches: NamedMatch
       channel.name = localizePlainName(locale, channel.name);
     }
     for (const event of match.events || []) {
-      if (event.player) event.player = localizePlainName(locale, event.player);
-      if (event.assistPlayer) event.assistPlayer = localizePlainName(locale, event.assistPlayer);
+      if (event.player) event.player = localizeTeamName(locale, event.player);
+      if (event.assistPlayer) event.assistPlayer = localizeTeamName(locale, event.assistPlayer);
     }
     for (const lineup of match.lineups || []) {
       for (const player of [...(lineup.players || []), ...(lineup.bench || [])]) {
-        player.name = localizePlainName(locale, player.name);
+        player.name = localizeTeamName(locale, player.name);
       }
       if (lineup.coach) lineup.coach.name = localizePlainName(locale, lineup.coach.name);
     }

@@ -16,7 +16,8 @@ import { newsVisibleWhere, overlayNewsList, overlayNewsTranslation } from '@/lib
 import { deskLabel } from '@/lib/news/desks';
 import { deskAuthorLabel, formatNewsHtml } from '@/lib/news/format-body';
 import { wordCount, resolveFullArticleBody } from '@/lib/news/fetch-article';
-import { readingTimeMinutes } from '@/lib/news/reading-time';
+import { readingTimeMinutes, readingTimeLabel } from '@/lib/news/reading-time';
+import { publicNewsTags, validateArticleHtml } from '@/lib/news/article-clean';
 import { isProtectedFullTextSource } from '@/lib/news/import-copy';
 import { linkedEntitiesForNews } from '@/lib/news/entity-suggest';
 import { linkContent } from '@/lib/news/linking';
@@ -105,6 +106,7 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
     },
     include: {
       author: true,
+      entityLinks: { select: { entityType: true, entityId: true } },
       comments: {
         where: { parentId: null },
         orderBy: { createdAt: 'asc' },
@@ -131,7 +133,7 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
     ? await resolveFullArticleBody({ content: localized.content, sourceUrl: news.sourceUrl })
     : { html: formatNewsHtml(localized.content || ''), image: null, enriched: false, words: wordCount(localized.content || '') };
 
-  if (resolved.enriched && resolved.words > wordCount(news.content || '') + 30 && !isProtectedFullTextSource(news.sourceUrl)) {
+  if (resolved.enriched && validateArticleHtml(resolved.html).ok && resolved.words > wordCount(news.content || '') + 30 && !isProtectedFullTextSource(news.sourceUrl)) {
     void prisma.news
       .update({
         where: { id: news.id },
@@ -143,7 +145,18 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
       .catch(swallow('src/app/[locale]/news/[slug]/page.tsx:enrich', null));
   }
 
-  const formattedBody = resolved.html;
+  const formattedBody = formatNewsHtml(resolved.html);
+  if (formattedBody && formattedBody !== news.content && validateArticleHtml(formattedBody).ok) {
+    void prisma.news
+      .update({
+        where: { id: news.id },
+        data: {
+          content: formattedBody,
+          readingTime: readingTimeMinutes(formattedBody),
+        },
+      })
+      .catch(swallow('src/app/[locale]/news/[slug]/page.tsx:sanitize-store', null));
+  }
   const linkedContent = await linkContent(formattedBody);
   const deskAuthor = deskAuthorLabel(news.author?.name, locale, pick);
   const sourceLabel = displaySourceName(news.sourceName, news.sourceUrl) || news.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source');
@@ -173,23 +186,55 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
     sourceLocale: true,
   } as const;
 
+  const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+  const entityFilters = news.entityLinks.map((link) => ({
+    entityType: link.entityType,
+    entityId: link.entityId,
+  }));
+
   const [relatedRaw, latestRaw, popularRaw, entityMap] = await Promise.all([
+    (async () => {
+      const byEntity =
+        entityFilters.length > 0
+          ? await prisma.newsEntityLink.findMany({
+              where: {
+                newsId: { not: news.id },
+                OR: entityFilters,
+              },
+              select: { newsId: true },
+              take: 40,
+            })
+          : [];
+      const relatedIds = [...new Set(byEntity.map((row) => row.newsId))];
+      return prisma.news.findMany({
+        where: {
+          AND: [
+            newsVisibleWhere(locale),
+            { id: { not: news.id } },
+            relatedIds.length > 0
+              ? { OR: [{ id: { in: relatedIds } }, { category: news.category }] }
+              : { category: news.category },
+          ],
+        },
+        orderBy: [{ publishedAt: 'desc' }],
+        take: 10,
+        select: storyPick,
+      });
+    })(),
+    prisma.news.findMany({
+      where: { AND: [newsVisibleWhere(locale), { id: { not: news.id } }] },
+      orderBy: [{ publishedAt: 'desc' }],
+      take: 10,
+      select: storyPick,
+    }),
     prisma.news.findMany({
       where: {
-        AND: [newsVisibleWhere(locale), { id: { not: news.id } }, { category: news.category }],
+        AND: [
+          newsVisibleWhere(locale),
+          { id: { not: news.id } },
+          { publishedAt: { gte: sixHoursAgo } },
+        ],
       },
-      orderBy: [{ publishedAt: 'desc' }],
-      take: 10,
-      select: storyPick,
-    }),
-    prisma.news.findMany({
-      where: { AND: [newsVisibleWhere(locale), { id: { not: news.id } }] },
-      orderBy: [{ publishedAt: 'desc' }],
-      take: 10,
-      select: storyPick,
-    }),
-    prisma.news.findMany({
-      where: { AND: [newsVisibleWhere(locale), { id: { not: news.id } }] },
       orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
       take: 8,
       select: storyPick,
@@ -217,6 +262,8 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
   const protectedSource = isProtectedFullTextSource(news.sourceUrl);
   const clippedCopy = protectedSource || words < 40;
   const readMins = readingTimeMinutes(resolved.html) || null;
+  const trendingFresh = popular.length > 0;
+  const trending = trendingFresh ? popular : latest;
   const newsSchema = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
@@ -229,10 +276,14 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
         '@type': 'Organization',
         name: sourceLabel,
       },
-      {
-        '@type': 'Organization',
-        name: deskAuthor,
-      },
+      ...(deskAuthor
+        ? [
+          {
+            '@type': 'Person',
+            name: deskAuthor,
+          },
+        ]
+        : []),
     ],
     publisher: {
       '@type': 'Organization',
@@ -258,19 +309,21 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
         canAccess={canAccess}
         heroImage={heroImage}
         heroSrcSet={heroSrcSet}
+        slug={news.slug}
         sourceLabel={sourceLabel}
         sourceUrl={news.sourceUrl}
         deskAuthor={deskAuthor}
         publishedLabel={publishedLabel}
-        readMins={readMins}
+        readLabel={readMins ? readingTimeLabel(locale, readMins) : null}
         bodyHtml={linkedContent}
         clippedCopy={clippedCopy}
         protectedSource={protectedSource}
-        tags={news.tags}
+        tags={publicNewsTags(news.tags)}
         entities={entities.map((entity) => ({ href: entity.href, name: entity.name }))}
         related={related.map(toCard)}
         latest={latest.map(toCard)}
-        popular={popular.map(toCard)}
+        popular={trending.map(toCard)}
+        trendingIsLive={trendingFresh}
         comments={publicComments.map((comment) => ({
           id: comment.id,
           content: comment.content,

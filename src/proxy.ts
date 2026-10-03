@@ -62,7 +62,9 @@ export default auth((req) => {
     }
   }
 
-  return handleI18nRouting(req);
+  const response = handleI18nRouting(req);
+  response.headers.set("x-ys-page", pathname);
+  return response;
 });
 
 export const config = {

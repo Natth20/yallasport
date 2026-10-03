@@ -16,6 +16,7 @@ import { Scale, Users } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { DERBY_NEEDLES, recordFor, remapMatchSides, shareBar, versusHref, type VersusTeamOption } from './versus';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import type { DerbyLink } from './QuickDerbyBar';
 import styles from './compare.module.css';
 
@@ -49,6 +50,29 @@ async function finishedGoals(teamId: string) {
     matches: home._count.id + away._count.id,
     goals: (home._sum.homeScore ?? 0) + (away._sum.awayScore ?? 0),
   };
+}
+
+function lastFive(teamId: string) {
+  return prisma.match.findMany({
+    where: {
+      status: 'FINISHED',
+      OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+      homeScore: { not: null },
+      awayScore: { not: null },
+    },
+    orderBy: { kickoffAt: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      kickoffAt: true,
+      homeScore: true,
+      awayScore: true,
+      homeTeamId: true,
+      homeTeam: { select: { id: true, name: true, slug: true } },
+      awayTeam: { select: { id: true, name: true, slug: true } },
+      league: { select: { name: true } },
+    },
+  });
 }
 
 function lastFinished(teamId: string) {
@@ -186,6 +210,8 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
         }).catch(swallow("src/components/versus/VersusHouse.tsx:137", null)),
         lastFinished(left.id).catch(swallow("src/components/versus/VersusHouse.tsx:138", null)),
         lastFinished(right.id).catch(swallow("src/components/versus/VersusHouse.tsx:139", null)),
+        lastFive(left.id).catch(swallow('VersusHouse.leftFive', [])),
+        lastFive(right.id).catch(swallow('VersusHouse.rightFive', [])),
         prisma.standing.findMany({
           where: { teamId: left.id },
           select: { leagueId: true, league: { select: { name: true, slug: true } } },
@@ -200,7 +226,7 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
 
   const scale = h2hWhere && left && right && dbScaleResult
     ? (() => {
-      const [leftGoals, rightGoals, leftSquad, rightSquad, h2hAll, dbH2hRecent, leftFull, rightFull, leftLast, rightLast, leftTables, rightTables] = dbScaleResult;
+      const [leftGoals, rightGoals, leftSquad, rightSquad, h2hAll, dbH2hRecent, leftFull, rightFull, leftLast, rightLast, leftFive, rightFive, leftTables, rightTables] = dbScaleResult;
       const rightLeagues = new Set((rightTables as any[]).map((row) => row.leagueId));
       const seen = new Set<string>();
       const shared: Array<{ name: string; slug: string }> = [];
@@ -268,6 +294,8 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
         rightFull,
         leftLast,
         rightLast,
+        leftFive,
+        rightFive,
         shared,
       };
     })()
@@ -304,7 +332,7 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
       kicker={t('house')}
       title={paired ? t('headline_pair', { a: leftName, b: rightName }) : t('headline')}
       lead={t('standfirst')}
-      aside={`${teamCount} ${locale === 'en' ? 'clubs' : 'نادي'}`}
+      aside={locale === 'ar' ? `${teamCount} ناديًا` : `${teamCount} clubs`}
       tools={
         <HallFoyer
           label={t('folio')}
@@ -378,6 +406,11 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
           </div>
           {missing ? <p className={styles.missing}>{t('missing')}</p> : null}
           <VersusPair locale={locale} initialA={left ? asOption(left) : null} initialB={right ? asOption(right) : null} />
+          {left && right && left.id !== right.id ? (
+            <p className={styles.note}>
+              <Link href={versusHref(right.slug, left.slug)}>{t('swap')}</Link>
+            </p>
+          ) : null}
         </section>
 
         {scale && left && right ? (
@@ -446,10 +479,41 @@ export async function VersusHouse({ team1, team2 }: { team1?: string; team2?: st
                       </p>
                       {club.last ? (
                         <Link href={`/match/${club.last.id}`}>
-                          {t('last_label')}: {club.last.homeTeam.name} {club.last.homeScore}–{club.last.awayScore} {club.last.awayTeam.name}
+                          {t('last_label')}: {localizeTeamName(locale, club.last.homeTeam.name)} {club.last.homeScore}–{club.last.awayScore} {localizeTeamName(locale, club.last.awayTeam.name)}
                         </Link>
                       ) : (
                         <p className={styles.meta}>{t('last_none')}</p>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+
+                <div className={styles.facts}>
+                  {[
+                    { name: leftName, rows: scale.leftFive as Awaited<ReturnType<typeof lastFive>>, teamId: left.id },
+                    { name: rightName, rows: scale.rightFive as Awaited<ReturnType<typeof lastFive>>, teamId: right.id },
+                  ].map((club) => (
+                    <Card key={`${club.name}-form`} variant="bordered" padding="sm" className={styles.fact}>
+                      <strong>{club.name}</strong>
+                      {club.rows.length === 0 ? (
+                        <p className={styles.meta}>{t('last_none')}</p>
+                      ) : (
+                        <ul className={styles.meetings}>
+                          {club.rows.map((row) => {
+                            const home = row.homeTeamId === club.teamId;
+                            const scored = home ? row.homeScore : row.awayScore;
+                            const conceded = home ? row.awayScore : row.homeScore;
+                            const mark = scored == null || conceded == null ? '—' : scored > conceded ? 'W' : scored < conceded ? 'L' : 'D';
+                            const opp = home ? row.awayTeam.name : row.homeTeam.name;
+                            return (
+                              <li key={row.id}>
+                                <Link href={`/match/${row.id}`}>
+                                  {mark} · {localizeTeamName(locale, opp)} {row.homeScore}–{row.awayScore} · {row.league.name}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       )}
                     </Card>
                   ))}

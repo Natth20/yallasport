@@ -3,10 +3,21 @@ import type { NormalizedMatch, NormalizedMatchDetail } from './types';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@/generated/prisma';
 import { randomUUID } from 'crypto';
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
+import { localizeCompetitionTitle } from '@/lib/i18n/competition-names';
 
-export async function rememberArabicDisplay(entityType: 'TEAM' | 'LEAGUE' | 'PLAYER', entityId: string, official: string) {
-  const arabic = localizePlainName('ar', official);
+export async function rememberArabicDisplay(
+  entityType: 'TEAM' | 'LEAGUE' | 'PLAYER',
+  entityId: string,
+  official: string,
+  extra?: { country?: string | null; externalId?: string | null },
+) {
+  const arabic =
+    entityType === 'LEAGUE'
+      ? localizeCompetitionTitle('ar', { name: official, country: extra?.country, externalId: extra?.externalId })
+      : entityType === 'TEAM'
+        ? localizeTeamName('ar', official)
+        : localizePlainName('ar', official);
   if (!arabic || arabic === official) return;
   await prisma.entityTranslation
     .upsert({
@@ -43,7 +54,7 @@ function isUniqueConflict(error: unknown) {
   );
 }
 
-async function upsertTeam(input: {
+export async function upsertTeam(input: {
   externalId: string;
   name: string;
   slug: string;
@@ -81,7 +92,7 @@ async function upsertTeam(input: {
   }
 }
 
-async function upsertLeague(input: {
+export async function upsertLeague(input: {
   externalId: string;
   name: string;
   slug: string;
@@ -112,7 +123,7 @@ async function upsertLeague(input: {
       SET "officialName" = ${input.name}, "sportId" = 'sport_football'
       WHERE id = ${row.id}
     `.catch(swallow("src/lib/sports-data/persistence.ts:91", null));
-    await rememberArabicDisplay('LEAGUE', row.id, input.name);
+    await rememberArabicDisplay('LEAGUE', row.id, input.name, { country: input.country, externalId });
     return row;
   } catch (error) {
     if (!isUniqueConflict(error)) throw error;
@@ -125,7 +136,7 @@ async function upsertLeague(input: {
       SET "officialName" = ${input.name}, "sportId" = 'sport_football'
       WHERE id = ${row.id}
     `.catch(swallow("src/lib/sports-data/persistence.ts:103", null));
-    await rememberArabicDisplay('LEAGUE', row.id, input.name);
+    await rememberArabicDisplay('LEAGUE', row.id, input.name, { country: input.country, externalId });
     return row;
   }
 }

@@ -7,6 +7,10 @@ test('splits API type into fee and category', () => {
   assert.equal(splitTransferType('Loan').kind, 'loan');
   assert.equal(splitTransferType('Free').kind, 'free');
   assert.equal(splitTransferType('N/A').type, null);
+  assert.equal(splitTransferType('N/A').kind, 'unknown');
+  assert.equal(splitTransferType('€0').fee, null);
+  assert.equal(splitTransferType('Contract ended').kind, 'ended');
+  assert.equal(splitTransferType('Rumour').kind, 'rumour');
 });
 
 test('parses fee magnitude', () => {

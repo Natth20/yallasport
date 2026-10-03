@@ -47,7 +47,7 @@ export function NewsCover({
         {/* Floating Brand Badge */}
         <span className="absolute top-4 start-4 flex h-8 items-center gap-1.5 rounded-full border border-white/15 bg-black/50 px-3 text-[11px] font-black uppercase tracking-wider text-white backdrop-blur-md">
           <Sparkles className="h-3 w-3 text-primary" />
-          YS Desk
+          {story.sourceName || pick(locale, 'من المصدر', 'From source')}
         </span>
 
         {/* Inner Media Info */}
@@ -95,8 +95,12 @@ export function NewsCover({
               </span>
             </>
           ) : null}
-          <span aria-hidden className="text-muted-foreground/40">·</span>
-          <span>{desk}</span>
+          {desk ? (
+            <>
+              <span aria-hidden className="text-muted-foreground/40">·</span>
+              <span>{desk}</span>
+            </>
+          ) : null}
         </div>
 
         {entities.length > 0 ? (

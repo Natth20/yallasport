@@ -72,7 +72,6 @@ export async function AuthGate({
                 {box}
               </span>
               <span className={styles.bezelMeta}>
-                <span className={styles.hd}>HD</span>
                 <span>{code}</span>
               </span>
             </div>

@@ -37,6 +37,7 @@ export const loadTransferDesk = cache(async function loadTransferDesk(filters: {
   season?: string;
   kind?: string;
   window?: string;
+  direction?: string;
 }) {
   const current = currentFootballSeason();
   const seasonYear = Number.parseInt(filters.season || '', 10);
@@ -87,7 +88,7 @@ export const loadTransferDesk = cache(async function loadTransferDesk(filters: {
 
   const seenNear = new Set<string>();
   rows = rows.filter((row) => {
-    const stamp = `${row.playerName}|${row.toTeam}|${row.date.toISOString().slice(0, 7)}`;
+    const stamp = `${row.playerSlug || row.playerName}|${row.fromTeam}|${row.toTeam}|${row.date.toISOString().slice(0, 10)}|${row.kind}`;
     if (seenNear.has(stamp)) return false;
     seenNear.add(stamp);
     return true;
@@ -130,8 +131,38 @@ export const loadTransferDesk = cache(async function loadTransferDesk(filters: {
   if (filters.window === 'summer' || filters.window === 'winter') {
     rows = rows.filter((row) => row.window === filters.window);
   }
+  if (filters.club && (filters.direction === 'in' || filters.direction === 'out')) {
+    const needle = filters.club.toLowerCase();
+    rows = rows.filter((row) =>
+      filters.direction === 'in'
+        ? Boolean(row.toTeam?.toLowerCase().includes(needle))
+        : Boolean(row.fromTeam?.toLowerCase().includes(needle)),
+    );
+  }
 
-  const headline = [...rows].sort((a, b) => (feeToNumber(b.fee) || 0) - (feeToNumber(a.fee) || 0))[0] || null;
+  const clubStats = new Map<string, { name: string; in: number; out: number }>();
+  for (const row of rows) {
+    if (row.toTeam) {
+      const cur = clubStats.get(row.toTeam) || { name: row.toTeam, in: 0, out: 0 };
+      cur.in += 1;
+      clubStats.set(row.toTeam, cur);
+    }
+    if (row.fromTeam) {
+      const cur = clubStats.get(row.fromTeam) || { name: row.fromTeam, in: 0, out: 0 };
+      cur.out += 1;
+      clubStats.set(row.fromTeam, cur);
+    }
+  }
+  const busiest = [...clubStats.values()]
+    .map((row) => ({ ...row, total: row.in + row.out }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+  const topFees = [...rows]
+    .filter((row) => feeToNumber(row.fee))
+    .sort((a, b) => (feeToNumber(b.fee) || 0) - (feeToNumber(a.fee) || 0))
+    .slice(0, 5);
+
+  const headline = topFees[0] || null;
   const meta = await safeRedisGet<{ syncedAt?: string; source?: string }>('sports:meta:transfers');
 
   return {
@@ -142,6 +173,8 @@ export const loadTransferDesk = cache(async function loadTransferDesk(filters: {
     seasonLabel: current,
     fromSeason: current - 1,
     headline: headline && feeToNumber(headline.fee) ? headline : null,
+    busiest,
+    topFees,
     syncedAt: meta?.syncedAt || null,
     source: meta?.source || null,
   };

@@ -125,6 +125,7 @@ export function toNormalizedStanding(row: {
     lost: row.lost,
     goalsFor: row.goalsFor,
     goalsAgainst: row.goalsAgainst,
+    goalDiff: row.goalsFor - row.goalsAgainst,
     points: row.points,
     team: {
       id: row.team.id,

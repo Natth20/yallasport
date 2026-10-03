@@ -25,6 +25,10 @@ import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { ArrowLeftRight, BarChart3, CalendarDays, Radio, Trophy, Tv, Play } from 'lucide-react';
 import styles from '@/components/live/live-hall.module.css';
+import { countLiveMatches, listLiveMatches } from '@/lib/sports-data/live-census';
+import { localizeLeagueName, localizeRoundName } from '@/lib/i18n/competition-names';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
+import { formatScore } from '@/lib/sports-data/score-format';
 
 export const revalidate = 20;
 
@@ -89,6 +93,11 @@ async function LivePageBody({
     ? await listPublishedLibrary({ take: 12 }).catch(swallow('LivePage.listPublishedLibrary', []))
     : [];
 
+  const [deskLive, deskLiveCount] = await Promise.all([
+    listLiveMatches(16).catch(swallow('LivePage.deskLive', [])),
+    countLiveMatches(),
+  ]);
+
   const tvRows = await listTonightTvGuide({
     start,
     end,
@@ -107,6 +116,7 @@ async function LivePageBody({
   walkLocalizeNames(locale, tvRows);
   walkLocalizeNames(locale, upcoming);
   walkLocalizeNames(locale, library);
+  walkLocalizeNames(locale, deskLive);
 
   type CatalogItem = (typeof items)[number];
   type Program = { match: CatalogItem['match']; assets: CatalogItem[] };
@@ -243,8 +253,8 @@ async function LivePageBody({
           <header className={styles.mast}>
             <div className={styles.metersGrid}>
               <div className={featuredLive ? styles.meterLive : styles.meterCard}>
-                <span className={styles.meterValue}>{featuredLive ? 'LIVE' : '—'}</span>
-                <span className={styles.meterLabel}>{t('now_on_air')}</span>
+                <span className={styles.meterValue}>{deskLiveCount}</span>
+                <span className={styles.meterLabel}>{pick(locale, 'مباشر الآن', 'Live now')}</span>
               </div>
               <div className={styles.meterCard}>
                 <span className={styles.meterValue}>{tvRows.length}</span>
@@ -262,19 +272,19 @@ async function LivePageBody({
               <span className={styles.licenseMark} aria-hidden />
               <div>
                 <h2>
-                  {pick(locale, 'القاعة جاهزة للبث المرخّص', 'The hall is ready for licensed playback')}
+                  {pick(locale, 'لا يتوفر بث مباشر داخل الصفحة حاليًا', 'No in-page live stream is available right now')}
                 </h2>
                 <p>
                   {pick(
                     locale,
-                    'ما في بث داخل الصفحة قبل مفتاح البث المرخّص. المباريات والقنوات أدناه من المكتب كما وصلت. زر المشاهدة يظهر فور تفعيل الـ API.',
-                    'Nothing plays inside this page until the licensed stream flag is on. Matches and channels below are from the desk as filed. Watch buttons appear when the API is enabled.',
+                    'المباريات المباشرة والقنوات أدناه من السجل. زر المشاهدة يظهر فقط إن وُجد بث مرخّص.',
+                    'Live matches and channels below come from the ledger. Watch appears only when a licensed stream exists.',
                   )}
                 </p>
               </div>
               <ul>
-                <li>{pick(locale, 'مشغّل المسرح جاهز', 'Stage player is wired')}</li>
-                <li>{pick(locale, 'فلاتر الدوري والقناة جاهزة', 'League and channel filters are ready')}</li>
+                <li>{pick(locale, 'المباراة الجارية منفصلة عن البث', 'A live match is not the same as a stream')}</li>
+                <li>{pick(locale, 'فلاتر البطولة والقناة أدناه', 'League and channel filters are below')}</li>
                 <li>{pick(locale, 'لا روابط اختراع', 'No invented stream links')}</li>
               </ul>
             </section>
@@ -368,6 +378,42 @@ async function LivePageBody({
             )}
           </section>
 
+          {deskLive.length > 0 ? (
+            <section className={styles.bandSection}>
+              <div className={styles.bandHead}>
+                <div className={styles.bandMark}>
+                  <h2 className={styles.bandTitle}>{pick(locale, 'مباشر الآن', 'Live now')}</h2>
+                </div>
+                <Link href="/matches?status=live" className="text-xs font-bold text-[var(--ys-orange)] hover:underline">
+                  {pick(locale, 'كل المباريات المباشرة', 'All live matches')}
+                </Link>
+              </div>
+              <ul className="grid gap-3 md:grid-cols-2">
+                {deskLive.map((match) => (
+                  <li key={match.id}>
+                    <Link href={`/match/${match.id}`} className="block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
+                      <p className="text-xs text-muted-foreground">
+                        {localizeLeagueName(locale, match.league, match.league.name)}
+                        {match.round ? ` · ${localizeRoundName(locale, match.round)}` : ''}
+                      </p>
+                      <p className="mt-2 flex items-center justify-between gap-3 font-bold">
+                        <span>{localizeTeamName(locale, match.homeTeam.name)}</span>
+                        <span>{formatScore(match.homeScore, match.awayScore)}</span>
+                      </p>
+                      <p className="mt-1 flex items-center justify-between gap-3 font-bold">
+                        <span>{localizeTeamName(locale, match.awayTeam.name)}</span>
+                        <span className="text-xs font-semibold text-red-500">
+                          {pick(locale, 'مباشر', 'LIVE')}
+                          {match.minute != null ? ` ${match.minute}′` : ''}
+                        </span>
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           {/* ==========================================================================
             3. LEAGUE & CHANNEL RAILS (Filters Bar)
             ========================================================================== */}
@@ -375,7 +421,6 @@ async function LivePageBody({
             <section className={styles.bandSection}>
               <div className={styles.bandHead}>
                 <div className={styles.bandMark}>
-                  <span className={styles.bandFolio}>01</span>
                   <h2 className={styles.bandTitle}>{t('filters')}</h2>
                 </div>
                 {leagueId || channelId ? (
@@ -441,7 +486,6 @@ async function LivePageBody({
               <section className={styles.bandSection}>
                 <div className={styles.bandHead}>
                   <div className={styles.bandMark}>
-                    <span className={styles.bandFolio}>02</span>
                     <div>
                       <h2 className={styles.bandTitle}>{t('channels_wall')}</h2>
                       <p className={styles.bandLead}>{t('tonight')}</p>
@@ -572,7 +616,6 @@ async function LivePageBody({
                 <section className={styles.bandSection}>
                   <div className={styles.bandHead}>
                     <div className={styles.bandMark}>
-                      <span className={styles.bandFolio}>03</span>
                       <h2 className={styles.bandTitle}>{t('schedule')}</h2>
                     </div>
                   </div>
@@ -631,7 +674,6 @@ async function LivePageBody({
                 <section className={styles.bandSection}>
                   <div className={styles.bandHead}>
                     <div className={styles.bandMark}>
-                      <span className={styles.bandFolio}>04</span>
                       <h2 className={styles.bandTitle}>{t('linear_wall')}</h2>
                     </div>
                   </div>
@@ -662,7 +704,6 @@ async function LivePageBody({
                 <section className={styles.bandSection}>
                   <div className={styles.bandHead}>
                     <div className={styles.bandMark}>
-                      <span className={styles.bandFolio}>05</span>
                       <h2 className={styles.bandTitle}>{t('vod_shelf')}</h2>
                     </div>
                   </div>
@@ -714,7 +755,6 @@ async function LivePageBody({
               <aside className={styles.sideColumn}>
                 <div className={styles.bandHead}>
                   <div className={styles.bandMark}>
-                    <span className={styles.bandFolio}>06</span>
                     <h2 className={styles.bandTitle}>{t('coming_windows')}</h2>
                   </div>
                 </div>

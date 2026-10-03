@@ -51,8 +51,8 @@ export function MatchHero({
     <section id="hall-screen" className={hall.wideScreen}>
       <div className={hall.chassis}>
         <HallBezel
-          label={pick(locale, 'مسرح المباراة', 'Match stage')}
-          clock={isLive ? (match.minute ? `${match.minute}′` : 'LIVE') : isFinished ? 'FT' : 'HD'}
+          label={pick(locale, 'المباراة', 'Match')}
+          clock={isLive ? (match.minute ? `${match.minute}′` : pick(locale, 'مباشر', 'Live')) : isFinished ? pick(locale, 'نهاية', 'FT') : null}
         />
         <div className={`${hall.frame} ${styles.hero}`}>
           <span className={styles.auroraLeft} aria-hidden />

@@ -26,7 +26,7 @@ export function CrestImage({
       alt={alt}
       width={size}
       height={size}
-      className={className}
+      className={`${className || ''} object-contain`}
       sizes={`${size}px`}
       priority={priority}
     />

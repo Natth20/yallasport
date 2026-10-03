@@ -36,6 +36,7 @@ import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { MatchHero } from '@/components/sports/MatchHero';
+import { SiteAd } from '@/components/ads/SiteAd';
 import { MatchDetailTabs } from '@/components/sports/MatchDetailTabs';
 import { MatchContextPack } from '@/components/sports/MatchContextPack';
 import { sportsData } from '@/lib/sports-data';
@@ -47,16 +48,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const locale = await getLocale();
   try {
     const { id } = await params;
-    const match = await prisma.match.findFirst({
-      where: { OR: [{ id }, { externalId: id }] },
-      select: {
-        homeScore: true,
-        awayScore: true,
-        status: true,
-        homeTeam: { select: { name: true, logoUrl: true } },
-        awayTeam: { select: { name: true, logoUrl: true } },
-      },
-    });
+    const match = await getResolvedMatchDetail(id);
     if (!match) {
       return pageMetadata({
         locale,
@@ -107,12 +99,13 @@ function toForm(
 ): FormLetter[] {
   return rows.map((row) => {
     const isHome = row.homeTeamId === teamId;
-    const scored = (isHome ? row.homeScore : row.awayScore) ?? 0;
-    const conceded = (isHome ? row.awayScore : row.homeScore) ?? 0;
+    if (row.homeScore == null || row.awayScore == null) return null;
+    const scored = isHome ? row.homeScore : row.awayScore;
+    const conceded = isHome ? row.awayScore : row.homeScore;
     if (scored > conceded) return 'W';
     if (scored < conceded) return 'L';
     return 'D';
-  });
+  }).filter((letter): letter is FormLetter => Boolean(letter));
 }
 
 function belongsToTeam(teamId: string, team: { id: string; externalId: string }) {
@@ -125,12 +118,13 @@ function toFormFromMatches(
 ): FormLetter[] {
   return rows.map((row) => {
     const isHome = belongsToTeam(row.homeTeam.id, team);
-    const scored = (isHome ? row.homeScore : row.awayScore) ?? 0;
-    const conceded = (isHome ? row.awayScore : row.homeScore) ?? 0;
+    if (typeof row.homeScore !== 'number' || typeof row.awayScore !== 'number') return null;
+    const scored = isHome ? row.homeScore : row.awayScore;
+    const conceded = isHome ? row.awayScore : row.homeScore;
     if (scored > conceded) return 'W';
     if (scored < conceded) return 'L';
     return 'D';
-  });
+  }).filter((letter): letter is FormLetter => Boolean(letter));
 }
 
 type RawFixtureEnvelope = {
@@ -487,11 +481,11 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
   const homeRecent =
     homeRecentDb.length > 0
       ? homeRecentDb
-      : (homeLastApi.length > 0 ? homeLastApi : h2hMatches).slice(0, 5);
+      : homeLastApi.slice(0, 5);
   const awayRecent =
     awayRecentDb.length > 0
       ? awayRecentDb
-      : (awayLastApi.length > 0 ? awayLastApi : h2hMatches).slice(0, 5);
+      : awayLastApi.slice(0, 5);
   const homeForm =
     homeRecentDb.length > 0
       ? toForm(
@@ -614,6 +608,7 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
           hasLicensedStream={Boolean(STREAMING_ENABLED && licensedAsset)}
           userFollow={Boolean(userFollow)}
         />
+        <SiteAd placement="match-rail" locale={locale} />
         {sameDayMatches.length > 0 ? (
           <section className={styles.dayRail} aria-label={pick(locale, 'مباريات البطولة اليوم', 'Same-day fixtures')}>
             <header className={styles.dayRailHead}>

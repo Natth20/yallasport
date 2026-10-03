@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { VersusHouse } from '@/components/versus/VersusHouse';
 import { pick } from '@/i18n/pick';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 import { getLocale } from 'next-intl/server';
@@ -20,8 +21,8 @@ export async function generateMetadata({
     title: pick(locale, 'مقارنة الفرق', 'Team comparison'),
     description: pick(
       locale,
-      'ميزان مكتبي: فريقان من الدفتر، مواجهات منتهية كما سُجّلت، بلا رادار مخترع.',
-      'A desk scale: two teams from the ledger, finished meetings as stored, no invented radar.',
+      'قارن ناديين: الأداء، المواجهات المباشرة، وآخر المباريات من المصدر فقط.',
+      'Compare two clubs: form, head-to-head and recent matches from the source only.',
     ),
     path: '/compare',
   });
@@ -33,15 +34,19 @@ export async function generateMetadata({
     ]);
     const title =
       a && b
-        ? `${a.name} × ${b.name}`
+        ? pick(
+          locale,
+          `${localizeTeamName(locale, a.name)} ضد ${localizeTeamName(locale, b.name)} | مقارنة وإحصائيات ومواجهات`,
+          `${localizeTeamName(locale, a.name)} vs ${localizeTeamName(locale, b.name)} | comparison and head-to-head`,
+        )
         : a
-          ? pick(locale, `ميزان ${a.name}`, `Scale: ${a.name}`)
-          : pick(locale, 'مقارنة الفرق', 'Team comparison');
+          ? pick(locale, `مقارنة ${localizeTeamName(locale, a.name)}`, `Compare ${localizeTeamName(locale, a.name)}`)
+          : pick(locale, 'مقارنة الأندية', 'Club comparison');
     return pageMetadata({
       locale,
       title,
       description: fallback.description as string,
-      path: '/compare',
+      path: team1 && team2 ? `/compare?team1=${team1}&team2=${team2}` : '/compare',
     });
   } catch {
     return fallback;

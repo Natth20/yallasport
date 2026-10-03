@@ -111,7 +111,7 @@ function PlayerSearchField({
         setHits([]);
         setLoading(false);
       }
-    }, 120);
+    }, 280);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
@@ -165,7 +165,7 @@ function PlayerSearchField({
             }
             if (event.key === 'Escape') setOpen(false);
           }}
-          placeholder={ar ? 'اكتب اسم اللاعب…' : 'Type a player name…'}
+          placeholder={ar ? 'ابحث عن لاعب…' : 'Search for a player…'}
           autoComplete="off"
           role="combobox"
           aria-expanded={open}
@@ -177,7 +177,7 @@ function PlayerSearchField({
       {open ? (
         <ul id={listId} role="listbox" className={folio.suggest}>
           {loading && hits.length === 0 ? (
-            <li className={folio.suggestEmpty}>{ar ? 'نبحث في الدفتر…' : 'Checking the desk…'}</li>
+            <li className={folio.suggestEmpty}>{ar ? 'جاري البحث…' : 'Searching…'}</li>
           ) : hits.length === 0 ? (
             <li className={folio.suggestEmpty}>
               {ar ? 'ما في لاعب بهالاسم من المصدر.' : 'The source returned no player for that name.'}
@@ -198,7 +198,7 @@ function PlayerSearchField({
                     <span>{hit.name.charAt(0)}</span>
                   )}
                   <em>
-                    <strong>{hit.name}</strong>
+                    <strong className={folio.nameText}>{hit.name}</strong>
                     {hit.teamName ? <i>{hit.teamName}</i> : null}
                   </em>
                 </button>
@@ -268,7 +268,7 @@ export function PlayerComparePicker({
   return (
     <div className={folio.picker}>
       <div className={folio.pickerRow}>
-        <PlayerSearchField locale={locale} label={ar ? 'الكفة الأولى' : 'Left scale'} value={p1} onPick={setP1} onClear={() => setP1(null)} />
+        <PlayerSearchField locale={locale} label={ar ? 'اللاعب الأول' : 'First player'} value={p1} onPick={setP1} onClear={() => setP1(null)} />
         <div className={folio.pickerActions}>
           <span className={folio.vsMark} aria-hidden>
             VS
@@ -282,14 +282,14 @@ export function PlayerComparePicker({
             disabled={!p1 || !p2 || p1.slug === p2.slug}
             className={folio.goBtn}
           >
-            {ar ? 'قارن الآن' : 'Compare now'}
+            {ar ? 'قارن اللاعبين' : 'Compare players'}
           </button>
         </div>
-        <PlayerSearchField locale={locale} label={ar ? 'الكفة الثانية' : 'Right scale'} value={p2} onPick={setP2} onClear={() => setP2(null)} />
+        <PlayerSearchField locale={locale} label={ar ? 'اللاعب الثاني' : 'Second player'} value={p2} onPick={setP2} onClear={() => setP2(null)} />
       </div>
       {faces && faces.length > 0 ? (
         <div className={folio.faces}>
-          <p>{ar ? 'وجوه من الدفتر' : 'Names on file'}</p>
+          <p>{ar ? 'لاعبون مقترحون' : 'Suggested players'}</p>
           <div>
             {faces.map((face) => (
               <Link key={face.slug} href={pickFaceHref(face)} className={folio.faceChip}>
@@ -299,7 +299,7 @@ export function PlayerComparePicker({
                 ) : (
                   <span>{face.name.charAt(0)}</span>
                 )}
-                {face.name}
+                <strong className={folio.nameText}>{face.name}</strong>
               </Link>
             ))}
           </div>

@@ -91,6 +91,7 @@ async function LeagueArchivePageBody({ params }: { params: Promise<{ slug: strin
       )}
       leagueName={league.name}
       logoUrl={league.logoUrl}
+      statsLeagueId={league.externalId}
       seasonId={seasonId}
       signature={signature}
       ghost={archiveSeasons.length ? String(archiveSeasons.length) : undefined}

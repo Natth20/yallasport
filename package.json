@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/streaming/entitlement.test.ts src/lib/streaming/playback-token.test.ts src/lib/i18n/entity-names.test.ts src/lib/i18n/sports-lexicon.test.ts src/lib/sports-data/match-window.test.ts src/lib/sports-data/config.test.ts src/lib/sports-data/development-provider.test.ts src/lib/sports-data/versus-record.test.ts src/lib/news/freshness.test.ts src/lib/auth/admin-access.test.ts src/lib/datetime/format.test.ts src/lib/predictions/rank.test.ts src/lib/transfers/fee.test.ts",
+    "test": "tsx --test src/lib/streaming/entitlement.test.ts src/lib/streaming/playback-token.test.ts src/lib/i18n/entity-names.test.ts src/lib/i18n/sports-lexicon.test.ts src/lib/sports-data/match-window.test.ts src/lib/sports-data/config.test.ts src/lib/sports-data/development-provider.test.ts src/lib/sports-data/standings-map.test.ts src/lib/sports-data/versus-record.test.ts src/lib/news/freshness.test.ts src/lib/news/article-clean.test.ts src/lib/news/reading-time.test.ts src/lib/auth/admin-access.test.ts src/lib/datetime/format.test.ts src/lib/predictions/rank.test.ts src/lib/transfers/fee.test.ts src/lib/transfers/validate.test.ts src/lib/players/current-club.test.ts src/lib/ads/catalog.test.ts src/lib/search/unified.test.ts",
     "check:i18n": "node scripts/check-i18n.mjs",
     "postinstall": "prisma generate",
     "verify": "pnpm check:i18n && pnpm test && pnpm exec tsc --noEmit"

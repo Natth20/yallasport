@@ -21,17 +21,18 @@ export async function generateMetadata({
       : pick(locale, 'بحث', 'Search'),
     description: pick(
       locale,
-      'ابحث في يلا سبورت عن المباريات، الفرق، اللاعبين، البطولات، والأخبار المعتمدة.',
-      'Search Yalla Sport for matches, teams, players, leagues, and verified news.'
+      'ابحث في يلا سبورت عن الفرق واللاعبين والمدربين والبطولات والمباريات والأخبار.',
+      'Search Yalla Sport for teams, players, coaches, leagues, matches, and news.',
     ),
     path: '/search',
+    noIndex: Boolean(query),
   });
 }
 
 export default function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kind?: string }>;
+  searchParams: Promise<{ q?: string; kind?: string; page?: string }>;
 }) {
   return (
     <Suspense fallback={<SearchFallback />}>
@@ -43,8 +44,9 @@ export default function SearchPage({
 async function SearchPageBody({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kind?: string }>;
+  searchParams: Promise<{ q?: string; kind?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  return <SearchHouse q={params.q} kindParam={params.kind} />;
+  const page = Number.parseInt(params.page || '1', 10);
+  return <SearchHouse q={params.q} kindParam={params.kind} page={Number.isFinite(page) ? page : 1} />;
 }

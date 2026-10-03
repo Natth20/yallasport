@@ -252,7 +252,7 @@ export function TeamDossier({
       <section id="hall-screen" className={`${styles.wideScreen} ${board.clubSalon}`} aria-label={name}>
         <div className={styles.chassis}>
           <HallBezel
-            label={activeMatch ? localizePlainName(locale, activeMatch.league.name) : pick(locale, 'صالة النادي', 'Club salon')}
+            label={activeMatch ? localizePlainName(locale, activeMatch.league.name) : pick(locale, 'النادي', 'Club')}
             clock={
               activeMatch
                 ? activeMatch.status === 'NOT_STARTED'

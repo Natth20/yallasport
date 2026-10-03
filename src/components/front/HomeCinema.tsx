@@ -37,13 +37,13 @@ export async function HomeCinema() {
       : t('live_badge')
     : pulse.live > 0
       ? `${pulse.live} ${t('stat_live')}`
-      : pick(locale, 'صالة اليوم', "Today's salon");
+      : pick(locale, 'اليوم', 'Today');
 
   return (
     <section id="hall-screen" className={hall.wideScreen} aria-label={t('stage_kicker')}>
       <div className={hall.chassis}>
         <HallBezel
-          label={useMatch && match ? match.league.name : pick(locale, 'صالة اليوم', "Today's salon")}
+          label={useMatch && match ? match.league.name : pick(locale, 'اليوم', 'Today')}
           clock={clock}
         />
         <div className={`${hall.frame} ${styles.cinemaFrame}`}>

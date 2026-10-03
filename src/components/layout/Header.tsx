@@ -59,7 +59,7 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
     { name: t('common.matches') || 'المباريات', href: '/matches' },
     { name: t('common.leagues') || 'البطولات', href: '/leagues' },
     { name: t('common.news') || 'الأخبار', href: '/news' },
-    { name: t('common.broadcasts') || 'البث المباشر', href: '/live', badge: ar ? 'مباشر' : 'LIVE' },
+    { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live', badge: '🔴' },
     { name: t('common.video') || 'الفيديوهات', href: '/videos' },
   ];
 

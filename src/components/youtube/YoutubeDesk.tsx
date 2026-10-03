@@ -269,7 +269,7 @@ export function YoutubeDesk({
                 </span>
               </div>
               <div className={styles['yt-bezel-right']}>
-                <span className={styles['yt-bezel-hd']}>1080p HD</span>
+                <span className={styles['yt-bezel-hd']}>YS</span>
                 {typeof current.durationSec === 'number' && current.durationSec > 0 ? (
                   <span className={styles['yt-bezel-clock']}>{clock(current.durationSec)}</span>
                 ) : null}

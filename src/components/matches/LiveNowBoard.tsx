@@ -61,7 +61,7 @@ export function LiveNowBoard({
             </div>
           </div>
           <span className="rounded-full bg-red-500 px-2.5 py-1 text-[10px] font-black tabular-nums text-white">
-            {t('live_matches', {count: liveMatches.length})}
+            {t('live')} ({liveMatches.length})
           </span>
         </div>
 
@@ -83,7 +83,7 @@ export function LiveNowBoard({
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[8px] font-black ${
                   halftime ? 'bg-amber-400/25 text-amber-800 dark:text-amber-100' : 'animate-pulse bg-red-500 text-white'
                 }`}>
-                  {halftime ? t('halftime') : match.minute ? `${t('live')} ${match.minute}'` : t('live')}
+                  {halftime ? t('halftime') : match.minute ? `${t('live')} · ${match.minute}′` : t('live')}
                 </span>
               </div>
               <div className="space-y-2.5">

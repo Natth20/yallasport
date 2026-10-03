@@ -3,12 +3,16 @@ import { formatNewsHtml } from '@/lib/news/format-body';
 import { pickImageFromHtml } from '@/lib/news/enrich-source';
 import { isProtectedFullTextSource } from '@/lib/news/import-copy';
 import { isTrustedNewsUrl } from '@/lib/news/trusted-sources';
+import { extractJsonLdArticleBody, sanitizeArticleHtml, validateArticleHtml } from '@/lib/news/article-clean';
 
 const ARTICLE_SELECTORS = [
   '[itemprop="articleBody"]',
   '.wysiwyg',
   '.c-article__body',
   '.articleBody',
+  '.Article-body',
+  '.Article-text',
+  '.article__text',
   '.story-content',
   '.news-article-body',
   'article[data-component="text-block"]',
@@ -22,9 +26,9 @@ const ARTICLE_SELECTORS = [
   '.entry-content',
   '.post-content',
   'article .content',
-  'article',
-  'main',
 ];
+
+const LAST_RESORT_SELECTORS = ['article', 'main'];
 
 function decodeEntities(input: string) {
   return input
@@ -184,34 +188,43 @@ export async function fetchTrustedSourceArticle(
     });
     if (!response.ok) return null;
 
-    const rawHtml = stripNoise(await response.text());
-    const slice = rawHtml.slice(0, 450_000);
+    const rawHtml = await response.text();
+    const jsonLd = extractJsonLdArticleBody(rawHtml);
+    const slice = stripNoise(rawHtml).slice(0, 450_000);
 
-    let best = '';
-    let bestWords = 0;
-    for (const selector of ARTICLE_SELECTORS) {
+    const candidates: string[] = [];
+    if (jsonLd) candidates.push(jsonLd);
+    for (const selector of [...ARTICLE_SELECTORS, ...LAST_RESORT_SELECTORS]) {
       let extracted: string | null = null;
       try {
         extracted = extractBySelector(slice, selector);
       } catch {
         continue;
       }
-      if (!extracted) continue;
-      const cleaned = keepReadableBlocks(extracted, sourceUrl);
-      const words = wordCount(cleaned);
-      if (words > bestWords) {
-        best = cleaned;
-        bestWords = words;
-      }
-      if (bestWords >= 220) break;
+      if (extracted) candidates.push(extracted);
     }
 
-    if (bestWords < 60) return null;
+    let best = '';
+    let bestScore = 0;
+    for (const candidate of candidates) {
+      const cleaned = sanitizeArticleHtml(keepReadableBlocks(candidate, sourceUrl));
+      const check = validateArticleHtml(cleaned);
+      if (!check.ok) continue;
+      const score = check.words <= 900 ? check.words : 900 - (check.words - 900);
+      if (score > bestScore) {
+        best = cleaned;
+        bestScore = score;
+      }
+      if (bestScore >= 180 && jsonLd) break;
+    }
+
+    const words = wordCount(best);
+    if (words < 60 || !validateArticleHtml(best).ok) return null;
 
     return {
       html: best,
       image: pickImageFromHtml(best, sourceUrl),
-      words: bestWords,
+      words,
     };
   } catch (error) {
     reportCaughtError("src/lib/news/fetch-article.ts:192", error);
@@ -228,16 +241,17 @@ export async function resolveFullArticleBody(input: {
   force?: boolean;
 }) {
   if (isProtectedFullTextSource(input.sourceUrl)) {
-    const current = (input.content || '').trim();
+    const current = sanitizeArticleHtml(input.content || '');
     return { html: formatNewsHtml(current), image: null as string | null, enriched: false, words: wordCount(current) };
   }
-  const current = (input.content || '').trim();
+  const current = sanitizeArticleHtml(input.content || '');
   const currentWords = wordCount(current);
-  if (!input.force && currentWords >= 280) {
+  const currentOk = validateArticleHtml(current).ok;
+  if (!input.force && currentOk && currentWords >= 120) {
     return { html: formatNewsHtml(current), image: null as string | null, enriched: false, words: currentWords };
   }
   const scraped = await fetchTrustedSourceArticle(input.sourceUrl);
-  if (!scraped) {
+  if (!scraped || !validateArticleHtml(scraped.html).ok) {
     return { html: formatNewsHtml(current), image: null as string | null, enriched: false, words: currentWords };
   }
 

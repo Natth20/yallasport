@@ -545,6 +545,14 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
     const counts = new Map(teamLinkGroups.map((row) => [row.entityId, row._count._all]));
     teamsInNews = teams
       .map((team) => ({ ...team, count: counts.get(team.id) ?? 0 }))
+      .filter((team) => {
+        const label = team.name.trim();
+        if (!label) return false;
+        if (/^TB\s*\d+/i.test(label)) return false;
+        if (/^[A-Z0-9._-]{1,6}$/.test(label)) return false;
+        if (/^\d+$/.test(label)) return false;
+        return Boolean(team.slug && !/^[0-9]+$/.test(team.slug));
+      })
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
   }

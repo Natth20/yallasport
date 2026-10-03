@@ -121,7 +121,7 @@ export async function linkedEntitiesForNews(newsIds: string[], locale: string) {
   if (newsIds.length === 0) return result;
 
   const links = await prisma.newsEntityLink.findMany({
-    where: { newsId: { in: newsIds }, confirmed: true },
+    where: { newsId: { in: newsIds } },
     orderBy: { createdAt: 'asc' },
   });
   if (links.length === 0) return result;

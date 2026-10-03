@@ -22,7 +22,7 @@ export const revalidate = 120;
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ p1?: string; p2?: string }>;
+  searchParams: Promise<{ p1?: string; p2?: string; season?: string }>;
 }): Promise<Metadata> {
   const locale = await getLocale();
   const fallback = pageMetadata({
@@ -36,7 +36,7 @@ export async function generateMetadata({
     path: '/compare-players',
   });
   try {
-    const { p1, p2 } = await searchParams;
+    const { p1, p2, season } = await searchParams;
     const [a, b] = await Promise.all([
       p1 ? prisma.player.findUnique({ where: { slug: p1 }, select: { name: true } }) : null,
       p2 ? prisma.player.findUnique({ where: { slug: p2 }, select: { name: true } }) : null,
@@ -44,13 +44,19 @@ export async function generateMetadata({
     const [left, right] = [p1, p2].filter(Boolean).sort();
     const title =
       a && b
-        ? `${localizePlainName(locale, a.name)} × ${localizePlainName(locale, b.name)}`
+        ? pick(
+          locale,
+          `${localizePlainName(locale, a.name)} ضد ${localizePlainName(locale, b.name)} – مقارنة الإحصائيات`,
+          `${localizePlainName(locale, a.name)} vs ${localizePlainName(locale, b.name)} – stats comparison`,
+        )
         : pick(locale, 'مقارنة اللاعبين', 'Player comparison');
     return pageMetadata({
       locale,
       title,
       description: fallback.description as string,
-      path: left && right ? `/compare-players?p1=${left}&p2=${right}` : '/compare-players',
+      path: left && right
+        ? `/compare-players?p1=${left}&p2=${right}${season ? `&season=${season}` : ''}`
+        : '/compare-players',
     });
   } catch {
     return fallback;
@@ -85,7 +91,8 @@ function Portrait({
         )}
       </div>
       <Link href={`/player/${card.slug}`} className={folio.name}>
-        {name}
+        <span className={folio.nameText}>{name}</span>
+        {locale === 'ar' && card.name && card.name !== name ? <em className={folio.meta}>{card.name}</em> : null}
       </Link>
       {team && card.club?.slug ? (
         <Link href={`/team/${card.club.slug}`} className={folio.team}>
@@ -97,7 +104,7 @@ function Portrait({
       {meta ? <span className={folio.meta}>{meta}</span> : null}
       {card.competitions[0] ? (
         <span className={folio.comp}>
-          {localizePlainName(locale, card.competitions[0])}
+          {localizePlainName(locale, card.competitions[0].name)}
           {card.season ? ` · ${card.season}/${card.season + 1}` : ''}
         </span>
       ) : null}
@@ -106,7 +113,7 @@ function Portrait({
 }
 
 export default function PlayerComparisonPage(props: {
-  searchParams: Promise<{ p1?: string; p2?: string; season?: string }>;
+  searchParams: Promise<{ p1?: string; p2?: string; season?: string; comp?: string }>;
 }) {
   return (
     <Suspense fallback={<FrontSkeleton kind="hero" />}>
@@ -118,10 +125,10 @@ export default function PlayerComparisonPage(props: {
 async function PlayerComparisonPageBody({
   searchParams,
 }: {
-  searchParams: Promise<{ p1?: string; p2?: string; season?: string }>;
+  searchParams: Promise<{ p1?: string; p2?: string; season?: string; comp?: string }>;
 }) {
   const locale = await getLocale();
-  const { p1: slug1, p2: slug2, season: seasonParam } = await searchParams;
+  const { p1: slug1, p2: slug2, season: seasonParam, comp: competitionId } = await searchParams;
   const current = currentFootballSeason();
   const seasonYear = Number.parseInt(seasonParam || '', 10);
   const pinned = Number.isFinite(seasonYear);
@@ -148,24 +155,20 @@ async function PlayerComparisonPageBody({
       <SalonStage
         tone="booth"
         wide
-        kicker={pick(locale, 'مكتب المقارنة', 'Compare desk')}
+        kicker={pick(locale, 'مقارنة الإحصائيات', 'Stats comparison')}
         title={pick(locale, 'مقارنة اللاعبين', 'Compare players')}
         lead={pick(
           locale,
-          'ابحث عن أي لاعب من المصدر. الأرقام من إحصائيات الموسم، مو أصفار مخترعة.',
-          'Pick two players. Figures are this season’s source stats — not invented zeros.',
+          'ابحث عن لاعبين، حدّد الموسم والبطولة، وقارن الأرقام القادمة من المصدر فقط.',
+          'Search two players, pick a season and competition, and compare figures from the source only.',
         )}
       >
         {same ? (
-          <p className={folio.warn}>{pick(locale, 'اختَر لاعبين مختلفين.', 'Pick two different players.')}</p>
+          <p className={folio.warn}>{pick(locale, 'اختر لاعبين مختلفين للمقارنة.', 'Choose two different players to compare.')}</p>
+        ) : slug1 || slug2 ? (
+          <p className={folio.hint}>{pick(locale, 'اختر اللاعب الثاني.', 'Choose the second player.')}</p>
         ) : (
-          <p className={folio.hint}>
-            {pick(
-              locale,
-              'اكتب حرفين من الاسم. النتائج تطلع من الدفتر أولاً، وبعدين من المصدر إن لزم.',
-              'Type two letters. The desk answers first; the source is asked only if the ledger is thin.',
-            )}
-          </p>
+          <p className={folio.hint}>{pick(locale, 'اختر لاعبين لبدء المقارنة.', 'Choose two players to start the comparison.')}</p>
         )}
         <PlayerComparePicker
           locale={locale}
@@ -184,7 +187,7 @@ async function PlayerComparisonPageBody({
         />
         {faces.length >= 2 ? (
           <div className={folio.suggest}>
-            <p>{pick(locale, 'وجوه من الدفتر', 'Faces on the desk')}</p>
+            <p>{pick(locale, 'لاعبون مقترحون', 'Suggested players')}</p>
             <div className={folio.suggestGrid}>
               {Array.from({ length: Math.min(3, Math.floor(faces.length / 2)) }, (_, index) => {
                 const face = faces[index * 2];
@@ -217,8 +220,8 @@ async function PlayerComparisonPageBody({
   }
 
   const [left, right] = await Promise.all([
-    loadPlayerCompareCard(slug1, pinned ? season : undefined),
-    loadPlayerCompareCard(slug2, pinned ? season : undefined),
+    loadPlayerCompareCard(slug1, pinned ? season : undefined, competitionId),
+    loadPlayerCompareCard(slug2, pinned ? season : undefined, competitionId),
   ]);
   if (!left || !right) notFound();
 
@@ -229,17 +232,22 @@ async function PlayerComparisonPageBody({
   const picked1 = { name: localizePlainName(locale, left.name), slug: left.slug, photoUrl: left.photoUrl };
   const picked2 = { name: localizePlainName(locale, right.name), slug: right.slug, photoUrl: right.photoUrl };
   const seasons = [current, current - 1, current - 2];
+  const competitions = [...left.competitions, ...right.competitions].filter(
+    (row, index, list) => list.findIndex((item) => item.id === row.id) === index,
+  );
+  const compareQs = (year: number, comp = competitionId) =>
+    `/compare-players?p1=${encodeURIComponent(slug1)}&p2=${encodeURIComponent(slug2)}&season=${year}${comp && comp !== 'all' ? `&comp=${encodeURIComponent(comp)}` : ''}`;
 
   return (
     <SalonStage
       tone="booth"
       wide
-      kicker={pick(locale, 'مكتب المقارنة', 'Compare desk')}
+      kicker={pick(locale, 'مقارنة الإحصائيات', 'Stats comparison')}
       title={`${picked1.name} × ${picked2.name}`}
       lead={pick(
         locale,
-        `موسم ${seasonNote}/${seasonNote + 1} من المصدر. الشَرطة تعني أن الرقم ما وصل، مش صفر.`,
-        `${seasonNote}/${seasonNote + 1} season from the source. A dash means the figure did not arrive — not a fake zero.`,
+        `موسم ${seasonNote}/${seasonNote + 1} من المصدر. الشرطة تعني أن الرقم غير متوفر، وليست صفراً.`,
+        `${seasonNote}/${seasonNote + 1} season from the source. A dash means the figure is unavailable — not a zero.`,
       )}
       tools={
         <div className="salon-foyer">
@@ -247,13 +255,29 @@ async function PlayerComparisonPageBody({
             {seasons.map((year) => (
               <Link
                 key={year}
-                href={`/compare-players?p1=${encodeURIComponent(slug1)}&p2=${encodeURIComponent(slug2)}&season=${year}`}
+                href={compareQs(year)}
                 className={`salon-tab${year === shownSeason ? ' is-on' : ''}`}
               >
-                {year}/{year + 1}
+                {year}/{String(year + 1).slice(-2)}
               </Link>
             ))}
           </nav>
+          {competitions.length > 0 ? (
+            <nav className="salon-tabs" aria-label={pick(locale, 'البطولة', 'Competition')}>
+              <Link href={compareQs(shownSeason, 'all')} className={`salon-tab${!competitionId || competitionId === 'all' ? ' is-on' : ''}`}>
+                {pick(locale, 'جميع البطولات', 'All competitions')}
+              </Link>
+              {competitions.slice(0, 8).map((row) => (
+                <Link
+                  key={row.id}
+                  href={compareQs(shownSeason, row.id)}
+                  className={`salon-tab${competitionId === row.id ? ' is-on' : ''}`}
+                >
+                  {localizePlainName(locale, row.name)}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </div>
       }
     >

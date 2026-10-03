@@ -13,19 +13,19 @@ export function PhotoBrief({
 }) {
   const cells = [
     {
-      dt: pick(locale, 'إطارات معتمدة', 'Approved prints'),
+      dt: pick(locale, 'صور من التقارير', 'Report photos'),
       dd: String(frames),
       icon: Camera,
       hint: pick(locale, 'من التقارير المنشورة', 'From published reports'),
     },
     {
-      dt: pick(locale, 'وكالات ومصادر', 'Agencies'),
+      dt: pick(locale, 'المصادر', 'Sources'),
       dd: String(sources),
       icon: Layers,
       hint: pick(locale, 'كما وصلت على المكتب', 'As filed on the desk'),
     },
     {
-      dt: pick(locale, 'جدار القاعة', 'Hall wall'),
+      dt: pick(locale, 'عدد الصور', 'Photos'),
       dd: String(frames),
       icon: LayoutGrid,
       hint: pick(locale, 'شبكة واحدة مرتّبة', 'One ordered grid'),
@@ -33,13 +33,13 @@ export function PhotoBrief({
   ];
 
   return (
-    <aside className={styles['yt-brief']} aria-label={pick(locale, 'ملخص قاعة الصور', 'Photo salon brief')}>
+    <aside className={styles['yt-brief']} aria-label={pick(locale, 'ملخص الصور', 'Photos brief')}>
       <div className={styles['yt-brief-header']}>
         <div className={styles['yt-brief-sync']}>
           <span className={styles['yt-sync-dot']} aria-hidden />
           <Radio size={14} className={styles['yt-sync-icon']} aria-hidden />
           <span className={styles['yt-sync-label']}>
-            {pick(locale, 'الإطارات من التقارير المعتمدة فقط', 'Frames come from approved reports only')}
+            {pick(locale, 'الصور من التقارير المنشورة فقط', 'Photos come from published reports only')}
           </span>
         </div>
       </div>

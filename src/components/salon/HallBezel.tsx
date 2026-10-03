@@ -3,9 +3,11 @@ import styles from './entity-hall.module.css';
 export function HallBezel({
   label,
   clock,
+  mark,
 }: {
   label: string;
-  clock: string;
+  clock?: string | null;
+  mark?: string | null;
 }) {
   return (
     <div className={styles.bezel}>
@@ -17,10 +19,12 @@ export function HallBezel({
         </span>
         <span>{label}</span>
       </div>
-      <div className={styles.bezelRight}>
-        <span className={styles.hd}>HD</span>
-        <span className={styles.clock}>{clock}</span>
-      </div>
+      {(mark || clock) ? (
+        <div className={styles.bezelRight}>
+          {mark ? <span className={styles.hd}>{mark}</span> : null}
+          {clock ? <span className={styles.clock}>{clock}</span> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

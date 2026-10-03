@@ -111,8 +111,8 @@ async function TeamPageBody({ params }: { params: Promise<{ slug: string }> }) {
         title={localizePlainName(locale, dossier.team.name)}
         lead={pick(
           locale,
-          'الشعار على المسرح، والمواعيد في قائمة العرض، والقائمة والجدول على الجدران — من المصدر فقط.',
-          'The crest sits on the stage, the fixtures sit in the programme, and the squad and table sit on the walls — from the source only.',
+          'ملف النادي من المصدر: المباريات والقائمة والترتيب دون أرقام مخترعة.',
+          'Club file from the source: fixtures, squad, and table — no invented numbers.',
         )}
         aside={dossier.team.country ? localizePlainName(locale, dossier.team.country) : pick(locale, 'من المصدر', 'From source')}
         tools={

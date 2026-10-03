@@ -142,8 +142,8 @@ export function CoachDossier({ locale, dossier }: { locale: string; dossier: Coa
         <section className={styles.screen}>
           <div className={styles.chassis}>
             <HallBezel
-              label={pick(locale, 'صالة المدرب', 'Coach salon')}
-              clock={career.length ? `${folio(active)} / ${folio(career.length)}` : 'PRO TACTICS'}
+              label={pick(locale, 'المدرب', 'Coach')}
+              clock={career.length ? `${folio(active)} / ${folio(career.length)}` : pick(locale, 'ملف', 'File')}
             />
             <div className={styles.frame}>
               {/* VIP Coach Stage */}
@@ -234,7 +234,7 @@ export function CoachDossier({ locale, dossier }: { locale: string; dossier: Coa
           <aside className={styles.queue} aria-label={pick(locale, 'المسيرة والمحطات', 'Career stints')}>
             <header className={styles.queueHead}>
               <div>
-                <p>{pick(locale, 'الآن على الصالة', 'On the easel')}</p>
+                <p>{pick(locale, 'لاعبو الفريق', 'Squad')}</p>
                 <h3>{pick(locale, 'قائمة المحطات', 'Career Stints')}</h3>
               </div>
               <span className={styles.shelfBadge}>{folio(career.length)}</span>
@@ -317,7 +317,7 @@ export function CoachDossier({ locale, dossier }: { locale: string; dossier: Coa
                 <Users size={18} aria-hidden />
               </div>
               <div>
-                <h3>{pick(locale, 'جدار قائمة لاعبي الفريق', 'Team Squad Wall')}</h3>
+                <h3>{pick(locale, 'قائمة لاعبي الفريق', 'Team squad')}</h3>
                 <p>{pick(locale, 'قائمة اللاعبين تحت قيادة المدرب مع صورهم ومراكزهم.', 'Players under the coach with positions and portraits.')}</p>
               </div>
             </div>
@@ -350,7 +350,7 @@ export function CoachDossier({ locale, dossier }: { locale: string; dossier: Coa
                 <Calendar size={18} aria-hidden />
               </div>
               <div>
-                <h3>{pick(locale, 'جدار مواعيد ونتائج الفريق', 'Fixtures & Results Wall')}</h3>
+                <h3>{pick(locale, 'مواعيد ونتائج الفريق', 'Fixtures and results')}</h3>
                 <p>{pick(locale, 'المباريات القادمة والنتائج الأخيرة للنادي.', 'Recent outcomes and upcoming matches for the club.')}</p>
               </div>
             </div>

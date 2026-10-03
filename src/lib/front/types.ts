@@ -45,6 +45,7 @@ export type FrontStandingRow = {
   lost: number;
   goalsFor: number;
   goalsAgainst: number;
+  goalDiff?: number;
   points: number;
   zone: string | null;
   team: FrontCrest;

@@ -8,7 +8,8 @@ import { pick } from '@/i18n/pick';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
-import { walkLocalizeNames, localizePlainName } from '@/lib/i18n/sports-lexicon';
+import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
+import { formatLeagueSeason, localizeCompetitionTitle } from '@/lib/i18n/competition-names';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { auth } from '@/lib/auth/auth';
@@ -24,11 +25,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = await getLocale();
   const { slug } = await params;
-  const league = await prisma.league.findUnique({
-    where: { slug },
-    select: { name: true, country: true, logoUrl: true },
-  });
-  if (!league) {
+  const dossier = await loadLeagueDossier(slug);
+  if (!dossier) {
     return pageMetadata({
       locale,
       title: pick(locale, 'البطولة', 'League'),
@@ -37,12 +35,24 @@ export async function generateMetadata({
       noIndex: true,
     });
   }
+  const name = localizeCompetitionTitle(locale, dossier.league);
+  const season = formatLeagueSeason(dossier.seasonId);
+  const seasonBit = season ? ` ${season}` : '';
   return pageMetadata({
     locale,
-    title: localizePlainName(locale, league.name),
-    description: `${pick(locale, 'ملف', 'Profile for')} ${league.name}${league.country ? ` ${pick(locale, 'من', 'from')} ${league.country}` : ''} — ${pick(locale, 'الجدول، الترتيب، الأخبار والمباريات من مصدر البيانات الحقيقي.', 'schedule, standings, news and matches from the real data source.')}`,
+    title: pick(
+      locale,
+      `${name}${seasonBit} | المباريات والترتيب والهدافون | يلا سبورت`,
+      `${name}${seasonBit} | fixtures, table and scorers | Yalla Sport`
+    ),
+    description: pick(
+      locale,
+      `تابع ${name}${seasonBit}: مباريات البطولة، النتائج، جدول الترتيب، والهدافين عبر يلا سبورت من مصدر البيانات المعتمد.`,
+      `Follow ${name}${seasonBit}: fixtures, results, the league table and top scorers on Yalla Sport from the official data source.`
+    ),
     path: `/league/${slug}`,
-    images: [league.logoUrl],
+    images: [dossier.league.logoUrl],
+    absolute: true,
   });
 }
 
@@ -88,30 +98,48 @@ async function LeaguePageBody({
       <JsonLd
         data={{
           '@context': 'https://schema.org',
-          '@type': 'SportsOrganization',
-          name: dossier.league.name,
-          logo: dossier.league.logoUrl,
-          sport: 'Soccer',
+          '@graph': [
+            {
+              '@type': 'SportsOrganization',
+              name: localizeCompetitionTitle(locale, dossier.league),
+              logo: dossier.league.logoUrl,
+              sport: 'Soccer',
+            },
+            ...(dossier.spotlight
+              ? [
+                {
+                  '@type': 'SportsEvent',
+                  name: `${dossier.spotlight.homeTeam.name} × ${dossier.spotlight.awayTeam.name}`,
+                  startDate: dossier.spotlight.kickoffAt.toISOString(),
+                  sport: 'Soccer',
+                  competitor: [
+                    { '@type': 'SportsTeam', name: dossier.spotlight.homeTeam.name },
+                    { '@type': 'SportsTeam', name: dossier.spotlight.awayTeam.name },
+                  ],
+                },
+              ]
+              : []),
+          ],
         }}
       />
       <SalonStage
         tone="sash"
         wide
         compact
-        kicker={pick(locale, 'وشاح البطولة', 'Competition sash')}
-        title={localizePlainName(locale, dossier.league.name)}
+        kicker={pick(locale, 'البطولة', 'Competition')}
+        title={localizeCompetitionTitle(locale, dossier.league)}
         lead={pick(
           locale,
-          'الشاشة للمباراة المختارة، والقائمة للجولة، والجدران للترتيب والأندية والأرقام من المصدر فقط.',
-          'The screen holds the selected fixture, the programme holds the round, and the walls hold the table, clubs and numbers from the source only.',
+          'نظرة عامة على المباريات والترتيب والهدافين والأندية من المصدر فقط — بلا أرقام مخمّنة.',
+          'Overview of matches, the table, scorers and clubs from the source only — no invented figures.',
         )}
-        aside={dossier.seasonId || dossier.league.country || undefined}
+        aside={formatLeagueSeason(dossier.seasonId) || undefined}
         tools={
           <HallFoyer
-            label={pick(locale, 'فصول البطولة', 'Competition chapters')}
+            label={pick(locale, 'أقسام البطولة', 'Competition sections')}
             items={[
-              { href: `/league/${dossier.league.slug}`, label: pick(locale, 'الملف', 'Hub'), icon: CalendarDays, current: true },
-              { href: `/league/${dossier.league.slug}/fixtures`, label: pick(locale, 'الجدول', 'Fixtures'), icon: Calendar },
+              { href: `/league/${dossier.league.slug}`, label: pick(locale, 'نظرة عامة', 'Overview'), icon: CalendarDays, current: true },
+              { href: `/league/${dossier.league.slug}/fixtures`, label: pick(locale, 'المباريات', 'Matches'), icon: Calendar },
               { href: `/league/${dossier.league.slug}/standings`, label: pick(locale, 'الترتيب', 'Table'), icon: Trophy },
               { href: `/league/${dossier.league.slug}/top-scorers`, label: pick(locale, 'الهدافون', 'Scorers'), icon: Target },
               { href: `/league/${dossier.league.slug}/archive`, label: pick(locale, 'الأرشيف', 'Archive'), icon: History },

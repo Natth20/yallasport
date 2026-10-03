@@ -36,6 +36,8 @@ function frontSportKeys() {
     `front:board:${todayKey}:v4`,
     `front:tv:${todayKey}:v2`,
     `front:tables:${season}:v3`,
+    `front:tables:${season}:v4`,
+    `front:tables:${season}:v5`,
     `front:squads:${season}:v3`,
     'front:scorers:7d:v3',
     'front:predict:v3',

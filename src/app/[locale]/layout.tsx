@@ -18,6 +18,7 @@ import { PageShell } from "@/components/motion/PageMotion";
 import { routing } from "@/i18n/routing";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { SiteAd } from "@/components/ads/SiteAd";
 import { gaMeasurementId } from "@/lib/analytics/config";
 import {
   CONTACT_EMAIL,
@@ -178,9 +179,11 @@ export default async function RootLayout({
               <SettingsProvider>
                 <LiveStatusProvider>
                   <Header desk={<StaffDoor className={headerStyles.staffButton} />} />
+                  <SiteAd placement="header-banner" locale={locale} />
                   <main className="flex-grow">
                     <PageShell>{children}</PageShell>
                   </main>
+                  <SiteAd placement="footer-banner" locale={locale} />
                   <Footer />
                   <CookieConsent analyticsEnabled={Boolean(gaMeasurementId())} />
                   <GoogleAnalytics measurementId={gaMeasurementId()} />

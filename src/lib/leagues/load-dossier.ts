@@ -1,10 +1,12 @@
 import { reportCaughtError } from '@/lib/ops/caught';
-import type { NormalizedMatch, NormalizedStanding } from '@/lib/sports-data/types';
+import type { NormalizedMatch } from '@/lib/sports-data/types';
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { sportsData } from '@/lib/sports-data';
 import { liveKickoffFloor } from '@/lib/sports-data/match-window';
+import { persistLeagueStandings } from '@/lib/sports-data/standings-persist';
+import { currentFootballSeason } from '@/lib/sports-data/season';
 
 async function soft<T>(run: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -16,9 +18,7 @@ async function soft<T>(run: () => Promise<T>, fallback: T): Promise<T> {
 }
 
 export function footballSeason(now = new Date()) {
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  return month >= 6 ? year : year - 1;
+  return currentFootballSeason(now);
 }
 
 function slugifyName(name: string) {
@@ -110,11 +110,25 @@ function mapApiFixture(row: ApiFixtureRow): NormalizedMatch {
 
 export type StandingZone = 'direct' | 'playoff' | 'out' | 'cl' | 'el' | 'rel' | null;
 
+function zoneFromDescription(raw?: string | null): StandingZone | undefined {
+  if (!raw) return undefined;
+  const text = raw.toLowerCase();
+  if (/play-?off|qualification|تصفية|ملحق/.test(text) && /champion|أبطال/.test(text)) return 'playoff';
+  if (/champion league|champions league|أبطال/.test(text)) return /league phase|دور المجموعات|دور الدوري/.test(text) && /8|top 8|الأول/i.test(text) ? 'direct' : 'cl';
+  if (/europa|conference|أوروبا|مؤتمرات/.test(text)) return 'el';
+  if (/relegat|هبوط/.test(text)) return 'rel';
+  if (/promotion - champions|تأهل.*أبطال/.test(text)) return 'direct';
+  return undefined;
+}
+
 export function standingZone(
   rank: number,
   total: number,
-  leagueName: string
+  leagueName: string,
+  description?: string | null,
 ): StandingZone {
+  const fromSource = zoneFromDescription(description);
+  if (fromSource) return fromSource;
   const ucl = /champions league/i.test(leagueName) || /دوري أبطال/i.test(leagueName);
   if (ucl && total >= 30) {
     if (rank <= 8) return 'direct';
@@ -259,6 +273,8 @@ export type LeagueDossierData = {
     current?: boolean;
     teams?: number;
   }>;
+  lastSyncedAt: Date | null;
+  provider: 'api-football' | 'database';
 };
 
 async function upsertTeamRow(input: {
@@ -325,53 +341,9 @@ async function upsertPlayerRow(input: {
 async function persistStandings(
   leagueDbId: string,
   seasonId: string,
-  rows: NormalizedStanding[]
+  rows: import('@/lib/sports-data/types').NormalizedStanding[],
 ) {
-  for (const row of rows.slice(0, 40)) {
-    const team = await upsertTeamRow({
-      externalId: row.team.externalId || row.team.id,
-      name: row.team.name,
-      slug: row.team.slug,
-      logoUrl: row.team.logoUrl,
-    });
-    if (!team) continue;
-    await soft(
-      () =>
-        prisma.standing.upsert({
-          where: {
-            leagueId_seasonId_teamId: {
-              leagueId: leagueDbId,
-              seasonId,
-              teamId: team.id,
-            },
-          },
-          update: {
-            rank: row.rank,
-            played: row.played,
-            won: row.won,
-            drawn: row.drawn,
-            lost: row.lost,
-            goalsFor: row.goalsFor,
-            goalsAgainst: row.goalsAgainst,
-            points: row.points,
-          },
-          create: {
-            leagueId: leagueDbId,
-            seasonId,
-            teamId: team.id,
-            rank: row.rank,
-            played: row.played,
-            won: row.won,
-            drawn: row.drawn,
-            lost: row.lost,
-            goalsFor: row.goalsFor,
-            goalsAgainst: row.goalsAgainst,
-            points: row.points,
-          },
-        }),
-      null
-    );
-  }
+  await persistLeagueStandings(leagueDbId, seasonId, rows);
 }
 
 async function hydrateLeagueFixtures(leagueExternalId: string, season: string) {
@@ -468,11 +440,23 @@ const matchSelect = {
   awayScore: true,
   kickoffAt: true,
   round: true,
+  seasonId: true,
+  lastSyncedAt: true,
   venue: { select: { name: true, city: true } },
   channels: { take: 4, select: { channel: { select: { name: true } } } },
   homeTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
   awayTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
 } as const;
+
+function isBroadcastName(name?: string | null) {
+  const value = (name || '').trim();
+  if (!value) return false;
+  return !/^(hd|sd|ys|n\/a|na|unknown|tbd|-)$/i.test(value);
+}
+
+function latestSeasonId(ids: string[]) {
+  return [...new Set(ids.filter(Boolean))].sort((a, b) => b.localeCompare(a, 'en', { numeric: true }))[0] || null;
+}
 
 function mapMatchCard(match: {
   id: string;
@@ -496,7 +480,9 @@ function mapMatchCard(match: {
     kickoffAt: match.kickoffAt,
     round: match.round,
     venue: match.venue,
-    channels: (match.channels ?? []).map((entry) => entry.channel),
+    channels: (match.channels ?? [])
+      .map((entry) => entry.channel)
+      .filter((channel) => isBroadcastName(channel.name)),
     homeTeam: match.homeTeam,
     awayTeam: match.awayTeam,
   };
@@ -554,15 +540,6 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
   const now = new Date();
   const seasonHint = String(footballSeason(now));
 
-  // Thin DB → hydrate from live API (real fixtures only).
-  const existingMatchCount = await soft(
-    () => prisma.match.count({ where: { leagueId: league.id } }),
-    0
-  );
-  if (isLiveSportsApi() && league.externalId && existingMatchCount < 12) {
-    await soft(() => hydrateLeagueFixtures(league.externalId, options?.season || seasonHint), 0);
-  }
-
   const seasonRows = await soft(
     () =>
       prisma.standing.findMany({
@@ -574,23 +551,43 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
       }),
     []
   );
-
-  const seasonId =
-    (options?.season && seasonRows.some((row) => row.seasonId === options.season)
-      ? options.season
-      : null) ||
-    seasonRows[0]?.seasonId ||
+  const matchSeasonRows = await soft(
+    () =>
+      prisma.match.findMany({
+        where: { leagueId: league.id },
+        distinct: ['seasonId'],
+        orderBy: { seasonId: 'desc' },
+        take: 12,
+        select: { seasonId: true },
+      }),
+    []
+  );
+  const knownSeasons = [...seasonRows, ...matchSeasonRows].map((row) => row.seasonId);
+  let seasonId =
+    (options?.season && knownSeasons.includes(options.season) ? options.season : null) ||
+    latestSeasonId(knownSeasons) ||
+    (options?.season ? options.season : null) ||
     seasonHint;
 
-  // Persist standings from API when thin.
-  const standingCount = await soft(
-    () => prisma.standing.count({ where: { leagueId: league.id, seasonId } }),
+  const existingMatchCount = await soft(
+    () => prisma.match.count({ where: { leagueId: league.id, seasonId } }),
     0
   );
-  if (isLiveSportsApi() && league.externalId && standingCount < 4) {
-    const apiRows = await soft(() => sportsData.getStandings(league.externalId, seasonId), []);
-    if (apiRows.length > 0) {
-      await persistStandings(league.id, seasonId, apiRows);
+  if (isLiveSportsApi() && league.externalId && existingMatchCount < 12) {
+    await soft(() => hydrateLeagueFixtures(league.externalId, seasonId), 0);
+  }
+
+  if (isLiveSportsApi() && league.externalId) {
+    const seasonsToTry = [options?.season, seasonId, seasonHint, String(Number(seasonHint) - 1)].filter(
+      (value, index, list): value is string => Boolean(value) && list.indexOf(value) === index,
+    );
+    for (const year of seasonsToTry) {
+      const apiRows = await soft(() => sportsData.getStandings(league.externalId, year), []);
+      if (apiRows.length > 0) {
+        await persistStandings(league.id, year, apiRows);
+        seasonId = year;
+        break;
+      }
     }
   }
 
@@ -599,7 +596,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
       soft(
         () =>
           prisma.match.findMany({
-            where: { leagueId: league.id, status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
+            where: { leagueId: league.id, seasonId, status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
             orderBy: { kickoffAt: 'asc' },
             take: 10,
             select: matchSelect,
@@ -609,7 +606,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
       soft(
         () =>
           prisma.match.findMany({
-            where: { leagueId: league.id, kickoffAt: { gte: now }, status: 'NOT_STARTED' },
+            where: { leagueId: league.id, seasonId, kickoffAt: { gte: now }, status: 'NOT_STARTED' },
             orderBy: { kickoffAt: 'asc' },
             take: 28,
             select: matchSelect,
@@ -619,7 +616,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
       soft(
         () =>
           prisma.match.findMany({
-            where: { leagueId: league.id, status: 'FINISHED' },
+            where: { leagueId: league.id, seasonId, status: 'FINISHED' },
             orderBy: { kickoffAt: 'desc' },
             take: 28,
             select: matchSelect,
@@ -631,7 +628,6 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
           prisma.standing.findMany({
             where: { leagueId: league.id, seasonId },
             orderBy: { rank: 'asc' },
-            take: 40,
             select: {
               id: true,
               rank: true,
@@ -680,7 +676,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
             where: {
               type: { in: ['GOAL', 'PENALTY'] },
               playerId: { not: null },
-              match: { leagueId: league.id },
+              match: { leagueId: league.id, seasonId },
             },
             _count: { id: true },
             orderBy: { _count: { id: 'desc' } },
@@ -695,7 +691,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
             where: {
               type: 'YELLOW_CARD',
               playerId: { not: null },
-              match: { leagueId: league.id },
+              match: { leagueId: league.id, seasonId },
             },
             _count: { id: true },
             orderBy: { _count: { id: 'desc' } },
@@ -710,7 +706,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
             where: {
               type: 'RED_CARD',
               playerId: { not: null },
-              match: { leagueId: league.id },
+              match: { leagueId: league.id, seasonId },
             },
             _count: { id: true },
             orderBy: { _count: { id: 'desc' } },
@@ -725,7 +721,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
             where: {
               type: { in: ['GOAL', 'PENALTY'] },
               assistName: { not: null },
-              match: { leagueId: league.id },
+              match: { leagueId: league.id, seasonId },
             },
             _count: { id: true },
             orderBy: { _count: { id: 'desc' } },
@@ -735,13 +731,12 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
       ),
     ]);
 
-  // If still no standings after hydrate attempt, use API in-memory.
   let standingsBase = standingRows;
-  if (standingsBase.length < 4 && isLiveSportsApi() && league.externalId) {
+  if (standingsBase.length === 0 && isLiveSportsApi() && league.externalId) {
     const apiRows = await soft(() => sportsData.getStandings(league.externalId, seasonId), []);
     if (apiRows.length > 0) {
       await persistStandings(league.id, seasonId, apiRows);
-      standingsBase = apiRows.slice(0, 36).map((row, index) => ({
+      standingsBase = apiRows.map((row, index) => ({
         id: `api-${row.team.externalId || index}`,
         rank: row.rank,
         played: row.played,
@@ -751,6 +746,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
         goalsFor: row.goalsFor,
         goalsAgainst: row.goalsAgainst,
         points: row.points,
+        description: row.description ?? null,
         team: {
           id: row.team.id,
           name: row.team.name,
@@ -789,7 +785,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
   const standings: LeagueDossierData['standings'] = standingsBase.map((row) => ({
     ...row,
     form: formByTeam.get(row.team.id) || [],
-    zone: standingZone(row.rank, totalTeams, league.name),
+    zone: standingZone(row.rank, totalTeams, league.name, 'description' in row ? (row as { description?: string | null }).description : null),
   }));
 
   const playerIds = [
@@ -808,39 +804,42 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
   const [players, teams] = await Promise.all([
     playerIds.length
       ? soft(
-          () =>
-            prisma.player.findMany({
-              where: { id: { in: playerIds } },
-              select: { id: true, name: true, slug: true, photoUrl: true, position: true },
-            }),
-          []
-        )
+        () =>
+          prisma.player.findMany({
+            where: { id: { in: playerIds } },
+            select: { id: true, name: true, slug: true, photoUrl: true, position: true },
+          }),
+        []
+      )
       : [],
     teamIds.length
       ? soft(
-          () =>
-            prisma.team.findMany({
-              where: { id: { in: teamIds } },
-              select: { id: true, name: true, slug: true, logoUrl: true },
-            }),
-          []
-        )
+        () =>
+          prisma.team.findMany({
+            where: { id: { in: teamIds } },
+            select: { id: true, name: true, slug: true, logoUrl: true },
+          }),
+        []
+      )
       : [],
   ]);
   const playerMap = new Map(players.map((p) => [p.id, p]));
   const teamMap = new Map(teams.map((t) => [t.id, t]));
 
   const standingTeamIds = new Set(standingsBase.map((row) => row.team.id));
-  let topScorers = scorerGroups
+  const mappedScorers = scorerGroups
     .map((row) => {
       if (!row.playerId) return null;
-      if (standingTeamIds.size > 0 && !standingTeamIds.has(row.teamId)) return null;
       const player = playerMap.get(row.playerId);
       const team = teamMap.get(row.teamId);
       if (!player || !team) return null;
       return { goals: row._count.id, assists: null as number | null, player, team };
     })
     .filter(Boolean) as LeagueDossierData['topScorers'];
+  const scopedScorers = standingTeamIds.size > 0
+    ? mappedScorers.filter((row) => standingTeamIds.has(row.team.id))
+    : mappedScorers;
+  let topScorers = scopedScorers.length >= 5 ? scopedScorers : mappedScorers;
 
   if (topScorers.length < 5 && league.externalId) {
     const apiScorers = await fetchApiTopScorers(league.externalId, seasonId);
@@ -934,20 +933,20 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
   const archiveSeasons: LeagueDossierData['archiveSeasons'] =
     archiveFromApi.length > 0
       ? archiveFromApi
-          .slice()
-          .sort((a, b) => b.year - a.year)
-          .slice(0, 12)
-          .map((row) => ({
-            seasonId: String(row.year),
-            start: row.start,
-            end: row.end,
-            current: row.current,
-          }))
+        .slice()
+        .sort((a, b) => b.year - a.year)
+        .slice(0, 12)
+        .map((row) => ({
+          seasonId: String(row.year),
+          start: row.start,
+          end: row.end,
+          current: row.current,
+        }))
       : seasons.map((id, index) => ({
-          seasonId: id,
-          current: index === 0,
-          teams: standings.length || undefined,
-        }));
+        seasonId: id,
+        current: index === 0,
+        teams: standings.length || undefined,
+      }));
 
   const spotlight =
     liveMatches[0] ||
@@ -980,7 +979,21 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
 
   const clubs = standings.map((row) => row.team);
 
-  const matchCount = await soft(() => prisma.match.count({ where: { leagueId: league.id } }), league._count.matches);
+  const matchCount = await soft(
+    () => prisma.match.count({ where: { leagueId: league.id, seasonId } }),
+    league._count.matches
+  );
+  const lastSyncedAt = await soft(
+    () =>
+      prisma.match
+        .findFirst({
+          where: { leagueId: league.id, seasonId },
+          orderBy: { lastSyncedAt: 'desc' },
+          select: { lastSyncedAt: true },
+        })
+        .then((row) => row?.lastSyncedAt ?? null),
+    null
+  );
 
   return {
     league: {
@@ -1008,5 +1021,7 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
     topCards,
     news,
     archiveSeasons,
+    lastSyncedAt,
+    provider: isLiveSportsApi() ? 'api-football' : 'database',
   };
 });

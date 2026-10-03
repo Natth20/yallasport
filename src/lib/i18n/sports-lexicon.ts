@@ -12,7 +12,6 @@ function key(value: string) {
 
 /** Competitions, clubs, countries, well-known players — FilGoal / beIN / Yallakora style. */
 const EN_AR: Record<string, string> = {
-  premierleague: 'الدوري الإنجليزي الممتاز',
   epl: 'الدوري الإنجليزي الممتاز',
   laliga: 'الليغا',
   laligaea: 'الليغا',
@@ -41,7 +40,6 @@ const EN_AR: Record<string, string> = {
   nileleague: 'دوري نايل',
   saudiprofessionallieague: 'دوري روشن',
   saudiproleague: 'دوري روشن',
-  proleague: 'دوري روشن',
   roshnsaudi: 'دوري روشن',
   uaeproleague: 'دوري أدنوك',
   qatarstarsleague: 'دوري نجوم قطر',
@@ -134,8 +132,12 @@ const EN_AR: Record<string, string> = {
   maldives: 'المالديف',
   azadeganleague: 'دوري آزادغان',
   premierleaguecup: 'كأس الدوري للشباب',
-  friendlies: 'ودية',
-  internationalfriendly: 'ودية',
+  friendlies: 'مباريات ودية',
+  internationalfriendly: 'مباريات دولية ودية',
+  friendlyinternational: 'مباريات دولية ودية',
+  clubfriendlies: 'مباريات ودية للأندية',
+  friendliesclubs: 'مباريات ودية للأندية',
+  clubfriendly: 'مباريات ودية للأندية',
   presidentscup: 'كأس الرئيس',
   saipa: 'سايبا',
   niroyezamini: 'نيروي زميني',
@@ -217,6 +219,59 @@ const EN_AR: Record<string, string> = {
   fcporto: 'بورتو',
   sportingcp: 'سبورتينغ لشبونة',
   sportinglisbon: 'سبورتينغ لشبونة',
+  como: 'كومو',
+  comocalcio: 'كومو',
+  aek: 'أيك أثينا',
+  aekathens: 'أيك أثينا',
+  aekathensfc: 'أيك أثينا',
+  clubbrugge: 'كلوب بروج',
+  clubbruggekv: 'كلوب بروج',
+  brugge: 'بروج',
+  clubbruggekvv: 'كلوب بروج',
+  lask: 'لاسك لينتس',
+  lasklinz: 'لاسك لينتس',
+  sabah: 'صباح',
+  sabahfa: 'صباح',
+  slaviapraha: 'سلافيا براغ',
+  skslaviaprague: 'سلافيا براغ',
+  slaviaprague: 'سلافيا براغ',
+  slavia: 'سلافيا براغ',
+  pafos: 'بافوس',
+  pafosfc: 'بافوس',
+  qarabag: 'قره باغ',
+  qarabagfk: 'قره باغ',
+  karabakh: 'قره باغ',
+  unionsaintgilloise: 'يونيون سان جيلواز',
+  unionsg: 'يونيون سان جيلواز',
+  bodoglint: 'بودو غليمت',
+  bodoglimt: 'بودو غليمت',
+  fkbg: 'بودو غليمت',
+  kairat: 'كايرات',
+  kairatalmaty: 'كايرات',
+  olympiacos: 'أولمبياكوس',
+  olympiakos: 'أولمبياكوس',
+  redstar: 'النجم الأحمر',
+  crvenazvezda: 'النجم الأحمر',
+  redstarbelgrade: 'النجم الأحمر',
+  dynamokyiv: 'دينامو كييف',
+  dynamokiev: 'دينامو كييف',
+  shakhtardonetsk: 'شاختار دونيتسك',
+  shakhtar: 'شاختار',
+  youngboys: 'يونغ بويز',
+  bscyoungboys: 'يونغ بويز',
+  talisca: 'تاليسكا',
+  andersonntalisca: 'تاليسكا',
+  ferrantorres: 'فيران توريس',
+  masongreenwood: 'ماسون غرينوود',
+  greenwood: 'غرينوود',
+  ermandinodemirovic: 'إرماندين ديميروفيتش',
+  demirovic: 'ديميروفيتش',
+  tripics: 'تريبيتش',
+  ztripic: 'تريبيتش',
+  janmickels: 'ميكلز',
+  mickels: 'ميكلز',
+  vsimic: 'سيمييتش',
+  simic: 'سيمييتش',
   galatasaray: 'غلطة سراي',
   fenerbahce: 'فنربخشة',
   besiktas: 'بشكتاش',
@@ -260,12 +315,7 @@ const EN_AR: Record<string, string> = {
   lagalaxy: 'لوس أنجلوس غالاكسي',
   celtic: 'سلتيك',
   rangers: 'رينجرز',
-  olympiakos: 'أولمبياكوس',
   panathinaikos: 'باناثينايكوس',
-  redstarbelgrade: 'النجم الأحمر',
-  crvenazvezda: 'النجم الأحمر',
-  dynamokyiv: 'دينامو كييف',
-  shakhtardonetsk: 'شاختار دونيتسك',
   riverplate: 'ريفر بليت',
   bocajuniors: 'بوكا جونيورز',
   flamengo: 'فلامنغو',
@@ -274,6 +324,10 @@ const EN_AR: Record<string, string> = {
   saopaulo: 'ساو باولو',
   england: 'إنجلترا',
   spain: 'إسبانيا',
+  world: 'عالمي',
+  luxembourg: 'لوكسمبورغ',
+  women: 'للسيدات',
+  womens: 'للسيدات',
   france: 'فرنسا',
   germany: 'ألمانيا',
   italy: 'إيطاليا',
@@ -293,6 +347,7 @@ const EN_AR: Record<string, string> = {
   uae: 'الإمارات',
   unitedarabemirates: 'الإمارات',
   japan: 'اليابان',
+  china: 'الصين',
   southkorea: 'كوريا الجنوبية',
   korea: 'كوريا الجنوبية',
   usa: 'الولايات المتحدة',
@@ -311,6 +366,17 @@ const EN_AR: Record<string, string> = {
   wales: 'ويلز',
   scotland: 'إسكتلندا',
   ireland: 'أيرلندا',
+  republicofireland: 'جمهورية أيرلندا',
+  ukraine: 'أوكرانيا',
+  finland: 'فنلندا',
+  georgia: 'جورجيا',
+  czechia: 'التشيك',
+  czechrepublic: 'التشيك',
+  papuanewguinea: 'بابوا غينيا الجديدة',
+  solomonislands: 'جزر سليمان',
+  fiji: 'فيجي',
+  newcaledonia: 'كاليدونيا الجديدة',
+  mongolia: 'منغوليا',
   senegal: 'السنغال',
   nigeria: 'نيجيريا',
   ghana: 'غانا',
@@ -480,7 +546,6 @@ const EN_AR: Record<string, string> = {
 };
 
 const TITLE: Record<string, string> = {
-  premierleague: 'Premier League',
   epl: 'Premier League',
   laliga: 'La Liga',
   laligaea: 'La Liga',
@@ -533,8 +598,10 @@ const TITLE: Record<string, string> = {
   azadeganleague: 'Azadegan League',
   premierleaguecup: 'Premier League Cup',
   friendlies: 'Friendlies',
+  internationalfriendly: 'International Friendlies',
+  clubfriendlies: 'Club Friendlies',
   presidentscup: 'Presidents Cup',
-  proleague: 'Saudi Pro League',
+  saudiproleague: 'Saudi Pro League',
   realsociedad: 'Real Sociedad',
   fcbayernmunchen: 'Bayern Munich',
   rbleipzig: 'RB Leipzig',
@@ -573,7 +640,13 @@ function titleCaseKey(enKey: string) {
   return enKey.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, (c) => c.toUpperCase());
 }
 
-const SKIP = /^(fc|sc|cf|afc|vs|v|u\d{1,2}|and|the)$/i;
+const SKIP = /^(fc|sc|cf|afc|vs|v|and|the)$/i;
+
+function ageBandSuffix(value: string) {
+  const match = value.match(/^(.*?)\s*U-?(\d{1,2})\s*$/i);
+  if (!match) return null;
+  return { base: match[1].trim(), years: match[2] };
+}
 
 function wordsOf(value: string) {
   return value.split(/\s+/).filter(Boolean);
@@ -615,6 +688,8 @@ function localizeArabic(value: string): string {
     i += used;
   }
   const joined = out.join(' ').trim();
+  if (!joined) return value;
+  if (/[\u0600-\u06FF]/.test(joined)) return joined;
   return /[A-Za-z]/.test(joined) ? value : joined;
 }
 
@@ -652,11 +727,16 @@ export function localizePlainName(locale: string, raw: string | number | null | 
   const value = typeof raw === 'string' ? raw.trim() : raw == null ? '' : String(raw).trim();
   if (!value) return '';
   if (/^[0-9:'+.\-\s/%]+$/.test(value)) return value;
-  if (/^(fc|sc|cf|afc|vs|u\d{1,2})$/i.test(value)) return value;
+  if (/^(fc|sc|cf|afc|vs)$/i.test(value)) return value;
   const k = key(value);
   const arabic = /[\u0600-\u06FF]/.test(value);
   if (locale === 'ar') {
     if (arabic) return value;
+    const initial = value.match(/^[A-Z]\.\s+(.+)$/);
+    if (initial) {
+      const rest = localizeArabic(initial[1]);
+      if (rest !== initial[1] && /[\u0600-\u06FF]/.test(rest)) return rest;
+    }
     return localizeArabic(value);
   }
   if (!arabic) return value;
@@ -664,6 +744,25 @@ export function localizePlainName(locale: string, raw: string | number | null | 
   const fromEn = Object.entries(EN_AR).find(([, ar]) => key(ar) === k);
   if (fromEn) return titleCaseKey(fromEn[0]);
   return value;
+}
+
+export function localizeTeamName(locale: string, raw: string | number | null | undefined): string {
+  const value = typeof raw === 'string' ? raw.trim() : raw == null ? '' : String(raw).trim();
+  if (!value) return '';
+  const band = ageBandSuffix(value);
+  if (locale === 'ar' && band) {
+    const named = localizePlainName('ar', band.base || value);
+    return `${named} تحت ${band.years} عامًا`;
+  }
+  const cleaned = value
+    .replace(/\s+(football club|calcio|fc|cf|kv|sk|fk|nk|ac|sc|afc|cfc|fa)\s*$/i, '')
+    .replace(/^(fc|sk|fk|nk|ac|as)\s+/i, '')
+    .trim();
+  if (cleaned && cleaned !== value) {
+    const stripped = localizePlainName(locale, cleaned);
+    if (locale !== 'ar' || stripped !== cleaned) return stripped;
+  }
+  return localizePlainName(locale, value);
 }
 
 const NAME_KEYS = new Set([
@@ -691,7 +790,7 @@ export function walkLocalizeNames(locale: string, node: unknown, depth = 0) {
   const record = node as Record<string, unknown>;
   for (const [field, value] of Object.entries(record)) {
     if (typeof value === 'string' && NAME_KEYS.has(field)) {
-      record[field] = localizePlainName(locale, value);
+      record[field] = localizeTeamName(locale, value);
     } else if (value && typeof value === 'object') {
       walkLocalizeNames(locale, value, depth + 1);
     }

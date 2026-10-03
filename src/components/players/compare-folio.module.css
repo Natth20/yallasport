@@ -530,6 +530,20 @@
   text-decoration: none;
 }
 
+.nameText {
+  display: inline;
+}
+
+.nameText::first-letter,
+.name::first-letter,
+.faceChip::first-letter,
+.suggestBtn strong::first-letter,
+.suggestOn strong::first-letter {
+  all: unset;
+  font-size: inherit;
+  float: none;
+}
+
 .name:hover {
   color: var(--ys-orange);
   -webkit-text-fill-color: var(--ys-orange);

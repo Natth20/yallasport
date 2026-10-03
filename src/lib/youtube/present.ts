@@ -39,7 +39,7 @@ export function youtubeCopy(locale: string) {
     channel: ar ? 'القناة' : 'Channel',
     duration: ar ? 'المدة' : 'Duration',
     play: ar ? 'تشغيل' : 'Play',
-    watchOnYoutube: ar ? 'افتح على يوتيوب' : 'Watch on YouTube',
+    watchOnYoutube: ar ? 'مشاهدة على YouTube' : 'Watch on YouTube',
     embedBlocked: ar
       ? 'القناة منعت عرض هذا المقطع داخل الموقع. افتحه على يوتيوب.'
       : 'The channel blocked this clip from playing on other sites. Open it on YouTube.',

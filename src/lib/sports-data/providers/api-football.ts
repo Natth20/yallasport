@@ -1,5 +1,6 @@
 import { sportsApiFetch } from '../provider-http';
 import type { SportsDataProvider } from '../interface';
+import { mapApiFootballStandings } from '../standings-map';
 import { 
   NormalizedMatch, 
   NormalizedMatchDetail, 
@@ -57,25 +58,8 @@ interface ApiTeamStatistics {
   statistics?: Array<{ type: string; value: string | number | null }>;
 }
 
-interface ApiStanding {
-  rank: number;
-  team: ApiTeam;
-  all: {
-    played: number;
-    win: number;
-    draw: number;
-    lose: number;
-    goals: { for: number; against: number };
-  };
-  points: number;
-}
-
 interface ApiTeamResponse {
   team: ApiTeam;
-}
-
-interface ApiStandingsResponse {
-  league: { standings: ApiStanding[][] };
 }
 
 interface ApiSeason {
@@ -331,27 +315,8 @@ export class ApiFootballProvider implements SportsDataProvider {
   }
 
   async getStandings(leagueId: string, season: string): Promise<NormalizedStanding[]> {
-    const data = await this.fetch<ApiStandingsResponse>(`/standings?league=${leagueId}&season=${season}`);
-    if (!data.response || data.response.length === 0) return [];
-    
-    const standings = data.response[0].league.standings[0];
-    return standings.map((s) => ({
-      rank: s.rank,
-      team: {
-        id: String(s.team.id),
-        externalId: String(s.team.id),
-        name: s.team.name,
-        slug: s.team.name.toLowerCase().replace(/\s+/g, '-'),
-        logoUrl: s.team.logo
-      },
-      played: s.all.played,
-      won: s.all.win,
-      drawn: s.all.draw,
-      lost: s.all.lose,
-      goalsFor: s.all.goals.for,
-      goalsAgainst: s.all.goals.against,
-      points: s.points
-    }));
+    const data = await this.fetch<unknown>(`/standings?league=${leagueId}&season=${season}`);
+    return mapApiFootballStandings(data);
   }
 
   async getTopScorers(leagueId: string, season: string): Promise<NormalizedScorer[]> {

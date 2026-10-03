@@ -7,10 +7,13 @@ import { swallow } from '@/lib/ops/caught';
 import type { PhotoFrame } from '@/components/photos/PhotoHall';
 
 export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: string): Promise<PhotoFrame[]> {
-  const raw = await prisma.news
+  const imageWhere = {
+    OR: [{ featuredImage: { not: null } }, { ogImage: { not: null } }],
+  };
+  let raw = await prisma.news
     .findMany({
       where: {
-        AND: [newsVisibleWhere(locale), { featuredImage: { not: null } }],
+        AND: [newsVisibleWhere(locale), imageWhere],
       },
       orderBy: { publishedAt: 'desc' },
       take: 96,
@@ -39,6 +42,28 @@ export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: stri
         publishedAt: Date | null;
       }>),
     );
+  if (raw.length === 0) {
+    raw = await prisma.news
+      .findMany({
+        where: {
+          AND: [{ status: 'PUBLISHED', publishedAt: { not: null } }, imageWhere],
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 96,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          featuredImage: true,
+          ogImage: true,
+          sourceName: true,
+          sourceUrl: true,
+          sourceLocale: true,
+          publishedAt: true,
+        },
+      })
+      .catch(swallow('photos.list.fallback', []));
+  }
   const stories = await overlayNewsList(raw, locale).catch(swallow('photos.overlay', raw));
   const unique: Array<(typeof stories)[number] & { featuredImage: string }> = [];
   const seen = new Set<string>();

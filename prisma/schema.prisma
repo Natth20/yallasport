@@ -560,11 +560,19 @@ enum NotificationType {
 }
 
 model AdSlot {
-  id          String  @id @default(cuid())
-  placement   String
-  isActive    Boolean @default(true)
-  impressions Int     @default(0)
-  clicks      Int     @default(0)
+  id          String   @id @default(cuid())
+  placement   String   @unique
+  isActive    Boolean  @default(false)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  headline    String?
+  imageUrl    String?
+  linkUrl     String?
+  html        String?
+  adsenseSlot String?
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([isActive, placement])
 }
 
 model Show {

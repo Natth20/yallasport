@@ -9,8 +9,9 @@ import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ChapterSectionHead, LeagueChapterShell } from '@/components/leagues/LeagueChapterShell';
 import { pick } from '@/i18n/pick';
 import { loadLeagueDossier, type LeagueMatchCard } from '@/lib/leagues/load-dossier';
-import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
+import { formatLeagueSeason, localizeCompetitionTitle, localizeRoundName, roundSortKey } from '@/lib/i18n/competition-names';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 
 export const revalidate = 60;
 
@@ -21,11 +22,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = await getLocale();
   const { slug } = await params;
-  const league = await prisma.league.findUnique({
-    where: { slug },
-    select: { name: true },
-  });
-  if (!league) {
+  const dossier = await loadLeagueDossier(slug);
+  if (!dossier) {
     return pageMetadata({
       locale,
       title: pick(locale, 'مباريات البطولة', 'League fixtures'),
@@ -34,10 +32,17 @@ export async function generateMetadata({
       noIndex: true,
     });
   }
+  const name = localizeCompetitionTitle(locale, dossier.league);
+  const season = formatLeagueSeason(dossier.seasonId);
+  const seasonBit = season ? ` ${season}` : '';
   return pageMetadata({
     locale,
-    title: `${pick(locale, 'مباريات', 'Fixtures')} ${league.name}`,
-    description: `${pick(locale, 'أجندة ونتائج', 'Agenda and results for')} ${league.name} ${pick(locale, 'من مصدر البيانات الحقيقي فقط.', 'from the real data source only.')}`,
+    title: pick(locale, `مباريات ${name}${seasonBit} | يلا سبورت`, `${name}${seasonBit} fixtures | Yalla Sport`),
+    description: pick(
+      locale,
+      `أجندة ونتائج ${name}${seasonBit} من مصدر البيانات المعتمد.`,
+      `Agenda and results for ${name}${seasonBit} from the official data source.`
+    ),
     path: `/league/${slug}/fixtures`,
   });
 }
@@ -50,7 +55,7 @@ function groupByRound(matches: LeagueMatchCard[], unassigned: string) {
     list.push(match);
     map.set(key, list);
   }
-  return [...map.entries()];
+  return [...map.entries()].sort((a, b) => roundSortKey(a[0]) - roundSortKey(b[0]));
 }
 
 function FormPips({ letters }: { letters: Array<'W' | 'D' | 'L'> }) {
@@ -123,14 +128,14 @@ function MatchRow({
             }
           />
         )}
-        {match.round ? <em>{match.round}</em> : null}
+        {match.round ? <em>{localizeRoundName(locale, match.round)}</em> : null}
       </div>
 
       <div className="lch-match-duel">
         <div className={`lch-match-side is-home${homeWon ? ' is-win' : ''}${awayWon ? ' is-loss' : ''}`}>
           <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-9 w-9" />
           <div className="min-w-0">
-            <strong>{match.homeTeam.name}</strong>
+            <strong>{localizeTeamName(locale, match.homeTeam.name)}</strong>
             <div className="lch-match-sub">
               {homeRank != null ? (
                 <span>
@@ -157,7 +162,7 @@ function MatchRow({
 
         <div className={`lch-match-side is-away${awayWon ? ' is-win' : ''}${homeWon ? ' is-loss' : ''}`}>
           <div className="min-w-0">
-            <strong>{match.awayTeam.name}</strong>
+            <strong>{localizeTeamName(locale, match.awayTeam.name)}</strong>
             <div className="lch-match-sub is-away">
               {awayRank != null ? (
                 <span>
@@ -266,6 +271,7 @@ async function LeagueFixturesPageBody({
       )}
       leagueName={league.name}
       logoUrl={league.logoUrl}
+      statsLeagueId={league.externalId}
       seasonId={seasonId}
       seasons={seasons}
       seasonHref={(value) => `/league/${slug}/fixtures?season=${value}`}
@@ -286,9 +292,8 @@ async function LeagueFixturesPageBody({
         {liveMatches.length > 0 ? (
           <section className="league-plate club-rise">
             <ChapterSectionHead
-              folio="01"
               kicker={pick(locale, 'مباشر', 'Live')}
-              title={pick(locale, 'الآن على الملعب', 'On the pitch now')}
+              title={pick(locale, 'مباشرة الآن', 'Live now')}
             />
             <div className="lch-match-stack">
               {liveMatches.map((match) => (
@@ -301,15 +306,14 @@ async function LeagueFixturesPageBody({
         {upcoming.length > 0 ? (
           <section className="league-plate club-rise">
             <ChapterSectionHead
-              folio="02"
               kicker={pick(locale, 'القادمة', 'Upcoming')}
-              title={pick(locale, 'ما تبقّى على الأجندة', 'Still on the agenda')}
+              title={pick(locale, 'المباريات القادمة', 'Upcoming matches')}
               note={`${upcoming.length} ${pick(locale, 'مباراة', 'fixtures')}`}
             />
             <div className="space-y-6">
               {upcomingByRound.map(([round, matches]) => (
                 <div key={round}>
-                  <div className="lch-round-label">{round}</div>
+                  <div className="lch-round-label">{localizeRoundName(locale, round) || round}</div>
                   <div className="lch-match-stack mt-3">
                     {matches.map((match) => (
                       <MatchRow
@@ -330,9 +334,8 @@ async function LeagueFixturesPageBody({
         {tvGuide.length > 0 ? (
           <section className="league-plate club-rise">
             <ChapterSectionHead
-              folio="03"
               kicker={pick(locale, 'البث', 'Broadcast')}
-              title={pick(locale, 'دليل القنوات', 'TV guide')}
+              title={pick(locale, 'القنوات الناقلة', 'Broadcasters')}
             />
             <div className="league-tv-stack">
               {tvGuide.map((row) => (
@@ -356,14 +359,13 @@ async function LeagueFixturesPageBody({
         {recent.length > 0 ? (
           <section className="league-plate club-rise">
             <ChapterSectionHead
-              folio="04"
               kicker={pick(locale, 'النتائج', 'Results')}
-              title={pick(locale, 'آخر ما انتهى', 'Latest finished')}
+              title={pick(locale, 'النتائج', 'Results')}
             />
             <div className="space-y-6">
               {recentByRound.map(([round, matches]) => (
                 <div key={round}>
-                  <div className="lch-round-label">{round}</div>
+                  <div className="lch-round-label">{localizeRoundName(locale, round) || round}</div>
                   <div className="lch-match-stack mt-3">
                     {matches.map((match) => (
                       <MatchRow
