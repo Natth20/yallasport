@@ -347,9 +347,9 @@ export function MatchDetailTabs({
               {statisticRows.map(([label, homeVal, awayVal, suffix]) => {
                 const home = Number(homeVal);
                 const away = Number(awayVal);
-                const total = Math.max(home + away, 1);
-                const homePercent = Math.round((home / total) * 100);
-                const awayPercent = 100 - homePercent;
+                const sum = home + away;
+                const homePercent = sum > 0 ? Math.round((home / sum) * 100) : 0;
+                const awayPercent = sum > 0 ? 100 - homePercent : 0;
 
                 return (
                   <div key={String(label)} className={styles.statRow}>

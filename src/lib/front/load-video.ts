@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
 import { listYoutubeShelf } from '@/lib/youtube/ingest';
@@ -27,7 +28,7 @@ function mapClips(
   }));
 }
 
-export async function loadFrontVideo(locale: string): Promise<{ videos: FrontClip[]; reels: FrontClip[] }> {
+async function _loadFrontVideo(locale: string): Promise<{ videos: FrontClip[]; reels: FrontClip[] }> {
   const packed = await cachedJson(`front:youtube:${locale === 'en' ? 'en' : 'ar'}:v6`, 40, async () => {
     const [videos, reels] = await Promise.all([
       listYoutubeShelf('VIDEO', 36, locale).catch(swallow('front.yt.video', [])),
@@ -40,3 +41,10 @@ export async function loadFrontVideo(locale: string): Promise<{ videos: FrontCli
     reels: rotateStart(mapClips(packed.reels, locale), 7),
   };
 }
+
+const _getCachedFrontVideo = cache(_loadFrontVideo);
+
+export async function loadFrontVideo(locale: string): Promise<{ videos: FrontClip[]; reels: FrontClip[] }> {
+  return _getCachedFrontVideo(locale);
+}
+

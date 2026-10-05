@@ -6,6 +6,7 @@ import { hostFromUrl, isTrustedNewsHost, TRUSTED_NEWS_HOSTS } from '@/lib/news/t
 import { footballCoverageWhere } from '@/lib/news/football-scope';
 import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { localizeLeagueName, localizeRoundName } from '@/lib/i18n/competition-names';
+import { cache } from 'react';
 
 function trustedSourceUrlClause(): Prisma.NewsWhereInput {
   return {
@@ -123,23 +124,26 @@ export async function overlayNewsList<
   });
 }
 
+// Per-request in-memory accumulation cache for entity translations.
+// On the first call we fetch ALL TEAM/LEAGUE translations for the locale in one query,
+// then cache the entire result for the lifetime of the request (React cache).
+const _getEntityTranslationCache = cache(async (locale: string): Promise<Map<string, string>> => {
+  const rows = await prisma.entityTranslation
+    .findMany({
+      where: { status: 'APPROVED', locale },
+      select: { entityType: true, entityId: true, name: true },
+    })
+    .catch(() => [] as Array<{ entityType: string; entityId: string; name: string }>);
+  return new Map(rows.map((row) => [`${row.entityType}:${row.entityId}`, row.name]));
+});
+
 export async function localizeEntityMap(
   entities: Array<{ entityType: string; entityId: string; fallback: string }>,
   locale: string
 ) {
   const map = new Map<string, string>();
   if (entities.length === 0) return map;
-  const rows = await prisma.entityTranslation.findMany({
-    where: {
-      status: 'APPROVED',
-      locale,
-      OR: entities.map((entity) => ({
-        entityType: entity.entityType,
-        entityId: entity.entityId,
-      })),
-    },
-  });
-  const approved = new Map(rows.map((row) => [`${row.entityType}:${row.entityId}`, row.name]));
+  const approved = await _getEntityTranslationCache(locale);
   for (const entity of entities) {
     const key = `${entity.entityType}:${entity.entityId}`;
     map.set(

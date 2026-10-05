@@ -282,7 +282,12 @@ export class ApiFootballProvider implements SportsDataProvider {
         extraMinute: event.time.extra || undefined,
         playerId: event.player?.id ? String(event.player.id) : undefined,
         player: event.player?.name || undefined,
-        assistPlayer: event.assist?.name || undefined,
+        assistPlayer:
+          event.assist?.name &&
+          event.player?.name &&
+          event.assist.name.trim().toLowerCase() !== event.player.name.trim().toLowerCase()
+            ? event.assist.name.trim()
+            : undefined,
         teamId: String(event.team.id),
         detail: event.detail,
       })),

@@ -1006,20 +1006,21 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   const discipline = dayEvents
     .filter((event) => event.type === 'YELLOW_CARD' || event.type === 'RED_CARD')
     .filter((event) => Boolean(namedActor(event.playerName)))
-    .slice(0, 8)
+    .slice(0, 24)
     .map((event) => {
       const isHome =
         event.teamId === event.match.homeTeamId ||
         event.teamId === event.match.homeTeam.id ||
         event.teamId === event.match.homeTeam.externalId;
       const team = isHome ? event.match.homeTeam : event.match.awayTeam;
+      const rawPlayer = namedActor(event.playerName) as string;
       return {
         id: event.id,
         matchId: event.match.id,
-        player: namedActor(event.playerName) as string,
+        player: localizeTeamName(locale, rawPlayer),
         minute: event.extraMinute ? `${event.minute}+${event.extraMinute}` : `${event.minute}`,
         type: event.type,
-        teamName: team.name,
+        teamName: localizeTeamName(locale, team.name),
         teamLogo: team.logoUrl,
       };
     });
@@ -1610,30 +1611,44 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                       <Clock3 className="h-6 w-6 text-muted-foreground dark:text-foreground" />
                     </div>
                     <h3 className="mt-6 text-xl font-bold text-foreground dark:text-foreground">
-                      {lensesActive
-                        ? pick(locale, 'لا مباريات تحت هذه العدسة', 'No matches under this lens')
-                        : statusFilter === 'live'
-                          ? pick(locale, 'لا توجد مباريات مباشرة الآن', 'No live matches right now')
-                          : statusFilter === 'upcoming'
-                            ? pick(locale, 'لا مواعيد قادمة في هذا اليوم', 'No upcoming fixtures on this day')
-                            : statusFilter === 'finished'
-                              ? pick(locale, 'لا نتائج منتهية في هذا اليوم', 'No finished results on this day')
-                              : pick(locale, 'لا توجد مباريات في هذا اليوم', 'No matches on this day')}
+                      {favoritesOnly
+                        ? (session?.user
+                            ? pick(locale, 'لا توجد مباريات لفرقك المفضلة في هذا اليوم', 'No matches for your followed teams today')
+                            : pick(locale, 'تابع أنديتك وفرقك المفضلة', 'Follow your favorite teams'))
+                        : lensesActive
+                          ? pick(locale, 'لا مباريات تحت هذه العدسة', 'No matches under this lens')
+                          : statusFilter === 'live'
+                            ? pick(locale, 'لا توجد مباريات مباشرة الآن', 'No live matches right now')
+                            : statusFilter === 'upcoming'
+                              ? pick(locale, 'لا مواعيد قادمة في هذا اليوم', 'No upcoming fixtures on this day')
+                              : statusFilter === 'finished'
+                                ? pick(locale, 'لا نتائج منتهية في هذا اليوم', 'No finished results on this day')
+                                : pick(locale, 'لا توجد مباريات في هذا اليوم', 'No matches on this day')}
                     </h3>
                     <p className="mt-2 text-sm font-medium text-muted-foreground">
-                      {lensesActive
-                        ? pick(locale, 'امسح البطولة أو القناة أو الساعة لعرض برنامج اليوم كاملاً.', 'Clear the competition, channel or hour to show the full day.')
-                        : statusFilter === 'all'
-                          ? pick(locale, 'جرّب يوماً آخر أو امسح عبارة البحث لعرض جميع المباريات.', 'Try another day or clear the search to show all matches.')
-                          : pick(locale, 'غيّر الفلتر أو اختر يوماً آخر من شريط التواريخ.', 'Change the filter or choose another day.')}
+                      {favoritesOnly
+                        ? (session?.user
+                            ? pick(locale, 'أضف مزيداً من الفرق أو البطولات لمتابعتها هنا، أو استعرض مباريات اليوم كاملة.', 'Add more teams to follow, or view the full day schedule.')
+                            : pick(locale, 'سجل دخولك أو اختر أنديتك المفضلة لتظهر مبارياتها هنا تلقائياً.', 'Sign in or select your favorite teams to track their matches here.'))
+                        : lensesActive
+                          ? pick(locale, 'امسح البطولة أو القناة أو الساعة لعرض برنامج اليوم كاملاً.', 'Clear the competition, channel or hour to show the full day.')
+                          : statusFilter === 'all'
+                            ? pick(locale, 'جرّب يوماً آخر أو امسح عبارة البحث لعرض جميع المباريات.', 'Try another day or clear the search to show all matches.')
+                            : pick(locale, 'غيّر الفلتر أو اختر يوماً آخر من شريط التواريخ.', 'Change the filter or choose another day.')}
                     </p>
                     <Link
-                      href={lensesActive ? pageHref({ league: undefined, channel: undefined, hour: undefined }) : '/matches'}
+                      href={favoritesOnly
+                        ? (session?.user ? '/favorites' : `/login?callbackUrl=${encodeURIComponent('/matches?favorites=1')}`)
+                        : lensesActive
+                          ? pageHref({ league: undefined, channel: undefined, hour: undefined })
+                          : '/matches'}
                       className="mt-6 inline-flex rounded-xl bg-foreground px-6 py-3 text-[11px] font-bold text-white transition-colors hover:bg-orange-500 dark:bg-card dark:text-foreground"
                     >
-                      {lensesActive
-                        ? pick(locale, 'مسح العدسات', 'Clear lenses')
-                        : pick(locale, 'العودة إلى مباريات اليوم', "Back to today's matches")}
+                      {favoritesOnly
+                        ? (session?.user ? pick(locale, 'إدارة الفرق المفضلة', 'Manage favorites') : pick(locale, 'تسجيل الدخول لتتبع الفرق', 'Sign in to follow teams'))
+                        : lensesActive
+                          ? pick(locale, 'مسح العدسات', 'Clear lenses')
+                          : pick(locale, 'العودة إلى مباريات اليوم', "Back to today's matches")}
                     </Link>
                   </div>
                 )}
@@ -1642,9 +1657,6 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
               <aside className={styles.rail}>
                 <section className={styles.plate}>
                   <div className="matchday-section-kicker">
-                    <span className="matchday-folio-mark" aria-hidden>
-                      05
-                    </span>
                     <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
                       {pick(locale, 'الموعد التالي', 'Next kickoff')}
                     </span>
@@ -1723,9 +1735,6 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                 {scorers.length > 0 ? (
                   <section className={styles.plate}>
                     <div className="matchday-section-kicker">
-                      <span className="matchday-folio-mark" aria-hidden>
-                        06
-                      </span>
                       <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
                         {pick(locale, 'سجل الأهداف', 'Scoresheet')}
                       </span>
@@ -1755,9 +1764,6 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                 {discipline.length > 0 ? (
                   <section className={styles.plate}>
                     <div className="matchday-section-kicker">
-                      <span className="matchday-folio-mark" aria-hidden>
-                        07
-                      </span>
                       <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
                         {pick(locale, 'الانضباط', 'Discipline')}
                       </span>

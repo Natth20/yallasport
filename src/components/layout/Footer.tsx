@@ -64,41 +64,41 @@ export async function Footer() {
 
   const columns = [
     {
-      title: ar ? 'البطولات' : 'Leagues',
-      links:
-        leagueLinks.length > 0
-          ? leagueLinks
-          : [{ name: ar ? 'كل البطولات' : 'All leagues', href: '/leagues' }],
-    },
-    {
-      title: ar ? 'التغطية' : 'Coverage',
+      title: ar ? 'يلا سبورت' : 'Yalla Sport',
       links: [
-        { name: t('common.matches') || 'المباريات المباشرة', href: '/matches' },
-        { name: t('common.broadcasts') || 'البث المباشر والقنوات', href: '/live' },
-        { name: t('common.leagues') || 'جميع البطولات', href: '/leagues' },
-        { name: t('common.transfers') || 'سوق الانتقالات', href: '/transfers' },
-        { name: t('common.stats') || 'مركز الإحصائيات', href: '/stats' },
-        { name: t('common.club_compare') || 'مقارنة الأندية', href: '/compare' },
-      ],
-    },
-    {
-      title: ar ? 'المحتوى' : 'Stories',
-      links: [
-        { name: t('common.news') || 'أخبار كرة القدم', href: '/news' },
-        { name: t('common.video') || 'أرشيف الفيديوهات', href: '/videos' },
-        { name: t('common.photos') || 'ألبوم الصور', href: '/photos' },
-        { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
-        { name: t('footer.leaderboard') || 'لوحة الصدارة والتوقعات', href: '/leaderboard' },
-      ],
-    },
-    {
-      title: ar ? 'الموقع' : 'The site',
-      links: [
-        { name: t('footer.about') || 'عن يلا سبورت', href: '/about' },
-        { name: t('footer.connect') || 'اتصل بنا', href: '/contact' },
-        { name: t('common.report') || 'الإبلاغ عن خطأ', href: '/report' },
-        { name: t('common.settings') || 'الإعدادات', href: '/settings' },
+        { name: t('footer.about') || 'من نحن', href: '/about' },
+        { name: t('footer.connect') || 'تواصل معنا', href: '/contact' },
+        { name: t('common.report') || 'إبلاغ عن محتوى', href: '/report' },
         ...(staff ? [{ name: ar ? 'لوحة التحكم' : 'Control desk', href: '/admin' }] : []),
+      ],
+    },
+    {
+      title: ar ? 'الرياضة' : 'Sports',
+      links: [
+        { name: t('common.matches') || 'المباريات', href: '/matches' },
+        { name: t('common.leagues') || 'البطولات', href: '/leagues' },
+        { name: ar ? 'الفرق' : 'Teams', href: '/leagues' },
+        { name: ar ? 'اللاعبون' : 'Players', href: '/compare-players' },
+        { name: ar ? 'المدربون' : 'Coaches', href: '/coach' },
+      ],
+    },
+    {
+      title: ar ? 'المحتوى' : 'Content',
+      links: [
+        { name: t('common.news') || 'الأخبار', href: '/news' },
+        { name: t('common.video') || 'الفيديو', href: '/videos' },
+        { name: t('common.photos') || 'الصور', href: '/photos' },
+        { name: t('common.transfers') || 'الانتقالات', href: '/transfers' },
+        { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
+      ],
+    },
+    {
+      title: ar ? 'الحساب' : 'Account',
+      links: [
+        { name: t('common.favorites') || 'المفضلة', href: '/favorites' },
+        { name: ar ? 'تابع فريقك' : 'Follow your team', href: '/favorites' },
+        { name: ar ? 'حسابي' : 'My Account', href: '/profile' },
+        { name: t('common.settings') || 'الإعدادات', href: '/settings' },
       ],
     },
   ];
@@ -122,10 +122,7 @@ export async function Footer() {
             <span />
             <span />
           </span>
-          {ar ? 'دليل القاعة' : 'Hall directory'}
-        </span>
-        <span className={styles.bezelMeta}>
-          <span>YS</span>
+          {ar ? 'يلا سبورت — التغطية الرياضية المباشرة' : 'Yalla Sport — Live Sports Coverage'}
         </span>
       </div>
 
@@ -180,17 +177,13 @@ export async function Footer() {
                 ? `${liveNow} مباراة مباشرة الآن`
                 : `${liveNow} live matches now`
               : ar
-                ? 'لا مباريات مباشرة في هذه اللحظة'
-                : 'No live matches at this moment'}
+                ? 'متابعة مباشرة للنتائج والمباريات'
+                : 'Live scores and fixture tracking'}
           </span>
           <span className={styles.pulseChip}>
-            {todayStories > 0
-              ? ar
-                ? `${todayStories} تقرير معتمد خلال 36 ساعة`
-                : `${todayStories} approved reports in 36 hours`
-              : ar
-                ? 'غرفة الأخبار من المصدر فقط'
-                : 'News desk from the source only'}
+            {ar
+              ? 'محدث لحظياً من المصدر الحي'
+              : 'Updated in real-time from the live source'}
           </span>
           <Link href="/live" className={styles.pulseLink}>
             {ar ? 'افتح يلا سبورت مباشر' : 'Open Yalla Sport Live'}

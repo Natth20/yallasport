@@ -5,7 +5,7 @@ import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { pick } from '@/i18n/pick';
-import { localizeLeagueRegion, localizeRoundName } from '@/lib/i18n/competition-names';
+import { localizeCompetitionTitle, localizeLeagueRegion, localizeRoundName } from '@/lib/i18n/competition-names';
 import { arabicCountLabel, countLabel } from '@/lib/i18n/arabic-count';
 import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 
@@ -161,7 +161,7 @@ export function LeagueDeskCard({
 
         <div className="league-desk-identity">
           <Link href={`/league/${league.slug}`}>
-            <h3>{league.name}</h3>
+            <h3>{localizeCompetitionTitle(locale, league)}</h3>
           </Link>
           {meta.length > 0 ? <p>{meta.slice(0, 3).join(' · ')}</p> : null}
         </div>

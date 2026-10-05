@@ -19,7 +19,7 @@ export async function VideoChapter() {
   const { videos } = await loadFrontVideo(locale);
   if (videos.length === 0) return null;
 
-  const [lead, ...queue] = videos;
+  const [lead, ...queue] = videos.slice(0, 4);
 
   return (
     <section className={`${shell.band} ${styles.suite}`}>

@@ -26,6 +26,7 @@ export type FrontStory = {
   category: string;
   publishedAt: string;
   sourceName: string | null;
+  views?: number;
 };
 
 export type FrontPulse = {
@@ -75,6 +76,7 @@ export type FrontTransfer = {
   playerName: string;
   playerSlug: string;
   playerPhoto: string | null;
+  kind: string | null;
 };
 
 export type FrontClip = {

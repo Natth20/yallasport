@@ -248,6 +248,71 @@ const EN_AR: Record<string, string> = {
   fkbg: 'بودو غليمت',
   kairat: 'كايرات',
   kairatalmaty: 'كايرات',
+  arenasgetxo: 'أريناس غيتشو',
+  arenasclub: 'أريناس غيتشو',
+  arenasclubdegetxo: 'أريناس غيتشو',
+  barakaldo: 'باراكالدو',
+  barakaldocf: 'باراكالدو',
+  alwaysready: 'أولويز ريدي',
+  clubalwaysready: 'أولويز ريدي',
+  sestaoriver: 'سيستاو ريفر',
+  sestao: 'سيستاو',
+  ponferradina: 'بونفيرادينا',
+  culturalleonesa: 'كولتورال ليونيسا',
+  algeciras: 'الجزيرة الخضراء (ألخسيراس)',
+  ceuta: 'سبتة',
+  adceuta: 'سبتة',
+  nastic: 'خيمناستيك طركونة',
+  gimnastictarragona: 'خيمناستيك طركونة',
+  logrones: 'لوغرونييس',
+  udlogrones: 'لوغرونييس',
+  merida: 'ميريدا',
+  unionistas: 'يونيونيستاس سالامنكا',
+  fuenlabrada: 'فوينلابرادا',
+  rayomajadahonda: 'رايو ماخاداهوندا',
+  tarazona: 'تارازونا',
+  intercity: 'إنترسيتي',
+  antiqueraporto: 'أنتيكيرا',
+  bolivar: 'بوليفار',
+  thestrongest: 'ذا سترونغيست',
+  wilstermann: 'خورخي ويلسترمان',
+  oriente: 'أورينتي بيتروليرو',
+  blooming: 'بلومينغ',
+  nacionalpotosi: 'ناسيونال بوتوسي',
+  palmeiras: 'بالميراس',
+  flamengo: 'فلامنغو',
+  saopaulo: 'ساو باولو',
+  santos: 'سانتوس',
+  corinthians: 'كورينثيانز',
+  fluminense: 'فلومينينسي',
+  gremio: 'غريميو',
+  internacional: 'إنترناسيونال',
+  atleticomineiro: 'أتلتيكو مينيرو',
+  cruzeiro: 'كروزو',
+  bocajuniors: 'بوكا جونيورز',
+  boca: 'بوكا جونيورز',
+  riverplate: 'ريفر بليت',
+  river: 'ريفر بليت',
+  racingclub: 'راسينغ كلوب',
+  independiente: 'إنديبندينتي',
+  sanlorenzo: 'سان لورينزو',
+  velezsarsfield: 'فيليز سارسفيلد',
+  estudiantes: 'إستوديانتس',
+  lanus: 'لانوس',
+  nbiiisoutheast: 'دوري الدرجة الثالثة المجري — الجنوب الشرقي',
+  nbiiisouthwest: 'دوري الدرجة الثالثة المجري — الجنوب الغربي',
+  nbiiinortheast: 'دوري الدرجة الثالثة المجري — الشمال الشرقي',
+  nbiiinorthwest: 'دوري الدرجة الثالثة المجري — الشمال الغربي',
+  nbiii: 'دوري الدرجة الثالثة المجري',
+  nbii: 'دوري الدرجة الثانية المجري',
+  nbi: 'الدوري المجري الممتاز',
+  '1ligau19': 'دوري الدرجة الأولى تحت 19 سنة',
+  ligau19: 'دوري تحت 19 سنة',
+  u19league: 'دوري تحت 19 سنة',
+  u21league: 'دوري تحت 21 سنة',
+  orientepetrolero: 'أورينتي بيتروليرو',
+  ligau21: 'دوري الشباب U21',
+  ligau23: 'دوري تحت 23 سنة',
   olympiacos: 'أولمبياكوس',
   olympiakos: 'أولمبياكوس',
   redstar: 'النجم الأحمر',
@@ -316,12 +381,6 @@ const EN_AR: Record<string, string> = {
   celtic: 'سلتيك',
   rangers: 'رينجرز',
   panathinaikos: 'باناثينايكوس',
-  riverplate: 'ريفر بليت',
-  bocajuniors: 'بوكا جونيورز',
-  flamengo: 'فلامنغو',
-  palmeiras: 'بالميراس',
-  corinthians: 'كورنثيانز',
-  saopaulo: 'ساو باولو',
   england: 'إنجلترا',
   spain: 'إسبانيا',
   world: 'عالمي',
@@ -779,6 +838,45 @@ const NAME_KEYS = new Set([
   'label',
 ]);
 
+/** Normalize and localize raw API round/stage names (e.g., 'Group - 1 - 6', 'Regular Season - 14') */
+export function localizeRoundName(locale: string, raw?: string | null): string {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  const ar = locale === 'ar';
+
+  if (!ar) return trimmed;
+
+  // Regular Season - X
+  const regMatch = trimmed.match(/^regular[\s_-]*season[\s_-]*(\d+)$/i);
+  if (regMatch) return `الموسم الاعتيادي — الجولة ${regMatch[1]}`;
+
+  // Group - X - Y (e.g. Group - 1 - 6 => المجموعة 1 — الجولة 6)
+  const groupDuelMatch = trimmed.match(/^group[\s_-]*(\d+)[\s_-]*(\d+)$/i);
+  if (groupDuelMatch) return `المجموعة ${groupDuelMatch[1]} — الجولة ${groupDuelMatch[2]}`;
+
+  // Group Stage - X
+  const groupStageRound = trimmed.match(/^group[\s_-]*stage[\s_-]*(\d+)$/i);
+  if (groupStageRound) return `دور المجموعات — الجولة ${groupStageRound[1]}`;
+
+  // Group X (e.g. Group 1, Group 11, Group A)
+  const groupSingle = trimmed.match(/^group[\s_-]*([a-zA-Z0-9]+)$/i);
+  if (groupSingle) return `المجموعة ${groupSingle[1]}`;
+
+  // Round of 16 / 32 / 64
+  if (/^round[\s_-]*of[\s_-]*16$/i.test(trimmed)) return 'ثمن النهائي (دور الـ 16)';
+  if (/^round[\s_-]*of[\s_-]*32$/i.test(trimmed)) return 'دور الـ 32';
+  if (/^round[\s_-]*of[\s_-]*64$/i.test(trimmed)) return 'دور الـ 64';
+
+  // Quarter-finals, Semi-finals, Final
+  if (/^quarter[\s_-]*finals?$/i.test(trimmed)) return 'ربع النهائي';
+  if (/^semi[\s_-]*finals?$/i.test(trimmed)) return 'نصف النهائي';
+  if (/^finals?$/i.test(trimmed)) return 'المباراة النهائية';
+  if (/^3rd[\s_-]*place[\s_-]*playoff$/i.test(trimmed)) return 'مباراة المركز الثالث';
+
+  return localizePlainName(locale, trimmed);
+}
+
 /** Rewrite sports proper names on a loaded tree for the active locale. */
 export function walkLocalizeNames(locale: string, node: unknown, depth = 0) {
   if (!node || depth > 10) return;
@@ -796,3 +894,4 @@ export function walkLocalizeNames(locale: string, node: unknown, depth = 0) {
     }
   }
 }
+

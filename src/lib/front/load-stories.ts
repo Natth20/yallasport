@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
@@ -17,6 +18,7 @@ const newsSelect = {
   publishedAt: true,
   sourceName: true,
   sourceLocale: true,
+  views: true,
 } as const;
 
 function toStory(row: {
@@ -29,6 +31,7 @@ function toStory(row: {
   category: string;
   publishedAt: Date | string | null;
   sourceName: string | null;
+  views?: number;
 }): FrontStory {
   return {
     id: row.id,
@@ -39,10 +42,11 @@ function toStory(row: {
     category: row.category,
     publishedAt: row.publishedAt ? new Date(row.publishedAt).toISOString() : new Date(0).toISOString(),
     sourceName: row.sourceName,
+    views: row.views ?? 0,
   };
 }
 
-export async function loadFrontStories(locale: string): Promise<{
+async function _loadFrontStories(locale: string): Promise<{
   lead: FrontStory | null;
   rest: FrontStory[];
   latest: FrontStory[];
@@ -53,7 +57,7 @@ export async function loadFrontStories(locale: string): Promise<{
       .findMany({
         where: newsVisibleWhere(locale),
         orderBy: { publishedAt: 'desc' },
-        take: 48,
+        take: 64,
         select: newsSelect,
       })
       .catch(swallow('front.news', [])),
@@ -70,7 +74,18 @@ export async function loadFrontStories(locale: string): Promise<{
   return {
     lead: stories[0] ?? null,
     rest: stories.slice(1, 16),
-    latest: chronological.filter((row) => !featuredIds.has(row.id)).slice(0, 5),
+    latest: chronological.filter((row) => !featuredIds.has(row.id)).slice(0, 16),
     photos,
   };
+}
+
+const _getCachedFrontStories = cache(_loadFrontStories);
+
+export async function loadFrontStories(locale: string): Promise<{
+  lead: FrontStory | null;
+  rest: FrontStory[];
+  latest: FrontStory[];
+  photos: FrontStory[];
+}> {
+  return _getCachedFrontStories(locale);
 }

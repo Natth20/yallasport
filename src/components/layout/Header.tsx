@@ -56,33 +56,26 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
 
   const navItems: NavLink[] = [
     { name: t('common.home') || 'الرئيسية', href: '/' },
+    { name: t('common.news') || 'الأخبار', href: '/news' },
     { name: t('common.matches') || 'المباريات', href: '/matches' },
     { name: t('common.leagues') || 'البطولات', href: '/leagues' },
-    { name: t('common.news') || 'الأخبار', href: '/news' },
-    { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live', badge: '🔴' },
-    { name: t('common.video') || 'الفيديوهات', href: '/videos' },
+    { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live', badge: 'LIVE' },
+    { name: t('common.video') || 'الفيديو', href: '/videos' },
+    { name: ar ? 'الريلز' : 'Reels', href: '/videos#reels' },
   ];
 
   const moreGroups: NavGroup[] = [
     {
-      label: ar ? 'الملعب' : 'Pitch',
+      label: ar ? 'المزيد' : 'More',
       items: [
-        { name: t('common.transfers') || 'سوق الانتقالات', href: '/transfers' },
-        { name: t('common.stats') || 'مركز الإحصائيات', href: '/stats' },
-        { name: t('common.club_compare') || 'مقارنة الأندية', href: '/compare' },
+        { name: ar ? 'الفرق' : 'Teams', href: '/leagues' },
+        { name: ar ? 'اللاعبون' : 'Players', href: '/compare-players' },
+        { name: ar ? 'المدربون' : 'Coaches', href: '/coach' },
+        { name: t('common.transfers') || 'الانتقالات', href: '/transfers' },
+        { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
         { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
-      ],
-    },
-    {
-      label: ar ? 'المعرض' : 'Gallery',
-      items: [{ name: t('common.photos') || 'ألبوم الصور', href: '/photos' }],
-    },
-    {
-      label: ar ? 'المكتب' : 'Desk',
-      items: [
-        { name: t('common.favorites') || 'المفضلة', href: '/favorites' },
-        { name: t('footer.leaderboard') || 'لوحة الصدارة', href: '/leaderboard' },
-        { name: t('common.settings') || 'الإعدادات', href: '/settings' },
+        { name: t('common.club_compare') || 'مقارنة الأندية', href: '/compare' },
+        { name: t('common.photos') || 'الصور', href: '/photos' },
       ],
     },
   ];
@@ -144,16 +137,15 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
                 const active = isActive(item.href);
                 return (
                   <Link
-                    key={item.href}
+                    key={`nav-${item.href}`}
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={`${styles.navItem} ${active ? styles.active : ''}`}
                   >
                     <span>{item.name}</span>
                     {item.badge ? (
-                      <span className={styles.livePill}>
+                      <span className={styles.liveBadge} title="مباشر">
                         <span className={styles.liveDot} aria-hidden />
-                        {item.badge}
                       </span>
                     ) : null}
                   </Link>
@@ -172,7 +164,7 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
                     <DropdownGroup key={group.label} label={group.label}>
                       {group.items.map((item) => (
                         <DropdownLink
-                          key={item.href}
+                          key={`${item.name}-${item.href}`}
                           href={item.href}
                           className={isActive(item.href) ? styles.moreActive : undefined}
                         >
@@ -216,6 +208,37 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
               </button>
             </div>
           </div>
+
+          {/* Mobile & iPad Quick Navigation Strip */}
+          <nav className={styles.mobileNavStrip} aria-label={t('navigation.main') || 'القائمة الرئيسية'}>
+            <div className={styles.mobileNavScroll}>
+              {navItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={`mob-nav-${item.href}`}
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`${styles.mobileNavItem} ${active ? styles.mobileNavActive : ''}`}
+                  >
+                    <span>{item.name}</span>
+                    {item.badge ? (
+                      <span className={styles.liveBadge} title="مباشر">
+                        <span className={styles.liveDot} aria-hidden />
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(true)}
+                className={styles.mobileNavItem}
+              >
+                <span>{ar ? 'المزيد' : 'More'}</span>
+              </button>
+            </div>
+          </nav>
         </header>
       </div>
 

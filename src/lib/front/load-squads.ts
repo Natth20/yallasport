@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
@@ -6,7 +7,7 @@ import { currentFootballSeason } from '@/lib/sports-data/season';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import type { FrontCrest } from './types';
 
-export async function loadFrontSquads(locale: string): Promise<{
+async function _loadFrontSquads(locale: string): Promise<{
   leagues: FrontCrest[];
   clubs: FrontCrest[];
   players: Array<FrontCrest & { photoUrl: string | null }>;
@@ -111,6 +112,17 @@ export async function loadFrontSquads(locale: string): Promise<{
     players: packed.players.map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
   };
 }
+
+const _getCachedFrontSquads = cache(_loadFrontSquads);
+
+export async function loadFrontSquads(locale: string): Promise<{
+  leagues: FrontCrest[];
+  clubs: FrontCrest[];
+  players: Array<FrontCrest & { photoUrl: string | null }>;
+}> {
+  return _getCachedFrontSquads(locale);
+}
+
 
 function playerWeight(row: { photoUrl: string | null; position: string | null }) {
   const position = (row.position || '').toUpperCase();

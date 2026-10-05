@@ -311,6 +311,15 @@
   min-width: 0;
 }
 
+.nk-queue-copy em {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  color: var(--ys-orange);
+}
+
 .nk-queue-copy b {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -323,9 +332,56 @@
 
 .nk-queue-copy small {
   display: block;
-  margin-top: 0.2rem;
-  font-size: 0.68rem;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
   color: var(--muted-foreground);
+}
+
+@media (max-width: 719px) {
+  .nk-queue {
+    padding: 0.85rem 0.75rem 1rem;
+  }
+
+  .nk-queue-list {
+    gap: 0.85rem;
+  }
+
+  .nk-queue-item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+  }
+
+  .nk-queue-num {
+    display: none;
+  }
+
+  .nk-queue-thumb {
+    aspect-ratio: 16 / 9;
+    border-radius: 0;
+  }
+
+  .nk-queue-copy {
+    padding: 0.85rem 0.95rem 1rem;
+  }
+
+  .nk-queue-copy em {
+    font-size: 0.72rem;
+  }
+
+  .nk-queue-copy b {
+    -webkit-line-clamp: 3;
+    font-size: 1.05rem;
+    line-height: 1.45;
+  }
+
+  .nk-queue-copy small {
+    font-size: 0.78rem;
+  }
 }
 
 .nk-wall {
@@ -370,8 +426,14 @@
 
 .nk-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .nk-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 860px) {

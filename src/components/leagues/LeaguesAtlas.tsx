@@ -605,7 +605,7 @@ export function LeaguesAtlas({
                     <LeagueCrest name={league.name} logoUrl={league.logoUrl} className="h-full w-full" />
                   </div>
                   <div className="min-w-0">
-                    <strong className="block truncate text-[11px] text-foreground dark:text-foreground">{league.name}</strong>
+                    <strong className="block truncate text-[11px] text-foreground dark:text-foreground">{leagueLabel(locale, league)}</strong>
                     <span className="text-[9px] text-muted-foreground">{league.liveMatch ? pick(locale, 'مباشر', 'Live') : countryLabel(locale, league.country)}</span>
                   </div>
                   {league.liveMatch && <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-rose-500" />}

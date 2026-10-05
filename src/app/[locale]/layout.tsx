@@ -15,6 +15,7 @@ import { PWAInstallPrompt } from "@/components/layout/PWAInstallPrompt";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { LiveStatusProvider } from "@/lib/context/LiveStatusContext";
 import { PageShell } from "@/components/motion/PageMotion";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { routing } from "@/i18n/routing";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
@@ -180,6 +181,7 @@ export default async function RootLayout({
                 <LiveStatusProvider>
                   <Header desk={<StaffDoor className={headerStyles.staffButton} />} />
                   <SiteAd placement="header-banner" locale={locale} />
+                  <ScrollToTop />
                   <main className="flex-grow">
                     <PageShell>{children}</PageShell>
                   </main>

@@ -43,7 +43,7 @@ export function NewsCover({
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-        
+
         {/* Floating Brand Badge */}
         <span className="absolute top-4 start-4 flex h-8 items-center gap-1.5 rounded-full border border-white/15 bg-black/50 px-3 text-[11px] font-black uppercase tracking-wider text-white backdrop-blur-md">
           <Sparkles className="h-3 w-3 text-primary" />
@@ -187,9 +187,9 @@ export function NewsLogRow({
   return (
     <Link
       href={`/news/${story.slug}`}
-      className="group grid grid-cols-[5.5rem_1fr] gap-3.5 rounded-2xl border border-border/60 bg-card/40 p-3 transition-all duration-200 hover:border-primary/40 hover:bg-card/70"
+      className="group grid grid-cols-1 gap-0 overflow-hidden rounded-2xl border border-border/60 bg-card/40 transition-all duration-200 hover:border-primary/40 hover:bg-card/70 sm:grid-cols-[7.5rem_1fr] sm:gap-3.5 sm:p-3"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-black/20">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-black/20 sm:aspect-[4/3] sm:rounded-xl">
         {cover ? (
           <CoverImage
             src={cover}
@@ -203,14 +203,14 @@ export function NewsLogRow({
           </span>
         )}
       </div>
-      <div className="flex min-w-0 flex-col justify-center">
-        <span className="text-[10px] font-black uppercase tracking-wider text-primary">
+      <div className="flex min-w-0 flex-col justify-center px-3.5 py-3 sm:px-0 sm:py-0">
+        <span className="text-[11px] font-black uppercase tracking-wider text-primary">
           {deskLabel(story.category, locale)}
         </span>
-        <h3 className="line-clamp-2 text-xs font-bold leading-snug text-foreground transition-colors group-hover:text-primary sm:text-sm">
+        <h3 className="mt-1 line-clamp-3 text-[1.02rem] font-bold leading-snug text-foreground transition-colors group-hover:text-primary sm:line-clamp-2 sm:text-sm">
           {story.title}
         </h3>
-        <div className="mt-1 flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12px] font-semibold text-muted-foreground sm:text-[10px]">
           <span className="truncate">{story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}</span>
           {story.publishedAt ? (
             <>

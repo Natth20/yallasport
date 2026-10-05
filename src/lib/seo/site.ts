@@ -30,7 +30,7 @@ export function defaultTitle(locale: string) {
 
 export function defaultDescription(locale: string) {
   return locale === 'ar'
-    ? 'يلا سبورت منصة كرة قدم عربية لنتائج المباريات الحية، جداول الترتيب، مواعيد الركلات، والأخبار المعتمدة من المصدر فقط. تابع الدوري الإنجليزي، الليغا، دوري أبطال أوروبا، والدوري المصري بأرقام حقيقية دون نتائج وهمية.'
+    ? 'يلا سبورت منصة رياضية متكاملة تجمع الأخبار والمباريات والنتائج والبطولات والفرق واللاعبين والإحصائيات والمحتوى والبث المباشر في مكان واحد. تابع الدوري الإنجليزي، الليغا، دوري أبطال أوروبا، والدوري المصري من مصادر معتمدة.'
     : 'Yalla Sport is an Arabic-first football desk for live scores, league tables, kickoff times, and source-verified news. Follow the Premier League, La Liga, the Champions League, and the Egyptian Premier League with real figures — never invented results.';
 }
 

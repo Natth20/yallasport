@@ -17,6 +17,21 @@ export async function HomeDesk() {
 
   return (
     <div className={styles.desk}>
+      <HomeDayTabs
+        matches={board}
+        locale={locale}
+        labels={{
+          today: pick(locale, 'اليوم', 'Today'),
+          tomorrow: pick(locale, 'غدًا', 'Tomorrow'),
+          after: pick(locale, 'بعد غد', 'Day after'),
+        }}
+        programmeKicker={pick(locale, 'مباريات اليوم', "Today's matches")}
+        programmeTitle={t('cta_matches')}
+        allLabel={t('ch01_cta')}
+        empty={pick(locale, 'لا مواعيد في هذا اليوم من المصدر.', 'No fixtures from the source on this day.')}
+        liveLabel={t('live_badge')}
+        ftLabel={t('ft_badge')}
+      />
       <aside className={styles.rail} aria-label={t('stat_live')}>
         <header className={styles.railHead}>
           <div>
@@ -55,22 +70,6 @@ export async function HomeDesk() {
           ))
         )}
       </aside>
-
-      <HomeDayTabs
-        matches={board}
-        locale={locale}
-        labels={{
-          today: pick(locale, 'اليوم', 'Today'),
-          tomorrow: pick(locale, 'غداً', 'Tomorrow'),
-          after: pick(locale, 'بعد غد', 'Day after'),
-        }}
-        programmeKicker={pick(locale, 'شريط المواعيد', 'Fixture strip')}
-        programmeTitle={t('cta_matches')}
-        allLabel={t('ch01_cta')}
-        empty={pick(locale, 'لا مواعيد في هذا اليوم من المصدر.', 'No fixtures from the source on this day.')}
-        liveLabel={t('live_badge')}
-        ftLabel={t('ft_badge')}
-      />
     </div>
   );
 }

@@ -1,0 +1,1161 @@
+/* ==========================================================================
+   Cyber Luxury Sports Portal - Front Section 1 Design System
+   Dual-Theme Engine: Dark Cosmic Obsidian & Light Porcelain Ivory
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   01. Cyber Floating Live Ticker
+   -------------------------------------------------------------------------- */
+.cyberTickerWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.65rem;
+  background: #ffffff;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 9999px;
+  box-shadow: 
+    0 4px 20px -2px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global(.dark) .cyberTickerWrap,
+:global([data-theme="dark"]) .cyberTickerWrap {
+  background: rgba(10, 15, 26, 0.85);
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 
+    0 10px 36px -6px rgba(0, 0, 0, 0.7),
+    0 0 20px -8px rgba(245, 158, 11, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.cyberTickerWrap:hover {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 
+    0 8px 28px -4px rgba(245, 158, 11, 0.2),
+    0 0 20px -5px rgba(245, 158, 11, 0.25);
+}
+
+.tickerLivePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.tickerLivePill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-100%);
+  animation: shimmerSweep 2.8s infinite;
+}
+
+@keyframes shimmerSweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.pulsingRadarDot {
+  position: relative;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 0 8px #ffffff;
+}
+
+.pulsingRadarDot::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.7);
+  animation: radarWave 1.6s infinite cubic-bezier(0, 0, 0.2, 1);
+}
+
+@keyframes radarWave {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.tickerScrollTrack {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  white-space: nowrap;
+  padding-right: 0.5rem;
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.tickerScrollTrack::-webkit-scrollbar {
+  display: none;
+}
+
+.tickerItemCapsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  border: 1px solid rgba(203, 213, 225, 0.7);
+  color: #1e293b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+:global(.dark) .tickerItemCapsule,
+:global([data-theme="dark"]) .tickerItemCapsule {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: #f3f4f6;
+}
+
+.tickerItemCapsule:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
+  color: #d97706;
+}
+
+:global(.dark) .tickerItemCapsule:hover,
+:global([data-theme="dark"]) .tickerItemCapsule:hover {
+  color: #fbbf24;
+}
+
+.tickerToneLive {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+:global(.dark) .tickerToneLive,
+:global([data-theme="dark"]) .tickerToneLive {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+.tickerToneGoal {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.09);
+  color: #b45309;
+}
+
+:global(.dark) .tickerToneGoal,
+:global([data-theme="dark"]) .tickerToneGoal {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fde68a;
+}
+
+.tickerToneNews {
+  border-color: rgba(14, 165, 233, 0.3);
+  background: rgba(14, 165, 233, 0.08);
+  color: #0284c7;
+}
+
+:global(.dark) .tickerToneNews,
+:global([data-theme="dark"]) .tickerToneNews {
+  background: rgba(56, 189, 248, 0.08);
+  color: #bae6fd;
+}
+
+/* --------------------------------------------------------------------------
+   02. Cinematic Top Hero
+   -------------------------------------------------------------------------- */
+.topHeroContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.heroMasterGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .heroMasterGrid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.cinematicStoryPortal {
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  min-height: 400px;
+  background: #080c14;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 
+    0 12px 36px -6px rgba(15, 23, 42, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global(.dark) .cinematicStoryPortal,
+:global([data-theme="dark"]) .cinematicStoryPortal {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 20px 48px -8px rgba(0, 0, 0, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+@media (min-width: 1024px) {
+  .cinematicStoryPortal {
+    min-height: 460px;
+  }
+}
+
+.cinematicStoryPortal:hover {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 
+    0 20px 50px -8px rgba(245, 158, 11, 0.25),
+    0 0 30px -8px rgba(245, 158, 11, 0.2);
+  transform: translateY(-2px);
+}
+
+.cinematicImageLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cinematicHeroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cinematicStoryPortal:hover .cinematicHeroImg {
+  transform: scale(1.04);
+}
+
+.cinematicGradientVeil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 12, 20, 0.08) 0%,
+    rgba(8, 12, 20, 0.4) 35%,
+    rgba(8, 12, 20, 0.88) 75%,
+    #080c14 100%
+  );
+  z-index: 1;
+}
+
+.cinematicStoryContent {
+  position: relative;
+  z-index: 2;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+@media (min-width: 768px) {
+  .cinematicStoryContent {
+    padding: 2.25rem;
+  }
+}
+
+.cyberBadgeCluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cyberBadgeCategory {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.3) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+.cyberBadgeSource {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.verifiedDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.cinematicTitle {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.3;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .cinematicTitle {
+    font-size: 1.85rem;
+  }
+}
+
+.cinematicExcerpt {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.cinematicActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cinematicTimeText {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.cinematicReadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1.15rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  transition: all 0.25s ease;
+}
+
+.cinematicStoryPortal:hover .cinematicReadBtn {
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.7);
+  transform: scale(1.03);
+}
+
+/* --------------------------------------------------------------------------
+   03. VIP Matchday Super-Card
+   -------------------------------------------------------------------------- */
+.vipSpotlightCard {
+  position: relative;
+  border-radius: 1.5rem;
+  background: #ffffff;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 
+    0 12px 32px -6px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+:global(.dark) .vipSpotlightCard,
+:global([data-theme="dark"]) .vipSpotlightCard {
+  background: rgba(11, 16, 28, 0.9);
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 
+    0 20px 48px -8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.vipSpotlightCard:hover {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 
+    0 16px 40px -8px rgba(245, 158, 11, 0.2),
+    0 0 24px -6px rgba(245, 158, 11, 0.15);
+}
+
+.vipBackgroundAura {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.vipHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vipBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #d97706;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+:global(.dark) .vipBadge,
+:global([data-theme="dark"]) .vipBadge {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.vipLiveStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #059669;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+:global(.dark) .vipLiveStatusPill,
+:global([data-theme="dark"]) .vipLiveStatusPill {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.vipCenterHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.25rem 0;
+}
+
+.vipIconOrb {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.28) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.vipCenterTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+:global(.dark) .vipCenterTitle,
+:global([data-theme="dark"]) .vipCenterTitle {
+  color: #ffffff;
+}
+
+.vipCenterSubtitle {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+:global(.dark) .vipCenterSubtitle,
+:global([data-theme="dark"]) .vipCenterSubtitle {
+  color: #94a3b8;
+}
+
+.vipQuickActionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.vipActionLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  color: #1e293b;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+:global(.dark) .vipActionLink,
+:global([data-theme="dark"]) .vipActionLink {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: #f1f5f9;
+}
+
+.vipActionLink:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #d97706;
+}
+
+:global(.dark) .vipActionLink:hover,
+:global([data-theme="dark"]) .vipActionLink:hover {
+  color: #fbbf24;
+}
+
+/* --------------------------------------------------------------------------
+   04. Matchday Mini Cards Grid
+   -------------------------------------------------------------------------- */
+.miniMatchesGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .miniMatchesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .miniMatchesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.miniMatchCapsule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  border-radius: 1.1rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global(.dark) .miniMatchCapsule,
+:global([data-theme="dark"]) .miniMatchCapsule {
+  background: rgba(13, 18, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+}
+
+.miniMatchCapsule:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 
+    0 10px 24px -4px rgba(245, 158, 11, 0.18),
+    0 0 16px -4px rgba(245, 158, 11, 0.15);
+  transform: translateY(-2px);
+}
+
+.miniMatchCapsuleLive {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, #ffffff 100%);
+}
+
+:global(.dark) .miniMatchCapsuleLive,
+:global([data-theme="dark"]) .miniMatchCapsuleLive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%);
+}
+
+.miniTeamWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.miniTeamAway {
+  justify-content: flex-end;
+}
+
+.miniTeamTitle {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:global(.dark) .miniTeamTitle,
+:global([data-theme="dark"]) .miniTeamTitle {
+  color: #f1f5f9;
+}
+
+.miniCenterScoreBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.85rem;
+  min-width: 4.5rem;
+}
+
+.miniScoreDigit {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.06em;
+}
+
+:global(.dark) .miniScoreDigit,
+:global([data-theme="dark"]) .miniScoreDigit {
+  color: #ffffff;
+}
+
+.miniScoreDigitLive {
+  color: #ef4444;
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.miniStatusSubTag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #64748b;
+  margin-top: 0.1rem;
+}
+
+:global(.dark) .miniStatusSubTag,
+:global([data-theme="dark"]) .miniStatusSubTag {
+  color: #94a3b8;
+}
+
+.miniStatusSubTagLive {
+  color: #ef4444;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   05. Dual Matchday Cockpit & Flash Live Arena
+   -------------------------------------------------------------------------- */
+.dualArenaGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .dualArenaGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.cockpitPanel {
+  border-radius: 1.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 8px 30px -4px rgba(15, 23, 42, 0.07);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+:global(.dark) .cockpitPanel,
+:global([data-theme="dark"]) .cockpitPanel {
+  background: rgba(11, 16, 28, 0.85);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 
+    0 16px 40px -8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.cockpitPanel:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 
+    0 14px 36px -6px rgba(245, 158, 11, 0.15),
+    0 0 20px -6px rgba(245, 158, 11, 0.1);
+}
+
+.cockpitPanelHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+:global(.dark) .cockpitPanelHeader,
+:global([data-theme="dark"]) .cockpitPanelHeader {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.cockpitTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.cockpitIconBadge {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.75rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+}
+
+:global(.dark) .cockpitIconBadge,
+:global([data-theme="dark"]) .cockpitIconBadge {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.25) 100%);
+  color: #fbbf24;
+}
+
+.cockpitIconBadgeLive {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+}
+
+.cockpitTitleText {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+:global(.dark) .cockpitTitleText,
+:global([data-theme="dark"]) .cockpitTitleText {
+  color: #ffffff;
+}
+
+.cockpitDateTabs {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(203, 213, 225, 0.7);
+}
+
+:global(.dark) .cockpitDateTabs,
+:global([data-theme="dark"]) .cockpitDateTabs {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.cockpitDateTabBtn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:global(.dark) .cockpitDateTabBtn,
+:global([data-theme="dark"]) .cockpitDateTabBtn {
+  color: #94a3b8;
+}
+
+.cockpitDateTabActive {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a !important;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.cockpitFilterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cockpitFilterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:global(.dark) .cockpitFilterPill,
+:global([data-theme="dark"]) .cockpitFilterPill {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: #cbd5e1;
+}
+
+.cockpitFilterPill:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #d97706;
+}
+
+:global(.dark) .cockpitFilterPill:hover,
+:global([data-theme="dark"]) .cockpitFilterPill:hover {
+  color: #fbbf24;
+}
+
+.cockpitFilterPillActive {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #b45309;
+}
+
+:global(.dark) .cockpitFilterPillActive,
+:global([data-theme="dark"]) .cockpitFilterPillActive {
+  color: #fbbf24;
+}
+
+.cockpitFilterPillLive {
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.cockpitFilterPillLiveActive {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ef4444;
+}
+
+.filterCountTag {
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+:global(.dark) .filterCountTag,
+:global([data-theme="dark"]) .filterCountTag {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cockpitMatchCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cockpitMatchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  border-radius: 1rem;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global(.dark) .cockpitMatchRow,
+:global([data-theme="dark"]) .cockpitMatchRow {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.cockpitMatchRow:hover {
+  background: rgba(245, 158, 11, 0.07);
+  border-color: rgba(245, 158, 11, 0.35);
+  transform: translateY(-1px);
+}
+
+.cockpitMatchRowLive {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+
+:global(.dark) .cockpitMatchRowLive,
+:global([data-theme="dark"]) .cockpitMatchRowLive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.matchDualTeamCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+}
+
+.matchTeamSingle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.matchTeamNameLabel {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+:global(.dark) .matchTeamNameLabel,
+:global([data-theme="dark"]) .matchTeamNameLabel {
+  color: #f1f5f9;
+}
+
+.matchScoreArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-inline-start: 1rem;
+}
+
+.scoreDigitBadge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.6rem;
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+}
+
+:global(.dark) .scoreDigitBadge,
+:global([data-theme="dark"]) .scoreDigitBadge {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.scoreDigitBadgeLive {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.kickoffTimeBadge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.6rem;
+  background: #ffffff;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #d97706;
+}
+
+:global(.dark) .kickoffTimeBadge,
+:global([data-theme="dark"]) .kickoffTimeBadge {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #fbbf24;
+}
+
+.leagueSmallTag {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  font-weight: 600;
+}
+
+:global(.dark) .leagueSmallTag,
+:global([data-theme="dark"]) .leagueSmallTag {
+  color: #94a3b8;
+}
+
+.cockpitFooterLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+:global(.dark) .cockpitFooterLink,
+:global([data-theme="dark"]) .cockpitFooterLink {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+.cockpitFooterLink:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #d97706;
+}
+
+:global(.dark) .cockpitFooterLink:hover,
+:global([data-theme="dark"]) .cockpitFooterLink:hover {
+  color: #fbbf24;
+}
+
+/* Flash Radar Goal / Transfer item */
+.radarFlashCard {
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
+}
+
+:global(.dark) .radarFlashCard,
+:global([data-theme="dark"]) .radarFlashCard {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.radarFlashCard:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  transform: translateY(-2px);
+}
+
+.radarFlashHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radarTagGoal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #d97706;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+:global(.dark) .radarTagGoal,
+:global([data-theme="dark"]) .radarTagGoal {
+  color: #fbbf24;
+}
+
+.radarTagTransfer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #059669;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+:global(.dark) .radarTagTransfer,
+:global([data-theme="dark"]) .radarTagTransfer {
+  color: #34d399;
+}

@@ -292,8 +292,17 @@ export function NewsInkQueue({
                   {cover ? <CoverImage src={cover} alt="" sizes="120px" className="object-cover" /> : null}
                 </span>
                 <span className={styles['nk-queue-copy']}>
+                  <em>{deskLabel(story.category, locale)}</em>
                   <b dir={titleDir(story.title)}>{story.title}</b>
-                  <small>{story.sourceName || deskLabel(story.category, locale)}</small>
+                  <small>
+                    {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+                    {story.publishedAt ? (
+                      <>
+                        {' · '}
+                        <FrontWhen value={story.publishedAt} />
+                      </>
+                    ) : null}
+                  </small>
                 </span>
               </Link>
             </li>

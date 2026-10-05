@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { swallow } from '@/lib/ops/caught';
 import { DEFAULT_TIMEZONE, hourInTimezone } from '@/lib/datetime/format';
@@ -27,7 +28,7 @@ export type FrontFacts = {
   census: FrontCensus;
 };
 
-export async function loadFrontFacts(locale: string): Promise<FrontFacts> {
+async function _loadFrontFacts(locale: string): Promise<FrontFacts> {
   const [board, scorers, transfers] = await Promise.all([
     loadFrontBoard(locale),
     loadFrontScorers(locale),
@@ -93,3 +94,11 @@ export async function loadFrontFacts(locale: string): Promise<FrontFacts> {
     },
   };
 }
+
+const _getCachedFrontFacts = cache(_loadFrontFacts);
+
+export async function loadFrontFacts(locale: string): Promise<FrontFacts> {
+  return _getCachedFrontFacts(locale);
+}
+
+

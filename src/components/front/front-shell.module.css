@@ -10,6 +10,18 @@
   gap: var(--ys-space-6);
 }
 
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 880px) {
+  .split {
+    grid-template-columns: 1fr;
+  }
+}
+
 .meta {
   margin: 0;
   font-size: var(--ys-font-small);

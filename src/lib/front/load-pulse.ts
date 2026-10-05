@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
@@ -5,7 +6,7 @@ import { liveKickoffFloor, todayOrLiveWhere } from '@/lib/sports-data/match-wind
 import { frontDayWindow } from './window';
 import type { FrontPulse } from './types';
 
-export async function loadFrontPulse(): Promise<FrontPulse> {
+async function _loadFrontPulse(): Promise<FrontPulse> {
   const { todayKey, start, end, now } = frontDayWindow();
   return cachedJson(`front:pulse:${todayKey}:v2`, 20, async () => {
     const [matches, live, groups] = await Promise.all([
@@ -32,4 +33,10 @@ export async function loadFrontPulse(): Promise<FrontPulse> {
       todayKey,
     };
   });
+}
+
+const _getCachedFrontPulse = cache(_loadFrontPulse);
+
+export async function loadFrontPulse(): Promise<FrontPulse> {
+  return _getCachedFrontPulse();
 }

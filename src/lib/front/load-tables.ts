@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
@@ -9,13 +10,13 @@ import { localizeCompetitionTitle, localizeCountryName } from '@/lib/i18n/compet
 import { maybeRefreshFeaturedStandings } from '@/lib/sports-data/standings-persist';
 import type { FrontTable } from './types';
 
-export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
+async function _loadFrontTables(locale: string): Promise<FrontTable[]> {
   const season = String(currentFootballSeason());
   const previous = String(currentFootballSeason() - 1);
   const ids = STAT_BOARDS.map((board) => board.id);
 
-  const packed = await cachedJson(`front:tables:${season}:v5`, 90, async () => {
-    await maybeRefreshFeaturedStandings().catch(swallow('front.tables.refresh', { boards: 0, rows: 0, skipped: true }));
+  const packed = await cachedJson(`front:tables:${season}:v5`, 180, async () => {
+    void maybeRefreshFeaturedStandings().catch(swallow('front.tables.refresh', { boards: 0, rows: 0, skipped: true }));
 
     const leagues = await prisma.league
       .findMany({
@@ -99,3 +100,10 @@ export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
     })),
   }));
 }
+
+const _getCachedFrontTables = cache(_loadFrontTables);
+
+export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
+  return _getCachedFrontTables(locale);
+}
+

@@ -22,18 +22,22 @@ export async function StoriesLatest() {
           href="/news"
           cta={pick(locale, 'كل الأخبار', 'All news')}
         />
-        <ol className={styles.stack}>
-          {latest.map((story) => (
-            <li key={story.id}>
-              <Link href={`/news/${story.slug}`} className={styles.row}>
-                <span>
-                  <small><FrontWhen value={story.publishedAt} /></small>
-                  <b>{story.title}</b>
-                </span>
-              </Link>
-            </li>
+        <div className={styles.stack}>
+          {latest.slice(0, 8).map((story) => (
+            <Link key={story.id} href={`/news/${story.slug}`} className={styles.row}>
+              {story.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={story.image} alt="" className={styles.thumb} referrerPolicy="no-referrer" />
+              ) : (
+                <span className={styles.blank} aria-hidden />
+              )}
+              <span>
+                <small><FrontWhen value={story.publishedAt} /></small>
+                <b>{story.title}</b>
+              </span>
+            </Link>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );

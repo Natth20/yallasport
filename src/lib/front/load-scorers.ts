@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
 import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
@@ -11,7 +12,7 @@ function paint(locale: string, rows: FrontScorer[]) {
   return rows.map((row) => ({ ...row, name: localizePlainName(locale, row.name) }));
 }
 
-export async function loadFrontScorers(locale: string): Promise<{
+async function _loadFrontScorers(locale: string): Promise<{
   goals: FrontScorer[];
   assists: FrontScorer[];
   days: number;
@@ -131,3 +132,14 @@ export async function loadFrontScorers(locale: string): Promise<{
     ),
   };
 }
+
+const _getCachedFrontScorers = cache(_loadFrontScorers);
+
+export async function loadFrontScorers(locale: string): Promise<{
+  goals: FrontScorer[];
+  assists: FrontScorer[];
+  days: number;
+}> {
+  return _getCachedFrontScorers(locale);
+}
+

@@ -7,13 +7,22 @@ import { safeRedisGet, safeRedisSet } from '@/lib/redis';
 
 export const STAT_BOARDS = [
   { id: '39', slug: 'premier-league', ar: 'الدوري الإنجليزي الممتاز', en: 'Premier League' },
-  { id: '140', slug: 'la-liga', ar: 'الليغا', en: 'La Liga' },
+  { id: '140', slug: 'la-liga', ar: 'الدوري الإسباني', en: 'La Liga' },
   { id: '135', slug: 'serie-a', ar: 'الدوري الإيطالي', en: 'Serie A' },
-  { id: '78', slug: 'bundesliga', ar: 'البوندسليغا', en: 'Bundesliga' },
+  { id: '78', slug: 'bundesliga', ar: 'الدوري الألماني', en: 'Bundesliga' },
   { id: '61', slug: 'ligue-1', ar: 'الدوري الفرنسي', en: 'Ligue 1' },
   { id: '2', slug: 'ucl', ar: 'دوري أبطال أوروبا', en: 'Champions League' },
-  { id: '307', slug: 'spl', ar: 'دوري روشن', en: 'Saudi Pro League' },
-  { id: '233', slug: 'epl-egypt', ar: 'الدوري المصري', en: 'Egyptian Premier League' },
+  { id: '3', slug: 'europa-league', ar: 'الدوري الأوروبي', en: 'UEFA Europa League' },
+  { id: '307', slug: 'spl', ar: 'دوري روشن السعودي', en: 'Saudi Pro League' },
+  { id: '233', slug: 'epl-egypt', ar: 'الدوري المصري الممتاز', en: 'Egyptian Premier League' },
+  { id: '15', slug: 'afc-cl', ar: 'دوري أبطال آسيا للنخبة', en: 'AFC Champions League Elite' },
+  { id: '12', slug: 'caf-cl', ar: 'دوري أبطال أفريقيا', en: 'CAF Champions League' },
+  { id: '301', slug: 'uae-pro-league', ar: 'دوري أدنوك للمحترفين', en: 'UAE Pro League' },
+  { id: '305', slug: 'qatar-stars-league', ar: 'دوري نجوم قطر', en: 'Qatar Stars League' },
+  { id: '200', slug: 'botola-pro', ar: 'الدوري المغربي للمحترفين', en: 'Botola Pro' },
+  { id: '203', slug: 'super-lig', ar: 'الدوري التركي الممتاز', en: 'Süper Lig' },
+  { id: '94', slug: 'primeira-liga', ar: 'الدوري البرتغالي', en: 'Primeira Liga' },
+  { id: '88', slug: 'eredivisie', ar: 'الدوري الهولندي', en: 'Eredivisie' },
 ] as const;
 
 export function resolveStatBoard(raw?: string | null) {

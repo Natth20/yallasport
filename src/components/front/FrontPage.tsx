@@ -1,95 +1,130 @@
 import { Suspense } from 'react';
-import { getLocale, getTranslations } from 'next-intl/server';
-import { FrontSkeleton } from './FrontMark';
-import { FrontStage } from './FrontStage';
-import { HomeDesk } from './HomeDesk';
-import { HomeWhistle } from './HomeWhistle';
-import { HomeFacts } from './HomeFacts';
-import { HomeTape } from './HomeTape';
-import { HomePitch } from './HomePitch';
-import { HomeGuide } from './HomeGuide';
-import { StoriesChapter } from './chapters/StoriesChapter';
-import { StoriesLatest } from './chapters/StoriesLatest';
-import { ReelsChapter } from './chapters/ReelsChapter';
-import { PhotosChapter } from './chapters/PhotosChapter';
-import { VideoChapter } from './chapters/VideoChapter';
-import { TransfersChapter } from './chapters/TransfersChapter';
-import { ScorersChapter } from './chapters/ScorersChapter';
-import { PersonalBand } from './chapters/PersonalBand';
-import { SquadsChapter } from './chapters/SquadsChapter';
-import { HomeBrief } from './HomeBrief';
-import { SalonStage } from '@/components/salon/SalonStage';
-import { pick } from '@/i18n/pick';
+import { getLocale } from 'next-intl/server';
+import { loadFrontSources } from '@/lib/front/load-sources';
 import { SiteAd } from '@/components/ads/SiteAd';
-import styles from './home-salon.module.css';
+import { FrontSkeleton } from './FrontMark';
+import { FrontLiveTicker } from './FrontLiveTicker';
+import { FrontTopHero } from './FrontTopHero';
+import { FrontDualArena } from './FrontDualArena';
+import { FrontResultsStrip } from './FrontResultsStrip';
+import { HomeFacts } from './HomeFacts';
+import { FrontWatchNowBanner } from './FrontWatchNowBanner';
+import { FrontTopNewsGrid } from './FrontTopNewsGrid';
+import { FrontUniversalSearchBar } from './FrontUniversalSearchBar';
+import { FrontLatestNewsGrid } from './FrontLatestNewsGrid';
+import { FrontMajorLeagues } from './FrontMajorLeagues';
+import { FrontTransfersRail } from './FrontTransfersRail';
+import { FrontStarsToday } from './FrontStarsToday';
+import { FrontStatsCards } from './FrontStatsCards';
+import { FrontGoalsTape } from './FrontGoalsTape';
+import { FrontFollowTeam } from './FrontFollowTeam';
+import { FrontSportNewsBlock } from './FrontSportNewsBlock';
+import { FrontVideoGrid } from './FrontVideoGrid';
+import { FrontMediaStrip } from './FrontMediaStrip';
+import { SquadsChapter } from './chapters/SquadsChapter';
+import look from './front-design.module.css';
+
+export const dynamic = 'force-dynamic';
 
 export async function FrontPage() {
   const locale = await getLocale();
-  const t = await getTranslations('front');
+  const sources = await loadFrontSources();
 
   return (
-    <SalonStage
-      tone="booth"
-      wide
-      kicker={t('kicker')}
-      title={pick(locale, 'اليوم', 'Today')}
-      lead={t('standfirst')}
-      aside={t('source_seal')}
-    >
-      <div className={styles.salon}>
-        <Suspense fallback={<FrontSkeleton kind="hero" />}>
-          <FrontStage />
-        </Suspense>
+    <div className={look.luxuryPage}>
+      <div className={look.luxuryGlow} aria-hidden />
+      <div className={look.luxuryInner}>
+
+        {/* 🏆 الفصل الأول: التغطية المباشرة والبث الحي (Hero & Live Arena) */}
+        <section className="space-y-6">
+          <Suspense fallback={<FrontSkeleton kind="pulse" />}>
+            <FrontLiveTicker />
+          </Suspense>
+
+          <Suspense fallback={<FrontSkeleton kind="hero" />}>
+            <FrontTopHero />
+          </Suspense>
+
+          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+            <FrontDualArena />
+          </Suspense>
+        </section>
+
+        {/* 📰 الفصل الثاني: التغطية التحريرية والأخبار الرئيسية (Editorial & Main Stories) */}
+        <section className="space-y-8 pt-4">
+          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+            <FrontTopNewsGrid />
+          </Suspense>
+
+          <FrontUniversalSearchBar locale={locale} sources={sources} />
+
+          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+            <FrontLatestNewsGrid />
+          </Suspense>
+
+          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+            <FrontSportNewsBlock />
+          </Suspense>
+        </section>
+
+        {/* 📢 إعلان الراعي الرسمي المعتمد */}
         <SiteAd placement="home-mid" locale={locale} />
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <HomeDesk />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <StoriesChapter />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <StoriesLatest />
-        </Suspense>
-        <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-          <HomeWhistle />
-        </Suspense>
-        <div className={styles.folio}>
-          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <HomePitch />
+
+        {/* ⚽ الفصل الثالث: البث الحي والدوريات الكبرى (Matchday Hub & Major Leagues) */}
+        <section className="space-y-8 pt-4">
+          <FrontWatchNowBanner />
+
+          <Suspense fallback={<FrontSkeleton kind="pulse" />}>
+            <FrontResultsStrip />
           </Suspense>
+
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <TransfersChapter />
+            <FrontMajorLeagues />
           </Suspense>
+        </section>
+
+        {/* 📊 الفصل الرابع: الانتقالات، نجوم اليوم والإحصائيات (Transfers, Stars & Stats) */}
+        <section className="space-y-8 pt-4">
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <ScorersChapter />
+            <FrontTransfersRail />
           </Suspense>
+
+          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+            <FrontStarsToday />
+          </Suspense>
+
+          <Suspense fallback={<FrontSkeleton kind="pulse" />}>
+            <FrontGoalsTape />
+          </Suspense>
+
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
             <HomeFacts />
           </Suspense>
-          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <HomeTape />
+
+          <Suspense fallback={<FrontSkeleton kind="pulse" />}>
+            <FrontStatsCards />
           </Suspense>
+        </section>
+
+        {/* 🎥 الفصل الخامس: الميديا، الفيديو والأندية المفضلة (Media & Fan Zone) */}
+        <section className="space-y-8 pt-4 pb-8">
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <PersonalBand />
+            <FrontVideoGrid />
           </Suspense>
+
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <HomeGuide />
+            <FrontMediaStrip />
           </Suspense>
-          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <VideoChapter />
-          </Suspense>
-          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <ReelsChapter />
-          </Suspense>
-          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
-            <PhotosChapter />
-          </Suspense>
+
+          <FrontFollowTeam />
+
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
             <SquadsChapter />
           </Suspense>
-          <HomeBrief locale={locale} />
-        </div>
+        </section>
+
       </div>
-    </SalonStage>
+    </div>
   );
 }
+

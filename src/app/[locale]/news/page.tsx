@@ -154,7 +154,7 @@ function NewsHall({
   source: string;
   hrefFor: (next: { q?: string; desk?: string; source?: string; page?: number; day?: string | null }) => string;
 }) {
-  const programme = [...data.subLeads, ...data.rest].slice(0, 6);
+  const programme = [...data.subLeads, ...data.rest].slice(0, 4);
   const taken = new Set([data.lead?.id, ...programme.map((story) => story.id)].filter(Boolean) as string[]);
   const wall = data.lead ? data.rest.filter((story) => !taken.has(story.id)) : data.rest;
   wall.forEach((story) => taken.add(story.id));

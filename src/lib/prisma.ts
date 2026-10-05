@@ -13,7 +13,7 @@ const globalForPrisma = globalThis as unknown as {
 const nestedQuery = new AsyncLocalStorage<boolean>();
 
 let inFlight = 0;
-let gateSize = 6;
+let gateSize = 30;
 const waiting: Array<() => void> = [];
 
 function acquireGate() {
@@ -53,18 +53,18 @@ function withPoolLimits(raw: string | undefined, kind: 'app' | 'direct') {
 
     if (isTransaction) {
       url.searchParams.set('pgbouncer', 'true');
-      url.searchParams.set('connection_limit', kind === 'direct' ? '1' : '3');
-      gateSize = 3;
+      url.searchParams.set('connection_limit', kind === 'direct' ? '5' : '35');
+      gateSize = 35;
     } else if (isSessionPooler) {
-      url.searchParams.set('connection_limit', kind === 'direct' ? '1' : isDev ? '2' : '3');
-      gateSize = 2;
+      url.searchParams.set('connection_limit', kind === 'direct' ? '5' : '20');
+      gateSize = 25;
     } else if (!url.searchParams.has('connection_limit')) {
-      url.searchParams.set('connection_limit', isDev ? '5' : '10');
-      gateSize = isDev ? 4 : 8;
+      url.searchParams.set('connection_limit', isDev ? '20' : '35');
+      gateSize = 35;
     }
 
-    if (!url.searchParams.has('connect_timeout')) url.searchParams.set('connect_timeout', '10');
-    url.searchParams.set('pool_timeout', '20');
+    if (!url.searchParams.has('connect_timeout')) url.searchParams.set('connect_timeout', '15');
+    url.searchParams.set('pool_timeout', '30');
     url.searchParams.set('sslmode', url.searchParams.get('sslmode') || 'require');
     return url.toString();
   } catch (error) {
@@ -143,8 +143,7 @@ function getRawPrisma(): PrismaClient {
 }
 
 function getWrappedPrisma(): PrismaClient {
-  getRawPrisma();
-  return globalForPrisma.prismaWrapped ?? wrapPrisma(getRawPrisma());
+  return getRawPrisma();
 }
 
 export const prisma = new Proxy({} as PrismaClient, {

@@ -226,7 +226,12 @@ export function mapStoredMatchToDetail(stored: {
     extraMinute: event.extraMinute ?? undefined,
     playerId: event.playerId ?? undefined,
     player: event.playerName ?? undefined,
-    assistPlayer: event.assistName ?? undefined,
+    assistPlayer:
+      event.assistName &&
+      event.playerName &&
+      event.assistName.trim().toLowerCase() !== event.playerName.trim().toLowerCase()
+        ? event.assistName
+        : undefined,
     teamId: event.teamId,
     detail: event.detail ?? undefined,
   }));
