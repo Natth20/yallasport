@@ -38,5 +38,24 @@ async function _loadFrontPulse(): Promise<FrontPulse> {
 const _getCachedFrontPulse = cache(_loadFrontPulse);
 
 export async function loadFrontPulse(): Promise<FrontPulse> {
-  return _getCachedFrontPulse();
+  try {
+    const res = await _getCachedFrontPulse();
+    return res || {
+      matches: 0,
+      live: 0,
+      goals: 0,
+      yellow: 0,
+      red: 0,
+      todayKey: '',
+    };
+  } catch {
+    return {
+      matches: 0,
+      live: 0,
+      goals: 0,
+      yellow: 0,
+      red: 0,
+      todayKey: '',
+    };
+  }
 }

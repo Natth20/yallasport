@@ -84,7 +84,7 @@ async function _loadFrontTables(locale: string): Promise<FrontTable[]> {
     return tables;
   });
 
-  return packed.map((table) => ({
+  return (packed || []).map((table) => ({
     ...table,
     league: {
       id: table.league.id,
@@ -93,7 +93,7 @@ async function _loadFrontTables(locale: string): Promise<FrontTable[]> {
       name: localizeCompetitionTitle(locale, table.league),
       country: table.league.country ? localizeCountryName(locale, table.league.country) : table.league.country,
     },
-    rows: table.rows.map((row) => ({
+    rows: (table.rows || []).map((row) => ({
       ...row,
       goalDiff: row.goalDiff ?? row.goalsFor - row.goalsAgainst,
       team: { ...row.team, name: localizeTeamName(locale, row.team.name) },
@@ -104,6 +104,11 @@ async function _loadFrontTables(locale: string): Promise<FrontTable[]> {
 const _getCachedFrontTables = cache(_loadFrontTables);
 
 export async function loadFrontTables(locale: string): Promise<FrontTable[]> {
-  return _getCachedFrontTables(locale);
+  try {
+    const res = await _getCachedFrontTables(locale);
+    return res || [];
+  } catch {
+    return [];
+  }
 }
 

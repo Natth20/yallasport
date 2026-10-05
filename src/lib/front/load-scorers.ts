@@ -140,6 +140,16 @@ export async function loadFrontScorers(locale: string): Promise<{
   assists: FrontScorer[];
   days: number;
 }> {
-  return _getCachedFrontScorers(locale);
+  try {
+    const res = await _getCachedFrontScorers(locale);
+    if (res) return res;
+  } catch {
+    // fallback
+  }
+  return {
+    goals: [],
+    assists: [],
+    days: 0,
+  };
 }
 

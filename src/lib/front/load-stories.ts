@@ -52,31 +52,40 @@ async function _loadFrontStories(locale: string): Promise<{
   latest: FrontStory[];
   photos: FrontStory[];
 }> {
-  const raw = await cachedJson(`front:news:${locale === 'en' ? 'en' : 'ar'}:v7`, 40, () =>
-    prisma.news
-      .findMany({
-        where: newsVisibleWhere(locale),
-        orderBy: { publishedAt: 'desc' },
-        take: 64,
-        select: newsSelect,
-      })
-      .catch(swallow('front.news', [])),
-  );
+  try {
+    const raw = await cachedJson(`front:news:${locale === 'en' ? 'en' : 'ar'}:v7`, 40, () =>
+      prisma.news
+        .findMany({
+          where: newsVisibleWhere(locale),
+          orderBy: { publishedAt: 'desc' },
+          take: 64,
+          select: newsSelect,
+        })
+        .catch(swallow('front.news', [])),
+    );
 
-  const localized = await overlayNewsList(raw, locale);
-  const chronological = localized.map(toStory);
-  const stories = rotateStart(chronological, 3);
-  const featuredIds = new Set([stories[0]?.id, ...stories.slice(1, 6).map((row) => row.id)].filter(Boolean));
-  const photos = rotateStart(
-    stories.filter((item) => item.image),
-    4,
-  ).slice(0, 16);
-  return {
-    lead: stories[0] ?? null,
-    rest: stories.slice(1, 16),
-    latest: chronological.filter((row) => !featuredIds.has(row.id)).slice(0, 16),
-    photos,
-  };
+    const localized = await overlayNewsList(raw || [], locale);
+    const chronological = (localized || []).map(toStory);
+    const stories = rotateStart(chronological, 3);
+    const featuredIds = new Set([stories[0]?.id, ...stories.slice(1, 6).map((row) => row.id)].filter(Boolean));
+    const photos = rotateStart(
+      stories.filter((item) => item.image),
+      4,
+    ).slice(0, 16);
+    return {
+      lead: stories[0] ?? null,
+      rest: stories.slice(1, 16),
+      latest: chronological.filter((row) => !featuredIds.has(row.id)).slice(0, 16),
+      photos,
+    };
+  } catch {
+    return {
+      lead: null,
+      rest: [],
+      latest: [],
+      photos: [],
+    };
+  }
 }
 
 const _getCachedFrontStories = cache(_loadFrontStories);

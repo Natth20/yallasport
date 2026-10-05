@@ -9,40 +9,45 @@ import { frontMatchSelect, toFrontMatch } from './map-match';
 import type { FrontMatch } from './types';
 
 async function _loadFrontBoard(locale: string): Promise<FrontMatch[]> {
-  const { todayKey, now } = frontDayWindow();
-  const from = new Date(now.getTime() - 18 * 60 * 60 * 1000);
-  const to = new Date(now.getTime() + 72 * 60 * 60 * 1000);
-  const rows = await cachedJson(`front:board:${todayKey}:v4`, 20, () =>
-    prisma.match
-      .findMany({
-        where: {
-          OR: [
-            { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor(now) } },
-            { kickoffAt: { gte: from, lt: to } },
-          ],
-        },
-        orderBy: { kickoffAt: 'asc' },
-        take: 80,
-        select: frontMatchSelect,
-      })
-      .catch(swallow('front.board', [])),
-  );
+  try {
+    const { todayKey, now } = frontDayWindow();
+    const from = new Date(now.getTime() - 18 * 60 * 60 * 1000);
+    const to = new Date(now.getTime() + 72 * 60 * 60 * 1000);
+    const raw = await cachedJson(`front:board:${todayKey}:v4`, 20, () =>
+      prisma.match
+        .findMany({
+          where: {
+            OR: [
+              { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor(now) } },
+              { kickoffAt: { gte: from, lt: to } },
+            ],
+          },
+          orderBy: { kickoffAt: 'asc' },
+          take: 80,
+          select: frontMatchSelect,
+        })
+        .catch(swallow('front.board', [])),
+    );
 
-  await paintNormalizedMatches(locale, rows);
-  const seen = new Set<string>();
-  const unique = rows.filter((row) => {
-    const kickoffMs = row.kickoffAt ? new Date(row.kickoffAt).getTime() : 0;
-    const key = `${row.homeTeam.id}-${row.awayTeam.id}-${kickoffMs}`;
-    if (seen.has(row.id) || seen.has(key)) return false;
-    seen.add(row.id);
-    seen.add(key);
-    return true;
-  });
-  const live = unique.filter((row) => row.status === 'LIVE' || row.status === 'HALFTIME');
-  const upcoming = unique.filter((row) => row.status === 'NOT_STARTED');
-  const finished = unique.filter((row) => row.status === 'FINISHED');
-  const other = unique.filter((row) => row.status === 'POSTPONED' || row.status === 'CANCELLED');
-  return [...live, ...upcoming, ...finished, ...other].slice(0, 48).map((row) => toFrontMatch(row, locale));
+    const rows = raw || [];
+    await paintNormalizedMatches(locale, rows);
+    const seen = new Set<string>();
+    const unique = rows.filter((row) => {
+      const kickoffMs = row.kickoffAt ? new Date(row.kickoffAt).getTime() : 0;
+      const key = `${row.homeTeam.id}-${row.awayTeam.id}-${kickoffMs}`;
+      if (seen.has(row.id) || seen.has(key)) return false;
+      seen.add(row.id);
+      seen.add(key);
+      return true;
+    });
+    const live = unique.filter((row) => row.status === 'LIVE' || row.status === 'HALFTIME');
+    const upcoming = unique.filter((row) => row.status === 'NOT_STARTED');
+    const finished = unique.filter((row) => row.status === 'FINISHED');
+    const other = unique.filter((row) => row.status === 'POSTPONED' || row.status === 'CANCELLED');
+    return [...live, ...upcoming, ...finished, ...other].slice(0, 48).map((row) => toFrontMatch(row, locale));
+  } catch {
+    return [];
+  }
 }
 
 const _getCachedFrontBoard = cache(_loadFrontBoard);

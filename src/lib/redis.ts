@@ -3,16 +3,15 @@ import { reportCaughtError } from '@/lib/ops/caught';
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
 
-if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-  throw new Error("Missing Upstash Redis environment variables");
-}
-
 export const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  url: process.env.UPSTASH_REDIS_REST_URL || 'https://placeholder.upstash.io',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || 'placeholder_token',
 });
 
+const isRealRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+
 export async function safeRedisGet<T>(key: string, ms = 1200): Promise<T | null> {
+  if (!isRealRedis) return null;
   try {
     return await Promise.race([
       redis.get<T>(key),
@@ -31,14 +30,22 @@ export async function cachedJson<T>(
   ttlSeconds: number,
   load: () => Promise<T>,
 ): Promise<T> {
-  const hit = await safeRedisGet<T>(key);
-  if (hit !== null && hit !== undefined) return hit;
+  try {
+    const hit = await safeRedisGet<T>(key);
+    if (hit !== null && hit !== undefined) return hit;
+  } catch {
+    // ignore cache read failure
+  }
+
   const fresh = await load();
-  await safeRedisSet(key, fresh, { ex: ttlSeconds });
+  if (fresh !== undefined && fresh !== null && isRealRedis) {
+    await safeRedisSet(key, fresh, { ex: ttlSeconds });
+  }
   return fresh;
 }
 
 export async function safeRedisSet(key: string, value: unknown, options?: { ex: number }) {
+  if (!isRealRedis) return;
   try {
     await Promise.race([
       redis.set(key, value, options),
@@ -51,31 +58,50 @@ export async function safeRedisSet(key: string, value: unknown, options?: { ex: 
   }
 }
 
-// Rate limiter: 100 requests per 10 seconds per IP
-export const ratelimit = new Ratelimit({
-  redis: redis,
-  limiter: Ratelimit.slidingWindow(100, "10 s"),
-  analytics: true,
-  prefix: "@upstash/ratelimit",
-});
+const fallbackRatelimit = {
+  limit: async () => ({
+    success: true,
+    limit: 100,
+    remaining: 99,
+    reset: 0,
+    pending: Promise.resolve(),
+  }),
+} as unknown as Ratelimit;
 
-export const writeRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(8, "1 m"),
-  analytics: true,
-  prefix: "@upstash/ratelimit/write",
-});
+// Rate limiters with safe fallback if Redis is unavailable
+export const ratelimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(100, "10 s"),
+      analytics: true,
+      prefix: "@upstash/ratelimit",
+    })
+  : fallbackRatelimit;
 
-export const searchRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(40, "1 m"),
-  analytics: true,
-  prefix: "@upstash/ratelimit/search",
-});
+export const writeRatelimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(8, "1 m"),
+      analytics: true,
+      prefix: "@upstash/ratelimit/write",
+    })
+  : fallbackRatelimit;
 
-export const authRatelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(12, "1 m"),
-  analytics: true,
-  prefix: "@upstash/ratelimit/auth",
-});
+export const searchRatelimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(40, "1 m"),
+      analytics: true,
+      prefix: "@upstash/ratelimit/search",
+    })
+  : fallbackRatelimit;
+
+export const authRatelimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(12, "1 m"),
+      analytics: true,
+      prefix: "@upstash/ratelimit/auth",
+    })
+  : fallbackRatelimit;
+

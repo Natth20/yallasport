@@ -101,15 +101,16 @@ async function _loadFrontSquads(locale: string): Promise<{
     };
   });
 
+  const safePacked = packed || { leagues: [], clubs: [], players: [] };
   return {
-    leagues: packed.leagues.map((row) => ({
+    leagues: (safePacked.leagues || []).map((row) => ({
       id: row.id,
       slug: row.slug,
       logoUrl: row.logoUrl,
       name: statBoardLabel(locale, row.externalId, localizePlainName(locale, row.name)),
     })),
-    clubs: packed.clubs.map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
-    players: packed.players.map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
+    clubs: (safePacked.clubs || []).map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
+    players: (safePacked.players || []).map((row) => ({ ...row, name: localizePlainName(locale, row.name) })),
   };
 }
 
@@ -120,7 +121,17 @@ export async function loadFrontSquads(locale: string): Promise<{
   clubs: FrontCrest[];
   players: Array<FrontCrest & { photoUrl: string | null }>;
 }> {
-  return _getCachedFrontSquads(locale);
+  try {
+    const res = await _getCachedFrontSquads(locale);
+    if (res) return res;
+  } catch {
+    // fallback
+  }
+  return {
+    leagues: [],
+    clubs: [],
+    players: [],
+  };
 }
 
 

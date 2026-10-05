@@ -98,7 +98,20 @@ async function _loadFrontFacts(locale: string): Promise<FrontFacts> {
 const _getCachedFrontFacts = cache(_loadFrontFacts);
 
 export async function loadFrontFacts(locale: string): Promise<FrontFacts> {
-  return _getCachedFrontFacts(locale);
+  try {
+    const res = await _getCachedFrontFacts(locale);
+    if (res) return res;
+  } catch {
+    // fallback
+  }
+  return {
+    next: null,
+    loud: null,
+    podium: [],
+    move: null,
+    hours: [],
+    census: { live: 0, remaining: 0, finished: 0 },
+  };
 }
 
 
