@@ -7,7 +7,7 @@ import type { FrontTapeGoal } from './types';
 
 export async function loadFrontTape(locale: string): Promise<FrontTapeGoal[]> {
   const { todayKey, start, end } = frontDayWindow();
-  const rows = await cachedJson(`front:tape:${todayKey}:v1`, 25, () =>
+  let rows = await cachedJson(`front:tape:${todayKey}:v2`, 25, () =>
     prisma.matchEvent
       .findMany({
         where: {
@@ -15,17 +15,19 @@ export async function loadFrontTape(locale: string): Promise<FrontTapeGoal[]> {
           match: { kickoffAt: { gte: start, lt: end } },
         },
         orderBy: [{ minute: 'desc' }],
-        take: 10,
+        take: 12,
         select: {
           id: true,
           minute: true,
+          type: true,
           playerName: true,
           player: { select: { name: true, slug: true } },
           match: {
             select: {
               id: true,
-              homeTeam: { select: { name: true } },
-              awayTeam: { select: { name: true } },
+              homeTeam: { select: { name: true, logoUrl: true } },
+              awayTeam: { select: { name: true, logoUrl: true } },
+              league: { select: { name: true } },
             },
           },
         },
@@ -33,7 +35,37 @@ export async function loadFrontTape(locale: string): Promise<FrontTapeGoal[]> {
       .catch(swallow('front.tape', [])),
   );
 
-  return rows.map((row) => ({
+  // If no goals recorded in today's window yet, fetch most recent goals
+  if (!rows || rows.length === 0) {
+    rows = await cachedJson(`front:tape:recent:v2`, 60, () =>
+      prisma.matchEvent
+        .findMany({
+          where: {
+            type: { in: ['GOAL', 'PENALTY'] },
+          },
+          orderBy: [{ id: 'desc' }],
+          take: 8,
+          select: {
+            id: true,
+            minute: true,
+            type: true,
+            playerName: true,
+            player: { select: { name: true, slug: true } },
+            match: {
+              select: {
+                id: true,
+                homeTeam: { select: { name: true, logoUrl: true } },
+                awayTeam: { select: { name: true, logoUrl: true } },
+                league: { select: { name: true } },
+              },
+            },
+          },
+        })
+        .catch(swallow('front.tape.recent', [])),
+    );
+  }
+
+  return (rows || []).map((row) => ({
     id: row.id,
     minute: row.minute,
     player: localizePlainName(locale, row.player?.name || row.playerName || ''),
@@ -41,5 +73,9 @@ export async function loadFrontTape(locale: string): Promise<FrontTapeGoal[]> {
     matchId: row.match.id,
     home: localizePlainName(locale, row.match.homeTeam.name),
     away: localizePlainName(locale, row.match.awayTeam.name),
+    homeLogo: row.match.homeTeam.logoUrl ?? null,
+    awayLogo: row.match.awayTeam.logoUrl ?? null,
+    leagueName: row.match.league?.name ? localizePlainName(locale, row.match.league.name) : null,
+    type: row.type,
   }));
 }

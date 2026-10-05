@@ -52,6 +52,15 @@
   margin-inline: auto;
   padding: 1.5rem 0 5rem;
   gap: 3rem;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .luxuryInner {
+    width: calc(100% - 1.25rem);
+    padding: 1rem 0 3.5rem;
+    gap: 2.25rem;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -3368,4 +3377,192 @@
 :global(.dark) .squadPlayerRole,
 :global([data-theme="dark"]) .squadPlayerRole {
   color: #c084fc;
+}
+
+/* --------------------------------------------------------------------------
+   21. Luxury Goals Showcase (آخر الأهداف المسجلة)
+   -------------------------------------------------------------------------- */
+.goalsSection {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.goalsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .goalsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .goalsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.goalCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.06);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+:global(.dark) .goalCard,
+:global([data-theme="dark"]) .goalCard {
+  background: rgba(11, 16, 28, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.4);
+}
+
+.goalCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 12px 28px -6px rgba(245, 158, 11, 0.18);
+}
+
+.goalCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.goalMinuteBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.22) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #d97706;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+:global(.dark) .goalMinuteBadge,
+:global([data-theme="dark"]) .goalMinuteBadge {
+  color: #fbbf24;
+}
+
+.goalLeagueTag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:global(.dark) .goalLeagueTag,
+:global([data-theme="dark"]) .goalLeagueTag {
+  color: #94a3b8;
+}
+
+.goalScorerBlock {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.goalBallIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.goalScorerInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.goalScorerName {
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:global(.dark) .goalScorerName,
+:global([data-theme="dark"]) .goalScorerName {
+  color: #ffffff;
+}
+
+.goalPenaltyBadge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.goalMatchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(226, 232, 240, 0.8);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+:global(.dark) .goalMatchRow,
+:global([data-theme="dark"]) .goalMatchRow {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.goalTeamHome,
+.goalTeamAway {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.goalTeamHome {
+  text-align: start;
+}
+
+.goalTeamAway {
+  text-align: end;
+}
+
+.goalVsDivider {
+  color: #f59e0b;
+  font-weight: 900;
+  font-size: 0.75rem;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
 }

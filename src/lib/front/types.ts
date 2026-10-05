@@ -96,6 +96,10 @@ export type FrontTapeGoal = {
   matchId: string;
   home: string;
   away: string;
+  homeLogo?: string | null;
+  awayLogo?: string | null;
+  leagueName?: string | null;
+  type?: string | null;
 };
 
 export type FrontBroadcast = {

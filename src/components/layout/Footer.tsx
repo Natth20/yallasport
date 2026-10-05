@@ -79,7 +79,6 @@ export async function Footer() {
         { name: t('common.leagues') || 'البطولات', href: '/leagues' },
         { name: ar ? 'الفرق' : 'Teams', href: '/leagues' },
         { name: ar ? 'اللاعبون' : 'Players', href: '/compare-players' },
-        { name: ar ? 'المدربون' : 'Coaches', href: '/coach' },
       ],
     },
     {

@@ -69,8 +69,6 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
       label: ar ? 'المزيد' : 'More',
       items: [
         { name: ar ? 'الفرق' : 'Teams', href: '/leagues' },
-        { name: ar ? 'اللاعبون' : 'Players', href: '/compare-players' },
-        { name: ar ? 'المدربون' : 'Coaches', href: '/coach' },
         { name: t('common.transfers') || 'الانتقالات', href: '/transfers' },
         { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
         { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
