@@ -420,17 +420,28 @@
 
 .searchChip:hover {
   color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
 }
 
 .tray {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.18rem;
+  gap: 0.35rem;
+  padding: 0.2rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
   background: color-mix(in srgb, var(--muted) 55%, transparent);
   box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+}
+
+@media (max-width: 1099px) {
+  .tray {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    gap: 0.45rem;
+  }
 }
 
 .iconButton,
@@ -445,7 +456,32 @@
   color: var(--muted-foreground);
   cursor: pointer;
   border-radius: 999px;
-  transition: color 0.16s ease, background-color 0.16s ease;
+  transition: all 0.18s ease;
+}
+
+@media (max-width: 1099px) {
+  .searchChip,
+  .mobileMenuTrigger {
+    width: 2.35rem;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--muted) 75%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    color: var(--foreground);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  .searchChip:hover,
+  .mobileMenuTrigger:hover {
+    color: var(--ys-orange);
+    border-color: color-mix(in srgb, var(--ys-orange) 45%, transparent);
+    background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  }
 }
 
 .iconButton,
@@ -577,11 +613,12 @@
   display: flex;
   width: 100%;
   overflow: hidden;
-  border-top: 1px solid color-mix(in srgb, var(--ys-orange) 12%, var(--border));
+  border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   background: color-mix(in srgb, var(--card) 94%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding: 0.35rem 0.85rem;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  padding: 0.35rem 0.65rem;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
 }
 
 @media (min-width: 1100px) {
@@ -593,11 +630,11 @@
 .mobileNavScroll {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding-bottom: 0.1rem;
+  padding: 0.1rem 0;
   width: 100%;
 }
 
@@ -608,33 +645,42 @@
 .mobileNavItem {
   display: inline-flex;
   align-items: center;
-  gap: 0.32rem;
-  padding: 0.38rem 0.8rem;
-  font-size: 0.8rem;
+  gap: 0.35rem;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--muted-foreground);
-  border: 1px solid color-mix(in srgb, var(--ys-orange) 10%, var(--border));
-  background: color-mix(in srgb, var(--muted) 45%, transparent);
-  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 0.75rem;
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
   cursor: pointer;
-  transition: all 0.16s ease;
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .mobileNavItem:hover {
   color: var(--foreground);
-  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
-  border-color: color-mix(in srgb, var(--ys-orange) 30%, transparent);
+  background: color-mix(in srgb, var(--muted) 70%, transparent);
 }
 
 .mobileNavActive {
-  color: #0b0b0b !important;
-  -webkit-text-fill-color: #0b0b0b !important;
-  background: linear-gradient(135deg, #ff7b00 0%, #e05e00 100%) !important;
-  border-color: color-mix(in srgb, var(--ys-orange) 40%, transparent) !important;
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--ys-orange) 30%, transparent);
+  color: #d97706 !important;
+  -webkit-text-fill-color: #d97706 !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.22) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.38) !important;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.14);
+  font-weight: 800;
+}
+
+:global(.dark) .mobileNavActive,
+:global([data-theme="dark"]) .mobileNavActive {
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(217, 119, 6, 0.28) 100%) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 2px 14px rgba(245, 158, 11, 0.2);
 }
 
 .mobileLivePill {
@@ -644,10 +690,13 @@
   font-size: 0.68rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1099px) {
   .container {
-    padding: 0 0.75rem;
+    padding: 0 0.85rem;
     gap: 0.5rem;
     height: 3.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 }
