@@ -25,21 +25,40 @@ export async function safeRedisGet<T>(key: string, ms = 1200): Promise<T | null>
   }
 }
 
+// In-memory instant cache map (Key -> { data, expiresAt })
+const memoryCache = new Map<string, { data: unknown; expiresAt: number }>();
+
 export async function cachedJson<T>(
   key: string,
   ttlSeconds: number,
   load: () => Promise<T>,
 ): Promise<T> {
+  const now = Date.now();
+  
+  // 1. Instant In-Memory Cache Check (0ms)
+  const memHit = memoryCache.get(key);
+  if (memHit && memHit.expiresAt > now) {
+    return memHit.data as T;
+  }
+
+  // 2. Redis Cache Check
   try {
     const hit = await safeRedisGet<T>(key);
-    if (hit !== null && hit !== undefined) return hit;
+    if (hit !== null && hit !== undefined) {
+      memoryCache.set(key, { data: hit, expiresAt: now + ttlSeconds * 1000 });
+      return hit;
+    }
   } catch {
     // ignore cache read failure
   }
 
+  // 3. Fresh Query
   const fresh = await load();
-  if (fresh !== undefined && fresh !== null && isRealRedis) {
-    await safeRedisSet(key, fresh, { ex: ttlSeconds });
+  if (fresh !== undefined && fresh !== null) {
+    memoryCache.set(key, { data: fresh, expiresAt: now + ttlSeconds * 1000 });
+    if (isRealRedis) {
+      safeRedisSet(key, fresh, { ex: ttlSeconds }).catch(() => {});
+    }
   }
   return fresh;
 }

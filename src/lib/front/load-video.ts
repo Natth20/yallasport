@@ -30,7 +30,7 @@ function mapClips(
 
 async function _loadFrontVideo(locale: string): Promise<{ videos: FrontClip[]; reels: FrontClip[] }> {
   try {
-    const packed = await cachedJson(`front:youtube:${locale === 'en' ? 'en' : 'ar'}:v6`, 40, async () => {
+    const packed = await cachedJson(`front:youtube:${locale === 'en' ? 'en' : 'ar'}:v7`, 180, async () => {
       const [videos, reels] = await Promise.all([
         listYoutubeShelf('VIDEO', 36, locale).catch(swallow('front.yt.video', [])),
         listYoutubeShelf('SHORT', 24, locale).catch(swallow('front.yt.reels', [])),
