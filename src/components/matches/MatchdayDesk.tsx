@@ -38,17 +38,17 @@ export async function MatchdayDesk({
   return (
     <div className="space-y-4">
       {onAir.length > 0 ? (
-        <section className="overflow-hidden rounded-[1.45rem] border border-orange-400/30 matchday-desk-onair">
-          <header className="flex items-center justify-between gap-3 px-4 py-3">
+        <section className="overflow-hidden rounded-[1.45rem] border border-orange-400/30 bg-card/60 dark:bg-muted/40">
+          <header className="flex items-center justify-between gap-3 border-b border-orange-400/20 px-4 py-3">
             <div className="flex items-center gap-2">
-              <Radio className="h-3.5 w-3.5 text-orange-500 dark:text-orange-300" />
-              <h2 className="text-sm font-bold text-foreground dark:text-foreground">{t('licensed_feed')}</h2>
+              <Radio className="h-4 w-4 text-orange-500 animate-pulse" />
+              <h2 className="text-sm font-bold text-foreground">{t('licensed_feed')}</h2>
             </div>
-            <span className="text-[10px] font-black tabular-nums text-orange-600 dark:text-orange-200">
+            <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-black tabular-nums text-orange-600 dark:text-orange-300">
               {onAir.length}
             </span>
           </header>
-          <div className="flex gap-2 overflow-x-auto px-4 pb-4 no-scrollbar">
+          <div className="flex gap-3 overflow-x-auto px-4 py-3.5 no-scrollbar snap-x snap-mandatory">
             {onAir.map((match) => (
               <DeskCard key={match.id} match={match} live />
             ))}
@@ -57,22 +57,24 @@ export async function MatchdayDesk({
       ) : null}
 
       {soon.length > 0 ? (
-        <section className="matchday-soon overflow-hidden rounded-[1.45rem] border">
-          <header className="flex items-center justify-between gap-3 px-4 py-3">
+        <section className="overflow-hidden rounded-[1.45rem] border border-border/80 bg-card/60 dark:bg-muted/40">
+          <header className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
             <div className="flex items-center gap-2">
-              <Timer className="h-3.5 w-3.5 text-orange-500" />
+              <Timer className="h-4 w-4 text-orange-500" />
               <div>
-                <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
+                <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-orange-500">
                   {t('kicking_off_soon')}
                 </span>
-                <h2 className="text-sm font-bold text-foreground dark:text-foreground">
+                <h2 className="text-sm font-bold text-foreground">
                   {pick(locale, 'تنطلق خلال ساعتين', 'Kicking off within two hours')}
                 </h2>
               </div>
             </div>
-            <span className="text-[10px] font-black tabular-nums text-orange-500">{soon.length}</span>
+            <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-black tabular-nums text-orange-500">
+              {soon.length}
+            </span>
           </header>
-          <div className="flex gap-2 overflow-x-auto px-4 pb-4 no-scrollbar">
+          <div className="flex gap-3 overflow-x-auto px-4 py-3.5 no-scrollbar snap-x snap-mandatory">
             {soon.map((match) => (
               <DeskCard key={match.id} match={match} countdown />
             ))}
@@ -81,14 +83,19 @@ export async function MatchdayDesk({
       ) : null}
 
       {reminders.length > 0 ? (
-        <section className="matchday-plate !p-0 overflow-hidden">
-          <header className="flex items-center gap-2 px-4 py-3">
-            <Bell className="h-3.5 w-3.5 text-orange-500" />
-            <h2 className="text-sm font-bold text-foreground dark:text-foreground">
-              {pick(locale, 'تنبيهاتك لهذا اليوم', 'Your reminders today')}
-            </h2>
+        <section className="overflow-hidden rounded-[1.45rem] border border-border/80 bg-card/60 dark:bg-muted/40">
+          <header className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-orange-500" />
+              <h2 className="text-sm font-bold text-foreground">
+                {pick(locale, 'تنبيهاتك لهذا اليوم', 'Your reminders today')}
+              </h2>
+            </div>
+            <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-black tabular-nums text-orange-500">
+              {reminders.length}
+            </span>
           </header>
-          <div className="flex gap-2 overflow-x-auto px-4 pb-4 no-scrollbar">
+          <div className="flex gap-3 overflow-x-auto px-4 py-3.5 no-scrollbar snap-x snap-mandatory">
             {reminders.map((match) => (
               <DeskCard key={match.id} match={match} countdown={match.status === 'NOT_STARTED'} />
             ))}
@@ -99,8 +106,8 @@ export async function MatchdayDesk({
       {clashes.length > 0 ? (
         <section className="rounded-2xl border border-amber-400/35 bg-amber-50/80 px-4 py-4 dark:border-amber-400/20 dark:bg-amber-500/10">
           <header className="mb-3 flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 text-amber-600" />
-            <h2 className="text-sm font-bold text-foreground dark:text-foreground">
+            <Users className="h-4 w-4 text-amber-600" />
+            <h2 className="text-sm font-bold text-foreground">
               {pick(locale, 'تعارض في فرقك', 'A clash in your teams')}
             </h2>
           </header>
@@ -110,7 +117,7 @@ export async function MatchdayDesk({
                 key={`${a.id}-${b.id}`}
                 className="rounded-xl border border-amber-400/20 bg-card/80 px-3 py-2.5 text-[11px] dark:bg-muted"
               >
-                <p className="font-semibold text-foreground dark:text-foreground">
+                <p className="font-semibold text-foreground">
                   {pick(
                     locale,
                     'ركلتان في نفس الدقيقة تقريباً — اختر أي ملعب تتابع.',
@@ -150,38 +157,43 @@ function DeskCard({
   return (
     <Link
       href={`/match/${match.id}`}
-      className={`min-w-[220px] flex-1 rounded-xl border px-3 py-3 ${
+      className={`shrink-0 w-[240px] sm:w-[260px] snap-start rounded-2xl border p-3.5 transition-all hover:scale-[1.01] ${
         live
-          ? 'border-orange-400/35 bg-orange-50/80 dark:border-orange-300/25 dark:bg-card/[0.04]'
-          : 'border-border bg-card dark:border-border dark:bg-muted'
+          ? 'border-orange-500/40 bg-orange-50/90 dark:border-orange-500/35 dark:bg-orange-500/10'
+          : 'border-border/80 bg-card dark:border-border/60 dark:bg-muted/80 shadow-sm'
       }`}
     >
-      <div className={`mb-2 flex items-center justify-between gap-2 text-[9px] font-semibold ${
-        live ? 'text-muted-foreground dark:text-foreground/60' : 'text-muted-foreground'
+      <div className={`mb-2.5 flex items-center justify-between gap-2 text-[10px] font-bold ${
+        live ? 'text-orange-600 dark:text-orange-300' : 'text-muted-foreground'
       }`}>
         <span className="truncate">{match.league.name}</span>
-        {match.channel ? <span className="shrink-0 truncate text-orange-500">{match.channel}</span> : null}
+        {match.channel ? <span className="shrink-0 rounded bg-orange-500/10 px-1.5 py-0.5 text-[9px] font-bold text-orange-500">{match.channel}</span> : null}
       </div>
-      <div className="flex items-center gap-2">
-        <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6" />
-        <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-foreground dark:text-foreground">
+      <div className="flex items-center gap-2.5">
+        <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-foreground">
           {match.homeTeam.name}
         </span>
       </div>
-      <div className="mt-1.5 flex items-center gap-2">
-        <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6" />
-        <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-foreground dark:text-foreground">
+      <div className="mt-2 flex items-center gap-2.5">
+        <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-foreground">
           {match.awayTeam.name}
         </span>
       </div>
-      <div className={`mt-2 text-[10px] font-black tabular-nums ${live ? 'text-orange-600 dark:text-orange-200' : 'text-orange-500'}`}>
-        {live ? (
-          match.minute ? `${match.minute}′` : 'LIVE'
-        ) : countdown ? (
-          <MatchCountdown kickoffAt={new Date(match.kickoffAt)} compact />
-        ) : (
-          <ClientTime value={match.kickoffAt} />
-        )}
+      <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2 text-[11px] font-black tabular-nums">
+        <span className="text-[10px] font-bold text-muted-foreground">
+          {live ? 'مباشر' : countdown ? 'انطلاق بعد' : 'الموعد'}
+        </span>
+        <span className={live ? 'text-red-500 font-bold' : 'text-orange-500 font-bold'}>
+          {live ? (
+            match.minute ? `${match.minute}′` : 'LIVE'
+          ) : countdown ? (
+            <MatchCountdown kickoffAt={new Date(match.kickoffAt)} compact />
+          ) : (
+            <ClientTime value={match.kickoffAt} />
+          )}
+        </span>
       </div>
     </Link>
   );

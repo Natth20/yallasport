@@ -76,7 +76,7 @@ export function FrontArenaClient({
               <Calendar className="w-4 h-4" />
             </div>
             <h3 className={styles.cockpitTitleText}>
-              {ar ? 'مقصورة المباريات' : 'Matchday Cockpit'}
+              {ar ? 'مباريات اليوم' : 'Matchday Cockpit'}
             </h3>
           </div>
 

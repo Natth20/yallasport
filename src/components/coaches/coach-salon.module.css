@@ -1,22 +1,30 @@
-.house {
+/* ==========================================================================
+   COACH SALON MODULE - ROYAL LUXURY MODERN DESIGN SYSTEM
+   Supports Light & Dark Modes Natively
+   ========================================================================== */
+
+.coachPage {
   isolation: isolate;
   min-height: 100vh;
-  padding-bottom: 4.4rem;
+  padding-bottom: 5rem;
   background:
-    radial-gradient(70% 36% at 50% 0%, color-mix(in srgb, var(--ys-orange) 11%, transparent), transparent 62%),
+    radial-gradient(70% 36% at 50% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 60%),
     var(--background);
   color: var(--foreground);
 }
 
+/* --------------------------------------------------------------------------
+   1. MEGA HERO STAGE
+   -------------------------------------------------------------------------- */
 .hero {
   position: relative;
   overflow: hidden;
   color: #f6f1ea;
-  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 28%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 24%, transparent);
   background:
-    radial-gradient(50% 70% at 12% 0%, color-mix(in srgb, var(--ys-orange) 24%, transparent), transparent 56%),
-    radial-gradient(40% 50% at 92% 90%, color-mix(in srgb, #c26a3a 16%, transparent), transparent 58%),
-    linear-gradient(180deg, #16110d 0%, #0b0b0b 100%);
+    radial-gradient(55% 75% at 15% 0%, color-mix(in srgb, var(--ys-orange) 20%, transparent), transparent 60%),
+    radial-gradient(45% 55% at 85% 100%, color-mix(in srgb, #0ea5e9 12%, transparent), transparent 60%),
+    linear-gradient(180deg, #14110e 0%, #0a0a0a 100%);
 }
 
 .heroAura,
@@ -27,33 +35,30 @@
 }
 
 .heroGrid {
-  opacity: 0.055;
+  opacity: 0.05;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
   background-size: 3.2rem 3.2rem;
-  mask-image: radial-gradient(70% 70% at 40% 40%, #000 24%, transparent 80%);
-}
-
-.heroPhoto {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-  opacity: 0.16;
-  filter: saturate(0.75) contrast(1.08);
+  mask-image: radial-gradient(70% 70% at 50% 40%, #000 25%, transparent 80%);
 }
 
 .heroInner {
   position: relative;
   z-index: 1;
-  width: min(1280px, calc(100% - 2rem));
+  width: min(1320px, calc(100% - 2rem));
   margin-inline: auto;
-  padding-block: 2rem 2.4rem;
+  padding-block: 2.2rem 2.8rem;
   display: grid;
-  gap: 1.7rem;
+  gap: 2rem;
+}
+
+.heroTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .crumb {
@@ -61,418 +66,512 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: rgba(246, 241, 234, 0.68);
+  color: rgba(246, 241, 234, 0.7);
 }
 
 .crumb a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .crumb a:hover {
   color: var(--ys-orange);
 }
 
-.stage {
-  display: grid;
-  gap: 1.55rem;
-  align-items: end;
+.heroStage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.8rem;
 }
 
-@media (min-width: 880px) {
-  .stage {
-    grid-template-columns: 13.2rem minmax(0, 1fr);
-    gap: 2.1rem;
+@media (min-width: 768px) {
+  .heroStage {
+    flex-direction: row;
+    align-items: center;
+    gap: 2.4rem;
   }
 }
 
-.portrait {
+.avatarWrap {
   position: relative;
-  width: 13.2rem;
-  height: 16.4rem;
+  width: 9.5rem;
+  height: 9.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
   overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--ys-orange) 34%, transparent);
-  background: #111;
-  box-shadow: 0 24px 50px color-mix(in srgb, #000 46%, transparent);
+  border: 3.5px solid color-mix(in srgb, var(--ys-orange) 65%, #fff);
+  background: radial-gradient(circle at 50% 30%, #2a221b, #0d0d0d);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.6),
+    0 0 28px color-mix(in srgb, var(--ys-orange) 24%, transparent);
 }
 
-.portrait img {
+@media (min-width: 768px) {
+  .avatarWrap {
+    width: 11rem;
+    height: 11rem;
+  }
+}
+
+.avatarWrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: contrast(1.04);
+  object-position: top center;
+  filter: contrast(1.05);
 }
 
-.portrait span {
-  display: grid;
-  place-items: center;
+.avatarFallback {
+  width: 100%;
   height: 100%;
-  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.8rem;
   font-weight: 900;
   color: var(--ys-orange);
 }
 
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .kicker {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ys-orange);
 }
 
-.stage h1 {
-  margin: 0.25rem 0 0;
-  font-size: clamp(2.1rem, 4.8vw, 3.4rem);
+.heroCopy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4.2vw, 3.2rem);
   font-weight: 900;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: #fff;
 }
 
-.clubLink {
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.75rem;
-  color: #f6f1ea;
-  text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
   font-weight: 800;
+  backdrop-filter: blur(8px);
 }
 
-.clubLink:hover {
-  color: var(--ys-orange);
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10.2rem, 1fr));
-  gap: 0.8rem;
-}
-
-.fact {
-  display: grid;
-  gap: 0.28rem;
-  padding: 0.95rem 1rem;
-  border-radius: 1.05rem;
-  border: 1px solid color-mix(in srgb, #fff 10%, transparent);
-  background: color-mix(in srgb, #fff 5%, transparent);
-}
-
-.fact em {
-  font-style: normal;
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(246, 241, 234, 0.58);
-}
-
-.fact strong {
-  font-size: 0.88rem;
-}
-
-.floor {
-  width: min(1280px, calc(100% - 2rem));
-  margin-inline: auto;
-  padding-top: 1.85rem;
-  display: grid;
-  gap: 1.45rem;
-}
-
-.kpis {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-@media (min-width: 800px) {
-  .kpis {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.kpis li {
-  display: grid;
-  gap: 0.22rem;
-  padding: 1.15rem 1.05rem;
-  border-radius: 1.2rem;
-  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ys-orange) 9%, var(--card)), var(--card));
-}
-
-.kpis strong {
-  font-size: 1.35rem;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-}
-
-.kpis span {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-}
-
-.layout {
-  display: grid;
-  gap: 1.5rem;
-  align-items: start;
-}
-
-@media (min-width: 1080px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 21.5rem;
-  }
-}
-
-.main,
-.rail {
-  display: grid;
-  gap: 1.25rem;
-  align-content: start;
-}
-
-.band,
-.railCard {
-  display: grid;
-  gap: 1.1rem;
-  padding: 1.4rem;
-  border-radius: 1.4rem;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
-}
-
-.bandHead span,
-.railCard span {
-  font-size: 0.64rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ys-orange);
-}
-
-.bandHead h2,
-.railCard h2 {
-  margin: 0.15rem 0 0;
-  font-size: 1.08rem;
-  font-weight: 900;
-}
-
-.bandHead p {
-  margin: 0.2rem 0 0;
-  font-size: 0.78rem;
-  color: var(--muted-foreground);
-}
-
-.timeline {
-  display: grid;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.timeline li {
-  display: grid;
-  grid-template-columns: 2.6rem minmax(0, 1fr);
-  gap: 0.85rem;
+.chipLink {
+  display: inline-flex;
   align-items: center;
-  padding: 0.85rem 0.95rem;
-  border-radius: 1.05rem;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--foreground) 2%, var(--card));
-}
-
-.timeline img,
-.timeline i {
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 0.8rem;
-  object-fit: contain;
-  background: color-mix(in srgb, var(--foreground) 6%, transparent);
-}
-
-.timeline i {
-  display: block;
-}
-
-.timeline strong,
-.timeline em {
-  display: block;
-}
-
-.timeline em {
-  margin-top: 0.2rem;
-  font-style: normal;
-  font-size: 0.78rem;
-  color: var(--muted-foreground);
-}
-
-.squad {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr));
-  gap: 0.85rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.squad a {
-  display: grid;
-  gap: 0.45rem;
-  color: inherit;
-  text-decoration: none;
-}
-
-.shot {
-  position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1 / 1.08;
-  overflow: hidden;
-  border-radius: 1.05rem;
-  border: 1px solid var(--border);
-  background:
-    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--ys-orange) 22%, transparent), #14110e 72%);
-}
-
-.shot img,
-.shot span {
-  width: 72%;
-  height: 72%;
-  border-radius: 999px;
-  object-fit: cover;
-  object-position: top center;
-  border: 2px solid color-mix(in srgb, var(--ys-orange) 42%, transparent);
-}
-
-.shot span {
-  display: grid;
-  place-items: center;
-  font-size: 1.55rem;
-  font-weight: 900;
-  color: var(--ys-orange);
-}
-
-.shot b {
-  position: absolute;
-  inset-block-end: 0.4rem;
-  inset-inline-start: 0.4rem;
-  min-width: 1.5rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, #000 62%, transparent);
+  gap: 0.4rem;
+  background: color-mix(in srgb, var(--ys-orange) 20%, rgba(255, 255, 255, 0.08));
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 45%, rgba(255, 255, 255, 0.14));
   color: #fff;
-  font-size: 0.66rem;
-  font-weight: 900;
-  text-align: center;
-}
-
-.squad strong,
-.squad em {
-  display: block;
-  padding-inline: 0.15rem;
-}
-
-.squad em {
-  font-style: normal;
-  font-size: 0.68rem;
-  color: var(--muted-foreground);
-}
-
-.slips {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.slip {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.75rem 0.8rem;
-  border-radius: 1rem;
-  border: 1px solid var(--border);
-  color: inherit;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
   text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
 }
 
-.slip:hover {
+.chipLink:hover {
+  background: var(--ys-orange);
+  color: #111;
+  border-color: var(--ys-orange);
+  transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   2. DASHBOARD MAIN & CARDS
+   -------------------------------------------------------------------------- */
+.main {
+  max-width: 1320px;
+  margin: 2rem auto 0;
+  padding: 0 1rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.glassCard {
+  background: color-mix(in srgb, var(--foreground) 2.2%, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+@media (min-width: 768px) {
+  .glassCard {
+    padding: 1.85rem;
+  }
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.35rem;
+}
+
+.cardTitle {
+  font-size: 1.12rem;
+  font-weight: 900;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--foreground);
+}
+
+.cardSubtitle {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  margin: 0.2rem 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. STAT BOXES & KPIS
+   -------------------------------------------------------------------------- */
+.statBox {
+  background: color-mix(in srgb, var(--foreground) 3.5%, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.statBox:hover {
+  transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
 }
 
-.slipTop {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.7rem;
+.statBoxTitle {
+  font-size: 0.74rem;
   font-weight: 800;
   color: var(--muted-foreground);
 }
 
-.row {
+.statBoxValue {
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+/* --------------------------------------------------------------------------
+   4. CAREER STINTS TIMELINE
+   -------------------------------------------------------------------------- */
+.careerTimeline {
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.careerCard {
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  padding: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.careerCard:hover {
+  border-color: color-mix(in srgb, var(--ys-orange) 50%, var(--border));
+  background: color-mix(in srgb, var(--foreground) 5%, var(--card));
+  transform: translateY(-2px);
+}
+
+.careerLogo {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--foreground) 4%, var(--card));
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.careerLogo img {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+
+.careerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.careerClub {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.careerYears {
+  font-size: 0.74rem;
+  color: var(--muted-foreground);
+  font-weight: 800;
+}
+
+.careerRole {
+  font-size: 0.7rem;
+  color: var(--ys-orange);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   5. TROPHIES SHOWCASE
+   -------------------------------------------------------------------------- */
+.trophiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.trophyCard {
+  background: linear-gradient(135deg, color-mix(in srgb, #eab308 8%, var(--card)), var(--card));
+  border: 1px solid color-mix(in srgb, #eab308 25%, var(--border));
+  border-radius: 1.15rem;
+  padding: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.trophyCard:hover {
+  transform: translateY(-2px);
+  border-color: #eab308;
+  box-shadow: 0 8px 24px color-mix(in srgb, #eab308 14%, transparent);
+}
+
+.trophyIconBox {
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, #eab308 18%, var(--card));
+  border: 1px solid color-mix(in srgb, #eab308 40%, var(--border));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.trophyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.trophyTitle {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--foreground);
+  line-height: 1.25;
+}
+
+.trophyMeta {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  font-weight: 800;
+}
+
+/* --------------------------------------------------------------------------
+   6. BIOGRAPHY / TACTICAL VISION BOX
+   -------------------------------------------------------------------------- */
+.bioText {
+  font-size: 0.95rem;
+  line-height: 1.9;
+  color: var(--foreground);
+  margin: 0;
+  opacity: 0.95;
+}
+
+/* --------------------------------------------------------------------------
+   7. SQUAD UNDER COACH
+   -------------------------------------------------------------------------- */
+.squadGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.85rem;
+}
+
+@media (min-width: 768px) {
+  .squadGrid {
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+    gap: 1rem;
+  }
+}
+
+.playerCard {
+  position: relative;
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  padding: 1.15rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.8rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.playerCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--ys-orange);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.playerCardAvatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--muted);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playerCardAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.playerCardAvatarFallback {
+  font-size: 1.7rem;
+  font-weight: 900;
+  color: var(--ys-orange);
+}
+
+.playerShirtBadge {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  background: var(--ys-orange);
+  color: #111;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
+.playerName {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.playerMeta {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+/* --------------------------------------------------------------------------
+   8. MATCH SLIPS
+   -------------------------------------------------------------------------- */
+.slipsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.85rem;
+}
+
+.slip {
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.slip:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ys-orange) 40%, var(--border));
+}
+
+.slipHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
   font-weight: 800;
 }
 
-.score {
-  font-variant-numeric: tabular-nums;
+.slipRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 800;
 }
 
-.honours {
-  display: grid;
+.slipRowTeam {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.honours li {
-  padding: 0.7rem 0.75rem;
-  border-radius: 0.95rem;
-  border: 1px solid var(--border);
-}
-
-.honours em {
-  display: block;
-  margin-top: 0.15rem;
-  font-style: normal;
-  font-size: 0.72rem;
-  color: var(--muted-foreground);
-}
-
-.news a {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--border);
-  color: inherit;
-  text-decoration: none;
-}
-
-.news em {
-  font-size: 0.68rem;
-  color: var(--muted-foreground);
-}
-
-.bio,
-.source {
-  margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.7;
-  color: var(--muted-foreground);
-}
-
-.source {
-  font-size: 0.72rem;
+.slipRow strong {
+  font-size: 0.95rem;
+  color: var(--foreground);
 }

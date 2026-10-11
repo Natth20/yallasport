@@ -82,7 +82,7 @@ export function LeagueChapterShell({
     >
       <div className={`${styles.folio} league-dossier league-chapter`}>
         {seasons && seasons.length > 1 && seasonHref ? (
-          <div className="league-season-switch">
+          <div style={{marginBottom:"20px"}} className="league-season-switch">
             {seasons.slice(0, 8).map((season) => (
               <Link key={season} href={seasonHref(season)} className={season === seasonId ? 'is-active' : ''}>
                 {formatLeagueSeason(season) || season}
@@ -94,7 +94,7 @@ export function LeagueChapterShell({
         {signature && signature.length > 0 ? (
           <div className="league-signature">
             {signature.map((stat, index) => (
-              <div
+              <div style={{marginBottom:"20px"}}
                 key={stat.label}
                 className={`league-signature-tile${index === 0 ? ' is-lead' : ''}`}
               >

@@ -9,44 +9,31 @@ import {
   ArrowUpRight,
   Award,
   Calendar,
+  CheckCircle2,
+  Clock,
+  Compass,
   Crosshair,
   Flame,
+  Info,
   Layers,
+  MapPin,
   Newspaper,
   Repeat,
   Shield,
   Sparkles,
   Trophy,
+  User,
   Users,
   Zap,
 } from 'lucide-react';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
-import { HallBezel, HallBrackets } from '@/components/salon/HallBezel';
 import { pick } from '@/i18n/pick';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
-import { localizeTransferType } from '@/lib/transfers/fee';
 import { formatSportFigure } from '@/lib/format/sport-figure';
 import { apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import type { PlayerDossierData, PlayerSeasonBlock } from '@/lib/players/load-dossier';
-import styles from '@/components/salon/entity-hall.module.css';
-
-function folio(index: number) {
-  return String(index + 1).padStart(2, '0');
-}
-
-function metricGroups(block: PlayerSeasonBlock, locale: string) {
-  return [
-    { label: pick(locale, 'ظهور', 'Apps'), value: block.games.appearances },
-    { label: pick(locale, 'أساسي', 'XI'), value: block.games.lineups },
-    { label: pick(locale, 'دقيقة', 'Mins'), value: block.games.minutes },
-    { label: pick(locale, 'أهداف', 'Goals'), value: block.goals.total },
-    { label: pick(locale, 'صناعات', 'Assists'), value: block.goals.assists },
-    { label: pick(locale, 'تقييم', 'Rating'), value: formatSportFigure(block.games.rating) ?? block.games.rating },
-    { label: pick(locale, 'صفراء', 'Yellow'), value: block.cards.yellow },
-    { label: pick(locale, 'حمراء', 'Red'), value: block.cards.red },
-  ].filter((row) => row.value != null) as Array<{ label: string; value: string | number }>;
-}
+import board from '@/components/teams/team-salon.module.css';
 
 export function PlayerDossier({
   locale,
@@ -60,827 +47,585 @@ export function PlayerDossier({
     currentClub,
     onLoanFrom,
     confirmedFreeAgent,
-    transfersUpdatedAt,
-    clubHistory,
-    apiClubs,
     seasonBlocks,
     seasonTotals,
     rates,
     profileBars,
     trophies,
     sidelined,
-    timeline,
     transfers,
     news,
     teammates,
     clubFixtures,
+    timeline,
   } = dossier;
 
   const name = localizePlainName(locale, player.name);
   const portrait = apiSportsPlayerPhoto(player.externalId, player.photoUrl);
   const shirt = currentClub?.shirtNumber ?? seasonBlocks.find((block) => block.games.number != null)?.games.number;
   const clubName = currentClub ? localizePlainName(locale, currentClub.name) : null;
-  const unavailable = pick(locale, 'غير متوفر', 'Unavailable');
-  const clubStatus = currentClub
-    ? clubName || unavailable
-    : confirmedFreeAgent
-      ? pick(locale, 'لاعب حر', 'Free agent')
-      : pick(locale, 'النادي الحالي غير متوفر في مصدر البيانات', 'Current club is not listed in the source');
-  const queue = useMemo(() => teammates.slice(0, 10), [teammates]);
-  const [face, setFace] = useState<string | null>(null);
-  const shownShot = face || portrait;
-
-  const identity = [
-    player.nationality ? { label: pick(locale, 'الجنسية', 'Nationality'), value: localizePlainName(locale, player.nationality) } : null,
-    player.age != null ? { label: pick(locale, 'العمر', 'Age'), value: `${player.age} ${pick(locale, 'سنة', 'yrs')}` } : null,
-    player.height ? { label: pick(locale, 'الطول', 'Height'), value: player.height } : null,
-    player.weight ? { label: pick(locale, 'الوزن', 'Weight'), value: player.weight } : null,
-    player.position ? { label: pick(locale, 'المركز', 'Position'), value: localizePlainName(locale, player.position) } : null,
-    shirt != null ? { label: pick(locale, 'رقم القميص', 'Shirt No.'), value: `#${shirt}` } : null,
-    clubName || confirmedFreeAgent
-      ? { label: pick(locale, 'النادي الحالي', 'Current club'), value: clubStatus }
-      : { label: pick(locale, 'الحالة الحالية', 'Current status'), value: clubStatus },
-    player.injured ? { label: pick(locale, 'الحالة الطبية', 'Status'), value: pick(locale, 'مصاب حالياً', 'Injured') } : null,
-  ].filter(Boolean) as Array<{ label: string; value: string }>;
-
-  const kpis = seasonTotals
-    ? [
-      { label: pick(locale, 'مباريات الظهور', 'Appearances'), value: seasonTotals.appearances },
-      { label: pick(locale, 'أساسي', 'Lineups / Starts'), value: seasonTotals.lineups },
-      { label: pick(locale, 'الأهداف المسجلة', 'Total Goals'), value: seasonTotals.goals },
-      { label: pick(locale, 'التمريرات الحاسمة', 'Assists'), value: seasonTotals.assists },
-      { label: pick(locale, 'دقائق اللعب', 'Minutes Played'), value: seasonTotals.minutes },
-      seasonTotals.rating
-        ? { label: pick(locale, 'التقييم العام', 'Rating'), value: formatSportFigure(seasonTotals.rating) ?? seasonTotals.rating }
-        : null,
-    ].filter(Boolean) as Array<{ label: string; value: string | number }>
-    : [];
+  const nationality = player.nationality ? localizePlainName(locale, player.nationality) : null;
+  const position = player.position ? localizePlainName(locale, player.position) : null;
 
   return (
-    <div className={`${styles.hall} ${styles.cardHall}`}>
-      {/* ---------------- FOYER SUB-NAVIGATION ---------------- */}
-      <nav className={styles.foyer} aria-label={pick(locale, 'أقسام ملف اللاعب', 'Player profile sections')}>
-        <div className={styles.foyerTabs}>
-          <a href="#hall-screen" className={`${styles.foyerTab} ${styles.isOn}`}>
-            <Flame size={14} aria-hidden />
-            <span>{pick(locale, 'بطاقة اللاعب', 'Player VIP Card')}</span>
-          </a>
-          {kpis.length > 0 || profileBars.length > 0 ? (
-            <a href="#hall-stats" className={styles.foyerTab}>
-              <Activity size={14} aria-hidden />
-              <span>{pick(locale, 'المؤشرات والمهارات', 'Key Metrics & Skills')}</span>
-            </a>
-          ) : null}
-          {seasonBlocks.length > 0 ? (
-            <a href="#hall-competitions" className={styles.foyerTab}>
-              <Layers size={14} aria-hidden />
-              <span>{pick(locale, 'المسابقات والبطولات', 'Competitions')}</span>
-              <span className={styles.foyerBadge}>{seasonBlocks.length}</span>
-            </a>
-          ) : null}
-          {clubFixtures.upcoming.length > 0 || clubFixtures.recent.length > 0 ? (
-            <a href="#hall-fixtures" className={styles.foyerTab}>
-              <Calendar size={14} aria-hidden />
-              <span>{pick(locale, 'مواعيد النادي', 'Club Fixtures')}</span>
-              <span className={styles.foyerBadge}>{clubFixtures.upcoming.length + clubFixtures.recent.length}</span>
-            </a>
-          ) : null}
-          {teammates.length > 0 ? (
-            <a href="#hall-squad" className={styles.foyerTab}>
-              <Users size={14} aria-hidden />
-              <span>{pick(locale, 'زملاء الفريق', 'Teammates')}</span>
-              <span className={styles.foyerBadge}>{teammates.length}</span>
-            </a>
-          ) : null}
-          <a href="#hall-transfers" className={styles.foyerTab}>
-            <Repeat size={14} aria-hidden />
-            <span>{pick(locale, 'الانتقالات والأندية', 'Transfers & Clubs')}</span>
-          </a>
-          {trophies.length > 0 ? (
-            <a href="#hall-trophies" className={styles.foyerTab}>
-              <Award size={14} aria-hidden />
-              <span>{pick(locale, 'الألقاب والبطولات', 'Trophies')}</span>
-              <span className={styles.foyerBadge}>{trophies.length}</span>
-            </a>
-          ) : null}
-          {sidelined.length > 0 ? (
-            <a href="#hall-medical" className={styles.foyerTab}>
-              <AlertCircle size={14} aria-hidden />
-              <span>{pick(locale, 'السجل الطبي', 'Medical Record')}</span>
-            </a>
-          ) : null}
-        </div>
-      </nav>
+    <div className={board.teamPage}>
+      {/* =========================================================================
+          1. GOLDEN VIP PLAYER HERO BANNER
+          ========================================================================= */}
+      <section className={board.hero} aria-label={name}>
+        <div className={board.heroAura} aria-hidden />
+        <div className={board.heroGrid} aria-hidden />
 
-      {/* ---------------- CINEMA STAGE: VIP PLAYER CARD ---------------- */}
-      <div id="hall-screen" className={styles.stage}>
-        <section className={styles.screen} aria-label={name}>
-          <div className={styles.frame}>
-            <div className={styles.chassis}>
-              <HallBezel
-                label={clubStatus}
-                clock={player.position ? localizePlainName(locale, player.position) : pick(locale, 'لاعب', 'Player')}
-              />
+        <div className={board.heroInner}>
+          {/* Breadcrumb */}
+          <div className={board.heroTop}>
+            <div className={board.crumb}>
+              <Link href="/">{pick(locale, 'الرئيسية', 'Home')}</Link>
+              <span>/</span>
+              {currentClub ? (
+                <>
+                  <Link href={`/team/${currentClub.slug}`}>{clubName}</Link>
+                  <span>/</span>
+                </>
+              ) : null}
+              <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{name}</span>
+            </div>
+          </div>
 
-              {/* VIP Ultimate Player Platform */}
-              <div className={styles.vipCard}>
-                {shirt != null ? (
-                  <span className={styles.vipWatermark} aria-hidden>
-                    {shirt}
+          {/* Hero Core: Cutout Portrait, Name, Badges */}
+          <div className={board.heroStage}>
+            {/* Player Avatar Wrap */}
+            <div className={board.playerHeroAvatarWrap}>
+              {portrait ? (
+                <img src={portrait} alt={name} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', fontWeight: 900, color: 'var(--ys-orange)' }}>
+                  {name.charAt(0)}
+                </div>
+              )}
+
+              {shirt != null ? (
+                <span className={board.rankBadge}>
+                  #{shirt}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Player Info Details */}
+            <div className={board.heroCopy}>
+              <p className={board.kicker}>
+                {position ? `${position} · ` : ''}
+                {nationality ? `${nationality} · ` : ''}
+                {pick(locale, 'لاعب كرة قدم محترف', 'Professional Player')}
+              </p>
+
+              <h1>{name}</h1>
+
+              {/* Badges Ribbon */}
+              <div className={board.chips}>
+                {currentClub ? (
+                  <Link href={`/team/${currentClub.slug}`} className={board.chipLink}>
+                    <LeagueCrest name={currentClub.name} logoUrl={currentClub.logoUrl} className="h-4 w-4" />
+                    <span style={{ marginInlineStart: '0.35rem' }}>{clubName}</span>
+                  </Link>
+                ) : confirmedFreeAgent ? (
+                  <span className={board.chip}>
+                    {pick(locale, 'لاعب حر', 'Free Agent')}
                   </span>
                 ) : null}
 
-                <div className={styles.vipInfo}>
-                  {currentClub ? (
-                    <Link href={currentClub.slug ? `/team/${currentClub.slug}` : '/transfers'} className={styles.vipTeamBadge}>
-                      <LeagueCrest name={currentClub.name} logoUrl={currentClub.logoUrl} className="h-6 w-6" />
-                      <span>{clubName}</span>
-                    </Link>
-                  ) : (
-                    <span className={styles.vipTeamBadge}>
-                      <Shield size={16} />
-                      <span>{clubStatus}</span>
-                    </span>
-                  )}
-                  {onLoanFrom ? (
-                    <p className={styles.clubStatus}>
-                      <span className={styles.transferKind}>{pick(locale, 'إعارة', 'Loan')}</span>
-                      <span>
-                        {pick(locale, 'مرتبط بـ', 'Parent club')}{' '}
-                        {onLoanFrom.slug ? (
-                          <Link href={`/team/${onLoanFrom.slug}`}>{localizePlainName(locale, onLoanFrom.name)}</Link>
-                        ) : (
-                          localizePlainName(locale, onLoanFrom.name)
-                        )}
-                      </span>
-                    </p>
-                  ) : null}
+                {onLoanFrom ? (
+                  <span className={board.chip}>
+                    🔄 {pick(locale, 'معار من:', 'On loan from:')} {localizePlainName(locale, onLoanFrom.name)}
+                  </span>
+                ) : null}
 
-                  <h1 className={styles.vipTitle}>{name}</h1>
+                {player.injured === true ? (
+                  <span className={board.chip} style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)', color: '#ef4444', fontWeight: 900 }}>
+                    🚨 {pick(locale, 'مصاب حالياً', 'Injured')}
+                  </span>
+                ) : player.injured === false ? (
+                  <span className={board.chip} style={{ background: 'rgba(34, 197, 94, 0.12)', borderColor: 'rgba(34, 197, 94, 0.35)', color: '#16a34a', fontWeight: 900 }}>
+                    🟢 {pick(locale, 'جاهز للمشاركة', 'Match Fit')}
+                  </span>
+                ) : null}
 
-                  <div className={styles.vipMetaPills}>
-                    {player.position ? (
-                      <span className={styles.vipPill}>
-                        <b>{localizePlainName(locale, player.position)}</b>
-                      </span>
-                    ) : null}
-                    {player.nationality ? (
-                      <span className={styles.vipPill}>
-                        <span>🌍</span>
-                        <span>{localizePlainName(locale, player.nationality)}</span>
-                      </span>
-                    ) : null}
-                    {player.age != null ? (
-                      <span className={styles.vipPill}>
-                        <span>{player.age} {pick(locale, 'سنة', 'yrs')}</span>
-                      </span>
-                    ) : null}
-                    {player.height ? (
-                      <span className={styles.vipPill}>
-                        <span>📏</span>
-                        <span>{player.height}</span>
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
+                {player.age != null ? (
+                  <span className={board.chip}>
+                    <Calendar size={13} style={{ marginInlineEnd: '0.35rem' }} />
+                    {player.age} {pick(locale, 'سنة', 'yrs')}
+                  </span>
+                ) : null}
 
-                <div className={styles.vipAvatarBox}>
-                  <div className={styles.vipAvatarFrame}>
-                    {shownShot ? (
-                      <img src={shownShot} alt={name} />
-                    ) : (
-                      <div className={styles.vipAvatarPlaceholder}>{name.charAt(0)}</div>
-                    )}
-                  </div>
-                  {shirt != null ? (
-                    <span className={styles.vipShirtBadge} title={pick(locale, 'رقم القميص', 'Shirt number')}>
-                      {shirt}
-                    </span>
-                  ) : null}
-                </div>
+                {player.height ? (
+                  <span className={board.chip}>
+                    {pick(locale, 'الطول:', 'Height:')} {player.height}
+                  </span>
+                ) : null}
+
+                {player.weight ? (
+                  <span className={board.chip}>
+                    {pick(locale, 'الوزن:', 'Weight:')} {player.weight}
+                  </span>
+                ) : null}
+
+                {player.birthPlace ? (
+                  <span className={board.chip}>
+                    <MapPin size={13} style={{ marginInlineEnd: '0.35rem' }} />
+                    {player.birthPlace}
+                  </span>
+                ) : null}
+
+                {seasonTotals?.rating ? (
+                  <span className={board.chip} style={{ background: 'rgba(234, 179, 8, 0.15)', borderColor: 'rgba(234, 179, 8, 0.35)', color: '#eab308' }}>
+                    ★ {pick(locale, 'التقييم:', 'Rating:')} {formatSportFigure(seasonTotals.rating)}
+                  </span>
+                ) : null}
               </div>
-
-              {/* Bottom Caption */}
-              <div className={styles.caption}>
-                <span>
-                  <b>{name}</b>
-                  {clubName ? ` · ${clubName}` : ''}
-                </span>
-                <span>{player.position ? localizePlainName(locale, player.position) : pick(locale, 'لاعب محترف', 'Pro Player')}</span>
-              </div>
-
-              <HallBrackets />
             </div>
           </div>
-
-          <div className={styles.program}>
-            <div className={styles.chips}>
-              <span className={styles.chipOn}>
-                <b>{name}</b>
-              </span>
-              {clubName ? <span className={styles.chip}>{clubName}</span> : null}
-              {player.position ? <span className={styles.chip}>{localizePlainName(locale, player.position)}</span> : null}
-              {player.nationality ? <span className={styles.chip}>{localizePlainName(locale, player.nationality)}</span> : null}
-            </div>
-            <h2 className={styles.programTitle}>{[player.firstName, player.lastName].filter(Boolean).join(' ') || name}</h2>
-            <div className={styles.acts}>
-              {currentClub?.slug ? (
-                <Link href={`/team/${currentClub.slug}`} className={styles.go}>
-                  <span>{pick(locale, 'صفحة النادي', 'Club page')}</span>
-                  <ArrowUpRight size={14} />
-                </Link>
-              ) : null}
-              <Link href={`/compare-players?p1=${player.slug}`} className={styles.ghost}>
-                {pick(locale, 'مقارنة إحصاءات اللاعب', 'Compare Player')}
-              </Link>
-              {face ? (
-                <button type="button" className={styles.ghost} onClick={() => setFace(null)}>
-                  {pick(locale, 'استعادة صورة اللاعب', 'Reset Portrait')}
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </section>
-
-        {queue.length > 0 ? (
-          <aside className={styles.queue} aria-label={pick(locale, 'قائمة الزملاء', 'Teammates programme')}>
-            <header className={styles.queueHead}>
-              <div>
-                <p>{pick(locale, 'زملاء الفريق', 'Teammates')}</p>
-                <h3>{pick(locale, 'قائمة الزملاء', 'Teammates')}</h3>
-              </div>
-              <span className={styles.shelfBadge}>{folio(queue.length)}</span>
-            </header>
-            <ol className={styles.queueList}>
-              {queue.map((row, index) => {
-                const shot = apiSportsPlayerPhoto(row.slug.match(/(\d+)$/)?.[1], row.photoUrl);
-                const active = shot && shot === shownShot;
-                return (
-                  <li key={row.slug}>
-                    <button
-                      type="button"
-                      className={`${styles.queueItem}${active ? ` ${styles.on}` : ''}`}
-                      onClick={() => setFace(shot)}
-                      aria-pressed={Boolean(active)}
-                    >
-                      <span className={styles.queueNum}>{folio(index)}</span>
-                      <span className={`${styles.queueThumb} ${styles.isFace}`}>
-                        {shot ? <img src={shot} alt="" /> : <span>{row.name.charAt(0)}</span>}
-                      </span>
-                      <span className={styles.queueCopy}>
-                        <b>{localizePlainName(locale, row.name)}</b>
-                        <small>{row.position ? localizePlainName(locale, row.position) : pick(locale, 'زميل في الفريق', 'Teammate')}</small>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-          </aside>
-        ) : null}
-      </div>
-
-      {/* ---------------- IDENTITY FACTS & KPIS ---------------- */}
-      <div id="hall-stats" style={{ display: 'grid', gap: '1.25rem' }}>
-        {identity.length > 0 ? (
-          <div className={styles.facts}>
-            {identity.map((row) => (
-              <article key={row.label} className={styles.fact}>
-                <em>{row.label}</em>
-                <strong>{row.value}</strong>
-              </article>
-            ))}
-          </div>
-        ) : null}
-
-        {kpis.length > 0 ? (
-          <ul className={styles.kpis}>
-            {kpis.map((row) => (
-              <li key={row.label}>
-                <strong>{row.value}</strong>
-                <span>{row.label}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-
-      {/* ---------------- PERFORMANCE RADAR & SKILL BARS ---------------- */}
-      {profileBars && profileBars.length > 0 ? (
-        <section className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Zap size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'المهارات الفنية', 'Technical attributes')}</h3>
-                <p>{pick(locale, 'مؤشرات الأداء الميداني المستخرجة رياضياً من بيانات الموسم.', 'Field performance ratings calculated from match season stats.')}</p>
-              </div>
-            </div>
-            <span className={styles.shelfBadge}>{profileBars.length}</span>
-          </header>
-
-          <div className={styles.skillBars}>
-            {profileBars.map((bar) => {
-              const label = locale === 'ar' ? bar.labelAr : bar.labelEn;
-              const pct = Math.min(100, Math.round((bar.value / bar.max) * 100));
-              return (
-                <div key={bar.key} className={styles.skillBar}>
-                  <div className={styles.skillBarHead}>
-                    <span>{label}</span>
-                    <strong style={{ color: 'var(--ys-orange)' }}>
-                      {bar.value}{bar.suffix || ''}
-                    </strong>
-                  </div>
-                  <div className={styles.skillBarTrack}>
-                    <div className={styles.skillBarFill} style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
-
-      {/* ---------------- KEY RATES WALL ---------------- */}
-      {rates ? (
-        <section className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Sparkles size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'معدلات الأداء لكل 90 دقيقة', 'Key Rates per 90 Minutes')}</h3>
-                <p>{pick(locale, 'معدلات الفاعلية الهجومية ودقة التسديد وحسم الثنائيات.', 'Attacking efficacy, shot accuracy, and duel win rates.')}</p>
-              </div>
-            </div>
-          </header>
-          <ul className={styles.kpis}>
-            {rates.goalsPer90 != null ? (
-              <li>
-                <strong>{rates.goalsPer90}</strong>
-                <span>{pick(locale, 'أهداف / 90 دقيقة', 'Goals / 90m')}</span>
-              </li>
-            ) : null}
-            {rates.assistsPer90 != null ? (
-              <li>
-                <strong>{rates.assistsPer90}</strong>
-                <span>{pick(locale, 'صناعات / 90 دقيقة', 'Assists / 90m')}</span>
-              </li>
-            ) : null}
-            {rates.shotAccuracy != null ? (
-              <li>
-                <strong>{rates.shotAccuracy}%</strong>
-                <span>{pick(locale, 'دقة التسديد', 'Shot Accuracy')}</span>
-              </li>
-            ) : null}
-            {rates.duelWinPct != null ? (
-              <li>
-                <strong>{rates.duelWinPct}%</strong>
-                <span>{pick(locale, 'فوز الثنائيات', 'Duel Win Rate')}</span>
-              </li>
-            ) : null}
-            {rates.dribbleSuccessPct != null ? (
-              <li>
-                <strong>{rates.dribbleSuccessPct}%</strong>
-                <span>{pick(locale, 'نجاح المراوغات', 'Dribble Success')}</span>
-              </li>
-            ) : null}
-          </ul>
-        </section>
-      ) : null}
-
-      {/* ---------------- DETAILED SEASON BREAKDOWN ---------------- */}
-      {seasonTotals ? (
-        <section className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Crosshair size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'السجل الإحصائي الكامل للموسم', 'Complete Season Statistical Ledger')}</h3>
-                <p>{pick(locale, 'كافة الإحصائيات الفردية المسجلة من المصدر الرسمي.', 'All individual match stats verified from the official API.')}</p>
-              </div>
-            </div>
-          </header>
-
-          <div className={styles.facts}>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'التسديدات على المرمى', 'Shots on Target')}</em>
-              <strong>{seasonTotals.shotsOn} / {seasonTotals.shots}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'إجمالي التمريرات', 'Total Passes')}</em>
-              <strong>{seasonTotals.passes}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'التمريرات المفتاحية', 'Key Passes')}</em>
-              <strong>{seasonTotals.keyPasses}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'دقة التمرير', 'Pass Accuracy')}</em>
-              <strong>{seasonTotals.passAccuracy != null ? `${seasonTotals.passAccuracy}%` : '–'}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'افتكاك الكرة والاعتراضات', 'Tackles & Blocks')}</em>
-              <strong>{seasonTotals.tackles} / {seasonTotals.blocks}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'الثنائيات المكتسبة', 'Duels Won')}</em>
-              <strong>{seasonTotals.duelsWon} / {seasonTotals.duels}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'المراوغات الناجحة', 'Successful Dribbles')}</em>
-              <strong>{seasonTotals.dribbles} / {seasonTotals.dribbleAttempts}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'الأخطاء المكتسبة / المرتكبة', 'Fouls Drawn / Committed')}</em>
-              <strong>{seasonTotals.foulsDrawn} / {seasonTotals.foulsCommitted}</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'البطاقات الصفراء / الحمراء', 'Yellow / Red Cards')}</em>
-              <strong>{seasonTotals.yellow} 🟨 / {seasonTotals.red} 🟥</strong>
-            </article>
-            <article className={styles.fact}>
-              <em>{pick(locale, 'ركلات الجزاء المسجلة', 'Penalties Scored')}</em>
-              <strong>{seasonTotals.penaltiesScored}</strong>
-            </article>
-          </div>
-        </section>
-      ) : null}
-
-      {/* ---------------- COMPETITIONS WALL ---------------- */}
-      <section id="hall-competitions" className={styles.shelf}>
-        <header className={styles.shelfHead}>
-          <div className={styles.shelfTitle}>
-            <div className={styles.shelfIconBox}>
-              <Layers size={18} aria-hidden />
-            </div>
-            <div>
-              <h3>{pick(locale, 'المسابقات الرسمية', 'Official competitions')}</h3>
-              <p>{pick(locale, 'أرقام وإحصاءات اللاعب في كل بطولة كما وثقها المصدر.', 'Player stats recorded in each tournament.')}</p>
-            </div>
-          </div>
-          {seasonBlocks.length > 0 ? (
-            <span className={styles.shelfBadge}>{seasonBlocks.length}</span>
-          ) : null}
-        </header>
-
-        {seasonBlocks.length > 0 ? (
-          <div className={styles.compList}>
-            {seasonBlocks.map((block, index) => (
-              <article key={`${block.league.id}-${index}`} className={styles.comp}>
-                <div className={styles.compTop}>
-                  <LeagueCrest name={block.league.name} logoUrl={block.league.logoUrl} className="h-9 w-9" />
-                  <div>
-                    <strong>{localizePlainName(locale, block.league.name)}</strong>
-                    <em>{[localizePlainName(locale, block.team.name), block.league.season].filter(Boolean).join(' · ')}</em>
-                  </div>
-                </div>
-                <ul className={styles.metrics}>
-                  {metricGroups(block, locale).map((row) => (
-                    <li key={row.label}>
-                      <b>{row.value}</b>
-                      <span>{row.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className={styles.source}>
-            {pick(locale, 'لا توجد أرقام مسابقات مسجلة للموسم الحالي بعد.', 'No competition records available yet for this season.')}
-          </p>
-        )}
+        </div>
       </section>
 
-      {/* ---------------- CLUB FIXTURES WALL ---------------- */}
-      {clubFixtures.upcoming.length > 0 || clubFixtures.recent.length > 0 ? (
-        <section id="hall-fixtures" className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Calendar size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'مواعيد ونتائج نادي اللاعب', 'Club Fixtures & Results Wall')}</h3>
-                <p>{pick(locale, 'مباريات النادي القادمة والأخيرة من المصدر الرياضي الحي.', 'Upcoming and recent club matches from live source.')}</p>
-              </div>
+      {/* =========================================================================
+          2. MASTER PLAYER DASHBOARD
+          ========================================================================= */}
+      <main style={{ maxWidth: '1320px', margin: '2rem auto 0', padding: '0 1rem', display: 'grid', gap: '2rem' }}>
+
+        {/* ----------------- ROW 1: SEASON PERFORMANCE KPIS GRID ----------------- */}
+        <div className={board.glassCard}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Activity size={18} style={{ color: 'var(--ys-orange)' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'أرقام وإحصاءات اللاعب هذا الموسم', 'Season Performance Overview')}
+              </h3>
             </div>
-            <span className={styles.shelfBadge}>{clubFixtures.upcoming.length + clubFixtures.recent.length}</span>
-          </header>
-
-          <div className={styles.slips}>
-            {[...clubFixtures.upcoming, ...clubFixtures.recent].map((match) => {
-              const scored = match.homeScore != null && match.awayScore != null;
-              return (
-                <Link key={match.id} href={`/match/${match.id}`} className={styles.slip}>
-                  <div className={styles.slipTop}>
-                    <span className={styles.slipRound}>{localizePlainName(locale, match.league.name)}</span>
-                    {match.status === 'NOT_STARTED' ? (
-                      <ClientTime value={match.kickoffAt} locale={locale} options={{ day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }} />
-                    ) : (
-                      <em style={{ fontStyle: 'normal', color: 'var(--ys-orange)' }}>{pick(locale, 'نهاية', 'FT')}</em>
-                    )}
-                  </div>
-                  <div className={styles.row}>
-                    <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-5 w-5" />
-                    <span>{localizePlainName(locale, match.homeTeam.name)}</span>
-                    <strong>{scored ? match.homeScore : '–'}</strong>
-                  </div>
-                  <div className={styles.row}>
-                    <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-5 w-5" />
-                    <span>{localizePlainName(locale, match.awayTeam.name)}</span>
-                    <strong>{scored ? match.awayScore : '–'}</strong>
-                  </div>
-                </Link>
-              );
-            })}
           </div>
-        </section>
-      ) : null}
 
-      {/* ---------------- SQUAD / TEAMMATES WALL ---------------- */}
-      {teammates.length > 0 ? (
-        <section id="hall-squad" className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Users size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'زملاء الفريق', 'Teammates')}</h3>
-                <p>{pick(locale, 'قائمة اللاعبين المسجلين في النادي مع صورهم ومراكزهم.', 'Registered teammates in the squad.')}</p>
-              </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem' }}>
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'مباريات الظهور', 'Appearances')}</span>
+              <strong className={board.statBoxValue}>{seasonTotals?.appearances ?? '–'}</strong>
             </div>
-            <span className={styles.shelfBadge}>{teammates.length}</span>
-          </header>
 
-          <div className={styles.grid}>
-            {teammates.map((row) => {
-              const shot = apiSportsPlayerPhoto(row.slug.match(/(\d+)$/)?.[1], row.photoUrl);
-              return (
-                <Link key={row.slug} href={`/player/${row.slug}`} className={styles.tile}>
-                  <span className={styles.tileShot}>
-                    {shot ? <img src={shot} alt="" /> : <span>{row.name.charAt(0)}</span>}
-                  </span>
-                  <strong>{localizePlainName(locale, row.name)}</strong>
-                  <em>{row.position ? localizePlainName(locale, row.position) : ''}</em>
-                </Link>
-              );
-            })}
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'تشكيلة أساسية', 'Starts')}</span>
+              <strong className={board.statBoxValue}>{seasonTotals?.lineups ?? '–'}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle} style={{ color: 'var(--ys-orange)' }}>{pick(locale, 'الأهداف المسجلة', 'Goals')}</span>
+              <strong className={board.statBoxValue} style={{ color: 'var(--ys-orange)' }}>{seasonTotals?.goals ?? 0}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle} style={{ color: '#0284c7' }}>{pick(locale, 'صناعة الأهداف', 'Assists')}</span>
+              <strong className={board.statBoxValue} style={{ color: '#0284c7' }}>{seasonTotals?.assists ?? 0}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'دقائق اللعب', 'Minutes')}</span>
+              <strong className={board.statBoxValue}>{seasonTotals?.minutes ?? 0}&prime;</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle} style={{ color: '#eab308' }}>{pick(locale, 'التقييم الفني', 'Rating')}</span>
+              <strong className={board.statBoxValue} style={{ color: '#eab308' }}>
+                {seasonTotals?.rating ? formatSportFigure(seasonTotals.rating) : '–'}
+              </strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'بطاقات ملونة', 'Cards')}</span>
+              <strong className={board.statBoxValue} style={{ fontSize: '1.1rem' }}>
+                🟨 {seasonTotals?.yellow ?? 0} · 🟥 {seasonTotals?.red ?? 0}
+              </strong>
+            </div>
           </div>
-        </section>
-      ) : null}
 
-      {/* ---------------- TRANSFERS & CLUBS WALL ---------------- */}
-      <div id="hall-transfers" className={styles.split}>
-        {clubHistory.length > 0 || apiClubs.length > 0 ? (
-          <section className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Shield size={18} aria-hidden />
+          {/* Rates & Per 90 metrics */}
+          {rates && (rates.goalsPer90 != null || rates.shotAccuracy != null || rates.duelWinPct != null) ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem', marginTop: '1.25rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+              {rates.goalsPer90 != null ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'معدل الأهداف / 90 دقيقة', 'Goals / 90m')}</span>
+                  <strong style={{ fontSize: '0.9rem', color: 'var(--ys-orange)' }}>{rates.goalsPer90}</strong>
                 </div>
-                <div>
-                  <h3>{pick(locale, 'سجل الأندية', 'Clubs History')}</h3>
-                  <p>{pick(locale, 'الأندية التي مثلها اللاعب خلال مسيرته.', 'Clubs represented throughout career.')}</p>
+              ) : null}
+
+              {rates.shotAccuracy != null ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'دقة التسديد على المرمى', 'Shot Accuracy')}</span>
+                  <strong style={{ fontSize: '0.9rem' }}>{rates.shotAccuracy}%</strong>
                 </div>
-              </div>
-            </header>
-            <ul className={styles.people}>
-              {(clubHistory.length > 0 ? clubHistory : apiClubs.map((club) => ({
-                id: club.team.id,
-                name: club.team.name,
-                slug: '',
-                logoUrl: club.team.logoUrl,
-              }))).map((club) => (
-                <li key={club.id}>
-                  {club.slug ? (
-                    <Link href={`/team/${club.slug}`}>
-                      <LeagueCrest name={club.name} logoUrl={club.logoUrl} className="h-7 w-7" />
-                      <div>
-                        <strong>{localizePlainName(locale, club.name)}</strong>
-                        <em>{pick(locale, 'نادي من سجل اللاعب', 'Club from the player record')}</em>
-                      </div>
-                    </Link>
-                  ) : (
-                    <span>
-                      <LeagueCrest name={club.name} logoUrl={club.logoUrl} className="h-7 w-7" />
-                      <div>
-                        <strong>{localizePlainName(locale, club.name)}</strong>
-                      </div>
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
+              ) : null}
+
+              {rates.duelWinPct != null ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'نسبة الفوز بالالتحامات', 'Duel Win Rate')}</span>
+                  <strong style={{ fontSize: '0.9rem' }}>{rates.duelWinPct}%</strong>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {/* ----------------- ROW 2: PER-COMPETITION BREAKDOWN TABLE ----------------- */}
+        {seasonBlocks.length > 0 ? (
+          <section className={board.glassCard}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <Layers size={18} style={{ color: 'var(--ys-orange)' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'أرقام اللاعب حسب المسابقة والبطولة', 'Per-Competition Statistics')}
+              </h3>
+            </div>
+
+            <div className={board.standingsTableWrapper}>
+              <table className={board.standingsTable}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'start' }}>{pick(locale, 'البطولة والنادي', 'Competition & Team')}</th>
+                    <th>{pick(locale, 'ظهور', 'Apps')}</th>
+                    <th>{pick(locale, 'أساسي', 'Starts')}</th>
+                    <th>{pick(locale, 'دقائق', 'Mins')}</th>
+                    <th style={{ color: 'var(--ys-orange)' }}>{pick(locale, 'أهداف', 'Goals')}</th>
+                    <th style={{ color: '#0284c7' }}>{pick(locale, 'صناعة', 'Assists')}</th>
+                    <th>{pick(locale, 'بطاقات', 'Cards')}</th>
+                    <th style={{ color: '#eab308' }}>{pick(locale, 'التقييم', 'Rating')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {seasonBlocks.map((b, idx) => (
+                    <tr key={`${b.league.name}-${idx}`}>
+                      <td style={{ textAlign: 'start', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <LeagueCrest name={b.league.name} logoUrl={b.league.logoUrl} className="h-5 w-5" />
+                        <div>
+                          <strong style={{ display: 'block', fontSize: '0.85rem' }}>{localizePlainName(locale, b.league.name)}</strong>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>{localizePlainName(locale, b.team.name)}</span>
+                        </div>
+                      </td>
+                      <td>{b.games.appearances ?? '–'}</td>
+                      <td>{b.games.lineups ?? '–'}</td>
+                      <td>{b.games.minutes ?? 0}&prime;</td>
+                      <td style={{ fontWeight: 900, color: 'var(--ys-orange)' }}>{b.goals.total ?? 0}</td>
+                      <td style={{ fontWeight: 900, color: '#0284c7' }}>{b.goals.assists ?? 0}</td>
+                      <td>🟨 {b.cards.yellow ?? 0} {b.cards.red ? `· 🟥 ${b.cards.red}` : ''}</td>
+                      <td style={{ fontWeight: 800, color: '#eab308' }}>{formatSportFigure(b.games.rating) ?? '–'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         ) : null}
 
-        <section className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Repeat size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'الانتقالات والأندية', 'Transfers & clubs')}</h3>
-                <p>
-                  {pick(
-                    locale,
-                    'المسيرة الاحترافية وانتقالات اللاعب المسجلة في مصدر البيانات.',
-                    'Career clubs and transfers recorded in the sports data source.',
-                  )}
-                </p>
-              </div>
+        {/* ----------------- ROW 3: TRANSFERS & CAREER JOURNEY + TROPHIES ----------------- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          {/* Transfer History */}
+          <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Repeat size={18} style={{ color: 'var(--ys-orange)' }} />
+              <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'سجل الانتقالات ومسيرة الأندية', 'Career Transfers & Moves')}
+              </h3>
             </div>
-            {transfers.length > 0 ? <span className={styles.shelfBadge}>{transfers.length}</span> : null}
-          </header>
-          {transfers.length > 0 ? (
-            <ol className={styles.transferRail}>
-              {transfers.map((row, index) => {
-                const year = row.date && !Number.isNaN(row.date.getTime()) ? row.date.getUTCFullYear() : null;
-                const prevYear =
-                  index > 0 && transfers[index - 1].date
-                    ? transfers[index - 1].date!.getUTCFullYear()
-                    : null;
-                const fromName = row.fromTeam ? localizePlainName(locale, row.fromTeam) : unavailable;
-                const toName = row.toTeam ? localizePlainName(locale, row.toTeam) : unavailable;
-                const kindLabel = localizeTransferType(locale, row.type, row.kind);
-                return (
-                  <li key={row.id}>
-                    {year && year !== prevYear ? <p className={styles.transferYear}>{year}</p> : null}
-                    <article className={`${styles.transferCard}${row.kind === 'loan' ? ` ${styles.isLoan}` : ''}`}>
-                      <span className={styles.transferKind}>{kindLabel}</span>
-                      <div className={styles.transferPath}>
-                        {row.fromSlug ? (
-                          <Link href={`/team/${row.fromSlug}`} className={styles.transferClub}>
-                            <LeagueCrest name={fromName} logoUrl={row.fromLogo} className="h-8 w-8" />
-                            <span>{fromName}</span>
-                          </Link>
-                        ) : (
-                          <span className={styles.transferClub}>
-                            <LeagueCrest name={fromName} logoUrl={row.fromLogo} className="h-8 w-8" />
-                            <span>{fromName}</span>
+
+            {transfers.length > 0 ? (
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {transfers.map((t, idx) => (
+                  <div key={t.id || idx} className={board.transferItem}>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.85rem', color: 'var(--foreground)' }}>
+                        {t.fromTeam ? `${localizePlainName(locale, t.fromTeam)} ${locale === 'ar' ? '←' : '→'} ` : ''}
+                        {localizePlainName(locale, t.toTeam) || pick(locale, 'انتقال رسمي', 'Transfer')}
+                      </strong>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                        {t.date ? (
+                          <ClientTime value={t.date} locale={locale} options={{ day: 'numeric', month: 'short', year: 'numeric' }} />
+                        ) : null}
+                      </span>
+                    </div>
+
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--ys-orange)' }}>
+                      {t.fee || pick(locale, 'صفقة انتقال', 'Transfer')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.85rem', margin: '1.5rem 0' }}>
+                {pick(locale, 'سجل الانتقالات لم يتم تسجيله.', 'No recorded transfers.')}
+              </p>
+            )}
+          </div>
+
+          {/* Trophies & Honours */}
+          <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Award size={18} style={{ color: '#eab308' }} />
+              <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'سجل الألقاب والبطولات الموثقة', 'Honours & Trophies Won')}
+              </h3>
+            </div>
+
+            {trophies.length > 0 ? (
+              <div style={{ display: 'grid', gap: '0.65rem' }}>
+                {trophies.map((tr, idx) => {
+                  const isGold = tr.place?.toLowerCase().includes('winner') || tr.place === '1';
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem 1rem',
+                        background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))',
+                        border: '1px solid var(--border)',
+                        borderRadius: '0.85rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '1.4rem' }}>{isGold ? '🥇' : '🏆'}</span>
+                        <div>
+                          <strong style={{ display: 'block', fontSize: '0.88rem', color: 'var(--foreground)' }}>
+                            {localizePlainName(locale, tr.league)}
+                          </strong>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                            {[tr.season, tr.country ? localizePlainName(locale, tr.country) : null].filter(Boolean).join(' · ')}
                           </span>
-                        )}
-                        <span className={styles.transferArrow} aria-hidden>↓</span>
-                        {row.toSlug ? (
-                          <Link href={`/team/${row.toSlug}`} className={styles.transferClub}>
-                            <LeagueCrest name={toName} logoUrl={row.toLogo} className="h-8 w-8" />
-                            <span>{toName}</span>
-                          </Link>
-                        ) : (
-                          <span className={styles.transferClub}>
-                            <LeagueCrest name={toName} logoUrl={row.toLogo} className="h-8 w-8" />
-                            <span>{toName}</span>
-                          </span>
-                        )}
+                        </div>
                       </div>
-                      <div className={styles.transferMeta}>
-                        {row.season ? <span>{pick(locale, 'الموسم', 'Season')}: {row.season}</span> : null}
-                        {row.date ? (
-                          <span>
-                            {pick(locale, 'التاريخ', 'Date')}:{' '}
-                            <ClientTime value={row.date} locale={locale} options={{ day: 'numeric', month: 'short', year: 'numeric' }} />
-                          </span>
-                        ) : (
-                          <span>{pick(locale, 'التاريخ: غير متوفر', 'Date: unavailable')}</span>
-                        )}
-                        <span>
-                          {pick(locale, 'القيمة', 'Fee')}: {row.fee || unavailable}
+
+                      {tr.place ? (
+                        <span style={{ fontSize: '0.76rem', fontWeight: 900, color: isGold ? '#eab308' : 'var(--muted-foreground)' }}>
+                          {tr.place}
                         </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.85rem', margin: '1.5rem 0' }}>
+                {pick(locale, 'الألقاب والبطولات جاري تحديثها وتوثيقها.', 'Trophies record is being updated.')}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ----------------- ROW 4: CLUB MATCH FIXTURES (UPCOMING & RECENT) ----------------- */}
+        {clubFixtures && (clubFixtures.upcoming?.length > 0 || clubFixtures.recent?.length > 0) ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+            {clubFixtures.upcoming?.length > 0 ? (
+              <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Clock size={18} style={{ color: 'var(--ys-orange)' }} />
+                  <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                    {pick(locale, 'المباريات القادمة لنادي اللاعب', 'Upcoming Club Matches')}
+                  </h3>
+                </div>
+
+                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                  {clubFixtures.upcoming.slice(0, 3).map((m) => (
+                    <Link
+                      key={m.id}
+                      href={`/match/${m.id}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem 1rem',
+                        background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))',
+                        border: '1px solid var(--border)',
+                        borderRadius: '0.85rem',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <LeagueCrest name={m.homeTeam.name} logoUrl={m.homeTeam.logoUrl} className="h-6 w-6" />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{localizePlainName(locale, m.homeTeam.name)}</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--ys-orange)', fontWeight: 900 }}>{pick(locale, 'ضد', 'vs')}</span>
+                        <LeagueCrest name={m.awayTeam.name} logoUrl={m.awayTeam.logoUrl} className="h-6 w-6" />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{localizePlainName(locale, m.awayTeam.name)}</span>
                       </div>
-                    </article>
-                  </li>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                        <ClientTime value={m.kickoffAt} locale={locale} options={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }} />
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {clubFixtures.recent?.length > 0 ? (
+              <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Flame size={18} style={{ color: 'var(--ys-orange)' }} />
+                  <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                    {pick(locale, 'آخر نتائج مباريات نادي اللاعب', 'Recent Club Results')}
+                  </h3>
+                </div>
+
+                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                  {clubFixtures.recent.slice(0, 3).map((m) => (
+                    <Link
+                      key={m.id}
+                      href={`/match/${m.id}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem 1rem',
+                        background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))',
+                        border: '1px solid var(--border)',
+                        borderRadius: '0.85rem',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{localizePlainName(locale, m.homeTeam.name)}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--ys-orange)', background: 'color-mix(in srgb, var(--foreground) 6%, var(--card))', padding: '0.2rem 0.5rem', borderRadius: '0.4rem' }}>
+                          {m.homeScore ?? 0} - {m.awayScore ?? 0}
+                        </span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{localizePlainName(locale, m.awayTeam.name)}</span>
+                      </div>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                        {localizePlainName(locale, m.league.name)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* ----------------- ROW 5: RECENT MATCH IMPACT & TIMELINE ----------------- */}
+        {timeline.length > 0 ? (
+          <section className={board.glassCard}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              <Zap size={18} style={{ color: 'var(--ys-orange)' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'سجل الأهداف والمساهمات في المباريات الأخيرة', 'Recent Match Impact & Key Events')}
+              </h3>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+              {timeline.slice(0, 6).map((ev) => (
+                <Link
+                  key={ev.id}
+                  href={`/match/${ev.match.id}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.85rem 1rem',
+                    background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.85rem',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>
+                      {ev.type === 'GOAL' || ev.type === 'PENALTY' ? '⚽' : ev.type === 'YELLOW_CARD' ? '🟨' : ev.type === 'RED_CARD' ? '🟥' : '⚡'}
+                    </span>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.85rem' }}>
+                        {ev.type === 'GOAL' ? pick(locale, 'هدف مسجل', 'Goal') : ev.type === 'PENALTY' ? pick(locale, 'ضربة جزاء مسجلة', 'Penalty Goal') : ev.type}
+                      </strong>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                        {localizePlainName(locale, ev.match.homeTeam.name)} {ev.match.homeScore ?? 0} - {ev.match.awayScore ?? 0} {localizePlainName(locale, ev.match.awayTeam.name)}
+                      </span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--ys-orange)' }}>
+                    {ev.minute}&prime;
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* ----------------- ROW 6: LOCKER ROOM TEAMMATES & MEDICAL LOG ----------------- */}
+        {teammates.length > 0 ? (
+          <section className={board.glassCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={18} style={{ color: 'var(--ys-orange)' }} />
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                  {pick(locale, 'زملاء الفريق في النادي الحالي', 'Current Club Teammates')}
+                </h3>
+              </div>
+              <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)' }}>{teammates.length} {pick(locale, 'لاعباً', 'Players')}</span>
+            </div>
+
+            <div className={board.squadGrid}>
+              {teammates.slice(0, 12).map((tm) => {
+                const shot = apiSportsPlayerPhoto(tm.slug.match(/(\d+)$/)?.[1], tm.photoUrl);
+                return (
+                  <Link
+                    key={tm.slug}
+                    href={`/player/${tm.slug}`}
+                    className={board.playerCard}
+                  >
+                    {tm.shirtNumber != null ? (
+                      <span className={board.playerShirtBadge}>
+                        #{tm.shirtNumber}
+                      </span>
+                    ) : null}
+
+                    <div className={board.playerCardAvatar}>
+                      {shot ? (
+                        <img src={shot} alt={tm.name} loading="lazy" />
+                      ) : (
+                        <span className={board.playerCardAvatarFallback}>
+                          {tm.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+
+                    <strong className={board.playerName}>
+                      {localizePlainName(locale, tm.name)}
+                    </strong>
+                    <span className={board.playerMeta}>
+                      {tm.position ? localizePlainName(locale, tm.position) : ''}
+                    </span>
+                  </Link>
                 );
               })}
-            </ol>
-          ) : (
-            <p className={styles.transferEmpty}>
-              {pick(locale, 'لا توجد انتقالات مسجلة لهذا اللاعب في مصدر البيانات.', 'No transfers are recorded for this player in the data source.')}
-            </p>
-          )}
-          <div className={styles.acts} style={{ marginTop: '0.85rem' }}>
-            <Link href={`/transfers?player=${player.slug}`} className={styles.ghost}>
-              {pick(locale, 'عرض جميع الانتقالات', 'View all transfers')}
-            </Link>
-          </div>
-          {transfersUpdatedAt ? (
-            <p className={styles.transferMeta} style={{ marginTop: '0.65rem' }}>
-              {pick(locale, 'آخر تحديث للبيانات', 'Last data update')}:{' '}
-              <ClientTime value={transfersUpdatedAt} locale={locale} options={{ day: 'numeric', month: 'long', year: 'numeric' }} />
-            </p>
-          ) : null}
-        </section>
-      </div>
-
-      {/* ---------------- TROPHIES & HONOURS WALL ---------------- */}
-      {trophies.length > 0 ? (
-        <section id="hall-trophies" className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Award size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'الألقاب والبطولات', 'Trophies')}</h3>
-                <p>{pick(locale, 'الألقاب الموثقة في السجل الرياضي من المصدر الرسمي.', 'Documented championship titles from official source.')}</p>
-              </div>
             </div>
-            <span className={styles.shelfBadge}>{trophies.length}</span>
-          </header>
-          <div className={styles.trophyGrid}>
-            {trophies.map((trophy, index) => (
-              <div key={`${trophy.league}-${index}`} className={styles.trophyCard}>
-                <div className={styles.trophyIconBox}>
-                  <Trophy size={20} />
-                </div>
-                <div className={styles.trophyBody}>
-                  <strong>{localizePlainName(locale, trophy.league)}</strong>
-                  <em>{[trophy.season, trophy.place, trophy.country].filter(Boolean).join(' · ')}</em>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      {/* ---------------- SIDELINED & MEDICAL LEDGER ---------------- */}
-      {sidelined && sidelined.length > 0 ? (
-        <section id="hall-medical" className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <AlertCircle size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'السجل الطبي وحالات الغياب', 'Medical Ledger & Absences')}</h3>
-                <p>{pick(locale, 'تاريخ الإصابات والغيابات المسجلة رسمياً للاعب.', 'Documented injuries and recovery periods from sports data.')}</p>
-              </div>
+        {/* Medical & Injury Log if present */}
+        {sidelined.length > 0 ? (
+          <section className={board.glassCard}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <AlertCircle size={18} style={{ color: '#ef4444' }} />
+              <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'السجل الطبي وتاريخ الإصابات', 'Medical & Injury Record')}
+              </h3>
             </div>
-            <span className={styles.shelfBadge}>{sidelined.length}</span>
-          </header>
-          <div className={styles.injuryList}>
-            {sidelined.map((item, index) => (
-              <div key={`${item.type}-${index}`} className={styles.injuryCard}>
-                <div className={styles.injuryBadge}>
-                  <AlertCircle size={18} />
-                </div>
-                <div className={styles.injuryCopy}>
-                  <strong>{localizePlainName(locale, item.type)}</strong>
-                  <em>{[item.start, item.end].filter(Boolean).join(' — ')}</em>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
 
-      {/* ---------------- LINKED NEWS ---------------- */}
-      {news && news.length > 0 ? (
-        <section className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Newspaper size={18} aria-hidden />
-              </div>
-              <div>
-                <h3>{pick(locale, 'الأخبار والتغطيات المرتبطة', 'Linked News & Coverage')}</h3>
-                <p>{pick(locale, 'آخر التقارير الإخبارية عن اللاعب من المحرر الرياضي.', 'Latest editorial articles regarding the player.')}</p>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.75rem' }}>
+              {sidelined.map((item, idx) => (
+                <div key={idx} style={{ padding: '0.75rem 1rem', background: 'color-mix(in srgb, #ef4444 6%, var(--card))', border: '1px solid color-mix(in srgb, #ef4444 20%, var(--border))', borderRadius: '0.75rem' }}>
+                  <strong style={{ display: 'block', fontSize: '0.85rem', color: '#ef4444' }}>{item.type}</strong>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>{[item.start, item.end].filter(Boolean).join(' — ')}</span>
+                </div>
+              ))}
             </div>
-            <span className={styles.shelfBadge}>{news.length}</span>
-          </header>
-          <ul className={styles.people}>
-            {news.map((item) => (
-              <li key={item.id}>
-                <Link href={`/news/${item.slug}`}>
-                  <span className={styles.ghostFace}>📰</span>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <em>{item.category} · <ClientTime value={item.publishedAt} locale={locale} options={{ day: 'numeric', month: 'short' }} /></em>
-                  </div>
-                  <ArrowRight size={16} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      <p className={styles.source}>
-        {pick(
-          locale,
-          'المصدر: واجهة البيانات الرياضية والصفوف المنشورة رسمياً دون أي بيانات وهمية.',
-          'Source: official sports API and verified rows only — no invented data.',
-        )}
-      </p>
+      </main>
     </div>
   );
 }

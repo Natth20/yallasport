@@ -5,8 +5,9 @@ import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { Stagger, StaggerItem } from '@/components/motion/PageMotion';
-import { ArrowLeftRight, BarChart3, CalendarDays, Radio, Trophy } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, CalendarDays, Crown, Medal, Radio, Trophy } from 'lucide-react';
 import { ClientTime } from '@/components/datetime/ClientTime';
+import styles from './stats-centre.module.css';
 
 type Desk = Awaited<ReturnType<typeof loadStatsDesk>>;
 
@@ -186,111 +187,244 @@ export function StatsCentre({
           <p>{pick(locale, 'المصدر ما رجّع هذه الإحصائية بعد، أو لا أحد بلغ شرط المشاركة.', 'The source has not returned this board yet, or nobody met the appearance floor.')}</p>
         </div>
       ) : (
-        <div className={`stats-stage is-${kind}`}>
-          <Stagger className="stats-podium" delay={0.04}>
-            {desk.rows.slice(0, 3).map((row) => {
+        <div className={styles.statsStage}>
+          {/* Top 3 Podium */}
+          <Stagger className={styles.podiumGrid} delay={0.04}>
+            {(desk.rows.length >= 3
+              ? [desk.rows[1], desk.rows[0], desk.rows[2]]
+              : desk.rows.slice(0, 3)
+            ).map((row) => {
               const name = localizePlainName(locale, row.name);
               const team = row.teamName ? localizeTeamName(locale, row.teamName) : null;
+              const isRank1 = row.rank === 1;
+              const isRank2 = row.rank === 2;
+              const cardClass = isRank1
+                ? `${styles.podiumCard} ${styles.rank1}`
+                : isRank2
+                  ? `${styles.podiumCard} ${styles.rank2}`
+                  : `${styles.podiumCard} ${styles.rank3}`;
+              const tagClass = isRank1
+                ? `${styles.medalTag} ${styles.medalTag1}`
+                : isRank2
+                  ? `${styles.medalTag} ${styles.medalTag2}`
+                  : `${styles.medalTag} ${styles.medalTag3}`;
+
               return (
-                <StaggerItem key={`p-${row.rank}-${row.name}`}>
-                  <div>
-                    <span className="stats-medal">{row.rank}</span>
-                    {row.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.photoUrl} alt="" />
-                    ) : (
-                      <i>{name.charAt(0)}</i>
-                    )}
-                    <strong>{row.slug ? <Link href={`/player/${row.slug}`}>{name}</Link> : name}</strong>
+                <StaggerItem key={`podium-${row.rank}-${row.name}`}>
+                  <div className={cardClass}>
+                    <span className={tagClass}>
+                      {isRank1 ? <Crown size={13} aria-hidden /> : <Medal size={13} aria-hidden />}
+                      <span>#{row.rank}</span>
+                    </span>
+
+                    <div className={styles.avatarWrap}>
+                      {isRank1 ? (
+                        <div className={styles.crownBadge} aria-hidden>
+                          <Crown size={14} />
+                        </div>
+                      ) : null}
+                      {row.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={row.photoUrl} alt={name} className={styles.avatar} />
+                      ) : (
+                        <i className={styles.avatarFallback}>{name.charAt(0)}</i>
+                      )}
+                    </div>
+
+                    <strong className={styles.playerName}>
+                      {row.slug ? <Link href={`/player/${row.slug}`}>{name}</Link> : name}
+                    </strong>
+
                     {team ? (
-                      <em>
+                      <span className={styles.clubBadge}>
                         {row.teamLogo ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.teamLogo} alt="" className="stats-crest" />
+                          <img src={row.teamLogo} alt="" className={styles.clubCrest} />
                         ) : null}
-                        {row.teamSlug ? <Link href={`/team/${row.teamSlug}`}>{team}</Link> : team}
-                      </em>
+                        {row.teamSlug ? <Link href={`/team/${row.teamSlug}`}>{team}</Link> : <span>{team}</span>}
+                      </span>
                     ) : null}
-                    <b>
-                      {row.value}
-                      <small>{unit}</small>
-                      {kind === 'combined' && row.secondary != null ? <small>{row.value - row.secondary}+{row.secondary}</small> : null}
-                      {row.appearances != null ? <small>{row.appearances} {pick(locale, 'مباراة', 'apps')}</small> : null}
-                    </b>
+
+                    <div className={styles.valueBox}>
+                      <span className={styles.bigValue}>{row.value}</span>
+                      <span className={styles.unitLabel}>{unit}</span>
+                      {kind === 'combined' && row.secondary != null ? (
+                        <span className={styles.secondaryNote}>
+                          {row.value - row.secondary} + {row.secondary} {pick(locale, 'صناعة', 'assist')}
+                        </span>
+                      ) : null}
+                      {row.appearances != null ? (
+                        <span className={styles.secondaryNote}>
+                          {row.appearances} {pick(locale, 'مباراة', 'matches')}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </StaggerItem>
               );
             })}
           </Stagger>
-          <ol className="stats-board">
-            {desk.rows.slice(3).map((row) => {
-              const name = localizePlainName(locale, row.name);
-              const team = row.teamName ? localizeTeamName(locale, row.teamName) : null;
-              const max = desk.rows[0]?.value || 1;
-              return (
-                <li key={`${row.rank}-${row.name}`}>
-                  <div className="stats-row">
-                    <span className="stats-rank">{String(row.rank).padStart(2, '0')}</span>
-                    {row.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.photoUrl} alt="" />
-                    ) : (
-                      <i>{name.charAt(0)}</i>
-                    )}
-                    <span className="stats-who">
-                      <strong>{row.slug ? <Link href={`/player/${row.slug}`}>{name}</Link> : name}</strong>
-                      {team ? (
-                        <em>
-                          {row.teamLogo ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={row.teamLogo} alt="" className="stats-crest" />
-                          ) : null}
-                          {row.teamSlug ? <Link href={`/team/${row.teamSlug}`}>{team}</Link> : team}
-                        </em>
-                      ) : null}
-                      <span className="stats-meter" aria-hidden>
-                        <span style={{ width: `${Math.round((row.value / max) * 100)}%` }} />
+
+          {/* Leaderboard list (4th place onwards) */}
+          {desk.rows.length > 3 ? (
+            <ol className={styles.boardList}>
+              {desk.rows.slice(3).map((row) => {
+                const name = localizePlainName(locale, row.name);
+                const team = row.teamName ? localizeTeamName(locale, row.teamName) : null;
+                const max = desk.rows[0]?.value || 1;
+                const pct = Math.min(100, Math.max(12, Math.round((row.value / max) * 100)));
+
+                return (
+                  <li key={`${row.rank}-${row.name}`}>
+                    <div className={styles.leaderRow}>
+                      <span className={styles.rankBadge}>
+                        #{String(row.rank).padStart(2, '0')}
                       </span>
-                    </span>
-                    <b>{row.value}</b>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+
+                      {row.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={row.photoUrl} alt="" className={styles.leaderAvatar} />
+                      ) : (
+                        <i className={styles.leaderAvatarFallback}>{name.charAt(0)}</i>
+                      )}
+
+                      <div className={styles.playerInfo}>
+                        <strong className={styles.playerTitle}>
+                          {row.slug ? <Link href={`/player/${row.slug}`}>{name}</Link> : name}
+                        </strong>
+
+                        {team ? (
+                          <span className={styles.clubSub}>
+                            {row.teamLogo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={row.teamLogo} alt="" className={styles.clubSubCrest} />
+                            ) : null}
+                            {row.teamSlug ? <Link href={`/team/${row.teamSlug}`}>{team}</Link> : <span>{team}</span>}
+                            {row.appearances != null ? (
+                              <span>· {row.appearances} {pick(locale, 'مباراة', 'apps')}</span>
+                            ) : null}
+                          </span>
+                        ) : null}
+
+                        <div className={styles.meterTrack} aria-hidden>
+                          <div className={styles.meterFill} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+
+                      <div className={styles.scorePill}>
+                        <span className={styles.scoreVal}>{row.value}</span>
+                        <span className={styles.scoreUnit}>{unit}</span>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : null}
         </div>
       )}
       {desk.teamRows.length > 0 ? (
-        <div className="stats-teams">
-          <h2>{pick(locale, 'إحصائيات الفرق', 'Team figures')}</h2>
+        <section className="stats-teams-block">
+          <div className="stats-teams-header">
+            <div className="stats-teams-title-box">
+              <div className="stats-teams-icon">
+                <Trophy size={20} aria-hidden />
+              </div>
+              <div>
+                <h2>{pick(locale, 'إحصائيات الفرق وأرقام الموسم', 'Team Figures & Season Analytics')}</h2>
+                <p>{pick(locale, `تحليل تفصيلي لأداء أندية ${boardName} — الهجوم، الدفاع، وسجلات المباريات من مصدر الترتيب الرسمي.`, `Detailed breakdown of ${boardName} club performance — attack, defense, and records from the official table.`)}</p>
+              </div>
+            </div>
+            <span className="stats-teams-badge">{desk.teamRows.length} {pick(locale, 'فريقاً', 'Teams')}</span>
+          </div>
+
           <div className="stats-split">
             {[
-              [pick(locale, 'أكثر تسجيلًا', 'Most scored'), attack, 'goalsFor'] as const,
-              [pick(locale, 'أقل استقبالًا', 'Fewest conceded'), defense, 'goalsAgainst'] as const,
-              [pick(locale, 'أكثر انتصارات', 'Most wins'), wins, 'won'] as const,
-              [pick(locale, 'أكثر خسائر', 'Most losses'), losses, 'lost'] as const,
-              [pick(locale, 'أكثر تعادلات', 'Most draws'), draws, 'drawn'] as const,
-            ].map(([title, list, key]) => (
-              <section key={title}>
-                <h3>{title}</h3>
-                <ol>
-                  {list.map((row) => (
-                    <li key={`${key}-${row.slug}`}>
-                      <Link href={`/team/${row.slug}`}>
-                        {row.logoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.logoUrl} alt="" className="stats-crest" />
-                        ) : null}
-                        {localizeTeamName(locale, row.name)}
-                      </Link>
-                      <b>{row[key]}</b>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ))}
+              {
+                title: pick(locale, 'أكثر الفرق تسجيلاً', 'Most scored'),
+                subtitle: pick(locale, 'القوة الهجومية الضاربة', 'Top attack'),
+                list: attack,
+                key: 'goalsFor' as const,
+                unit: pick(locale, 'هدف', 'goals'),
+                tone: 'orange',
+              },
+              {
+                title: pick(locale, 'أقوى خط دفاع', 'Best defense'),
+                subtitle: pick(locale, 'الأقل استقبالاً للأهداف', 'Fewest conceded'),
+                list: defense,
+                key: 'goalsAgainst' as const,
+                unit: pick(locale, 'في مرماه', 'conceded'),
+                tone: 'green',
+              },
+              {
+                title: pick(locale, 'أكثر الفرق فوزاً', 'Most wins'),
+                subtitle: pick(locale, 'حاصدو الانتصارات', 'Top winners'),
+                list: wins,
+                key: 'won' as const,
+                unit: pick(locale, 'فوز', 'wins'),
+                tone: 'amber',
+              },
+              {
+                title: pick(locale, 'أكثر الفرق تعادلاً', 'Most draws'),
+                subtitle: pick(locale, 'التكافؤ وتقاسم النقاط', 'Most drawn'),
+                list: draws,
+                key: 'drawn' as const,
+                unit: pick(locale, 'تعادل', 'draws'),
+                tone: 'sky',
+              },
+              {
+                title: pick(locale, 'أكثر الفرق خسارة', 'Most losses'),
+                subtitle: pick(locale, 'معاناة الدفاع والنتائج', 'Most defeats'),
+                list: losses,
+                key: 'lost' as const,
+                unit: pick(locale, 'هزيمة', 'losses'),
+                tone: 'rose',
+              },
+            ].map(({ title, subtitle, list, key, unit: u, tone }) => {
+              const maxVal = Math.max(...list.map((r) => r[key]), 1);
+              return (
+                <div key={title} className={`stats-team-card is-${tone}`}>
+                  <div className="stats-team-card-head">
+                    <div>
+                      <h3>{title}</h3>
+                      <p>{subtitle}</p>
+                    </div>
+                  </div>
+
+                  <ol className="stats-team-list">
+                    {list.map((row, idx) => {
+                      const val = row[key];
+                      const pct = Math.max(12, Math.round((val / maxVal) * 100));
+                      return (
+                        <li key={`${key}-${row.slug}`} className="stats-team-item">
+                          <span className={`stats-team-rank is-rank-${idx + 1}`}>{idx + 1}</span>
+                          <Link href={`/team/${row.slug}`} className="stats-team-link">
+                            {row.logoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={row.logoUrl} alt="" className="stats-team-crest" />
+                            ) : (
+                              <span className="stats-team-crest-empty">{row.name.charAt(0)}</span>
+                            )}
+                            <div className="stats-team-info">
+                              <span className="stats-team-name">{localizeTeamName(locale, row.name)}</span>
+                              <div className="stats-team-bar-wrap">
+                                <div className="stats-team-bar" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          </Link>
+                          <span className="stats-team-val">
+                            <b>{val}</b>
+                            <small>{u}</small>
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </section>
       ) : null}
       <p className="stats-links">
         {desk.leagueSlug ? <Link href={`/league/${desk.leagueSlug}`}>{pick(locale, 'صفحة البطولة', 'Competition page')}</Link> : null}

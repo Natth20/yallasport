@@ -1,7 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import { deliverPush, reserveOnce, release, usersWanting } from '@/lib/notifications/deliver';
 
-export async function alertBreakingNews(story: { id: string; slug: string; title: string; sourceName?: string | null }) {
+export async function alertBreakingNews(story: {
+  id: string;
+  slug: string;
+  title: string;
+  sourceName?: string | null;
+  featuredImage?: string | null;
+}) {
   const users = await usersWanting('breakingNews');
 
   for (const user of users) {
@@ -13,10 +19,11 @@ export async function alertBreakingNews(story: { id: string; slug: string; title
       user.id,
       user.pushSubscriptions,
       {
-        title: 'خبر عاجل',
+        title: '🔴 خبر عاجل | يلا سبورت',
         body: story.title,
         url: `/ar/news/${story.slug}`,
         tag: `news-${story.id}`,
+        image: story.featuredImage || undefined,
       },
       {
         type: 'BREAKING_NEWS',
@@ -36,7 +43,7 @@ export async function alertRecentPublishedBreaking() {
       publishedAt: { gte: since },
       OR: [{ breaking: true }, { title: { contains: 'عاجل' } }, { title: { contains: 'breaking', mode: 'insensitive' } }],
     },
-    select: { id: true, slug: true, title: true, sourceName: true },
+    select: { id: true, slug: true, title: true, sourceName: true, featuredImage: true },
     take: 12,
   });
 

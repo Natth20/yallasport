@@ -22,20 +22,22 @@ import { FrontSportNewsBlock } from './FrontSportNewsBlock';
 import { FrontVideoGrid } from './FrontVideoGrid';
 import { FrontMediaStrip } from './FrontMediaStrip';
 import { SquadsChapter } from './chapters/SquadsChapter';
+import { FrontTopMatchesShowcase } from './FrontTopMatchesShowcase';
 import look from './front-design.module.css';
 
 export const dynamic = 'force-dynamic';
 
-export async function FrontPage() {
-  const locale = await getLocale();
-  const sources = await loadFrontSources();
+export async function FrontPage({ locale: propLocale }: { locale?: string } = {}) {
+  try {
+    const locale = propLocale || (await getLocale());
+    const sources = await loadFrontSources();
 
   return (
     <div className={look.luxuryPage}>
       <div className={look.luxuryGlow} aria-hidden />
       <div className={look.luxuryInner}>
 
-        {/* 🏆 الفصل الأول: التغطية المباشرة والبث الحي (Hero & Live Arena) */}
+        {/* 🏆 الفصل الأول: التغطية المباشرة والبث الحي وأبرز المباريات (Hero & Live Arena) */}
         <section className="space-y-6">
           <Suspense fallback={<FrontSkeleton kind="pulse" />}>
             <FrontLiveTicker />
@@ -47,6 +49,11 @@ export async function FrontPage() {
 
           <Suspense fallback={<FrontSkeleton kind="chapter" />}>
             <FrontDualArena />
+          </Suspense>
+
+          {/* ⚽ قسم أبرز المباريات والقمم الكروية */}
+          <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+            <FrontTopMatchesShowcase />
           </Suspense>
         </section>
 
@@ -126,5 +133,14 @@ export async function FrontPage() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('[FrontPage.render.error]', error);
+    return (
+      <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>يلا سبورت</h2>
+        <p style={{ color: 'var(--muted-foreground)' }}>جاري تحديث البيانات الرياضية...</p>
+      </div>
+    );
+  }
 }
 

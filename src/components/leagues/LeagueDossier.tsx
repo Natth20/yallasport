@@ -7,6 +7,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Crown,
   Flame,
   Newspaper,
   Shield,
@@ -16,6 +17,7 @@ import {
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
+import { LeagueClimaxSection } from '@/components/leagues/LeagueClimaxSection';
 import { HallBezel, HallBrackets } from '@/components/salon/HallBezel';
 import { pick } from '@/i18n/pick';
 import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
@@ -184,6 +186,12 @@ export function LeagueDossier({
             <Flame size={14} aria-hidden />
             <span>{pick(locale, 'نظرة عامة', 'Overview')}</span>
           </a>
+          {standings.length >= 2 || upcoming.length > 0 ? (
+            <a href="#hall-climax" className={styles.foyerTab}>
+              <Crown size={14} aria-hidden />
+              <span>{pick(locale, 'صراع الصدارة والمباريات', 'Title Race & Fixtures')}</span>
+            </a>
+          ) : null}
           {standings.length > 0 ? (
             <a href="#hall-standings" className={styles.foyerTab}>
               <Trophy size={14} aria-hidden />
@@ -387,6 +395,17 @@ export function LeagueDossier({
           ))}
         </ul>
       ) : null}
+
+      {/* ---------------- صراع الصدارة وأقرب المباريات (CLIMAX & FIXTURES SHOWCASE) ---------------- */}
+      <div id="hall-climax">
+        <LeagueClimaxSection
+          locale={locale}
+          league={league}
+          standings={standings}
+          upcoming={upcoming}
+          liveMatches={liveMatches}
+        />
+      </div>
 
       {standings.length === 0 ? (
         <section id="hall-standings" className={styles.shelf}>

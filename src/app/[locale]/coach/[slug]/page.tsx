@@ -77,41 +77,12 @@ async function CoachPageBody({ params }: { params: Promise<{ slug: string }> }) 
       : undefined,
   };
 
+  const serializedDossier = JSON.parse(JSON.stringify(dossier));
+
   return (
     <>
       <JsonLd data={coachSchema} />
-      <SalonStage
-        tone="gallery"
-        wide
-        compact
-        kicker={pick(locale, 'قاعة المدرب', 'Coach gallery')}
-        title={localizePlainName(locale, dossier.coach.name)}
-        lead={pick(
-          locale,
-          'ملف المدرب من المصدر: المسيرة والقائمة والمواعيد.',
-          'Coach file from the source: career, squad, and fixtures.',
-        )}
-        aside={dossier.club?.name || undefined}
-        tools={
-          <HallFoyer
-            label={pick(locale, 'جناح المدرب', 'Coach suite')}
-            items={[
-              { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
-              { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
-              { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
-              {
-                href: dossier.club?.slug ? `/team/${dossier.club.slug}` : '/leagues',
-                label: dossier.club?.name
-                  ? localizePlainName(locale, dossier.club.name)
-                  : pick(locale, 'النادي', 'Club'),
-                icon: Shield,
-              },
-            ]}
-          />
-        }
-      >
-        <CoachDossier locale={locale} dossier={dossier} />
-      </SalonStage>
+      <CoachDossier locale={locale} dossier={serializedDossier} />
     </>
   );
 }

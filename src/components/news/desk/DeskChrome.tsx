@@ -31,7 +31,7 @@ export function EditionWire({ matches, locale }: { matches: PitchMatch[]; locale
             </em>
           ) : null}
         </div>
-        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto no-scrollbar py-0.5 px-2 scroll-px-2">
           {matches.map((match) => {
             const live = match.status === 'LIVE' || match.status === 'HALFTIME';
             const hasScore = typeof match.homeScore === 'number' && typeof match.awayScore === 'number';

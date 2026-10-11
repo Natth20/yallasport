@@ -115,12 +115,15 @@ async function NewsPageBody({
       tools={
         <YoutubeFoyer>
           <HallFoyer
-            label={pick(locale, 'فهرس الغرفة', 'Desk index')}
+            label={pick(locale, 'فهرس الغرفة والأقسام', 'Desk & sections index')}
             items={[
-              { href: '/news', label: pick(locale, 'الأخبار', 'News'), badge: pick(locale, 'معتمد', 'Approved'), icon: Newspaper, current: true },
+              { href: '/news', label: pick(locale, 'أهم العناوين', 'Top Headlines'), badge: pick(locale, 'معتمد', 'Approved'), icon: Newspaper, current: true },
+              { href: '/news#news-wall', label: pick(locale, 'مستجدات الساعة', 'Live Wire'), icon: Radio },
+              { href: '/news?desk=all#news-wall', label: pick(locale, 'الدوريات الكبرى', 'Major Leagues'), icon: Clapperboard },
+              { href: '/matches', label: pick(locale, 'أبرز المباريات', 'Matches'), badge: 'LIVE', icon: Radio },
+              { href: '/videos', label: pick(locale, 'الفيديوهات', 'Videos'), icon: Clapperboard },
+              { href: '/videos/reels', label: pick(locale, 'الريلز', 'Reels'), badge: 'HOT', icon: Radio },
               { href: '/photos', label: pick(locale, 'الصور', 'Photos'), icon: Camera },
-              { href: '/videos', label: pick(locale, 'الفيديو', 'Video'), icon: Clapperboard },
-              { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
             ]}
           />
           <NewsInkMast locale={locale} stats={deskData.stats} compact />

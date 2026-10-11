@@ -36,6 +36,7 @@ import { FrontSkeleton } from '@/components/front/FrontMark';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { MatchHero } from '@/components/sports/MatchHero';
+import { MatchPredictionCard } from '@/components/sports/MatchPredictionCard';
 import { SiteAd } from '@/components/ads/SiteAd';
 import { MatchDetailTabs } from '@/components/sports/MatchDetailTabs';
 import { MatchContextPack } from '@/components/sports/MatchContextPack';
@@ -600,13 +601,26 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
           venueName={typeof venueName === 'string' ? venueName : undefined}
         />
 
-        {/* ---- HERO STAGE (5.2.1) ---- */}
+        {/* ---- HERO STAGE (5.2.1) + FAN PREDICTIONS ---- */}
         <MatchHero
           match={match}
           isLoggedIn={Boolean(session?.user)}
           hasReminder={Boolean(userReminder)}
           hasLicensedStream={Boolean(STREAMING_ENABLED && licensedAsset)}
           userFollow={Boolean(userFollow)}
+          sideWidget={
+            <MatchPredictionCard
+              matchId={match.id}
+              homeTeam={{ name: match.homeTeam.name, logoUrl: match.homeTeam.logoUrl }}
+              awayTeam={{ name: match.awayTeam.name, logoUrl: match.awayTeam.logoUrl }}
+              initialPollId={matchPollView?.id}
+              initialCounts={
+                pollCounts
+                  ? { home: pollCounts.home, draw: pollCounts.draw, away: pollCounts.away }
+                  : undefined
+              }
+            />
+          }
         />
         <SiteAd placement="match-rail" locale={locale} />
         {sameDayMatches.length > 0 ? (

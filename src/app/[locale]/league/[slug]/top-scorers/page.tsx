@@ -4,13 +4,15 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { Target } from 'lucide-react';
+import { Award, Crown, Flame, Target, Trophy } from 'lucide-react';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ChapterSectionHead, LeagueChapterShell } from '@/components/leagues/LeagueChapterShell';
 import { pick } from '@/i18n/pick';
+import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
 import { pageMetadata } from '@/lib/seo/site';
 import { formatLeagueSeason, localizeCompetitionTitle } from '@/lib/i18n/competition-names';
+import luxuryStyles from '@/components/leagues/league-luxury.module.css';
 
 export const revalidate = 90;
 
@@ -121,30 +123,67 @@ async function TopScorersPageBody({
       ) : (
         <div className="space-y-8">
           {podium.length > 0 ? (
-            <section className="lch-scorer-podium club-rise">
-              {[podium[1], podium[0], podium[2]].filter(Boolean).map((row) => (
-                <Link
-                  key={`${row.player.id}-podium`}
-                  href={`/player/${row.player.slug}`}
-                  className={`lch-scorer-podium-card${row === podium[0] ? ' is-lead' : ''}`}
-                >
-                  <span className="lch-podium-rank">{String(topScorers.indexOf(row) + 1).padStart(2, '0')}</span>
-                  {row.player.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={row.player.photoUrl} alt="" className="lch-scorer-face" />
-                  ) : (
-                    <span className="lch-scorer-face is-empty">{row.player.name.charAt(0)}</span>
-                  )}
-                  <strong>{row.player.name}</strong>
-                  <em>{row.team.name}</em>
-                  <b>{row.goals}</b>
-                  {row.assists != null ? (
-                    <span>
-                      {row.assists} {pick(locale, 'صناعة', 'ast')}
+            <section className={luxuryStyles.podiumSuite} aria-label={pick(locale, 'منصة هدافي البطولة', 'Top Scorers Podium')}>
+              {[podium[1], podium[0], podium[2]].filter(Boolean).map((row) => {
+                const rankIdx = topScorers.indexOf(row) + 1;
+                const isLead = rankIdx === 1;
+                const isSecond = rankIdx === 2;
+                const boxClass = isLead
+                  ? `${luxuryStyles.podiumBox} ${luxuryStyles.goldChampion}`
+                  : isSecond
+                    ? `${luxuryStyles.podiumBox} ${luxuryStyles.silverChaser}`
+                    : `${luxuryStyles.podiumBox} ${luxuryStyles.bronzeThird}`;
+                const badgeClass = isLead
+                  ? `${luxuryStyles.podiumCrownBadge} ${luxuryStyles.badgeGold}`
+                  : isSecond
+                    ? `${luxuryStyles.podiumCrownBadge} ${luxuryStyles.badgeSilver}`
+                    : `${luxuryStyles.podiumCrownBadge} ${luxuryStyles.badgeBronze}`;
+
+                return (
+                  <Link
+                    key={`${row.player.id}-podium`}
+                    href={`/player/${row.player.slug}`}
+                    className={boxClass}
+                  >
+                    <span className={badgeClass}>
+                      {isLead ? <Crown size={14} /> : <Award size={14} />}
+                      <span>#{String(rankIdx).padStart(2, '0')} {isLead ? pick(locale, 'الهداف الأول', 'Top Scorer') : isSecond ? pick(locale, 'الوصيف', '2nd') : pick(locale, 'الثالث', '3rd')}</span>
                     </span>
-                  ) : null}
-                </Link>
-              ))}
+
+                    <div className={luxuryStyles.podiumCrestWrap}>
+                      {row.player.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={row.player.photoUrl}
+                          alt=""
+                          className="h-16 w-16 rounded-full object-cover shadow-lg"
+                        />
+                      ) : (
+                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-800 text-xl font-black text-amber-400">
+                          {row.player.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+
+                    <strong className={luxuryStyles.podiumClubName}>
+                      {localizePlainName(locale, row.player.name)}
+                    </strong>
+                    <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                      {localizeTeamName(locale, row.team.name)}
+                    </span>
+
+                    <div className={luxuryStyles.podiumMetrics}>
+                      <strong>{row.goals}</strong>
+                      <span>{pick(locale, 'أهداف', 'goals')}</span>
+                      {row.assists != null ? (
+                        <span style={{ marginInlineStart: '0.4rem', color: '#94a3b8' }}>
+                          ({row.assists} {pick(locale, 'صناعة', 'ast')})
+                        </span>
+                      ) : null}
+                    </div>
+                  </Link>
+                );
+              })}
             </section>
           ) : null}
 
@@ -154,7 +193,7 @@ async function TopScorersPageBody({
                 <ChapterSectionHead
                   folio="01"
                   kicker={pick(locale, 'التهديف', 'Scoring')}
-                  title={pick(locale, 'قائمة الهدافين', 'Scorers list')}
+                  title={pick(locale, 'قائمة الهدافين الملكية', 'Royal Scorers Ledger')}
                 />
                 <div className="league-scorer-stack">
                   {topScorers.map((row, index) => (
@@ -163,7 +202,7 @@ async function TopScorersPageBody({
                       href={`/player/${row.player.slug}`}
                       className={`league-scorer-card${index === 0 ? ' is-lead' : ''}`}
                     >
-                      <span className="league-scorer-rank">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="league-scorer-rank">#{String(index + 1).padStart(2, '0')}</span>
                       {row.player.photoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={row.player.photoUrl} alt="" className="league-scorer-photo" />
@@ -171,15 +210,15 @@ async function TopScorersPageBody({
                         <span className="league-scorer-photo is-empty">{row.player.name.charAt(0)}</span>
                       )}
                       <div className="min-w-0 flex-1">
-                        <strong>{row.player.name}</strong>
+                        <strong>{localizePlainName(locale, row.player.name)}</strong>
                         <em>
-                          {row.team.name}
+                          {localizeTeamName(locale, row.team.name)}
                           {row.player.position ? ` · ${row.player.position}` : ''}
                           {row.assists != null
                             ? ` · ${row.assists} ${pick(locale, 'صناعة', 'ast')}`
                             : ''}
                           {index > 0
-                            ? ` · ${pick(locale, 'خلف بـ', 'behind by')} ${maxGoals - row.goals}`
+                            ? ` · ${pick(locale, 'فارق عن الصدارة', 'behind by')} ${maxGoals - row.goals}`
                             : ''}
                         </em>
                         <span className="lch-race-track" aria-hidden>
@@ -199,13 +238,13 @@ async function TopScorersPageBody({
                   <ChapterSectionHead
                     folio="02"
                     kicker={pick(locale, 'الصناعة', 'Creativity')}
-                    title={pick(locale, 'صناع اللعب', 'Top assists')}
+                    title={pick(locale, 'أفضل صناع الأهداف', 'Top Playmakers')}
                   />
                   <div className="league-scorer-stack">
                     {topAssists.map((row, index) => {
                       const body = (
                         <>
-                          <span className="league-scorer-rank">{String(index + 1).padStart(2, '0')}</span>
+                          <span className="league-scorer-rank">#{String(index + 1).padStart(2, '0')}</span>
                           {row.player?.photoUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={row.player.photoUrl} alt="" className="league-scorer-photo" />
@@ -213,8 +252,8 @@ async function TopScorersPageBody({
                             <span className="league-scorer-photo is-empty">{row.name.charAt(0)}</span>
                           )}
                           <div className="min-w-0">
-                            <strong>{row.name}</strong>
-                            {row.team ? <em>{row.team.name}</em> : null}
+                            <strong>{localizePlainName(locale, row.name)}</strong>
+                            {row.team ? <em>{localizeTeamName(locale, row.team.name)}</em> : null}
                           </div>
                           <span className="league-scorer-goals">{row.assists}</span>
                         </>
@@ -242,7 +281,7 @@ async function TopScorersPageBody({
                   <ChapterSectionHead
                     folio="03"
                     kicker={pick(locale, 'الانضباط', 'Discipline')}
-                    title={pick(locale, 'سجل البطاقات', 'Cards ledger')}
+                    title={pick(locale, 'سجل البطاقات والإنذارات', 'Discipline Ledger')}
                   />
                   <div className="league-scorer-stack">
                     {topCards.map((row, index) => (
@@ -251,10 +290,10 @@ async function TopScorersPageBody({
                         href={`/player/${row.player.slug}`}
                         className="league-scorer-card"
                       >
-                        <span className="league-scorer-rank">{String(index + 1).padStart(2, '0')}</span>
+                        <span className="league-scorer-rank">#{String(index + 1).padStart(2, '0')}</span>
                         <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-9 w-9" />
                         <div className="min-w-0">
-                          <strong>{row.player.name}</strong>
+                          <strong>{localizePlainName(locale, row.player.name)}</strong>
                           <em>
                             <span className="lch-card-y">{row.yellow}</span>
                             {pick(locale, ' صفراء', ' Y')} ·{' '}

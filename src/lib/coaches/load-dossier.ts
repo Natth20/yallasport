@@ -347,7 +347,87 @@ export const loadCoachDossier = cache(async function loadCoachDossier(slug: stri
     teamName: trophy.teamName,
   }));
   const trophiesApi = apiId ? await fetchTrophiesFromApi(apiId) : [];
-  const trophies = trophiesDb.length > 0 ? trophiesDb : trophiesApi;
+
+  const normCoachName = (resolvedName || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+  const KNOWN_COACH_DATA: Record<
+    string,
+    {
+      bio: string;
+      trophies: Array<{ id: string; title: string; season: string; teamName: string }>;
+    }
+  > = {
+    'jose mourinho': {
+      bio: 'جوزيه مورينيو (The Special One)، أحد أعظم وأشهر المدربين التكتيكيين في تاريخ كرة القدم الحديثة. اشتهر بالانضباط التكتيكي الحديدي، والتحولات الهجومية الصاعقة، والصلابة الدفاعية الأسطورية. حقق الثلاثية التاريخية مع إنتر ميلان، وتوج بلقب دوري أبطال أوروبا مع بورتو وإنتر ميلان، وقاد ريال مدريد إلى لقب الدوري الإسباني التاريخي برصيد 100 نقطة و121 هدفاً في موسم 2011/2012.',
+      trophies: [
+        { id: 'jm-1', title: 'UEFA Champions League', season: '2009/10', teamName: 'Inter Milan' },
+        { id: 'jm-2', title: 'UEFA Champions League', season: '2003/04', teamName: 'Porto' },
+        { id: 'jm-3', title: 'UEFA Europa League', season: '2016/17', teamName: 'Manchester United' },
+        { id: 'jm-4', title: 'UEFA Europa Conference League', season: '2021/22', teamName: 'Roma' },
+        { id: 'jm-5', title: 'UEFA Cup', season: '2002/03', teamName: 'Porto' },
+        { id: 'jm-6', title: 'La Liga', season: '2011/12', teamName: 'Real Madrid' },
+        { id: 'jm-7', title: 'Copa del Rey', season: '2010/11', teamName: 'Real Madrid' },
+        { id: 'jm-8', title: 'Supercopa de España', season: '2012', teamName: 'Real Madrid' },
+        { id: 'jm-9', title: 'Premier League', season: '2014/15', teamName: 'Chelsea' },
+        { id: 'jm-10', title: 'Premier League', season: '2005/06', teamName: 'Chelsea' },
+        { id: 'jm-11', title: 'Premier League', season: '2004/05', teamName: 'Chelsea' },
+        { id: 'jm-12', title: 'Serie A', season: '2009/10', teamName: 'Inter Milan' },
+        { id: 'jm-13', title: 'Serie A', season: '2008/09', teamName: 'Inter Milan' },
+        { id: 'jm-14', title: 'Coppa Italia', season: '2009/10', teamName: 'Inter Milan' },
+        { id: 'jm-15', title: 'Primeira Liga', season: '2003/04', teamName: 'Porto' },
+        { id: 'jm-16', title: 'Primeira Liga', season: '2002/03', teamName: 'Porto' },
+      ],
+    },
+    'mikel arteta': {
+      bio: 'ميكيل أرتيتا، المدير الفني الإسباني لنادي أرسنال، وأحد أبرز العقول التكتيكية الشابة في أوروبا. تتلمذ على يد بيب غوارديولا، وأعاد أرسنال إلى قمة المنافسة الأوروبية والدوري الإنجليزي الممتاز بأسلوب يعتمد على الاستحواذ العالي، والضغط المعاكس المنظم، والابتكار الهجومي المستمر.',
+      trophies: [
+        { id: 'ma-1', title: 'FA Cup', season: '2019/20', teamName: 'Arsenal' },
+        { id: 'ma-2', title: 'FA Community Shield', season: '2023', teamName: 'Arsenal' },
+        { id: 'ma-3', title: 'FA Community Shield', season: '2020', teamName: 'Arsenal' },
+      ],
+    },
+    'carlo ancelotti': {
+      bio: 'كارلو أنشيلوتي (Carletto)، المدرب الأكثر تتويجاً في تاريخ دوري أبطال أوروبا بخمسة ألقاب تاريخية، والمدرب الوحيد الذي حقق ألقاب الدوريات الخمسة الكبرى في أوروبا (إسبانيا، إنجلترا، إيطاليا، ألمانيا، فرنسا). يتميز بالحكمة التكتيكية الهادئة، وإدارة النجوم الفائقة، والمرونة العالية.',
+      trophies: [
+        { id: 'ca-1', title: 'UEFA Champions League', season: '2023/24', teamName: 'Real Madrid' },
+        { id: 'ca-2', title: 'UEFA Champions League', season: '2021/22', teamName: 'Real Madrid' },
+        { id: 'ca-3', title: 'UEFA Champions League', season: '2013/14', teamName: 'Real Madrid' },
+        { id: 'ca-4', title: 'UEFA Champions League', season: '2006/07', teamName: 'AC Milan' },
+        { id: 'ca-5', title: 'UEFA Champions League', season: '2002/03', teamName: 'AC Milan' },
+        { id: 'ca-6', title: 'La Liga', season: '2023/24', teamName: 'Real Madrid' },
+        { id: 'ca-7', title: 'La Liga', season: '2021/22', teamName: 'Real Madrid' },
+        { id: 'ca-8', title: 'Premier League', season: '2009/10', teamName: 'Chelsea' },
+        { id: 'ca-9', title: 'Serie A', season: '2003/04', teamName: 'AC Milan' },
+        { id: 'ca-10', title: 'Bundesliga', season: '2016/17', teamName: 'Bayern Munich' },
+        { id: 'ca-11', title: 'Ligue 1', season: '2012/13', teamName: 'Paris Saint-Germain' },
+      ],
+    },
+    'pep guardiola': {
+      bio: 'بيب غوارديولا، رائد كرة القدم الموضعية (Juego de Posición) وأحد أكثر المدربين تأثيراً في تاريخ اللعبة الحديثة. قاد برشلونة للسداسية التاريخية، وقاد مانشستر سيتي للثلاثية التاريخية في 2023، وهيمن على الدوري الإنجليزي الممتاز بأسلوب الاستحواذ المطلق والضغط العالي.',
+      trophies: [
+        { id: 'pg-1', title: 'UEFA Champions League', season: '2022/23', teamName: 'Manchester City' },
+        { id: 'pg-2', title: 'UEFA Champions League', season: '2010/11', teamName: 'Barcelona' },
+        { id: 'pg-3', title: 'UEFA Champions League', season: '2008/09', teamName: 'Barcelona' },
+        { id: 'pg-4', title: 'Premier League', season: '2023/24', teamName: 'Manchester City' },
+        { id: 'pg-5', title: 'Premier League', season: '2022/23', teamName: 'Manchester City' },
+        { id: 'pg-6', title: 'Premier League', season: '2021/22', teamName: 'Manchester City' },
+        { id: 'pg-7', title: 'Premier League', season: '2020/21', teamName: 'Manchester City' },
+        { id: 'pg-8', title: 'Premier League', season: '2018/19', teamName: 'Manchester City' },
+        { id: 'pg-9', title: 'Premier League', season: '2017/18', teamName: 'Manchester City' },
+        { id: 'pg-10', title: 'Bundesliga', season: '2015/16', teamName: 'Bayern Munich' },
+        { id: 'pg-11', title: 'La Liga', season: '2010/11', teamName: 'Barcelona' },
+      ],
+    },
+  };
+
+  const knownCoach = KNOWN_COACH_DATA[normCoachName];
+  const trophiesKnown = knownCoach?.trophies || [];
+  const trophies = trophiesDb.length > 0 ? trophiesDb : (trophiesApi.length > 0 ? trophiesApi : trophiesKnown);
+  const bio = (row?.bio && row.bio.length > 35) ? row.bio : (knownCoach?.bio || row?.bio || null);
 
   const teamId = club?.id;
   const squad = teamId
@@ -430,7 +510,7 @@ export const loadCoachDossier = cache(async function loadCoachDossier(slug: stri
       birthPlace,
       height: api?.height || null,
       weight: api?.weight || null,
-      bio: row?.bio ?? null,
+      bio: bio || row?.bio || null,
     },
     club,
     squad,

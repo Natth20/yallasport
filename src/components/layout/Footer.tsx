@@ -64,40 +64,45 @@ export async function Footer() {
 
   const columns = [
     {
-      title: ar ? 'يلا سبورت' : 'Yalla Sport',
+      title: ar ? 'المنافسات والمباريات' : 'Matches & Leagues',
       links: [
+        { name: t('common.matches') || 'المباريات والنتائج', href: '/matches' },
+        { name: t('common.leagues') || 'البطولات والدوريات', href: '/leagues' },
+        { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live' },
+        { name: ar ? 'دليل القنوات والبث' : 'TV Guide', href: '/tv-guide' },
+        { name: ar ? 'لوحة الصدارة والتوقعات' : 'Leaderboard', href: '/leaderboard' },
+        ...leagueLinks.slice(0, 3),
+      ],
+    },
+    {
+      title: ar ? 'الأخبار والوسائط' : 'News & Media',
+      links: [
+        { name: t('common.news') || 'أحدث الأخبار والتقارير', href: '/news' },
+        { name: t('common.video') || 'مكتبة الفيديو والأهداف', href: '/videos' },
+        { name: ar ? 'ريلز ولقطات سريعة' : 'Reels', href: '/videos#reels' },
+        { name: t('common.photos') || 'الصور والعدسة', href: '/photos' },
+        { name: t('common.transfers') || 'سوق الانتقالات', href: '/transfers' },
+      ],
+    },
+    {
+      title: ar ? 'الإحصائيات والمقارنات' : 'Stats & Compare',
+      links: [
+        { name: t('common.stats') || 'إحصائيات المواسم والفرق', href: '/stats' },
+        { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
+        { name: t('common.club_compare') || 'مقارنة الأندية', href: '/compare' },
+        { name: ar ? 'البحث الرياضي الشامل' : 'Search', href: '/search' },
+      ],
+    },
+    {
+      title: ar ? 'المنصة والحساب' : 'Account & About',
+      links: [
+        { name: ar ? 'حسابي والإشعارات' : 'My Account & Alerts', href: '/profile' },
+        { name: t('common.favorites') || 'الفرق والمباريات المفضلة', href: '/favorites' },
+        { name: t('common.settings') || 'الإعدادات والمظهر', href: '/settings' },
         { name: t('footer.about') || 'من نحن', href: '/about' },
         { name: t('footer.connect') || 'تواصل معنا', href: '/contact' },
         { name: t('common.report') || 'إبلاغ عن محتوى', href: '/report' },
-        ...(staff ? [{ name: ar ? 'لوحة التحكم' : 'Control desk', href: '/admin' }] : []),
-      ],
-    },
-    {
-      title: ar ? 'الرياضة' : 'Sports',
-      links: [
-        { name: t('common.matches') || 'المباريات', href: '/matches' },
-        { name: t('common.leagues') || 'البطولات', href: '/leagues' },
-        { name: ar ? 'الفرق' : 'Teams', href: '/leagues' },
-        { name: ar ? 'اللاعبون' : 'Players', href: '/compare-players' },
-      ],
-    },
-    {
-      title: ar ? 'المحتوى' : 'Content',
-      links: [
-        { name: t('common.news') || 'الأخبار', href: '/news' },
-        { name: t('common.video') || 'الفيديو', href: '/videos' },
-        { name: t('common.photos') || 'الصور', href: '/photos' },
-        { name: t('common.transfers') || 'الانتقالات', href: '/transfers' },
-        { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
-      ],
-    },
-    {
-      title: ar ? 'الحساب' : 'Account',
-      links: [
-        { name: t('common.favorites') || 'المفضلة', href: '/favorites' },
-        { name: ar ? 'تابع فريقك' : 'Follow your team', href: '/favorites' },
-        { name: ar ? 'حسابي' : 'My Account', href: '/profile' },
-        { name: t('common.settings') || 'الإعدادات', href: '/settings' },
+        ...(staff ? [{ name: ar ? 'لوحة الإدارة والتحكم' : 'Control Desk', href: '/admin' }] : []),
       ],
     },
   ];
@@ -150,8 +155,8 @@ export async function Footer() {
             </Link>
             <p className={styles.brandDesc}>
               {ar
-                ? 'يلا سبورت منصة رياضية عربية رائدة تقدم تغطية فورية وشاملة لمباريات كرة القدم، الجداول، النتائج المباشرة، وأحدث الأخبار العالمية والمحلية.'
-                : 'Yalla Sport is a leading sports platform delivering real-time football match coverage, live scores, standings, and global sporting news.'}
+                ? 'يلا سبورت منصة رياضية متكاملة تجمع الأخبار الرياضية، المباريات والنتائج المباشرة، البطولات والدوريات، الفرق واللاعبين والمدربين، الإحصائيات، الانتقالات، الفيديو والصور، مع تغطية رياضية شاملة من مصادر موثوقة.'
+                : 'Yalla Sport is a comprehensive sports platform that aggregates sports news, live match coverage and scores, tournaments and leagues, teams, players, coaches, statistics, transfers, video, and photos, with extensive coverage from reliable sources.'}
             </p>
           </div>
 
@@ -208,13 +213,13 @@ export async function Footer() {
         </div>
 
         <div className={styles.closer}>
-          <span className={styles.monogram} aria-hidden>
+          {/* <span className={styles.monogram} aria-hidden>
             YS
-          </span>
+          </span> */}
           <p>
             {ar
-              ? 'ختم برتقالي. التغطية من المصدر، والعرض من القاعة.'
-              : 'An orange seal. Coverage from the source, presentation from the hall.'}
+              ? 'يلا سبورت منصة رياضية متكاملة'
+              : 'Yalla Sport is a comprehensive sports platform'}
           </p>
         </div>
 

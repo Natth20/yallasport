@@ -52,8 +52,8 @@ export async function GET(req: Request) {
 
       if (dbMatch.status === 'LIVE' || dbMatch.status === 'HALFTIME') {
         await alertMatchFans(dbMatch, 'MATCH_START', {
-          title: 'بدأت المباراة',
-          body: `${dbMatch.homeTeam.name} ضد ${dbMatch.awayTeam.name}`,
+          title: `⏱️ صافرة البداية | ${dbMatch.homeTeam.name} × ${dbMatch.awayTeam.name}`,
+          body: `بدأت الآن أحداث المباراة • تابع النتيجة والتشكيلة مباشرة!`,
           tag: `match-start-${dbMatch.id}`,
           entityId: 'live',
         });
@@ -61,8 +61,8 @@ export async function GET(req: Request) {
 
       if (dbMatch.status === 'FINISHED') {
         await alertMatchFans(dbMatch, 'MATCH_END', {
-          title: 'انتهت المباراة',
-          body: `${dbMatch.homeTeam.name} ${dbMatch.homeScore ?? 0} - ${dbMatch.awayScore ?? 0} ${dbMatch.awayTeam.name}`,
+          title: `🏁 صافرة النهاية (${dbMatch.homeScore ?? 0} - ${dbMatch.awayScore ?? 0})`,
+          body: `${dbMatch.homeTeam.name} ${dbMatch.homeScore ?? 0} - ${dbMatch.awayScore ?? 0} ${dbMatch.awayTeam.name} (انتهت)`,
           tag: `match-end-${dbMatch.id}`,
           entityId: 'finished',
         });
@@ -72,8 +72,9 @@ export async function GET(req: Request) {
         event.type === 'GOAL' || event.type === 'PENALTY' || event.type === 'OWN_GOAL'
       )) {
         const eventKey = `${goal.minute}-${goal.extraMinute ?? 0}-${goal.playerId ?? goal.player ?? 'goal'}`;
+        const goalType = goal.type === 'PENALTY' ? ' (ركلة جزاء)' : goal.type === 'OWN_GOAL' ? ' (هدف في مرماه)' : '';
         await alertMatchFans(dbMatch, 'GOAL', {
-          title: `هدف${goal.player ? ` — ${goal.player}` : ''}`,
+          title: `⚽ هدف! د'${goal.minute}${goal.player ? ` — ${goal.player}${goalType}` : ''}`,
           body: `${detail.homeTeam.name} ${detail.homeScore ?? 0} - ${detail.awayScore ?? 0} ${detail.awayTeam.name}`,
           tag: `goal-${dbMatch.id}-${eventKey}`,
           entityId: eventKey,

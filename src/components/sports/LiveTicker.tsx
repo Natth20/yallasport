@@ -24,8 +24,8 @@ export const LiveTicker: React.FC<LiveTickerProps> = ({ matches }) => {
   if (liveMatches.length === 0) return null;
 
   return (
-    <div className="bg-muted dark:bg-card/[0.04] overflow-hidden py-1.5 border-b border-border dark:border-border relative z-[90]" dir="ltr">
-      <div className="flex animate-marquee whitespace-nowrap gap-16 items-center">
+    <div className="bg-muted dark:bg-card/[0.04] overflow-hidden no-scrollbar py-1.5 border-b border-border dark:border-border relative z-[90]" dir="ltr">
+      <div className="flex animate-marquee whitespace-nowrap gap-16 items-center no-scrollbar">
         {liveMatches.concat(liveMatches).map((match, i) => (
           <Link
             key={`${match.id}-${i}`}

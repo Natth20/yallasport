@@ -997,7 +997,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         leagueName: localizeLeagueName(locale, event.match.league, event.match.league.name),
         assist:
           namedActor(event.assistName) &&
-          foldSearch(event.assistName || '') !== foldSearch(event.playerName || '')
+            foldSearch(event.assistName || '') !== foldSearch(event.playerName || '')
             ? namedActor(event.assistName)
             : undefined,
       };
@@ -1613,8 +1613,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                     <h3 className="mt-6 text-xl font-bold text-foreground dark:text-foreground">
                       {favoritesOnly
                         ? (session?.user
-                            ? pick(locale, 'لا توجد مباريات لفرقك المفضلة في هذا اليوم', 'No matches for your followed teams today')
-                            : pick(locale, 'تابع أنديتك وفرقك المفضلة', 'Follow your favorite teams'))
+                          ? pick(locale, 'لا توجد مباريات لفرقك المفضلة في هذا اليوم', 'No matches for your followed teams today')
+                          : pick(locale, 'تابع أنديتك وفرقك المفضلة', 'Follow your favorite teams'))
                         : lensesActive
                           ? pick(locale, 'لا مباريات تحت هذه العدسة', 'No matches under this lens')
                           : statusFilter === 'live'
@@ -1628,8 +1628,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                     <p className="mt-2 text-sm font-medium text-muted-foreground">
                       {favoritesOnly
                         ? (session?.user
-                            ? pick(locale, 'أضف مزيداً من الفرق أو البطولات لمتابعتها هنا، أو استعرض مباريات اليوم كاملة.', 'Add more teams to follow, or view the full day schedule.')
-                            : pick(locale, 'سجل دخولك أو اختر أنديتك المفضلة لتظهر مبارياتها هنا تلقائياً.', 'Sign in or select your favorite teams to track their matches here.'))
+                          ? pick(locale, 'أضف مزيداً من الفرق أو البطولات لمتابعتها هنا، أو استعرض مباريات اليوم كاملة.', 'Add more teams to follow, or view the full day schedule.')
+                          : pick(locale, 'سجل دخولك أو اختر أنديتك المفضلة لتظهر مبارياتها هنا تلقائياً.', 'Sign in or select your favorite teams to track their matches here.'))
                         : lensesActive
                           ? pick(locale, 'امسح البطولة أو القناة أو الساعة لعرض برنامج اليوم كاملاً.', 'Clear the competition, channel or hour to show the full day.')
                           : statusFilter === 'all'
@@ -1670,24 +1670,46 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                         <Link
                           key={match.id}
                           href={`/match/${match.id}`}
-                          className="block rounded-xl border border-border px-3 py-3 transition-colors hover:border-orange-500/30 dark:border-border"
+                          className="group block rounded-2xl border border-border/80 bg-card/60 p-3.5 transition-all hover:border-orange-500/40 hover:bg-card/90 dark:border-border/60 dark:bg-card/40"
                         >
-                          <div className="flex items-center justify-between gap-2 text-[9px] font-semibold text-muted-foreground">
-                            <span className="truncate">{match.league.name}</span>
-                            <ClientTime value={match.kickoffAt} className="tabular-nums text-orange-500" />
+                          <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2 text-[10px] font-semibold text-muted-foreground">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <LeagueCrest name={match.league.name} logoUrl={match.league.logoUrl} className="h-4 w-4 shrink-0" />
+                              <span className="truncate">{match.league.name}</span>
+                            </div>
+                            <ClientTime value={match.kickoffAt} variant="clock" className="tabular-nums font-bold text-orange-500 shrink-0" />
                           </div>
-                          <p className="mt-1.5 truncate text-[12px] font-bold text-foreground dark:text-foreground">
-                            {match.homeTeam.name} × {match.awayTeam.name}
-                          </p>
+
+                          <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6 shrink-0" />
+                              <span className="truncate text-xs font-bold text-foreground">
+                                {match.homeTeam.name}
+                              </span>
+                            </div>
+
+                            <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] font-black text-muted-foreground">
+                              VS
+                            </span>
+
+                            <div className="flex items-center justify-end gap-2 min-w-0 text-end">
+                              <span className="truncate text-xs font-bold text-foreground">
+                                {match.awayTeam.name}
+                              </span>
+                              <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6 shrink-0" />
+                            </div>
+                          </div>
+
                           {(formByTeam.get(match.homeTeam.id)?.length || formByTeam.get(match.awayTeam.id)?.length) ? (
-                            <p className="mt-1.5 flex items-center gap-2">
+                            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/30 pt-2 text-[9px]">
                               <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
-                              <span className="text-slate-200 dark:text-foreground/10">/</span>
+                              <span className="text-muted-foreground/30">•</span>
                               <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
-                            </p>
+                            </div>
                           ) : null}
+
                           {(match.venue || match.channels[0]) && (
-                            <p className="mt-1 truncate text-[9px] font-medium text-muted-foreground">
+                            <p className="mt-1.5 truncate text-[9px] font-medium text-muted-foreground">
                               {[match.venue, match.venueCity, match.channels[0]?.name].filter(Boolean).join(' · ')}
                             </p>
                           )}

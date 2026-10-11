@@ -5,13 +5,15 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { History } from 'lucide-react';
+import { ArrowUpRight, Crown, History, Trophy } from 'lucide-react';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { ChapterSectionHead, LeagueChapterShell } from '@/components/leagues/LeagueChapterShell';
 import { pick } from '@/i18n/pick';
+import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { loadLeagueDossier } from '@/lib/leagues/load-dossier';
 import { prisma } from '@/lib/prisma';
 import { pageMetadata } from '@/lib/seo/site';
+import luxuryStyles from '@/components/leagues/league-luxury.module.css';
 
 export const revalidate = 300;
 
@@ -104,83 +106,101 @@ async function LeagueArchivePageBody({ params }: { params: Promise<{ slug: strin
           </p>
         </div>
       ) : (
-        <section className="league-plate club-rise">
-          <ChapterSectionHead
-            folio="01"
-            kicker={pick(locale, 'الخط الزمني', 'Timeline')}
-            title={pick(locale, 'المواسم المحفوظة', 'Stored seasons')}
-            note={pick(locale, 'اضغط موسماً لفتح ملفه.', 'Open a season folio.')}
-          />
+        <section className="league-plate club-rise !p-0 overflow-hidden">
+          <div className="border-b border-[rgba(15,23,42,0.06)] px-5 py-4 dark:border-white/8">
+            <ChapterSectionHead
+              folio="01"
+              kicker={pick(locale, 'الخزنة الملكية', 'Royal Vault')}
+              title={pick(locale, 'أرشيف المواسم وتاريخ الأبطال', 'Championship History & Season Vault')}
+              note={pick(locale, 'اضغط على أي موسم لاستعراض ترتيبه ونتائجه الكاملة.', 'Select any season to explore its full standings and records.')}
+            />
+          </div>
 
-          <ol className="lch-archive-timeline">
-            {archiveSeasons.map((season, index) => {
-              const champion = championBySeason.get(season.seasonId);
-              const active = season.seasonId === seasonId || Boolean(season.current);
-              return (
-                <li key={season.seasonId}>
+          <div className="p-5">
+            <div className={luxuryStyles.trophyVaultGrid}>
+              {archiveSeasons.map((season, index) => {
+                const champion = championBySeason.get(season.seasonId);
+                const active = season.seasonId === seasonId || Boolean(season.current);
+
+                return (
                   <Link
+                    key={season.seasonId}
                     href={`/league/${slug}?season=${season.seasonId}`}
-                    className={`lch-archive-card${active ? ' is-active' : ''}`}
+                    className={`${luxuryStyles.vaultCard}${active ? ` ${luxuryStyles.vaultCardCurrent}` : ''}`}
                   >
-                    <span className="lch-archive-index" aria-hidden>
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <div className="lch-archive-year">
-                      <strong>{season.seasonId}</strong>
+                    <div className={luxuryStyles.vaultHeader}>
+                      <span className={luxuryStyles.vaultSeasonYear}>
+                        {season.seasonId}
+                      </span>
                       {season.current ? (
-                        <em>{pick(locale, 'الحالي', 'Current')}</em>
-                      ) : null}
+                        <span className={`${luxuryStyles.cardBadge} border-emerald-500/30 bg-emerald-500/10 text-emerald-400`}>
+                          ⚡ {pick(locale, 'الموسم الجاري', 'Current')}
+                        </span>
+                      ) : champion ? (
+                        <span className={luxuryStyles.cardBadge}>
+                          <Crown size={12} />
+                          <span>{pick(locale, 'بطل مسجّل', 'Champion')}</span>
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                          #{String(index + 1).padStart(2, '0')}
+                        </span>
+                      )}
                     </div>
-                    <div className="lch-archive-body">
-                      {champion ? (
-                        <div className="lch-archive-champ">
+
+                    {champion ? (
+                      <div className={luxuryStyles.vaultChampBody}>
+                        <div style={{ padding: '0.4rem', borderRadius: '0.75rem', background: 'rgba(30,41,59,0.7)', border: '1px solid rgba(245,158,11,0.3)' }}>
                           <LeagueCrest
                             name={champion.team.name}
                             logoUrl={champion.team.logoUrl}
                             className="h-10 w-10"
                           />
-                          <div className="min-w-0">
-                            <span className="lch-archive-label">
-                              {pick(locale, 'البطل', 'Champion')}
-                            </span>
-                            <strong>{champion.team.name}</strong>
-                            <em>
-                              {champion.points} {pick(locale, 'نقطة', 'pts')} · {champion.played}{' '}
-                              {pick(locale, 'مباراة', 'played')}
-                            </em>
-                          </div>
                         </div>
-                      ) : (
-                        <div>
-                          <span className="lch-archive-label">
-                            {pick(locale, 'الحالة', 'Status')}
+                        <div className={luxuryStyles.vaultChampInfo}>
+                          <span className={luxuryStyles.vaultChampLabel}>
+                            {pick(locale, 'بطل الموسم', 'Season Champion')}
                           </span>
-                          <strong>
-                            {season.current
-                              ? pick(locale, 'الموسم الجاري', 'Ongoing season')
-                              : pick(locale, 'موسم مسجّل في المصدر', 'Season on record')}
+                          <strong className={luxuryStyles.vaultChampName}>
+                            {localizeTeamName(locale, champion.team.name)}
                           </strong>
+                          <span className={luxuryStyles.vaultChampStats}>
+                            {champion.points} {pick(locale, 'نقطة', 'pts')} · {champion.played} {pick(locale, 'مباراة', 'matches')}
+                          </span>
                         </div>
-                      )}
-                      {(season.start || season.end) && (
-                        <p className="lch-archive-dates">
-                          {[season.start, season.end].filter(Boolean).join(' → ')}
-                        </p>
-                      )}
-                      {season.teams ? (
-                        <p className="lch-archive-dates">
-                          {season.teams} {pick(locale, 'فريق في السجل', 'teams on ledger')}
-                        </p>
-                      ) : null}
+                      </div>
+                    ) : (
+                      <div className={luxuryStyles.vaultChampBody}>
+                        <div style={{ padding: '0.4rem', borderRadius: '0.75rem', background: 'rgba(30,41,59,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <History className="h-9 w-9 text-slate-400" />
+                        </div>
+                        <div className={luxuryStyles.vaultChampInfo}>
+                          <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                            {pick(locale, 'سجل الموسم', 'Season Record')}
+                          </span>
+                          <strong style={{ fontSize: '0.9rem', color: '#f8fafc' }}>
+                            {season.current
+                              ? pick(locale, 'منافسات الموسم جارية', 'Season in progress')
+                              : pick(locale, 'أرشيف موثق في السجل', 'Documented in archive')}
+                          </strong>
+                          {season.teams ? (
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.15rem' }}>
+                              {season.teams} {pick(locale, 'أندية مسجلة', 'registered clubs')}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: '#fbbf24', fontWeight: 700 }}>
+                      <span>{pick(locale, 'استعراض تفاصيل الموسم', 'View Season Dossier')}</span>
+                      <ArrowUpRight size={13} />
                     </div>
-                    <span className="lch-archive-cta">
-                      {pick(locale, 'فتح', 'Open')}
-                    </span>
                   </Link>
-                </li>
-              );
-            })}
-          </ol>
+                );
+              })}
+            </div>
+          </div>
         </section>
       )}
     </LeagueChapterShell>

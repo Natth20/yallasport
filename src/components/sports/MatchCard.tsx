@@ -150,7 +150,7 @@ export async function MatchCard({
             </>
           ) : (
             <span className={statusText ? 'is-status' : undefined}>
-              {statusText ?? <ClientTime value={match.kickoffAt} />}
+              {statusText ?? <ClientTime value={match.kickoffAt} variant="clock" />}
             </span>
           )}
         </div>

@@ -17,7 +17,7 @@ export function BrandMark({ size = 40, priority = false, className = '' }: Brand
       height={size}
       decoding="async"
       {...(priority ? { fetchPriority: 'high' as const } : {})}
-      className={`shrink-0 rounded-full bg-[#0b0b0b] object-contain ${className}`}
+      className={`shrink-0 object-contain select-none transition-transform duration-200 ${className}`}
     />
   );
 }

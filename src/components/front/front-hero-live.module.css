@@ -108,15 +108,19 @@
   align-items: center;
   gap: 0.6rem;
   overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch;
   white-space: nowrap;
-  padding-right: 0.5rem;
-  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  padding-inline: 0.75rem;
+  scroll-padding-inline: 0.75rem;
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
 }
 
 .tickerScrollTrack::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .tickerItemCapsule {

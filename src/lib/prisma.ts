@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { PrismaClient } from '@/generated/prisma';
 
-const PRISMA_CLIENT_REVISION = 21;
+const PRISMA_CLIENT_REVISION = 22;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -143,7 +143,8 @@ function getRawPrisma(): PrismaClient {
 }
 
 function getWrappedPrisma(): PrismaClient {
-  return getRawPrisma();
+  getRawPrisma();
+  return globalForPrisma.prismaWrapped || globalForPrisma.prisma!;
 }
 
 export const prisma = new Proxy({} as PrismaClient, {

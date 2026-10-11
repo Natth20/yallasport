@@ -4,17 +4,34 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 /**
- * ScrollToTop – يُعيد scroll الصفحة إلى الأعلى عند كل navigation.
- * يحل مشكلة "بتفتح الصفحة من الأسفل" التي تحدث بسبب scroll restoration
- * أو بسبب انتقالات Framer Motion التي تُبقي الـ scroll position.
+ * ScrollToTop – يُعيد scroll الصفحة إلى أعلى نقطة فوراً عند كل تنقل أو فتح صفحة.
+ * يمنع متصفحات الجوال والديسكتوب من استعادة موضع التمرير في الأسفل.
  */
 export function ScrollToTop() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // إعادة تعيين scroll position فوراً عند كل تغيير في المسار
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    resetScroll();
+
+    // Re-run in next frame to counter any deferred layout recalculation or motion
+    const rafId = requestAnimationFrame(resetScroll);
+    return () => cancelAnimationFrame(rafId);
   }, [pathname]);
 
   return null;
 }
+

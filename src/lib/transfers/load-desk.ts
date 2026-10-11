@@ -140,16 +140,20 @@ export const loadTransferDesk = cache(async function loadTransferDesk(filters: {
     );
   }
 
-  const clubStats = new Map<string, { name: string; in: number; out: number }>();
+  const clubStats = new Map<string, { name: string; in: number; out: number; logo: string | null; slug: string | null }>();
   for (const row of rows) {
     if (row.toTeam) {
-      const cur = clubStats.get(row.toTeam) || { name: row.toTeam, in: 0, out: 0 };
+      const cur = clubStats.get(row.toTeam) || { name: row.toTeam, in: 0, out: 0, logo: row.toLogo, slug: row.toSlug };
       cur.in += 1;
+      if (!cur.logo && row.toLogo) cur.logo = row.toLogo;
+      if (!cur.slug && row.toSlug) cur.slug = row.toSlug;
       clubStats.set(row.toTeam, cur);
     }
     if (row.fromTeam) {
-      const cur = clubStats.get(row.fromTeam) || { name: row.fromTeam, in: 0, out: 0 };
+      const cur = clubStats.get(row.fromTeam) || { name: row.fromTeam, in: 0, out: 0, logo: row.fromLogo, slug: row.fromSlug };
       cur.out += 1;
+      if (!cur.logo && row.fromLogo) cur.logo = row.fromLogo;
+      if (!cur.slug && row.fromSlug) cur.slug = row.fromSlug;
       clubStats.set(row.fromTeam, cur);
     }
   }

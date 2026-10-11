@@ -5,29 +5,32 @@ import { Link } from '@/i18n/navigation';
 import { FollowButton } from '@/components/common/FollowButton';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
-import { HallBezel, HallBrackets } from '@/components/salon/HallBezel';
 import { pick } from '@/i18n/pick';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
-import { slugifyCoachName } from '@/lib/coaches/slug';
 import { apiSportsCoachPhoto, apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import {
   Activity,
   ArrowRight,
   ArrowUpRight,
+  Award,
   Calendar,
+  Clock,
+  Compass,
+  FileText,
   Flame,
+  Info,
   Layers,
   MapPin,
   Newspaper,
   Repeat,
   Shield,
+  Sparkles,
   Trophy,
-  UserCheck,
+  User,
   Users,
   Zap,
 } from 'lucide-react';
 import type {
-  FormLetter,
   SquadGroupKey,
   TeamDossierData,
 } from '@/lib/teams/load-dossier';
@@ -35,45 +38,21 @@ import styles from '@/components/salon/entity-hall.module.css';
 import board from '@/components/teams/team-salon.module.css';
 
 type SquadFilter = SquadGroupKey | 'ALL';
-
 const SQUAD_ORDER: SquadGroupKey[] = ['GK', 'DF', 'MF', 'FW', 'OTHER'];
-
-function folio(index: number) {
-  return String(index + 1).padStart(2, '0');
-}
 
 function squadLabel(key: SquadGroupKey, locale: string) {
   switch (key) {
     case 'GK':
       return pick(locale, 'حراس المرمى', 'Goalkeepers');
     case 'DF':
-      return pick(locale, 'الدفاع', 'Defence');
+      return pick(locale, 'خط الدفاع', 'Defenders');
     case 'MF':
-      return pick(locale, 'الوسط', 'Midfield');
+      return pick(locale, 'خط الوسط', 'Midfielders');
     case 'FW':
-      return pick(locale, 'الهجوم', 'Attack');
+      return pick(locale, 'خط الهجوم', 'Attackers');
     default:
-      return pick(locale, 'أخرى', 'Other');
+      return pick(locale, 'لاعبون آخرون', 'Other');
   }
-}
-
-function liveClock(match: { status: string; minute: number | null }, locale: string) {
-  if (match.status === 'HALFTIME') return pick(locale, 'استراحة', 'Half-time');
-  if (match.minute) return `${match.minute}'`;
-  return pick(locale, 'مباشر', 'Live');
-}
-
-function formWord(letter: FormLetter, locale: string) {
-  if (letter === 'W') return pick(locale, 'ف', 'W');
-  if (letter === 'D') return pick(locale, 'ت', 'D');
-  return pick(locale, 'خ', 'L');
-}
-
-function formPillClass(letter: string) {
-  const key = letter.toUpperCase();
-  if (key === 'W') return styles.formPillW;
-  if (key === 'L') return styles.formPillL;
-  return styles.formPillD;
 }
 
 function goalDiffLabel(diff: number) {
@@ -116,9 +95,6 @@ export function TeamDossier({
     team,
     squad,
     squadCount,
-    squadAges,
-    squadComposition,
-    nationalities,
     liveMatches,
     upcoming,
     recentResults,
@@ -131,10 +107,45 @@ export function TeamDossier({
     competitions,
     scorers,
     assisters,
+    discipline,
     transfers,
     news,
     tableWindow,
+    seasonSlice,
   } = dossier;
+
+  const [squadFilter, setSquadFilter] = useState<SquadFilter>('ALL');
+  const [transfersTab, setTransfersTab] = useState<'in' | 'out'>('in');
+
+  const availableFormations = useMemo(() => {
+    const list = (seasonSlice?.formations || []).map((f) => f.formation);
+    if (!list.includes('4-3-3')) list.push('4-3-3');
+    if (!list.includes('4-2-3-1')) list.push('4-2-3-1');
+    if (!list.includes('4-4-2')) list.push('4-4-2');
+    return list;
+  }, [seasonSlice]);
+
+  const [tacticalFormation, setTacticalFormation] = useState<string>(
+    seasonSlice?.formations?.[0]?.formation || '4-3-3'
+  );
+
+  const startingXI = useMemo(() => {
+    const parts = tacticalFormation
+      .split('-')
+      .map((n) => parseInt(n, 10))
+      .filter((n) => !isNaN(n) && n > 0);
+
+    const defCount = parts[0] || 4;
+    const midCount = parts[1] || 3;
+    const fwdCount = parts.slice(2).reduce((a, b) => a + b, 0) || 3;
+
+    const gk = (squad.GK || []).slice(0, 1);
+    const df = (squad.DF || []).slice(0, defCount);
+    const mf = (squad.MF || []).slice(0, midCount);
+    const fw = (squad.FW || []).slice(0, fwdCount);
+
+    return { gk, df, mf, fw };
+  }, [tacticalFormation, squad]);
 
   const name = localizePlainName(locale, team.name);
   const country = team.country ? localizePlainName(locale, team.country) : null;
@@ -148,848 +159,895 @@ export function TeamDossier({
     }
     : null;
 
-  const [dept, setDept] = useState<SquadFilter>('ALL');
-
-  // Focus match for cinema stage
-  const matchesQueue = useMemo(() => {
-    const rows = [...liveMatches, ...(nextMatch ? [nextMatch] : []), ...upcoming.slice(0, 5)];
-    const seen = new Set<string>();
-    return rows.filter((match) => {
-      if (!match?.id || seen.has(match.id)) return false;
-      seen.add(match.id);
-      return true;
-    });
-  }, [liveMatches, nextMatch, upcoming]);
-
-  const [activeMatchIndex, setActiveMatchIndex] = useState(0);
-  const activeMatch = matchesQueue[activeMatchIndex] || matchesQueue[0];
-
-  const squadChapters = SQUAD_ORDER.map((key) => ({ key, players: squad[key] })).filter(
+  // Flattened squad by position
+  const squadChapters = SQUAD_ORDER.map((key) => ({ key, players: squad[key] || [] })).filter(
     (chapter) => chapter.players.length > 0,
   );
 
   const displayedSquad = useMemo(() => {
-    if (dept === 'ALL') return squadChapters.flatMap((c) => c.players);
-    return squad[dept] || [];
-  }, [dept, squad, squadChapters]);
-  const liveOnStage = Boolean(activeMatch && (activeMatch.status === 'LIVE' || activeMatch.status === 'HALFTIME'));
+    if (squadFilter === 'ALL') return squadChapters.flatMap((c) => c.players);
+    return squad[squadFilter] || [];
+  }, [squadFilter, squad, squadChapters]);
 
-  const identity = [
-    country ? { label: pick(locale, 'الدولة / الاتحاد', 'Country / Federation'), value: country } : null,
-    team.founded ? { label: pick(locale, 'سنة التأسيس', 'Founded'), value: String(team.founded) } : null,
-    team.code ? { label: pick(locale, 'الرمز المختصر', 'Team Code'), value: team.code } : null,
-    venue?.name ? { label: pick(locale, 'الملعب الرسمي', 'Home Ground'), value: venue.name } : null,
-    venue?.city ? { label: pick(locale, 'المدينة', 'City'), value: venue.city } : null,
-    team.coach?.name
-      ? { label: pick(locale, 'المدير الفني', 'Head Coach'), value: localizePlainName(locale, team.coach.name) }
-      : null,
-  ].filter(Boolean) as Array<{ label: string; value: string }>;
+  // Transfers in and out
+  const transfersIn = useMemo(() => {
+    return transfers.filter((t) => !t.toTeam || t.toTeam.toLowerCase().includes(team.name.toLowerCase()));
+  }, [transfers, team.name]);
 
-  const kpis = [
-    stats.played > 0 ? { label: pick(locale, 'مباريات الموسم', 'Played'), value: stats.played } : null,
-    stats.won > 0 ? { label: pick(locale, 'الانتصارات', 'Wins'), value: stats.won } : null,
-    stats.goalsFor > 0 ? { label: pick(locale, 'الأهداف المسجلة', 'Goals Scored'), value: stats.goalsFor } : null,
-    stats.played > 0 ? { label: pick(locale, 'فارق الأهداف', 'Goal Difference'), value: goalDiffLabel(stats.goalDiff) } : null,
-    stats.winPct != null ? { label: pick(locale, 'نسبة الفوز', 'Win Percentage'), value: `${stats.winPct}%` } : null,
-    standing && standing.points > 0 ? { label: pick(locale, 'رصيد النقاط', 'League Points'), value: standing.points } : null,
-    standing && standing.rank > 0 ? { label: pick(locale, 'الترتيب الرسمي', 'League Rank'), value: `#${standing.rank}` } : null,
-    squadCount > 0 ? { label: pick(locale, 'قائمة اللاعبين', 'Squad Count'), value: squadCount } : null,
-    squadAges ? { label: pick(locale, 'متوسط الأعمار', 'Average Age'), value: `${squadAges.avg} سنة` } : null,
-    nationalities.length > 0 ? { label: pick(locale, 'جنسيات مختلفة', 'Nationalities'), value: nationalities.length } : null,
-  ].filter(Boolean) as Array<{ label: string; value: string | number }>;
+  const transfersOut = useMemo(() => {
+    return transfers.filter((t) => t.fromTeam && t.fromTeam.toLowerCase().includes(team.name.toLowerCase()));
+  }, [transfers, team.name]);
+
+  const displayedTransfers = transfersTab === 'in' ? (transfersIn.length > 0 ? transfersIn : transfers) : transfersOut;
+
+  // Top Performers
+  const topScorer = scorers[0] || null;
+  const topAssister = assisters[0] || null;
+
+  const allSquadPlayers = useMemo(() => squadChapters.flatMap((c) => c.players), [squadChapters]);
+
+  const resolvePlayerShot = (photoUrl?: string | null, slug?: string | null, rawName?: string | null) => {
+    const direct = playerShot(photoUrl, slug);
+    if (direct) return direct;
+    if (rawName) {
+      const clean = rawName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const match = allSquadPlayers.find((entry) => {
+        const pClean = entry.player.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pClean.includes(clean) || clean.includes(pClean);
+      });
+      if (match) return playerShot(match.player.photoUrl, match.player.slug);
+    }
+    return null;
+  };
+
+  const resolvePlayerSlug = (slug?: string | null, rawName?: string | null) => {
+    if (slug) return slug;
+    if (rawName) {
+      const clean = rawName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const match = allSquadPlayers.find((entry) => {
+        const pClean = entry.player.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        return pClean.includes(clean) || clean.includes(pClean);
+      });
+      if (match) return match.player.slug;
+    }
+    return null;
+  };
+
+  // Live match
+  const activeLiveMatch = liveMatches[0] || null;
 
   return (
-    <div className={`${styles.hall} ${styles.vaultHall}`}>
-      {/* ---------------- FOYER SUB-NAVIGATION ---------------- */}
-      <nav className={styles.foyer} aria-label={pick(locale, 'أقسام ملف النادي', 'Club sections')}>
-        <div className={styles.foyerTabs}>
-          <a href="#hall-screen" className={`${styles.foyerTab} ${styles.isOn}`}>
-            <Flame size={14} aria-hidden />
-            <span>{pick(locale, 'مسرح النادي والمواجهات', 'Cinema Duel Stage')}</span>
-          </a>
-          <a href="#hall-stats" className={styles.foyerTab}>
-            <Activity size={14} aria-hidden />
-            <span>{pick(locale, 'أرقام وإحصاءات الموسم', 'Key Figures')}</span>
-          </a>
-          {standing ? (
-            <a href="#hall-standing" className={styles.foyerTab}>
-              <Trophy size={14} aria-hidden />
-              <span>{pick(locale, 'الترتيب في الدوري', 'League Standing')}</span>
-            </a>
-          ) : null}
-          <a href="#hall-squad" className={styles.foyerTab}>
-            <Users size={14} aria-hidden />
-            <span>{pick(locale, 'قائمة الفريق', 'Squad')}</span>
-            <span className={styles.foyerBadge}>{squadCount}</span>
-          </a>
-          {formTrail.length > 0 || recentResults.length > 0 ? (
-            <a href="#hall-record" className={styles.foyerTab}>
-              <Calendar size={14} aria-hidden />
-              <span>{pick(locale, 'سجل النتائج', 'Match Record')}</span>
-            </a>
-          ) : null}
-          {scorers.length > 0 || assisters.length > 0 ? (
-            <a href="#hall-performers" className={styles.foyerTab}>
-              <Zap size={14} aria-hidden />
-              <span>{pick(locale, 'الهدافون والنجوم', 'Top Performers')}</span>
-            </a>
-          ) : null}
-          {team.coach ? (
-            <a href="#hall-coach" className={styles.foyerTab}>
-              <UserCheck size={14} aria-hidden />
-              <span>{pick(locale, 'المدير الفني', 'Head Coach')}</span>
-            </a>
-          ) : null}
-          {venue ? (
-            <a href="#hall-ground" className={styles.foyerTab}>
-              <MapPin size={14} aria-hidden />
-              <span>{pick(locale, 'ملعب النادي', 'Home Ground')}</span>
-            </a>
-          ) : null}
-        </div>
-      </nav>
+    <div className={board.teamPage}>
+      {/* =========================================================================
+          1. MEGA ROYAL HERO STAGE
+          ========================================================================= */}
+      <section className={board.hero} aria-label={name}>
+        <div className={board.heroAura} aria-hidden />
+        <div className={board.heroGrid} aria-hidden />
+        {venue?.imageUrl ? (
+          <img src={venue.imageUrl} alt="" className={board.heroPhoto} aria-hidden />
+        ) : null}
 
-      <section id="hall-screen" className={`${styles.wideScreen} ${board.clubSalon}`} aria-label={name}>
-        <div className={styles.chassis}>
-          <HallBezel
-            label={activeMatch ? localizePlainName(locale, activeMatch.league.name) : pick(locale, 'النادي', 'Club')}
-            clock={
-              activeMatch
-                ? activeMatch.status === 'NOT_STARTED'
-                  ? pick(locale, 'مباراة قادمة', 'Upcoming')
-                  : liveClock(activeMatch, locale)
-                : pick(locale, 'ملف رسمي', 'Official')
-            }
-          />
-          <div className={`${styles.frame} ${board.clubFrame}`}>
-            {activeMatch ? (
-              <>
-                <div className={styles.crestWash} aria-hidden>
-                  {activeMatch.homeTeam.logoUrl ? <img src={activeMatch.homeTeam.logoUrl} alt="" /> : <span />}
-                  {activeMatch.awayTeam.logoUrl ? <img src={activeMatch.awayTeam.logoUrl} alt="" /> : <span />}
+        <div className={board.heroInner}>
+          {/* Breadcrumb & Live Strip */}
+          <div className={board.heroTop}>
+            <div className={board.crumb}>
+              <Link href="/">{pick(locale, 'الرئيسية', 'Home')}</Link>
+              <span>/</span>
+              <Link href="/matches">{pick(locale, 'الأندية الرياضية', 'Football Clubs')}</Link>
+              <span>/</span>
+              <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{name}</span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              {activeLiveMatch ? (
+                <Link
+                  href={`/match/${activeLiveMatch.id}`}
+                  className={styles.liveBadge}
+                  style={{ textDecoration: 'none' }}
+                >
+                  <span className={styles.liveDot} />
+                  <span>{pick(locale, 'مباراة مباشرة الآن', 'Match Live Now')}</span>
+                </Link>
+              ) : null}
+
+              <FollowButton
+                entityId={team.id}
+                entityType="TEAM"
+                isLoggedIn={loggedIn}
+                initialIsFollowing={isFollowing}
+                variant="ghost"
+              />
+            </div>
+          </div>
+
+          {/* Hero Core */}
+          <div className={board.heroStage}>
+            {/* Club Crest Shield */}
+            <div className={board.crestWrap}>
+              {team.logoUrl ? (
+                <img src={team.logoUrl} alt={name} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', fontWeight: 900, color: 'var(--ys-orange)' }}>
+                  {name.charAt(0)}
                 </div>
-                <div className={styles.duel}>
-                  {activeMatch.homeTeam.slug ? (
-                    <Link href={`/team/${activeMatch.homeTeam.slug}`} className={styles.side}>
-                      <LeagueCrest name={activeMatch.homeTeam.name} logoUrl={activeMatch.homeTeam.logoUrl} className="h-16 w-16" />
-                      <strong>{localizePlainName(locale, activeMatch.homeTeam.name)}</strong>
-                    </Link>
-                  ) : (
-                    <div className={styles.side}>
-                      <LeagueCrest name={activeMatch.homeTeam.name} logoUrl={activeMatch.homeTeam.logoUrl} className="h-16 w-16" />
-                      <strong>{localizePlainName(locale, activeMatch.homeTeam.name)}</strong>
-                    </div>
-                  )}
+              )}
 
-                  <div className={styles.score}>
-                    {activeMatch.status === 'NOT_STARTED' ? (
-                      <span className={board.kickoffBlock}>
-                        <ClientTime
-                          value={activeMatch.kickoffAt}
-                          locale={locale}
-                          options={{ weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }}
-                        />
-                      </span>
-                    ) : (
-                      <b>
-                        {activeMatch.homeScore ?? '–'} : {activeMatch.awayScore ?? '–'}
-                      </b>
-                    )}
-                    <em className={liveOnStage ? styles.liveBadge : undefined}>
-                      {liveOnStage ? <span className={styles.liveDot} /> : null}
-                      {liveOnStage
-                        ? pick(locale, 'مباشر', 'Live')
-                        : localizePlainName(locale, activeMatch.league.name)}
-                    </em>
+              {standing ? (
+                <span className={board.rankBadge}>
+                  #{standing.rank}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Club Info Details */}
+            <div className={board.heroCopy}>
+              <p className={board.kicker}>
+                {country ? `${country} · ` : ''}
+                {team.code ? `${team.code} · ` : ''}
+                {pick(locale, 'نادي رياضي رسمي', 'Official Football Club')}
+              </p>
+
+              <h1>{name}</h1>
+
+              {/* Badges Ribbon */}
+              <div className={board.chips}>
+                {standing ? (
+                  <span className={board.chip}>
+                    <Trophy size={13} style={{ marginInlineEnd: '0.35rem', color: '#eab308' }} />
+                    #{standing.rank} {localizePlainName(locale, standing.league.name)} · {standing.points} {pick(locale, 'نقطة', 'pts')}
+                  </span>
+                ) : null}
+
+                {team.founded ? (
+                  <span className={board.chip}>
+                    <Calendar size={13} style={{ marginInlineEnd: '0.35rem' }} />
+                    {pick(locale, `تأسس عام ${team.founded}`, `Est. ${team.founded}`)}
+                  </span>
+                ) : null}
+
+                {venue?.name ? (
+                  <span className={board.chip}>
+                    <MapPin size={13} style={{ marginInlineEnd: '0.35rem' }} />
+                    {venue.name} {venue.city ? `(${venue.city})` : ''}
+                  </span>
+                ) : null}
+
+                {team.coach?.name ? (
+                  <Link
+                    href={team.coach.slug ? `/coach/${team.coach.slug}` : '#'}
+                    className={board.chipLink}
+                  >
+                    <User size={13} style={{ marginInlineEnd: '0.35rem', color: 'var(--ys-orange)' }} />
+                    {pick(locale, 'المدرب:', 'Coach:')} {localizePlainName(locale, team.coach.name)}
+                  </Link>
+                ) : null}
+
+                {squadCount > 0 ? (
+                  <span className={board.chip}>
+                    <Users size={13} style={{ marginInlineEnd: '0.35rem' }} />
+                    {squadCount} {pick(locale, 'لاعباً في القائمة', 'Squad Players')}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          2. MASTER CONTENT DASHBOARD (THEME-NATIVE & RESPONSIVE)
+          ========================================================================= */}
+      <main style={{ maxWidth: '1320px', margin: '2rem auto 0', padding: '0 1rem', display: 'grid', gap: '2rem' }}>
+
+        {/* ----------------- ROW 1: NEXT MATCH & RECENT FORM SPOTLIGHT ----------------- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          {/* Next Match Card */}
+          <div className={board.spotlightCard} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'var(--ys-orange)', color: '#111', fontSize: '0.72rem', fontWeight: 900, padding: '0.25rem 0.65rem', borderRadius: '999px' }}>
+                <Clock size={12} />
+                {pick(locale, 'المباراة القادمة', 'Next Match')}
+              </span>
+
+              {nextMatch ? (
+                <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', fontWeight: 800 }}>
+                  {localizePlainName(locale, nextMatch.league.name)}
+                </span>
+              ) : null}
+            </div>
+
+            {nextMatch ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '1rem', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                    <LeagueCrest name={nextMatch.homeTeam.name} logoUrl={nextMatch.homeTeam.logoUrl} className="h-14 w-14 object-contain" />
+                    <strong style={{ fontSize: '0.9rem', fontWeight: 800 }}>{localizePlainName(locale, nextMatch.homeTeam.name)}</strong>
                   </div>
 
-                  {activeMatch.awayTeam.slug ? (
-                    <Link href={`/team/${activeMatch.awayTeam.slug}`} className={styles.side}>
-                      <LeagueCrest name={activeMatch.awayTeam.name} logoUrl={activeMatch.awayTeam.logoUrl} className="h-16 w-16" />
-                      <strong>{localizePlainName(locale, activeMatch.awayTeam.name)}</strong>
-                    </Link>
-                  ) : (
-                    <div className={styles.side}>
-                      <LeagueCrest name={activeMatch.awayTeam.name} logoUrl={activeMatch.awayTeam.logoUrl} className="h-16 w-16" />
-                      <strong>{localizePlainName(locale, activeMatch.awayTeam.name)}</strong>
-                    </div>
-                  )}
+                  <div>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--ys-orange)', background: 'color-mix(in srgb, var(--foreground) 6%, var(--card))', padding: '0.4rem 0.85rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                      {pick(locale, 'ضد', 'VS')}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                    <LeagueCrest name={nextMatch.awayTeam.name} logoUrl={nextMatch.awayTeam.logoUrl} className="h-14 w-14 object-contain" />
+                    <strong style={{ fontSize: '0.9rem', fontWeight: 800 }}>{localizePlainName(locale, nextMatch.awayTeam.name)}</strong>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '0.85rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
+                    <ClientTime value={nextMatch.kickoffAt} locale={locale} options={{ weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }} />
+                  </div>
+
+                  <Link
+                    href={`/match/${nextMatch.id}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--ys-orange)', fontSize: '0.8rem', fontWeight: 900, textDecoration: 'none' }}
+                  >
+                    <span>{pick(locale, 'مركز المباراة', 'Match Center')}</span>
+                    <ArrowUpRight size={14} />
+                  </Link>
                 </div>
               </>
             ) : (
-              <div className={styles.vipCard}>
-                <div className={styles.vipInfo}>
-                  <span className={styles.vipTeamBadge}>
-                    <Shield size={16} />
-                    <span>{country || pick(locale, 'نادي رياضي رسمي', 'Official Club')}</span>
-                  </span>
-                  <h1 className={styles.vipTitle}>{name}</h1>
-                  <div className={styles.vipMetaPills}>
-                    {standing ? (
-                      <span className={styles.vipPill}>
-                        <b>
-                          {pick(locale, 'الترتيب', 'Rank')} #{standing.rank}
-                        </b>
-                      </span>
-                    ) : null}
-                    {standing ? (
-                      <span className={styles.vipPill}>
-                        <span>
-                          {standing.points} {pick(locale, 'نقطة', 'pts')}
-                        </span>
-                      </span>
-                    ) : null}
-                    {stats.played > 0 ? (
-                      <span className={styles.vipPill}>
-                        <span>
-                          {stats.won} {pick(locale, 'فوز', 'wins')}
-                        </span>
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                <div className={styles.vipAvatarBox}>
-                  <div className={styles.vipAvatarFrame}>
-                    {team.logoUrl ? (
-                      <img src={team.logoUrl} alt={name} className={board.crestPhoto} />
-                    ) : (
-                      <div className={styles.vipAvatarPlaceholder}>{name.charAt(0)}</div>
-                    )}
-                  </div>
-                </div>
+              <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.85rem', margin: '2rem 0' }}>
+                {pick(locale, 'لا توجد مواعيد مباريات قادمة مجدولة حالياً.', 'No upcoming matches scheduled currently.')}
+              </p>
+            )}
+          </div>
+
+          {/* 5-Match Form Ribbon */}
+          <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--foreground)' }}>
+                📈 {pick(locale, 'شريط نتائج المباريات الأخيرة', 'Recent Form Guide')}
+              </span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
+                {pick(locale, 'آخر 5 مباريات', 'Last 5 Matches')}
+              </span>
+            </div>
+
+            {formTrail.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.6rem' }}>
+                {formTrail.slice(0, 5).map((f, i) => (
+                  <Link
+                    key={`${f.matchId}-${i}`}
+                    href={`/match/${f.matchId}`}
+                    style={{
+                      background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))',
+                      border: '1px solid var(--border)',
+                      borderRadius: '0.85rem',
+                      padding: '0.75rem 0.5rem',
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <LeagueCrest name={f.opponent.name} logoUrl={f.opponent.logoUrl} className="h-6 w-6" />
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90px' }}>
+                      {localizePlainName(locale, f.opponent.name)}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--foreground)' }}>
+                      {f.homeScore} - {f.awayScore}
+                    </span>
+                    <span className={`${styles.formPill} ${f.letter === 'W' ? styles.formPillW : f.letter === 'L' ? styles.formPillL : styles.formPillD}`} style={{ margin: '0 auto' }}>
+                      {f.letter === 'W' ? pick(locale, 'ف', 'W') : f.letter === 'D' ? pick(locale, 'ت', 'D') : pick(locale, 'خ', 'L')}
+                    </span>
+                  </Link>
+                ))}
               </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.85rem' }}>
+                {pick(locale, 'سجل النتائج السابقة غير متوفر حالياً.', 'Recent form not available.')}
+              </p>
             )}
 
-            <div className={styles.caption}>
-              <span>
-                <b>{name}</b>
-                {standing ? ` · #${standing.rank} ${localizePlainName(locale, standing.league.name)}` : ''}
-              </span>
-              {matchesQueue.length > 1 ? (
-                <div className={styles.stepGroup}>
-                  <button
-                    type="button"
-                    className={styles.stepBtn}
-                    onClick={() => setActiveMatchIndex((prev) => (prev > 0 ? prev - 1 : matchesQueue.length - 1))}
-                    aria-label={pick(locale, 'المواجهة السابقة', 'Previous fixture')}
-                  >
-                    ←
-                  </button>
-                  <span>
-                    {folio(activeMatchIndex)} / {folio(matchesQueue.length - 1)}
-                  </span>
-                  <button
-                    type="button"
-                    className={styles.stepBtn}
-                    onClick={() => setActiveMatchIndex((prev) => (prev < matchesQueue.length - 1 ? prev + 1 : 0))}
-                    aria-label={pick(locale, 'المواجهة التالية', 'Next fixture')}
-                  >
-                    →
-                  </button>
-                </div>
-              ) : null}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--muted-foreground)', borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+              <span>🟢 {pick(locale, 'فوز', 'Win')}</span>
+              <span>🟡 {pick(locale, 'تعادل', 'Draw')}</span>
+              <span>🔴 {pick(locale, 'خسارة', 'Loss')}</span>
             </div>
-            <HallBrackets />
+          </div>
+        </div>
+
+        {/* ----------------- ROW 2: FULL SEASON KPIS & RECORD METERS ----------------- */}
+        <div className={board.glassCard}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Activity size={18} style={{ color: 'var(--ys-orange)' }} />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                {pick(locale, 'إحصاءات وأرقام النادي لهذا الموسم', 'Season Performance Analytics')}
+              </h3>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.85rem' }}>
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'مباريات ملعوبة', 'Matches Played')}</span>
+              <strong className={board.statBoxValue}>{stats.played}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle} style={{ color: '#16a34a' }}>{pick(locale, 'الانتصارات', 'Wins')}</span>
+              <strong className={board.statBoxValue} style={{ color: '#16a34a' }}>{stats.won}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle} style={{ color: '#ca8a04' }}>{pick(locale, 'التعادلات', 'Draws')}</span>
+              <strong className={board.statBoxValue} style={{ color: '#ca8a04' }}>{stats.drawn}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle} style={{ color: '#dc2626' }}>{pick(locale, 'الهزائم', 'Losses')}</span>
+              <strong className={board.statBoxValue} style={{ color: '#dc2626' }}>{stats.lost}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'أهداف له / عليه', 'GF : GA')}</span>
+              <strong className={board.statBoxValue}>{stats.goalsFor} : {stats.goalsAgainst}</strong>
+            </div>
+
+            <div className={board.statBox}>
+              <span className={board.statBoxTitle}>{pick(locale, 'فارق الأهداف', 'Goal Diff')}</span>
+              <strong className={board.statBoxValue} style={{ color: stats.goalDiff > 0 ? '#16a34a' : stats.goalDiff < 0 ? '#dc2626' : 'inherit' }}>
+                {goalDiffLabel(stats.goalDiff)}
+              </strong>
+            </div>
+
+            {stats.winPct != null ? (
+              <div className={board.statBox}>
+                <span className={board.statBoxTitle} style={{ color: 'var(--ys-orange)' }}>{pick(locale, 'نسبة الفوز', 'Win Rate')}</span>
+                <strong className={board.statBoxValue} style={{ color: 'var(--ys-orange)' }}>{stats.winPct}%</strong>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Home vs Away Mini Split */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginTop: '1.25rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted-foreground)' }}>🏠 {pick(locale, 'سجل المباريات داخل الديار', 'Home Record')}</span>
+              <strong style={{ fontSize: '0.85rem', color: 'var(--foreground)' }}>{homeStats.won} {pick(locale, 'فوز', 'W')} · {homeStats.drawn} {pick(locale, 'تعادل', 'D')} · {homeStats.lost} {pick(locale, 'خسارة', 'L')}</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted-foreground)' }}>✈️ {pick(locale, 'سجل المباريات خارج الديار', 'Away Record')}</span>
+              <strong style={{ fontSize: '0.85rem', color: 'var(--foreground)' }}>{awayStats.won} {pick(locale, 'فوز', 'W')} · {awayStats.drawn} {pick(locale, 'تعادل', 'D')} · {awayStats.lost} {pick(locale, 'خسارة', 'L')}</strong>
+            </div>
           </div>
         </div>
 
-        <div className={styles.program}>
-          <div className={styles.chips}>
-            <span className={styles.chipOn}>
-              <b>{name}</b>
-            </span>
-            {country ? <span className={styles.chip}>{country}</span> : null}
-            {standing ? (
-              <span className={styles.chip}>
-                #{standing.rank} {localizePlainName(locale, standing.league.name)}
-              </span>
-            ) : null}
-            {team.coach?.name ? <span className={styles.chip}>{localizePlainName(locale, team.coach.name)}</span> : null}
-          </div>
-          <h2 className={styles.programTitle}>{name}</h2>
-          <div className={styles.acts}>
-            <FollowButton
-              entityId={team.id}
-              entityType="TEAM"
-              isLoggedIn={loggedIn}
-              initialIsFollowing={isFollowing}
-              variant="ghost"
-            />
-            <Link href={`/compare?team1=${team.slug}`} className={styles.ghost}>
-              {pick(locale, 'مقارنة هذا النادي', 'Compare Club')}
-            </Link>
-            {activeMatch ? (
-              <Link href={`/match/${activeMatch.id}`} className={styles.go}>
-                <span>{pick(locale, 'فتح مركز المباراة', 'Match Center')}</span>
-                <ArrowUpRight size={14} />
-              </Link>
-            ) : null}
-          </div>
-        </div>
-
-        {matchesQueue.length > 0 ? (
-          <aside className={board.pitchStrip} aria-label={pick(locale, 'برنامج مباريات النادي', 'Club fixtures')}>
-            <header className={board.pitchStripHead}>
-              <div>
-                <p>{pick(locale, 'شريط المواجهات', 'Fixture strip')}</p>
-                <h3>{pick(locale, 'المواعيد على المسرح', 'On the programme')}</h3>
-              </div>
-              <span>{folio(matchesQueue.length)}</span>
-            </header>
-            <ol className={board.pitchStripList}>
-              {matchesQueue.map((m, index) => {
-                const active = index === activeMatchIndex;
-                const opp = m.homeTeam?.name === team.name ? m.awayTeam : m.homeTeam;
-                if (!opp) return null;
-                return (
-                  <li key={`${m.id || 'queue'}-${opp.name}-${index}`}>
-                    <button
-                      type="button"
-                      className={`${board.pitchCard}${active ? ` ${board.pitchCardOn}` : ''}`}
-                      onClick={() => setActiveMatchIndex(index)}
-                      aria-pressed={Boolean(active)}
-                    >
-                      <span className={board.pitchNum}>{folio(index)}</span>
-                      <span className={board.pitchThumb}>
-                        <LeagueCrest name={opp.name} logoUrl={opp.logoUrl} className="h-8 w-8" />
-                      </span>
-                      <span className={board.pitchCopy}>
-                        <b>{localizePlainName(locale, opp.name)}</b>
-                        <i>
-                          {m.status === 'NOT_STARTED' ? (
-                            <ClientTime value={m.kickoffAt} locale={locale} options={{ day: 'numeric', month: 'short' }} />
-                          ) : (
-                            liveClock(m, locale)
-                          )}
-                          {' · '}
-                          {localizePlainName(locale, m.league.name)}
-                        </i>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-          </aside>
-        ) : null}
-      </section>
-
-      <div className={board.suite}>
-        <div id="hall-stats" className={board.stack}>
-          {identity.length > 0 ? (
-            <div className={styles.facts}>
-              {identity.map((row) => (
-                <article key={row.label} className={styles.fact}>
-                  <em>{row.label}</em>
-                  <strong>{row.value}</strong>
-                </article>
-              ))}
-            </div>
-          ) : null}
-
-          {kpis.length > 0 ? (
-            <ul className={styles.kpis}>
-              {kpis.map((row) => (
-                <li key={row.label}>
-                  <strong>{row.value}</strong>
-                  <span>{row.label}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-
-        {/* ---------------- LEAGUE TABLE WINDOW ---------------- */}
-        {standing ? (
-          <section id="hall-standing" className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Trophy size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'موقف النادي في جدول الدوري', 'League Standing & Context')}</h3>
-                  <p>
-                    {localizePlainName(locale, standing.league.name)} · {pick(locale, `المركز #${standing.rank} برصيد ${standing.points} نقطة`, `Rank #${standing.rank} with ${standing.points} pts`)}
-                  </p>
-                </div>
-              </div>
-              <Link href={`/league/${standing.league.slug}/standings`} className={styles.shelfBadge}>
-                {pick(locale, 'الجدول الكامل', 'Full Table')} →
-              </Link>
-            </header>
-
-            {tableWindow.length > 0 ? (
-              <div className={styles.tableCard}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>{pick(locale, 'الفريق', 'Club')}</th>
-                      <th>{pick(locale, 'لعب', 'P')}</th>
-                      <th>{pick(locale, 'فوز', 'W')}</th>
-                      <th>{pick(locale, 'تعادل', 'D')}</th>
-                      <th>{pick(locale, 'خسارة', 'L')}</th>
-                      <th>{pick(locale, 'فارق', 'GD')}</th>
-                      <th>{pick(locale, 'نقاط', 'Pts')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableWindow.map((row, index) => {
-                      const isUs = row.isUs || row.team.name === team.name;
-                      return (
-                        <tr key={row.team.id || row.team.slug || `standing-row-${index}`} className={isUs ? styles.rowDirect : undefined}>
-                          <td>
-                            <b>{row.rank}</b>
-                          </td>
-                          <td>
-                            <Link href={`/team/${row.team.slug}`} className={styles.teamCol}>
-                              <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-6 w-6" />
-                              <span>{localizePlainName(locale, row.team.name)}</span>
-                            </Link>
-                          </td>
-                          <td>{row.played}</td>
-                          <td>{row.won}</td>
-                          <td>{row.drawn}</td>
-                          <td>{row.lost}</td>
-                          <td>{(row.goalsFor ?? 0) - (row.goalsAgainst ?? 0)}</td>
-                          <td>
-                            <span className={styles.pts}>{row.points}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
-
-            {/* Home vs Away Splits */}
-            {homeStats.played > 0 || awayStats.played > 0 ? (
-              <div className={`${styles.facts} ${board.splitFacts}`}>
-                <article className={styles.fact}>
-                  <em>{pick(locale, 'السجل على أرضه', 'Home Record')}</em>
-                  <strong>{homeStats.won} فوز · {homeStats.drawn} تعادل · {homeStats.lost} خسارة</strong>
-                  <span className={board.mutedLine}>
-                    {homeStats.goalsFor}:{homeStats.goalsAgainst} ({pick(locale, 'أهداف', 'goals')})
-                  </span>
-                </article>
-                <article className={styles.fact}>
-                  <em>{pick(locale, 'السجل خارج الديار', 'Away Record')}</em>
-                  <strong>{awayStats.won} فوز · {awayStats.drawn} تعادل · {awayStats.lost} خسارة</strong>
-                  <span className={board.mutedLine}>
-                    {awayStats.goalsFor}:{awayStats.goalsAgainst} ({pick(locale, 'أهداف', 'goals')})
-                  </span>
-                </article>
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-      </div>
-
-      {/* ---------------- SQUAD SHOWCASE ---------------- */}
-      <section id="hall-squad" className={styles.shelf}>
-        <header className={styles.shelfHead}>
-          <div className={styles.shelfTitle}>
-            <div className={styles.shelfIconBox}>
-              <Users size={18} aria-hidden />
-            </div>
-            <div>
-              <h3>{pick(locale, 'قائمة الفريق والتشكيلة الرسمية', 'Official Squad & Roster')}</h3>
-              <p>
-                {squadAges
-                  ? pick(locale, `${squadCount} لاعباً مسجلاً من المصدر · متوسط الأعمار ${squadAges.avg} سنة`, `${squadCount} registered players · avg age ${squadAges.avg}`)
-                  : pick(locale, `${squadCount} لاعباً مسجلاً`, `${squadCount} players`)}
-              </p>
-            </div>
-          </div>
-          <span className={styles.shelfBadge}>{displayedSquad.length}</span>
-        </header>
-
-        {/* Squad Position Filter Tabs */}
-        <div className={styles.deptTabs}>
-          <button
-            type="button"
-            className={`${styles.deptTab}${dept === 'ALL' ? ` ${styles.isOn}` : ''}`}
-            onClick={() => setDept('ALL')}
-          >
-            <span>{pick(locale, 'الكل', 'All')}</span>
-            <span className={styles.deptBadge}>{squadCount}</span>
-          </button>
-          {squadChapters.map((ch) => (
-            <button
-              key={ch.key}
-              type="button"
-              className={`${styles.deptTab}${dept === ch.key ? ` ${styles.isOn}` : ''}`}
-              onClick={() => setDept(ch.key)}
-            >
-              <span>{squadLabel(ch.key, locale)}</span>
-              <span className={styles.deptBadge}>{ch.players.length}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Squad Grid */}
-        <div className={styles.grid}>
-          {displayedSquad.map((row) => {
-            const shot = playerShot(row.player.photoUrl, row.player.slug);
-            return (
-              <Link key={row.id} href={`/player/${row.player.slug}`} className={styles.tile}>
-                <span className={styles.tileShot}>
-                  {shot ? <img src={shot} alt="" /> : <span>{row.player.name.charAt(0)}</span>}
-                  {row.shirtNumber != null ? <b className={board.shirt}>#{row.shirtNumber}</b> : null}
-                </span>
-                <strong>{localizePlainName(locale, row.player.name)}</strong>
-                <em>
-                  {[
-                    row.player.position ? localizePlainName(locale, row.player.position) : null,
-                    row.player.nationality ? localizePlainName(locale, row.player.nationality) : null,
-                    row.player.age != null ? `${row.player.age} ${pick(locale, 'سنة', 'y')}` : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </em>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ---------------- FORM TRAIL & MATCH RECORD ---------------- */}
-      <div className={board.suite}>
-        {formTrail.length > 0 || recentResults.length > 0 ? (
-          <section id="hall-record" className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Calendar size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'سجل النتائج وشكل الفريق', 'Form Guide & Recent Results')}</h3>
-                  <p>{pick(locale, 'نتائج آخر المباريات الرسمية للنادي من المصدر.', 'Last official match results from verified data.')}</p>
-                </div>
-              </div>
-              <span className={styles.shelfBadge}>{formTrail.length || recentResults.length}</span>
-            </header>
-
-            {/* Form Guide Pill Trail */}
-            {formTrail.length > 0 ? (
-              <ul className={styles.formTrail}>
-                {formTrail.map((entry) => (
-                  <li key={entry.matchId}>
-                    <Link href={`/match/${entry.matchId}`} className={styles.formTrailItem}>
-                      <span className={`${styles.formPill} ${formPillClass(entry.letter)}`}>
-                        {formWord(entry.letter, locale)}
-                      </span>
-                      <LeagueCrest name={entry.opponent.name} logoUrl={entry.opponent.logoUrl} className="h-5 w-5" />
-                      <span>
-                        <strong className={board.formName}>{localizePlainName(locale, entry.opponent.name)}</strong>
-                        <small className={board.formMeta}>
-                          {entry.isHome ? pick(locale, 'على أرضه', 'H') : pick(locale, 'خارج ملعبه', 'A')} · {entry.homeScore}:{entry.awayScore}
-                        </small>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {/* Slips */}
-            {recentResults.length > 0 ? (
-              <div className={`${styles.slips} ${board.recordSlips}`}>
-                {recentResults.slice(0, 6).map((match) => {
-                  const scored = match.homeScore != null && match.awayScore != null;
-                  return (
-                    <Link key={match.id} href={`/match/${match.id}`} className={styles.slip}>
-                      <div className={styles.slipTop}>
-                        <span className={styles.slipRound}>{localizePlainName(locale, match.league.name)}</span>
-                        <em style={{ fontStyle: 'normal', color: 'var(--ys-orange)' }}>{pick(locale, 'نهاية', 'FT')}</em>
-                      </div>
-                      <div className={styles.row}>
-                        <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-5 w-5" />
-                        <span>{localizePlainName(locale, match.homeTeam.name)}</span>
-                        <strong>{scored ? match.homeScore : '–'}</strong>
-                      </div>
-                      <div className={styles.row}>
-                        <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-5 w-5" />
-                        <span>{localizePlainName(locale, match.awayTeam.name)}</span>
-                        <strong>{scored ? match.awayScore : '–'}</strong>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
-        {/* ---------------- TOP PERFORMERS: SCORERS & ASSISTS ---------------- */}
-        {scorers.length > 0 || assisters.length > 0 ? (
-          <section id="hall-performers" className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Zap size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'نجوم النادي: الهدافون وصناع الأهداف', 'Top Club Performers')}</h3>
-                  <p>{pick(locale, 'أبرز المساهمين في أهداف النادي هذا الموسم.', 'Club leading scorers and playmakers.')}</p>
-                </div>
-              </div>
-            </header>
-
-            <div className={styles.performersGrid}>
-              {scorers.slice(0, 6).map((performer) => {
-                const shot = playerShot(performer.photoUrl, performer.slug);
-                return (
-                  <Link key={performer.slug || performer.name} href={`/player/${performer.slug}`} className={styles.performerCard}>
-                    <div className={styles.performerPhoto}>
-                      {shot ? <img src={shot} alt="" /> : <span>{performer.name.charAt(0)}</span>}
-                    </div>
-                    <div className={styles.performerCopy}>
-                      <strong>{localizePlainName(locale, performer.name)}</strong>
-                      <em>{pick(locale, 'هداف الفريق', 'Club Scorer')}</em>
-                    </div>
-                    <div className={styles.performerStat}>
-                      <b>{performer.goals || 0}</b>
-                      <small>{pick(locale, 'أهداف', 'goals')}</small>
-                    </div>
-                  </Link>
-                );
-              })}
-              {assisters.slice(0, 4).map((performer) => {
-                const shot = playerShot(performer.photoUrl, performer.slug);
-                return (
-                  <Link key={performer.slug || performer.name} href={`/player/${performer.slug}`} className={styles.performerCard}>
-                    <div className={styles.performerPhoto}>
-                      {shot ? <img src={shot} alt="" /> : <span>{performer.name.charAt(0)}</span>}
-                    </div>
-                    <div className={styles.performerCopy}>
-                      <strong>{localizePlainName(locale, performer.name)}</strong>
-                      <em>{pick(locale, 'صانع ألعاب', 'Playmaker')}</em>
-                    </div>
-                    <div className={styles.performerStat}>
-                      <b>{performer.assists || 0}</b>
-                      <small>{pick(locale, 'صناعة', 'assists')}</small>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-      </div>
-
-      <div className={board.suite}>
-        {team.coach ? (
-          <section id="hall-coach" className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <UserCheck size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'الجهاز الفني والمدرب', 'Technical Staff & Head Coach')}</h3>
-                  <p>{pick(locale, 'المسؤول الفني الأول عن قيادة الفريق.', 'First-team manager leading the club.')}</p>
-                </div>
-              </div>
-            </header>
-
-            <div className={styles.facts}>
-              <div className={`${styles.fact} ${board.coachCard}`}>
-                <div className={board.coachShot}>
-                  {apiSportsCoachPhoto(slugTailId(team.coach.slug), team.coach.photoUrl) ? (
-                    <img src={apiSportsCoachPhoto(slugTailId(team.coach.slug), team.coach.photoUrl)!} alt="" />
+        {/* ----------------- ROW 3: TOP PERFORMERS & ACTIVE COMPETITIONS ----------------- */}
+        {topScorer || topAssister || competitions.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Top Scorer Card */}
+            {topScorer ? (
+              <div className={board.glassCard} style={{ display: 'flex', alignItems: 'center', gap: '1.15rem' }}>
+                <div style={{ width: '4.75rem', height: '4.75rem', borderRadius: '50%', overflow: 'hidden', background: 'radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--ys-orange) 15%, var(--muted)), var(--card))', border: '2.5px solid color-mix(in srgb, var(--ys-orange) 45%, var(--border))', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {resolvePlayerShot(topScorer.photoUrl, topScorer.slug, topScorer.name) ? (
+                    <img src={resolvePlayerShot(topScorer.photoUrl, topScorer.slug, topScorer.name)!} alt={topScorer.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
                   ) : (
-                    <span>{team.coach.name.charAt(0)}</span>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', fontWeight: 900, color: 'var(--ys-orange)' }}>
+                      {topScorer.name.charAt(0)}
+                    </div>
                   )}
                 </div>
                 <div>
-                  <Link
-                    href={`/coach/${team.coach.slug || slugifyCoachName(team.coach.name, team.coach.id)}`}
-                    className={board.coachName}
-                  >
-                    <strong>{localizePlainName(locale, team.coach.name)}</strong>
-                  </Link>
-                  {team.coach.nationality ? (
-                    <em>{localizePlainName(locale, team.coach.nationality)}</em>
-                  ) : null}
-                </div>
-              </div>
-              {team.coach.career.length > 0 ? (
-                <div className={styles.fact}>
-                  <em>{pick(locale, 'سجل المحطات التدريبية', 'Career Stints')}</em>
-                  <strong>
-                    {team.coach.career.length} {pick(locale, 'محطات موثقة', 'stints')}
+                  <span style={{ fontSize: '0.74rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--ys-orange)' }}>
+                    ⚽ {pick(locale, 'هداف النادي', 'Top Goalscorer')}
+                  </span>
+                  <strong style={{ display: 'block', fontSize: '1.05rem', fontWeight: 900, margin: '0.2rem 0' }}>
+                    {resolvePlayerSlug(topScorer.slug, topScorer.name) ? (
+                      <Link href={`/player/${resolvePlayerSlug(topScorer.slug, topScorer.name)}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {localizePlainName(locale, topScorer.name)}
+                      </Link>
+                    ) : (
+                      localizePlainName(locale, topScorer.name)
+                    )}
                   </strong>
-                  <span className={board.mutedLine}>
-                    {team.coach.career.slice(0, 3).map((s) => s.club).join(' · ')}
+                  <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
+                    {topScorer.goals} {pick(locale, 'أهداف مسجلة', 'Goals Scored')}
                   </span>
                 </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
+              </div>
+            ) : null}
 
-        {/* ---------------- HOME GROUND / VENUE ---------------- */}
-        {venue ? (
-          <section id="hall-ground" className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <MapPin size={18} aria-hidden />
+            {/* Top Assister Card */}
+            {topAssister ? (
+              <div className={board.glassCard} style={{ display: 'flex', alignItems: 'center', gap: '1.15rem' }}>
+                <div style={{ width: '4.75rem', height: '4.75rem', borderRadius: '50%', overflow: 'hidden', background: 'radial-gradient(circle at 50% 30%, color-mix(in srgb, #0284c7 15%, var(--muted)), var(--card))', border: '2.5px solid color-mix(in srgb, #0284c7 45%, var(--border))', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {resolvePlayerShot(topAssister.photoUrl, topAssister.slug, topAssister.name) ? (
+                    <img src={resolvePlayerShot(topAssister.photoUrl, topAssister.slug, topAssister.name)!} alt={topAssister.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', fontWeight: 900, color: '#0284c7' }}>
+                      {topAssister.name.charAt(0)}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <h3>{pick(locale, 'أرض النادي وملعبه الرسمي', 'Club Official Home Ground')}</h3>
-                  <p>{pick(locale, 'الملعب المعتمد لمباريات الفريق على أرضه.', 'Official verified venue from sports data.')}</p>
-                </div>
-              </div>
-            </header>
-
-            <div className={styles.venueDossier}>
-              {venue.imageUrl ? (
-                <div className={styles.venueImgBox}>
-                  <img src={venue.imageUrl} alt={venue.name} referrerPolicy="no-referrer" />
-                </div>
-              ) : null}
-              <div className={styles.venueBody}>
-                <div>
-                  <h3 className={board.venueTitle}>{venue.name}</h3>
-                  {venue.address ? <p className={board.venueLead}>{venue.address}</p> : null}
-                </div>
-
-                <div className={styles.venueMetaGrid}>
-                  {venue.city ? (
-                    <div className={styles.venueMetaItem}>
-                      <span>{pick(locale, 'المدينة', 'City')}</span>
-                      <strong>{venue.city}</strong>
-                    </div>
-                  ) : null}
-                  {typeof venue.capacity === 'number' && venue.capacity > 0 ? (
-                    <div className={styles.venueMetaItem}>
-                      <span>{pick(locale, 'السعة الجماهيرية', 'Capacity')}</span>
-                      <strong>{venue.capacity.toLocaleString(locale === 'ar' ? 'ar' : 'en')} {pick(locale, 'مشجع', 'fans')}</strong>
-                    </div>
-                  ) : null}
-                  {venue.surface ? (
-                    <div className={styles.venueMetaItem}>
-                      <span>{pick(locale, 'أرضية الملعب', 'Surface')}</span>
-                      <strong>{venue.surface}</strong>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
-      </div>
-
-      <div className={styles.split}>
-        {competitions.length > 0 ? (
-          <section className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Layers size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'المسابقات المشارك بها', 'Competitions')}</h3>
-                  <p>{pick(locale, 'البطولات الرسمية للموسم.', 'Season tournaments.')}</p>
-                </div>
-              </div>
-            </header>
-            <ul className={styles.people}>
-              {competitions.map((comp) => (
-                <li key={comp.id}>
-                  <Link href={`/league/${comp.slug}`}>
-                    <LeagueCrest name={comp.name} logoUrl={comp.logoUrl} className="h-7 w-7" />
-                    <div>
-                      <strong>{localizePlainName(locale, comp.name)}</strong>
-                      <em>{comp.matches} {pick(locale, 'مباراة', 'matches')}{comp.country ? ` · ${localizePlainName(locale, comp.country)}` : ''}</em>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        {transfers.length > 0 ? (
-          <section className={styles.shelf}>
-            <header className={styles.shelfHead}>
-              <div className={styles.shelfTitle}>
-                <div className={styles.shelfIconBox}>
-                  <Repeat size={18} aria-hidden />
-                </div>
-                <div>
-                  <h3>{pick(locale, 'سوق الانتقالات', 'Transfers Market')}</h3>
-                  <p>{pick(locale, 'حركات الانتقال المسجلة.', 'Latest player moves.')}</p>
-                </div>
-              </div>
-              <span className={styles.shelfBadge}>{transfers.length}</span>
-            </header>
-            <ul className={styles.people}>
-              {transfers.slice(0, 8).map((row) => (
-                <li key={row.id}>
-                  <Link href={`/player/${row.player.slug}`}>
-                    {playerShot(row.player.photoUrl, row.player.slug) ? (
-                      <img src={playerShot(row.player.photoUrl, row.player.slug)!} alt="" className={styles.ghostFace} />
+                  <span style={{ fontSize: '0.74rem', fontWeight: 900, textTransform: 'uppercase', color: '#0284c7' }}>
+                    🎯 {pick(locale, 'صانع ألعاب الفريق', 'Top Playmaker')}
+                  </span>
+                  <strong style={{ display: 'block', fontSize: '1.05rem', fontWeight: 900, margin: '0.2rem 0' }}>
+                    {resolvePlayerSlug(topAssister.slug, topAssister.name) ? (
+                      <Link href={`/player/${resolvePlayerSlug(topAssister.slug, topAssister.name)}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {localizePlainName(locale, topAssister.name)}
+                      </Link>
                     ) : (
-                      <span className={styles.ghostFace}>{row.player.name.charAt(0)}</span>
+                      localizePlainName(locale, topAssister.name)
                     )}
-                    <div>
-                      <strong>{localizePlainName(locale, row.player.name)}</strong>
-                      <em>
-                        {[row.fromTeam, row.toTeam].filter(Boolean).map((t) => localizePlainName(locale, t as string)).join(' → ')}
-                      </em>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-      </div>
-
-      {/* ---------------- LINKED NEWS ---------------- */}
-      {news && news.length > 0 ? (
-        <section className={styles.shelf}>
-          <header className={styles.shelfHead}>
-            <div className={styles.shelfTitle}>
-              <div className={styles.shelfIconBox}>
-                <Newspaper size={18} aria-hidden />
+                  </strong>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
+                    {topAssister.assists} {pick(locale, 'تمريرات حاسمة', 'Assists Made')}
+                  </span>
+                </div>
               </div>
-              <div>
-                <h3>{pick(locale, 'أخبار وتقارير النادي', 'Club News & Editorial')}</h3>
-                <p>{pick(locale, 'التغطيات الصحفية والتحليلات المباشرة.', 'Editorial match reports and club updates.')}</p>
+            ) : null}
+
+            {/* Active Tournaments */}
+            {competitions.length > 0 ? (
+              <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.65rem' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
+                  🏆 {pick(locale, 'البطولات المشارك بها', 'Competitions')}
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {competitions.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/league/${c.slug}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))',
+                        border: '1px solid var(--border)',
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '0.65rem',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        textDecoration: 'none',
+                        color: 'inherit',
+                      }}
+                    >
+                      <LeagueCrest name={c.name} logoUrl={c.logoUrl} className="h-4 w-4" />
+                      <span>{localizePlainName(locale, c.name)}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* ----------------- ROW 4: 2D TACTICAL STARTING XI PITCH ----------------- */}
+        <section className={board.glassCard}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--foreground)' }}>
+                <Compass size={18} style={{ color: 'var(--ys-orange)' }} />
+                {pick(locale, 'التشكيلة الأساسية ونظام اللعب التكتيكي', 'Tactical Formation & Starting Lineup')}
+              </h3>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--muted-foreground)' }}>
+                {pick(locale, 'توزيع اللاعبين الأساسيين على أرضية الملعب وفق الخطة التكتيكية الأكثر استخداماً.', 'Starting eleven tactical deployment on the pitch.')}
+              </p>
+            </div>
+
+            {/* Formation Selector Pills */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--muted-foreground)', marginInlineEnd: '0.35rem' }}>
+                {pick(locale, 'الخطة التكتيكية:', 'System:')}
+              </span>
+              {availableFormations.map((fmt) => {
+                const matchCount = seasonSlice?.formations?.find((f) => f.formation === fmt)?.played;
+                const isSelected = tacticalFormation === fmt;
+                return (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => setTacticalFormation(fmt)}
+                    style={{
+                      cursor: 'pointer',
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '999px',
+                      fontSize: '0.78rem',
+                      fontWeight: 900,
+                      border: isSelected ? '1px solid var(--ys-orange)' : '1px solid var(--border)',
+                      background: isSelected ? 'var(--ys-orange)' : 'color-mix(in srgb, var(--foreground) 4%, var(--card))',
+                      color: isSelected ? '#111' : 'var(--foreground)',
+                      transition: 'all 0.2s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <span>{fmt}</span>
+                    {matchCount ? (
+                      <span style={{ fontSize: '0.68rem', opacity: 0.85 }}>({matchCount})</span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* The Pitch */}
+          <div className={board.pitchContainer}>
+            <div className={board.pitchMarkings}>
+              <div className={board.pitchPenaltyBoxTop}>
+                <div className={board.pitchGoalBoxTop} />
+              </div>
+              <div className={board.pitchHalfwayLine} />
+              <div className={board.pitchCenterCircle}>
+                <div className={board.pitchCenterSpot} />
+              </div>
+              <div className={board.pitchPenaltyBoxBottom}>
+                <div className={board.pitchGoalBoxBottom} />
               </div>
             </div>
-            <span className={styles.shelfBadge}>{news.length}</span>
-          </header>
-          <ul className={styles.people}>
-            {news.map((item) => (
-              <li key={item.id}>
-                <Link href={`/news/${item.slug}`}>
-                  <span className={styles.ghostFace}>📰</span>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <em>{item.category} · <ClientTime value={item.publishedAt} locale={locale} options={{ day: 'numeric', month: 'short' }} /></em>
-                  </div>
-                  <ArrowRight size={16} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
 
-      <p className={styles.source}>
-        {pick(
-          locale,
-          'المصدر: بيانات النادي الرسمية والمباريات الموثقة عبر واجهة البيانات دون أي أرقام وهمية.',
-          'Source: verified club sports data and fixtures without invented numbers.',
-        )}
-      </p>
+            {/* 1. Goalkeeper */}
+            {startingXI.gk.map((item) => {
+              const shot = resolvePlayerShot(item.player.photoUrl, item.player.slug, item.player.name);
+              return (
+                <Link
+                  key={item.id}
+                  href={`/player/${item.player.slug}`}
+                  className={board.pitchNode}
+                  style={{ bottom: '7%', left: '50%' }}
+                >
+                  <div className={board.pitchNodeAvatar}>
+                    {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
+                    {item.shirtNumber != null ? <span className={board.pitchNodeShirt}>#{item.shirtNumber}</span> : null}
+                  </div>
+                  <span className={board.pitchNodeName}>{localizePlainName(locale, item.player.name)}</span>
+                </Link>
+              );
+            })}
+
+            {/* 2. Defenders */}
+            {startingXI.df.map((item, idx) => {
+              const count = startingXI.df.length;
+              const leftPct = (100 / (count + 1)) * (idx + 1);
+              const shot = resolvePlayerShot(item.player.photoUrl, item.player.slug, item.player.name);
+              return (
+                <Link
+                  key={item.id}
+                  href={`/player/${item.player.slug}`}
+                  className={board.pitchNode}
+                  style={{ bottom: '28%', left: `${leftPct}%` }}
+                >
+                  <div className={board.pitchNodeAvatar}>
+                    {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
+                    {item.shirtNumber != null ? <span className={board.pitchNodeShirt}>#{item.shirtNumber}</span> : null}
+                  </div>
+                  <span className={board.pitchNodeName}>{localizePlainName(locale, item.player.name)}</span>
+                </Link>
+              );
+            })}
+
+            {/* 3. Midfielders */}
+            {startingXI.mf.map((item, idx) => {
+              const count = startingXI.mf.length;
+              const leftPct = (100 / (count + 1)) * (idx + 1);
+              const shot = resolvePlayerShot(item.player.photoUrl, item.player.slug, item.player.name);
+              return (
+                <Link
+                  key={item.id}
+                  href={`/player/${item.player.slug}`}
+                  className={board.pitchNode}
+                  style={{ bottom: '54%', left: `${leftPct}%` }}
+                >
+                  <div className={board.pitchNodeAvatar}>
+                    {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
+                    {item.shirtNumber != null ? <span className={board.pitchNodeShirt}>#{item.shirtNumber}</span> : null}
+                  </div>
+                  <span className={board.pitchNodeName}>{localizePlainName(locale, item.player.name)}</span>
+                </Link>
+              );
+            })}
+
+            {/* 4. Attackers */}
+            {startingXI.fw.map((item, idx) => {
+              const count = startingXI.fw.length;
+              const leftPct = (100 / (count + 1)) * (idx + 1);
+              const shot = resolvePlayerShot(item.player.photoUrl, item.player.slug, item.player.name);
+              return (
+                <Link
+                  key={item.id}
+                  href={`/player/${item.player.slug}`}
+                  className={board.pitchNode}
+                  style={{ bottom: '79%', left: `${leftPct}%` }}
+                >
+                  <div className={board.pitchNodeAvatar}>
+                    {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
+                    {item.shirtNumber != null ? <span className={board.pitchNodeShirt}>#{item.shirtNumber}</span> : null}
+                  </div>
+                  <span className={board.pitchNodeName}>{localizePlainName(locale, item.player.name)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ----------------- ROW 5: SQUAD ROSTER WITH POSITIONAL TABS ----------------- */}
+        <section className={board.glassCard}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--foreground)' }}>
+                <Users size={18} style={{ color: 'var(--ys-orange)' }} />
+                {pick(locale, 'قائمة لاعبي الفريق الرسمية', 'Official Squad Roster')}
+              </h3>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--muted-foreground)' }}>
+                {pick(locale, 'جميع لاعبي الفريق مع أرقام القمصان، المراكز، والجنسيات.', 'All registered club players with jersey numbers and nationalities.')}
+              </p>
+            </div>
+
+            {/* Positional filter tabs */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+              <button
+                type="button"
+                onClick={() => setSquadFilter('ALL')}
+                className={`${styles.foyerTab} ${squadFilter === 'ALL' ? styles.isOn : ''}`}
+                style={{ cursor: 'pointer', padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+              >
+                <span>{pick(locale, 'الكل', 'All')}</span>
+                <span className={styles.foyerBadge}>{squadCount}</span>
+              </button>
+
+              {SQUAD_ORDER.filter((k) => squad[k]?.length > 0).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setSquadFilter(k)}
+                  className={`${styles.foyerTab} ${squadFilter === k ? styles.isOn : ''}`}
+                  style={{ cursor: 'pointer', padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}
+                >
+                  <span>{squadLabel(k, locale)}</span>
+                  <span className={styles.foyerBadge}>{squad[k]?.length || 0}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {displayedSquad.length > 0 ? (
+            <div className={board.squadGrid}>
+              {displayedSquad.map((entry) => {
+                const shot = playerShot(entry.player.photoUrl, entry.player.slug);
+                return (
+                  <Link
+                    key={entry.id}
+                    href={`/player/${entry.player.slug}`}
+                    className={board.playerCard}
+                  >
+                    {entry.shirtNumber != null ? (
+                      <span className={board.playerShirtBadge}>
+                        #{entry.shirtNumber}
+                      </span>
+                    ) : null}
+
+                    <div className={board.playerCardAvatar}>
+                      {shot ? (
+                        <img src={shot} alt={entry.player.name} loading="lazy" />
+                      ) : (
+                        <span className={board.playerCardAvatarFallback}>
+                          {entry.player.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+
+                    <strong className={board.playerName}>
+                      {localizePlainName(locale, entry.player.name)}
+                    </strong>
+                    <span className={board.playerMeta}>
+                      {[
+                        entry.player.position ? localizePlainName(locale, entry.player.position) : null,
+                        entry.player.nationality ? localizePlainName(locale, entry.player.nationality) : null,
+                        entry.player.age ? `${entry.player.age} ${pick(locale, 'سنة', 'y/o')}` : null,
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', padding: '2rem 0', fontSize: '0.85rem' }}>
+              {pick(locale, 'قائمة اللاعبين جاري تحديثها من مصدر البيانات.', 'Squad roster is being updated.')}
+            </p>
+          )}
+        </section>
+
+        {/* ----------------- ROW 5: LEAGUE STANDINGS TABLE ----------------- */}
+        {standing ? (
+          <section className={board.glassCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <Trophy size={18} style={{ color: '#eab308' }} />
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                    {localizePlainName(locale, standing.league.name)} — {pick(locale, 'جدول الترتيب', 'League Standings')}
+                  </h3>
+                </div>
+              </div>
+
+              <Link
+                href={`/league/${standing.league.slug}`}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--ys-orange)', fontSize: '0.8rem', fontWeight: 800, textDecoration: 'none' }}
+              >
+                <span>{pick(locale, 'جدول الدوري بالكامل', 'Full Table')}</span>
+                <ArrowUpRight size={14} />
+              </Link>
+            </div>
+
+            <div className={board.standingsTableWrapper}>
+              <table className={board.standingsTable}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'start' }}>{pick(locale, 'الترتيب والنادي', 'Rank & Team')}</th>
+                    <th>{pick(locale, 'لعب', 'P')}</th>
+                    <th>{pick(locale, 'فاز', 'W')}</th>
+                    <th>{pick(locale, 'تعادل', 'D')}</th>
+                    <th>{pick(locale, 'خسر', 'L')}</th>
+                    <th>{pick(locale, 'له:عليه', 'GF:GA')}</th>
+                    <th>{pick(locale, 'فارق', 'GD')}</th>
+                    <th style={{ fontWeight: 900, color: 'var(--ys-orange)' }}>{pick(locale, 'نقاط', 'PTS')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableWindow.map((row) => (
+                    <tr
+                      key={row.team.id}
+                      className={row.isUs ? board.standingRowUs : undefined}
+                    >
+                      <td style={{ textAlign: 'start', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <span style={{ minWidth: '1.5rem', color: row.isUs ? 'var(--ys-orange)' : 'inherit', fontWeight: 800 }}>#{row.rank}</span>
+                        <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-5 w-5" />
+                        <span>{localizePlainName(locale, row.team.name)}</span>
+                      </td>
+                      <td>{row.played}</td>
+                      <td>{row.won}</td>
+                      <td>{row.drawn}</td>
+                      <td>{row.lost}</td>
+                      <td>{row.goalsFor}:{row.goalsAgainst}</td>
+                      <td style={{ color: row.goalsFor - row.goalsAgainst > 0 ? '#16a34a' : row.goalsFor - row.goalsAgainst < 0 ? '#dc2626' : 'inherit' }}>
+                        {goalDiffLabel(row.goalsFor - row.goalsAgainst)}
+                      </td>
+                      <td style={{ fontWeight: 900, color: 'var(--ys-orange)', fontSize: '0.95rem' }}>
+                        {row.points}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        {/* ----------------- ROW 6: TRANSFERS & CLUB INFO/VENUE ----------------- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          {/* Transfers Box */}
+          <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Repeat size={18} style={{ color: 'var(--ys-orange)' }} />
+                <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0, color: 'var(--foreground)' }}>
+                  {pick(locale, 'انتقالات وميركاتو النادي', 'Club Transfers & Mercato')}
+                </h3>
+              </div>
+            </div>
+
+            {displayedTransfers.length > 0 ? (
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {displayedTransfers.slice(0, 5).map((t) => (
+                  <div key={t.id} className={board.transferItem}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <div style={{ width: '2.4rem', height: '2.4rem', borderRadius: '0.5rem', overflow: 'hidden', background: 'var(--muted)', flexShrink: 0 }}>
+                        {playerShot(t.player.photoUrl, t.player.slug) ? (
+                          <img src={playerShot(t.player.photoUrl, t.player.slug)!} alt={t.player.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 900, color: 'var(--foreground)' }}>
+                            {t.player.name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '0.85rem', color: 'var(--foreground)' }}>
+                          <Link href={`/player/${t.player.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                            {localizePlainName(locale, t.player.name)}
+                          </Link>
+                        </strong>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)' }}>
+                          {t.fromTeam ? `${t.fromTeam} → ` : ''}{t.toTeam || ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--ys-orange)' }}>
+                      {t.fee || pick(locale, 'انتقال', 'Transfer')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.85rem', margin: '1.5rem 0' }}>
+                {pick(locale, 'سجل الانتقالات لم يتم تسجيله للموسم الحالي.', 'No recorded transfers for the current window.')}
+              </p>
+            )}
+          </div>
+
+          {/* Grand Stadium & Club Heritage Showcase */}
+          {venue ? (
+            <div className={board.stadiumCard}>
+              <div className={board.stadiumBanner}>
+                {venue.imageUrl ? (
+                  <img src={venue.imageUrl} alt={venue.name} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', background: 'radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--ys-orange) 20%, #1a3d24), #0b1a0f)' }} />
+                )}
+                <div className={board.stadiumBannerOverlay}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--ys-orange)', letterSpacing: '0.12em' }}>
+                    🏟️ {pick(locale, 'الملعب الرسمي والمعقل التاريخي', 'Official Stadium & Ground')}
+                  </span>
+                  <h2 className={board.stadiumTitle}>{venue.name}</h2>
+                  <p className={board.stadiumSubtitle}>
+                    {[venue.city, country, venue.address].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+              </div>
+
+              <div className={board.stadiumStatsRow}>
+                {venue.capacity ? (
+                  <div className={board.stadiumStatBox}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'السعة الجماهيرية', 'Seating Capacity')}</span>
+                    <strong style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--foreground)' }}>{venue.capacity.toLocaleString()} {pick(locale, 'متفرج', 'seats')}</strong>
+                  </div>
+                ) : null}
+
+                {venue.surface ? (
+                  <div className={board.stadiumStatBox}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'نوعية الأرضية', 'Pitch Surface')}</span>
+                    <strong style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--foreground)' }}>
+                      🌱 {venue.surface.toLowerCase().includes('hybrid') ? pick(locale, 'عشب طبيعي مهجن', venue.surface) : venue.surface.toLowerCase().includes('grass') ? pick(locale, 'عشب طبيعي', venue.surface) : venue.surface}
+                    </strong>
+                  </div>
+                ) : null}
+
+                {venue.city ? (
+                  <div className={board.stadiumStatBox}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'المدينة والموقع', 'City & Location')}</span>
+                    <strong style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--foreground)' }}>📍 {localizePlainName(locale, venue.city)}</strong>
+                  </div>
+                ) : null}
+
+                {team.founded ? (
+                  <div className={board.stadiumStatBox}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>{pick(locale, 'سنة التأسيس', 'Founded')}</span>
+                    <strong style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--ys-orange)' }}>📅 {team.founded}</strong>
+                  </div>
+                ) : null}
+
+                {team.coach ? (
+                  <Link
+                    href={team.coach.slug ? `/coach/${team.coach.slug}` : '#'}
+                    className={board.stadiumStatBox}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <span style={{ fontSize: '0.72rem', color: 'var(--ys-orange)', fontWeight: 900 }}>👔 {pick(locale, 'المدير الفني', 'Head Coach')}</span>
+                    <strong style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--foreground)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>{localizePlainName(locale, team.coach.name)}</span>
+                      <ArrowUpRight size={14} style={{ color: 'var(--ys-orange)' }} />
+                    </strong>
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+      </main>
     </div>
   );
 }

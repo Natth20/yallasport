@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   let data = {
     title: 'يلا سبورت - تنبيه مباشر',
-    body: 'تحديث جديد في مباراة اليوم!',
+    body: 'تحديث جديد في المباريات والأخبار الرياضية',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     url: '/ar/matches',
@@ -71,20 +71,25 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon || '/icons/icon-192.png',
-      badge: data.badge || '/icons/icon-192.png',
-      data: { url: data.url || '/ar/matches' },
-      tag: 'yallasport-live-alert',
-      renotify: true,
-      actions: [
-        { action: 'open', title: 'مشاهدة المباراة' },
-        { action: 'close', title: 'إغلاق' },
-      ],
-    })
-  );
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icons/icon-192.png',
+    badge: data.badge || '/icons/icon-192.png',
+    data: { url: data.url || '/ar/matches' },
+    tag: data.tag || `ys-alert-${Date.now()}`,
+    renotify: true,
+    vibrate: [200, 100, 200],
+    actions: data.actions || [
+      { action: 'open', title: 'مشاهدة التفاصيل' },
+      { action: 'close', title: 'إغلاق' },
+    ],
+  };
+
+  if (data.image) {
+    options.image = data.image;
+  }
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {

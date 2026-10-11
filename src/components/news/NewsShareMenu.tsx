@@ -221,7 +221,7 @@ export function NewsShareMenu({ title }: { title: string }) {
       <button
         ref={buttonRef}
         type="button"
-        className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-200 ${
+        className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 mt-5 text-xs font-bold transition-all duration-200 ${
           open
             ? 'border border-primary/40 bg-primary/15 text-primary'
             : 'border border-border/80 bg-card/80 text-foreground/80 hover:border-primary/40 hover:bg-card hover:text-primary'
@@ -230,7 +230,7 @@ export function NewsShareMenu({ title }: { title: string }) {
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
       >
-        <Share2 className="h-3.5 w-3.5" />
+        <Share2  className="h-3.5 w-3.5" />
         <span>{pick(locale, 'مشاركة', 'Share')}</span>
       </button>
       {panel}

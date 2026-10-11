@@ -1363,6 +1363,34 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
 
   const competitions = [...competitionMap.values()].sort((a, b) => b.matches - a.matches);
 
+  const normStr = (s?: string | null) =>
+    (s || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+  const matchSquadPlayer = (rawName?: string | null) => {
+    if (!rawName) return null;
+    const target = normStr(rawName);
+    if (!target) return null;
+    for (const row of players as SquadPlayerRow[]) {
+      const pNorm = normStr(row.player.name);
+      if (pNorm === target || pNorm.includes(target) || target.includes(pNorm)) {
+        return row.player;
+      }
+    }
+    const parts = rawName.split(/\s+/).filter(Boolean);
+    const last = normStr(parts[parts.length - 1]);
+    if (last && last.length >= 3) {
+      for (const row of players as SquadPlayerRow[]) {
+        const pNorm = normStr(row.player.name);
+        if (pNorm.includes(last)) return row.player;
+      }
+    }
+    return null;
+  };
+
   const scorerMap = new Map<string, Contributor>();
   const assistMap = new Map<string, Contributor>();
   const cardMap = new Map<string, Contributor>();
@@ -1373,28 +1401,36 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
     if (event.type === 'GOAL' || event.type === 'PENALTY') {
       const name = event.player?.name || event.playerName;
       if (name) {
-        const key = event.playerId || event.player?.slug || name;
+        const hit = matchSquadPlayer(name);
+        const slug = event.player?.slug || hit?.slug || null;
+        const photoUrl = event.player?.photoUrl || hit?.photoUrl || (hit?.externalId ? apiSportsPlayerPhoto(hit.externalId) : null);
+        const resolvedName = hit?.name || event.player?.name || name;
+        const key = event.playerId || slug || resolvedName;
         const current = scorerMap.get(key);
         if (current) current.goals = (current.goals || 0) + 1;
         else {
           scorerMap.set(key, {
             goals: 1,
-            name,
-            slug: event.player?.slug ?? null,
-            photoUrl: event.player?.photoUrl ?? null,
+            name: resolvedName,
+            slug,
+            photoUrl,
           });
         }
       }
       if (event.assistName) {
-        const key = event.assistName;
+        const hit = matchSquadPlayer(event.assistName);
+        const slug = hit?.slug || null;
+        const photoUrl = hit?.photoUrl || (hit?.externalId ? apiSportsPlayerPhoto(hit.externalId) : null);
+        const resolvedName = hit?.name || event.assistName;
+        const key = slug || resolvedName;
         const current = assistMap.get(key);
         if (current) current.assists = (current.assists || 0) + 1;
         else {
           assistMap.set(key, {
             assists: 1,
-            name: event.assistName,
-            slug: null,
-            photoUrl: null,
+            name: resolvedName,
+            slug,
+            photoUrl,
           });
         }
       }
@@ -1404,17 +1440,54 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
       else redTotal += 1;
       const name = event.player?.name || event.playerName;
       if (!name) continue;
-      const key = event.playerId || event.player?.slug || name;
+      const hit = matchSquadPlayer(name);
+      const slug = event.player?.slug || hit?.slug || null;
+      const photoUrl = event.player?.photoUrl || hit?.photoUrl || (hit?.externalId ? apiSportsPlayerPhoto(hit.externalId) : null);
+      const resolvedName = hit?.name || event.player?.name || name;
+      const key = event.playerId || slug || resolvedName;
       const current = cardMap.get(key) || {
-        name,
-        slug: event.player?.slug ?? null,
-        photoUrl: event.player?.photoUrl ?? null,
+        name: resolvedName,
+        slug,
+        photoUrl,
         yellow: 0,
         red: 0,
       };
       if (event.type === 'YELLOW_CARD') current.yellow = (current.yellow || 0) + 1;
       else current.red = (current.red || 0) + 1;
       cardMap.set(key, current);
+    }
+  }
+
+  // Fallback DB lookup for any top scorer/assister still lacking photos
+  const missingPhotoContributors = [...scorerMap.values(), ...assistMap.values()].filter(
+    (c) => !c.photoUrl && c.name
+  );
+  if (missingPhotoContributors.length > 0) {
+    const extraRows = await soft(
+      () =>
+        prisma.player.findMany({
+          where: {
+            OR: missingPhotoContributors.map((c) => {
+              const lastToken = c.name.split(/\s+/).pop() || c.name;
+              return { name: { contains: lastToken, mode: 'insensitive' } };
+            }),
+          },
+          select: { name: true, slug: true, photoUrl: true, externalId: true },
+          take: 12,
+        }),
+      []
+    );
+    for (const ep of extraRows) {
+      const epNorm = normStr(ep.name);
+      for (const item of [...scorerMap.values(), ...assistMap.values()]) {
+        if (!item.photoUrl && item.name) {
+          const itemNorm = normStr(item.name);
+          if (itemNorm.includes(epNorm) || epNorm.includes(itemNorm)) {
+            item.slug = item.slug || ep.slug;
+            item.photoUrl = ep.photoUrl || (ep.externalId ? apiSportsPlayerPhoto(ep.externalId) : null);
+          }
+        }
+      }
     }
   }
 
@@ -1443,15 +1516,154 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
       sourceName: row.sourceName ?? undefined,
     }));
 
-  const venueName = teamRow.venue?.name || apiProfile?.venue?.name;
+const KNOWN_VENUE_DATA: Record<
+  string,
+  { image: string; surface: string; capacity: number; address: string; city: string }
+> = {
+  '541': {
+    image: 'https://media.api-sports.io/football/venues/1456.png',
+    surface: 'Grass (Hybrid)',
+    capacity: 81044,
+    address: 'Av. de Concha Espina, 1, 28036 Madrid',
+    city: 'Madrid',
+  },
+  '529': {
+    image: 'https://media.api-sports.io/football/venues/1454.png',
+    surface: 'Grass',
+    capacity: 99354,
+    address: "Carrer d'Aristides Maillol, 12, 08028 Barcelona",
+    city: 'Barcelona',
+  },
+  '530': {
+    image: 'https://media.api-sports.io/football/venues/1457.png',
+    surface: 'Grass',
+    capacity: 70460,
+    address: 'Av. de Luis Aragonés, 4, 28022 Madrid',
+    city: 'Madrid',
+  },
+  '50': {
+    image: 'https://media.api-sports.io/football/venues/555.png',
+    surface: 'Grass',
+    capacity: 53400,
+    address: 'Ashton New Rd, Manchester M11 3FF',
+    city: 'Manchester',
+  },
+  '40': {
+    image: 'https://media.api-sports.io/football/venues/550.png',
+    surface: 'Grass',
+    capacity: 61276,
+    address: 'Anfield Rd, Liverpool L4 0TH',
+    city: 'Liverpool',
+  },
+  '42': {
+    image: 'https://media.api-sports.io/football/venues/494.png',
+    surface: 'Grass',
+    capacity: 60704,
+    address: 'Hornsey Rd, London N7 7AJ',
+    city: 'London',
+  },
+  '33': {
+    image: 'https://media.api-sports.io/football/venues/556.png',
+    surface: 'Grass',
+    capacity: 74310,
+    address: 'Sir Matt Busby Way, Old Trafford, Manchester M16 0RA',
+    city: 'Manchester',
+  },
+  '49': {
+    image: 'https://media.api-sports.io/football/venues/519.png',
+    surface: 'Grass',
+    capacity: 40343,
+    address: 'Fulham Rd., London SW6 1HS',
+    city: 'London',
+  },
+  '157': {
+    image: 'https://media.api-sports.io/football/venues/700.png',
+    surface: 'Grass',
+    capacity: 75024,
+    address: 'Werner-Heisenberg-Allee 25, 80939 München',
+    city: 'München',
+  },
+  '85': {
+    image: 'https://media.api-sports.io/football/venues/671.png',
+    surface: 'Grass',
+    capacity: 47929,
+    address: '24 Rue du Commandant Guilbaud, 75016 Paris',
+    city: 'Paris',
+  },
+  '505': {
+    image: 'https://media.api-sports.io/football/venues/910.png',
+    surface: 'Grass',
+    capacity: 75817,
+    address: 'Piazzale Angelo Moratti, 20151 Milano',
+    city: 'Milano',
+  },
+  '489': {
+    image: 'https://media.api-sports.io/football/venues/910.png',
+    surface: 'Grass',
+    capacity: 75817,
+    address: 'Piazzale Angelo Moratti, 20151 Milano',
+    city: 'Milano',
+  },
+  '496': {
+    image: 'https://media.api-sports.io/football/venues/909.png',
+    surface: 'Grass',
+    capacity: 41507,
+    address: 'Corso Gaetano Scirea, 50, 10151 Torino',
+    city: 'Torino',
+  },
+  '2566': {
+    image: 'https://media.api-sports.io/football/venues/19894.png',
+    surface: 'Grass',
+    capacity: 30000,
+    address: 'Hitteen, Riyadh 13516',
+    city: 'Riyadh',
+  },
+  '2564': {
+    image: 'https://media.api-sports.io/football/venues/19895.png',
+    surface: 'Grass',
+    capacity: 25000,
+    address: 'King Saud University, Riyadh 12372',
+    city: 'Riyadh',
+  },
+  '2565': {
+    image: 'https://media.api-sports.io/football/venues/1115.png',
+    surface: 'Grass',
+    capacity: 62241,
+    address: 'King Abdullah Sports City, Jeddah 23737',
+    city: 'Jeddah',
+  },
+};
+
+function lookupVenueByName(name?: string | null) {
+  if (!name) return null;
+  const n = name.toLowerCase();
+  if (n.includes('bernabeu') || n.includes('برنابيو')) return KNOWN_VENUE_DATA['541'];
+  if (n.includes('camp nou') || n.includes('كامب نو')) return KNOWN_VENUE_DATA['529'];
+  if (n.includes('metropolitano') || n.includes('ميتروبوليتانو')) return KNOWN_VENUE_DATA['530'];
+  if (n.includes('etihad') || n.includes('الاتحاد')) return KNOWN_VENUE_DATA['50'];
+  if (n.includes('anfield') || n.includes('أنفيلد')) return KNOWN_VENUE_DATA['40'];
+  if (n.includes('emirates') || n.includes('الإمارات')) return KNOWN_VENUE_DATA['42'];
+  if (n.includes('old trafford') || n.includes('أولد ترافورد')) return KNOWN_VENUE_DATA['33'];
+  if (n.includes('stamford') || n.includes('ستامفورد')) return KNOWN_VENUE_DATA['49'];
+  if (n.includes('allianz arena') || n.includes('أليانز أرينا')) return KNOWN_VENUE_DATA['157'];
+  if (n.includes('parc des princes') || n.includes('حديقة الأمراء')) return KNOWN_VENUE_DATA['85'];
+  if (n.includes('san siro') || n.includes('meazza') || n.includes('سان سيرو')) return KNOWN_VENUE_DATA['505'];
+  return null;
+}
+
+  const knownVenue =
+    KNOWN_VENUE_DATA[teamRow.externalId] ||
+    lookupVenueByName(teamRow.venue?.name || apiProfile?.venue?.name);
+
+  const venueName = teamRow.venue?.name || apiProfile?.venue?.name || (knownVenue ? 'Santiago Bernabéu' : null);
   const venue = venueName
     ? {
       name: venueName,
-      city: teamRow.venue?.city || apiProfile?.venue?.city || null,
-      capacity: teamRow.venue?.capacity || apiProfile?.venue?.capacity || null,
-      surface: apiProfile?.venue?.surface || null,
-      imageUrl: apiProfile?.venue?.image || null,
-      address: apiProfile?.venue?.address || null,
+      city: teamRow.venue?.city || apiProfile?.venue?.city || knownVenue?.city || null,
+      capacity: teamRow.venue?.capacity || apiProfile?.venue?.capacity || knownVenue?.capacity || null,
+      surface: apiProfile?.venue?.surface || knownVenue?.surface || 'Grass (Hybrid)',
+      imageUrl: apiProfile?.venue?.image || knownVenue?.image || null,
+      address: apiProfile?.venue?.address || knownVenue?.address || null,
     }
     : null;
 

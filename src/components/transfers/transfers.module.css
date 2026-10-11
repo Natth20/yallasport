@@ -1,0 +1,932 @@
+/* ==========================================================================
+   TRANSFERS & MERCATO WIRE - LUXURY SPORTS DESIGN SYSTEM
+   ========================================================================== */
+
+.container {
+  display: grid;
+  gap: 1.75rem;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   HERO SPOTLIGHT CARD (أكبر الصفقات الموثقة)
+   -------------------------------------------------------------------------- */
+.heroCard {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 36%, var(--border));
+  background:
+    radial-gradient(ellipse at 90% 0%, color-mix(in srgb, var(--ys-orange) 16%, transparent), transparent 60%),
+    radial-gradient(ellipse at 10% 100%, color-mix(in srgb, #22c55e 8%, transparent), transparent 50%),
+    color-mix(in srgb, var(--card) 95%, transparent);
+  box-shadow:
+    0 20px 50px color-mix(in srgb, var(--ys-orange) 8%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 900px) {
+  .heroCard {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 1.75rem 2.25rem;
+  }
+}
+
+.heroAvatarBox {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.heroAvatar {
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--ys-orange) 15%, var(--muted));
+  border: 2.5px solid var(--ys-orange);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ys-orange) 35%, transparent);
+}
+
+.heroAvatarInitial {
+  display: grid;
+  place-items: center;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ys-orange), #e05e00);
+  color: #0b0b0b;
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-style: normal;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.heroContent {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.heroKicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 35%, transparent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.heroName {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+}
+
+.heroBridge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.heroTeam {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.heroTeam:hover {
+  color: var(--ys-orange);
+}
+
+.heroTeam img {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+.heroArrow {
+  color: var(--ys-orange);
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.heroFeeBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+@media (min-width: 900px) {
+  .heroFeeBox {
+    align-items: flex-end;
+  }
+}
+
+.heroFeeLabel {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heroFeeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ys-orange) 22%, var(--card)), color-mix(in srgb, var(--ys-orange) 10%, var(--card)));
+  border: 1px solid rgba(255, 140, 0, 0.6);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--ys-orange) 24%, transparent);
+  font-size: 1.25rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+}
+
+/* --------------------------------------------------------------------------
+   TALLY HUD (بطاقات الإحصائيات السريعة)
+   -------------------------------------------------------------------------- */
+.tallyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 860px) {
+  .tallyGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+.tallyCard {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.15rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, #000 3%, transparent);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.tallyCard:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ys-orange) 38%, var(--border));
+}
+
+.tallyIcon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 24%, transparent);
+  color: var(--ys-orange);
+  flex-shrink: 0;
+}
+
+.tallyInfo {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.tallyValue {
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+}
+
+.tallyLabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   SHOWCASE SECTIONS (أعلى الصفقات قيمة + أكثر الأندية نشاطاً وحركة)
+   -------------------------------------------------------------------------- */
+.showcaseSection {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ys-orange) 24%, var(--border));
+}
+
+.sectionTitleBox {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.sectionIcon {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--ys-orange) 14%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, transparent);
+  color: var(--ys-orange);
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.sectionDesc {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.sectionPill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 30%, transparent);
+  color: var(--ys-orange);
+}
+
+/* --------------------------------------------------------------------------
+   TOP FEES GRID (أعلى الصفقات)
+   -------------------------------------------------------------------------- */
+.topFeesGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .topFeesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .topFeesGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.feeCard {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 20%, var(--border));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--ys-orange) 10%, transparent), transparent 70%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+  box-shadow: 0 6px 20px color-mix(in srgb, #000 3%, transparent);
+  transition: all 0.2s ease;
+}
+
+.feeCard:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--ys-orange) 10%, transparent);
+}
+
+.feeCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.feeAmount {
+  font-size: 0.95rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 14%, var(--card));
+  border: 1px solid rgba(255, 140, 0, 0.4);
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--ys-orange) 20%, transparent);
+}
+
+.feePlayerBox {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.feePlayerAvatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--muted));
+  border: 1.5px solid var(--ys-orange);
+  flex-shrink: 0;
+}
+
+.feePlayerInitial {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ys-orange), #e05e00);
+  color: #0b0b0b;
+  font-size: 1rem;
+  font-weight: 900;
+  font-style: normal;
+  flex-shrink: 0;
+}
+
+.feePlayerInfo {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.feePlayerName {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--foreground);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feePlayerName:hover {
+  color: var(--ys-orange);
+}
+
+.feeDate {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}
+
+.feeRoute {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--muted) 60%, var(--card));
+  border: 1px solid var(--border);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.feeTeam {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.feeTeam span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feeTeamLogo {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.feeArrow {
+  color: var(--ys-orange);
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   BUSIEST CLUBS GRID (أكثر الأندية نشاطاً - FULL WIDTH ON DESKTOP & PREMIUM MOBILE)
+   -------------------------------------------------------------------------- */
+.busiestGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+@media (min-width: 580px) {
+  .busiestGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 860px) {
+  .busiestGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1180px) {
+  .busiestGrid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.clubLinkWrapper {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.clubCard {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 20%, var(--border));
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--ys-orange) 8%, transparent), transparent 75%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+  box-shadow: 0 6px 20px color-mix(in srgb, #000 3%, transparent);
+  transition: all 0.22s ease;
+  height: 100%;
+}
+
+.clubCard:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--ys-orange) 48%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 6%, var(--card));
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--ys-orange) 12%, transparent);
+}
+
+.clubHead {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.rankBadge {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--muted) 80%, var(--card));
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.rank1 {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #0b0b0b;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
+}
+
+.rank2 {
+  background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+  color: #0b0b0b;
+  box-shadow: 0 3px 10px rgba(148, 163, 184, 0.3);
+}
+
+.rank3 {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(180, 83, 9, 0.3);
+}
+
+.clubIdentity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.clubLogo {
+  width: 1.85rem;
+  height: 1.85rem;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.clubLogoFallback {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--ys-orange) 14%, var(--card));
+  color: var(--ys-orange);
+  font-size: 0.82rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.clubName {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ratioBarBox {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ratioBar {
+  display: flex;
+  height: 6px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--muted) 90%, var(--card));
+}
+
+.ratioBarIn {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  transition: width 0.3s ease;
+}
+
+.ratioBarOut {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  transition: width 0.3s ease;
+}
+
+.clubStatsFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.clubPills {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pillInBadge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.pillOutBadge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.clubTotalBadge {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--muted) 60%, var(--card));
+  border: 1px solid var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   THE TRANSFER WIRE / FEED (سجل الميركاتو الحركي)
+   -------------------------------------------------------------------------- */
+.wire {
+  display: grid;
+  gap: 1.85rem;
+}
+
+.monthBlock {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.monthHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
+}
+
+.monthHead h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.monthCount {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.moveList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.moveCard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  padding: 0.95rem 1.15rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, #000 2%, transparent);
+  transition: all 0.18s ease;
+}
+
+@media (min-width: 820px) {
+  .moveCard {
+    grid-template-columns: minmax(11rem, 1.2fr) minmax(14rem, 1.8fr) auto;
+    align-items: center;
+    gap: 1.15rem;
+  }
+}
+
+.moveCard:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--ys-orange) 34%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 5%, var(--card));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--ys-orange) 6%, transparent);
+}
+
+.movePlayer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.playerAvatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--ys-orange) 10%, var(--muted));
+  border: 1.5px solid color-mix(in srgb, var(--ys-orange) 25%, transparent);
+  flex-shrink: 0;
+}
+
+.playerInitial {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ys-orange) 16%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 30%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.85rem;
+  font-weight: 900;
+  font-style: normal;
+  flex-shrink: 0;
+}
+
+.playerMeta {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.playerName {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--foreground);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerName:hover {
+  color: var(--ys-orange);
+}
+
+.moveCorridor {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.teamPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.teamPill em {
+  font-style: normal;
+  color: var(--muted-foreground);
+}
+
+.teamPill:hover {
+  color: var(--ys-orange);
+}
+
+.teamLogo {
+  width: 1.45rem;
+  height: 1.45rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.corridorArrow {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ys-orange) 14%, var(--card));
+  color: var(--ys-orange);
+  flex-shrink: 0;
+}
+
+.moveMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+@media (min-width: 820px) {
+  .moveMeta {
+    justify-content: flex-end;
+  }
+}
+
+.kindBadge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 80%, var(--card));
+  color: var(--foreground);
+}
+
+.kindLoan {
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.28);
+}
+
+.kindFree {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.kindOfficial {
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  border-color: color-mix(in srgb, var(--ys-orange) 30%, transparent);
+}
+
+.feeBadge {
+  font-size: 0.76rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 14%, var(--card));
+  border: 1px solid rgba(255, 140, 0, 0.4);
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+@media (max-width: 819px) {
+  .moveCard {
+    padding: 0.85rem 0.95rem;
+    gap: 0.65rem;
+  }
+
+  .moveCorridor {
+    padding: 0.45rem 0.65rem;
+    border-radius: 0.85rem;
+    background: color-mix(in srgb, var(--muted) 45%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .teamPill {
+    font-size: 0.78rem;
+    max-width: 42%;
+  }
+
+  .teamPill span, .teamPill em {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .moveMeta {
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 0.2rem;
+    border-top: 1px dashed color-mix(in srgb, var(--border) 60%, transparent);
+  }
+}
+
+.feeUndisclosed {
+  color: var(--muted-foreground);
+  background: transparent;
+  border-color: var(--border);
+  font-weight: 700;
+}
+
+.moveDate {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+}

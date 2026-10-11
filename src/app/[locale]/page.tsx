@@ -1,13 +1,17 @@
 import React from 'react';
-import { getLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { FrontPage } from '@/components/front/FrontPage';
 import { pageMetadata, defaultTitle, defaultDescription } from '@/lib/seo/site';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
   return pageMetadata({
     locale,
     title: defaultTitle(locale),
@@ -17,6 +21,12 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default function HomePage() {
-  return <FrontPage />;
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  return <FrontPage locale={locale} />;
 }

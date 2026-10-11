@@ -11,6 +11,7 @@ export type PushPayload = {
   url: string;
   tag?: string;
   icon?: string;
+  image?: string;
 };
 
 type PrefKey = 'goal' | 'matchStart' | 'matchEnd' | 'breakingNews';

@@ -11,9 +11,26 @@ import { localizeTransferType } from '@/lib/transfers/fee';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { TransferFace } from '@/components/transfers/TransferFace';
-import { ArrowLeftRight, BarChart3, CalendarDays, Radio, Trophy } from 'lucide-react';
+import {
+  Activity,
+  ArrowLeftRight,
+  ArrowRight,
+  BarChart3,
+  Calendar,
+  CalendarDays,
+  CheckCircle2,
+  Coins,
+  DollarSign,
+  Flame,
+  Radio,
+  Repeat,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+} from 'lucide-react';
 import { TransferFilters } from '@/components/transfers/TransferFilters';
 import { ClientTime } from '@/components/datetime/ClientTime';
+import styles from '@/components/transfers/transfers.module.css';
 
 export const revalidate = 90;
 
@@ -83,24 +100,26 @@ async function TransfersPageBody({
   const paid = desk.rows.filter((row) => row.fee).length;
   const loans = desk.rows.filter((row) => row.kind === 'loan').length;
   const frees = desk.rows.filter((row) => row.kind === 'free').length;
+  const ar = locale === 'ar';
+
   const tally = [
-    { value: desk.rows.length, label: pick(locale, 'حركة انتقالية ظاهرة', 'Recorded moves shown') },
-    ...(paid > 0 ? [{ value: paid, label: pick(locale, 'برسم', 'With a fee') }] : []),
-    ...(loans > 0 ? [{ value: loans, label: pick(locale, 'إعارة', 'Loans') }] : []),
-    ...(frees > 0 ? [{ value: frees, label: pick(locale, 'انتقال حر', 'Free moves') }] : []),
+    { value: desk.rows.length, label: pick(locale, 'حركة موثقة', 'Verified Moves'), icon: Activity },
+    ...(paid > 0 ? [{ value: paid, label: pick(locale, 'صفقة برسم مالي', 'Deals with Fee'), icon: Coins }] : []),
+    ...(loans > 0 ? [{ value: loans, label: pick(locale, 'إعارة مؤكدة', 'Loan Deals'), icon: Repeat }] : []),
+    ...(frees > 0 ? [{ value: frees, label: pick(locale, 'انتقال حر', 'Free Transfers'), icon: CheckCircle2 }] : []),
   ];
 
   return (
     <SalonStage
       tone="market"
-      kicker={pick(locale, 'سلك الميركاتو', 'Mercato wire')}
-      title={pick(locale, 'الانتقالات', 'Transfers')}
+      kicker={pick(locale, 'سلك الميركاتو الحصري', 'Mercato Wire')}
+      title={pick(locale, 'سوق الانتقالات', 'Transfer Market')}
       lead={pick(
         locale,
-        `موسم ${desk.fromSeason}/${desk.fromSeason + 1} وموسم ${desk.seasonLabel}/${desk.seasonLabel + 1} من دفتر المصدر.`,
-        `Seasons ${desk.fromSeason}/${desk.fromSeason + 1} and ${desk.seasonLabel}/${desk.seasonLabel + 1} from the source ledger.`,
+        `موسم ${desk.fromSeason}/${desk.fromSeason + 1} وموسم ${desk.seasonLabel}/${desk.seasonLabel + 1} — توثيق فوري لصفقات الأندية بدون اختراع شائعات.`,
+        `Seasons ${desk.fromSeason}/${desk.fromSeason + 1} and ${desk.seasonLabel}/${desk.seasonLabel + 1} from verified source ledgers.`,
       )}
-      aside={pick(locale, `${desk.rows.length} حركة ظاهرة`, `${desk.rows.length} recorded moves`)}
+      aside={pick(locale, `${desk.rows.length} صفقة موثقة`, `${desk.rows.length} verified deals`)}
       wide
       compact
       tools={
@@ -137,143 +156,378 @@ async function TransfersPageBody({
         </div>
       }
     >
-      {desk.syncedAt ? (
-        <p className="xfer-fresh">
-          {pick(locale, 'آخر مزامنة', 'Last sync')}: <ClientTime value={desk.syncedAt} />
-          {desk.source ? ` · ${desk.source}` : ''}
-        </p>
-      ) : null}
-
-      {desk.rows.length > 0 ? (
-        <div className="xfer-tally">
-          {tally.map((item) => (
-            <article key={item.label}>
-              <strong>{item.value}</strong>
-              <span>{item.label}</span>
-            </article>
-          ))}
-        </div>
-      ) : null}
-
-      {desk.topFees.length > 1 ? (
-        <section className="xfer-month">
-          <h2>{pick(locale, 'أغلى الانتقالات الموثقة', 'Largest verified fees')}</h2>
-          <ul className="xfer-list">
-            {desk.topFees.map((row) => (
-              <li key={`fee-${row.id}`}>
-                <div className="xfer-row is-fee">
-                  <strong>{localizePlainName(locale, row.playerName)}</strong>
-                  <span className="xfer-path">
-                    {localizePlainName(locale, row.fromTeam || '—')} → {localizePlainName(locale, row.toTeam || '—')}
-                  </span>
-                  <em className="xfer-fee">{row.fee}</em>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {desk.busiest.length > 0 ? (
-        <section className="xfer-month">
-          <h2>{pick(locale, 'أكثر الأندية نشاطًا', 'Busiest clubs')}</h2>
-          <ul className="xfer-list">
-            {desk.busiest.map((row) => (
-              <li key={row.name}>
-                <div className="xfer-row">
-                  <strong>{localizePlainName(locale, row.name)}</strong>
-                  <span className="xfer-meta">
-                    {pick(locale, `${row.in} قادم · ${row.out} مغادر`, `${row.in} in · ${row.out} out`)}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {desk.headline ? (
-        <article className="xfer-hero">
-          <TransferFace
-            src={desk.headline.playerPhoto}
-            name={localizePlainName(locale, desk.headline.playerName)}
-          />
-          <em>{pick(locale, 'أكبر صفقة موثقة', 'Largest verified fee')}</em>
-          <strong>{localizePlainName(locale, desk.headline.playerName)}</strong>
-          <span>
-            {[desk.headline.fromTeam, desk.headline.toTeam].filter(Boolean).join(' → ')}
-            {desk.headline.fee ? ` · ${desk.headline.fee}` : ''}
-          </span>
-        </article>
-      ) : null}
-
-      {desk.rows.length === 0 ? (
-        <div className="salon-empty">
-          <strong>{pick(locale, 'ما في صفقات من المصدر', 'No moves from the source')}</strong>
-          <p>
-            {pick(
-              locale,
-              'الدفتر فاضي بهالفلاتر. غيّر النادي أو الموسم، أو امسح الفلاتر. ما بنعرض صفقات مخترعة.',
-              'The ledger is empty for these filters. Change club or season, or reset. We do not invent deals.',
-            )}
+      <div className={styles.container}>
+        {desk.syncedAt ? (
+          <p className="xfer-fresh flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span>{pick(locale, 'آخر تحديث للدفتر', 'Last sync')}: <ClientTime value={desk.syncedAt} /></span>
+            {desk.source ? <span className="opacity-60">({desk.source})</span> : null}
           </p>
-        </div>
-      ) : (
-        <div className="xfer-wire">
-          {groups.map((group) => (
-            <section key={group.key} className="xfer-month">
-              <h2>{monthLabel(group.label, locale)}</h2>
-              <ul className="xfer-list">
-                {group.rows.map((row) => {
-                  const name = localizePlainName(locale, row.playerName);
-                  const from = row.fromTeam ? localizePlainName(locale, row.fromTeam) : '—';
-                  const to = row.toTeam ? localizePlainName(locale, row.toTeam) : '—';
-                  const inner = (
-                    <>
-                      <span className="xfer-who">
-                        <TransferFace src={row.playerPhoto} name={name} />
-                        {row.playerSlug ? (
-                          <Link href={`/player/${row.playerSlug}`}>
-                            <strong>{name}</strong>
-                          </Link>
+        ) : null}
+
+        {/* 1. SPOTLIGHT HERO RECORD DEAL */}
+        {desk.headline ? (
+          <article className={styles.heroCard}>
+            <div className={styles.heroAvatarBox}>
+              <TransferFace
+                src={desk.headline.playerPhoto}
+                name={localizePlainName(locale, desk.headline.playerName)}
+                className={styles.heroAvatar}
+                fallbackClassName={styles.heroAvatarInitial}
+              />
+            </div>
+            <div className={styles.heroContent}>
+              <span className={styles.heroKicker}>
+                <Flame className="h-3 w-3" />
+                {pick(locale, 'أبرز الصفقات الموثقة', 'Top Verified Transfer')}
+              </span>
+              <h2 className={styles.heroName}>
+                {localizePlainName(locale, desk.headline.playerName)}
+              </h2>
+              <div className={styles.heroBridge}>
+                <span className={styles.heroTeam}>
+                  {desk.headline.fromLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={desk.headline.fromLogo} alt="" />
+                  ) : null}
+                  <span>{localizePlainName(locale, desk.headline.fromTeam || '—')}</span>
+                </span>
+                <span className={styles.heroArrow}>{ar ? '←' : '→'}</span>
+                <span className={styles.heroTeam}>
+                  {desk.headline.toLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={desk.headline.toLogo} alt="" />
+                  ) : null}
+                  <span>{localizePlainName(locale, desk.headline.toTeam || '—')}</span>
+                </span>
+              </div>
+            </div>
+            {desk.headline.fee ? (
+              <div className={styles.heroFeeBox}>
+                <span className={styles.heroFeeLabel}>{pick(locale, 'قيمة الصفقة', 'Transfer Fee')}</span>
+                <span className={styles.heroFeeBadge}>
+                  <DollarSign className="h-4 w-4" />
+                  {desk.headline.fee}
+                </span>
+              </div>
+            ) : null}
+          </article>
+        ) : null}
+
+        {/* 2. TALLY HUD STATS */}
+        {desk.rows.length > 0 ? (
+          <div className={styles.tallyGrid}>
+            {tally.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.label} className={styles.tallyCard}>
+                  <div className={styles.tallyIcon}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className={styles.tallyInfo}>
+                    <span className={styles.tallyValue}>{item.value}</span>
+                    <span className={styles.tallyLabel}>{item.label}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {/* 3. LARGEST VERIFIED FEES (أعلى الصفقات قيمة) */}
+        {desk.topFees.length > 1 ? (
+          <section className={styles.showcaseSection}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitleBox}>
+                <div className={styles.sectionIcon}>
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={styles.sectionTitle}>
+                    {pick(locale, 'أعلى الصفقات قيمة ومبلغاً', 'Largest Verified Transfer Fees')}
+                  </h3>
+                  <p className={styles.sectionDesc}>
+                    {pick(locale, 'أغلى الانتقالات الموثقة رسمياً في الميركاتو بالأرقام المعتمدة', 'Record verified fees in mercato ledgers')}
+                  </p>
+                </div>
+              </div>
+              <span className={styles.sectionPill}>Top {desk.topFees.slice(0, 5).length}</span>
+            </div>
+
+            <div className={styles.topFeesGrid}>
+              {desk.topFees.slice(0, 5).map((row, index) => (
+                <div key={`fee-${row.id}`} className={styles.feeCard}>
+                  <div className={styles.feeCardHead}>
+                    <span className={`${styles.rankBadge} ${styles[`rank${index + 1}`] || ''}`}>
+                      #{index + 1}
+                    </span>
+                    <span className={styles.feeAmount}>{row.fee}</span>
+                  </div>
+
+                  <div className={styles.feePlayerBox}>
+                    <TransferFace
+                      src={row.playerPhoto}
+                      name={localizePlainName(locale, row.playerName)}
+                      className={styles.feePlayerAvatar}
+                      fallbackClassName={styles.feePlayerInitial}
+                    />
+                    <div className={styles.feePlayerInfo}>
+                      {row.playerSlug ? (
+                        <Link href={`/player/${row.playerSlug}`} className={styles.feePlayerName}>
+                          {localizePlainName(locale, row.playerName)}
+                        </Link>
+                      ) : (
+                        <span className={styles.feePlayerName}>{localizePlainName(locale, row.playerName)}</span>
+                      )}
+                      <span className={styles.feeDate}>
+                        {new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'ar-EG', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          timeZone: 'UTC',
+                        }).format(row.date)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.feeRoute}>
+                    <span className={styles.feeTeam}>
+                      {row.fromLogo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={row.fromLogo} alt="" className={styles.feeTeamLogo} />
+                      ) : null}
+                      <span>{localizePlainName(locale, row.fromTeam || '—')}</span>
+                    </span>
+                    <span className={styles.feeArrow}>{ar ? '←' : '→'}</span>
+                    <span className={styles.feeTeam}>
+                      {row.toLogo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={row.toLogo} alt="" className={styles.feeTeamLogo} />
+                      ) : null}
+                      <span>{localizePlainName(locale, row.toTeam || '—')}</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* 4. BUSIEST CLUBS IN MERCATO (أكثر الأندية نشاطًا وحركة - FULL WIDTH ON DESKTOP & BEAUTIFUL ON MOBILE) */}
+        {desk.busiest.length > 0 ? (
+          <section className={styles.showcaseSection}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitleBox}>
+                <div className={styles.sectionIcon}>
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={styles.sectionTitle}>
+                    {pick(locale, 'أكثر الأندية نشاطًا وحركة في الميركاتو', 'Most Active & Busiest Clubs')}
+                  </h3>
+                  <p className={styles.sectionDesc}>
+                    {pick(
+                      locale,
+                      'إجمالي حركات الاستقدام والإعارة والبيع المسجلة لكل نادٍ في السوق',
+                      'Breakdown of incoming, outgoing, and total transfers recorded per club',
+                    )}
+                  </p>
+                </div>
+              </div>
+              <span className={styles.sectionPill}>
+                {desk.busiest.length} {pick(locale, 'أندية نشطة', 'active clubs')}
+              </span>
+            </div>
+
+            <div className={styles.busiestGrid}>
+              {desk.busiest.map((club, index) => {
+                const clubName = localizePlainName(locale, club.name);
+                const totalMoves = club.in + club.out;
+                const inPercent = totalMoves > 0 ? Math.round((club.in / totalMoves) * 100) : 50;
+
+                const CardContent = (
+                  <div className={styles.clubCard}>
+                    {/* Header: Rank + Club Crest & Name */}
+                    <div className={styles.clubHead}>
+                      <span className={`${styles.rankBadge} ${styles[`rank${index + 1}`] || ''}`}>
+                        #{index + 1}
+                      </span>
+                      <div className={styles.clubIdentity}>
+                        {club.logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={club.logo} alt={clubName} className={styles.clubLogo} />
                         ) : (
-                          <strong>{name}</strong>
+                          <span className={styles.clubLogoFallback}>{clubName.charAt(0)}</span>
                         )}
+                        <span className={styles.clubName}>{clubName}</span>
+                      </div>
+                    </div>
+
+                    {/* Ratio progress bar */}
+                    <div className={styles.ratioBarBox}>
+                      <div className={styles.ratioBar}>
+                        <div
+                          className={styles.ratioBarIn}
+                          style={{ width: `${inPercent}%` }}
+                          title={`+${club.in} ${pick(locale, 'قادمون', 'in')}`}
+                        />
+                        <div
+                          className={styles.ratioBarOut}
+                          style={{ width: `${100 - inPercent}%` }}
+                          title={`-${club.out} ${pick(locale, 'مغادرون', 'out')}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stats & Pills Footer */}
+                    <div className={styles.clubStatsFooter}>
+                      <div className={styles.clubPills}>
+                        <span className={styles.pillInBadge}>
+                          ↓ {club.in} {pick(locale, 'قادم', 'in')}
+                        </span>
+                        <span className={styles.pillOutBadge}>
+                          ↑ {club.out} {pick(locale, 'مغادر', 'out')}
+                        </span>
+                      </div>
+                      <span className={styles.clubTotalBadge}>
+                        {totalMoves} {pick(locale, 'صفقات', 'moves')}
                       </span>
-                      <span className="xfer-path">
-                        {row.fromLogo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.fromLogo} alt="" />
-                        ) : null}
-                        {row.fromSlug ? <Link href={`/team/${row.fromSlug}`}>{from}</Link> : <em>{from}</em>}
-                        <b aria-hidden>→</b>
-                        {row.toLogo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={row.toLogo} alt="" />
-                        ) : null}
-                        {row.toSlug ? <Link href={`/team/${row.toSlug}`}>{to}</Link> : <em>{to}</em>}
-                      </span>
-                      <span className="xfer-meta">
-                        <time>
-                          {new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'ar-EG', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            timeZone: 'UTC',
-                          }).format(row.date)}
-                        </time>
-                        <em className={`xfer-kind is-${row.kind}`}>{localizeTransferType(locale, row.type, row.kind)}</em>
-                        <em className="xfer-fee">{row.fee || pick(locale, 'غير معلنة', 'Undisclosed')}</em>
-                      </span>
-                    </>
-                  );
-                  return <li key={row.id}><div className={`xfer-row${row.fee ? ' is-fee' : ''}`}>{inner}</div></li>;
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+                    </div>
+                  </div>
+                );
+
+                return club.slug ? (
+                  <Link key={club.name} href={`/team/${club.slug}`} className={styles.clubLinkWrapper}>
+                    {CardContent}
+                  </Link>
+                ) : (
+                  <div key={club.name} className={styles.clubLinkWrapper}>
+                    {CardContent}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {/* 4. THE MERCATO WIRE (MONTHLY TIMELINE) */}
+        {desk.rows.length === 0 ? (
+          <div className="salon-empty rounded-3xl border border-dashed border-border p-12 text-center">
+            <strong className="text-lg font-black">{pick(locale, 'لا توجد صفقات مسجلة لهذه الفلاتر', 'No moves found')}</strong>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {pick(
+                locale,
+                'جرب تغيير النادي أو الموسم أو النافذة، أو اضغط على مسح الفلاتر لعرض كافة الصفقات.',
+                'Try changing club or season filters, or click reset to see all moves.',
+              )}
+            </p>
+          </div>
+        ) : (
+          <div className={styles.wire}>
+            {groups.map((group) => (
+              <section key={group.key} className={styles.monthBlock}>
+                <div className={styles.monthHead}>
+                  <h2>
+                    <Calendar className="h-4 w-4 text-primary" />
+                    {monthLabel(group.label, locale)}
+                  </h2>
+                  <span className={styles.monthCount}>
+                    {group.rows.length} {pick(locale, 'صفقة', 'deals')}
+                  </span>
+                </div>
+                <ul className={styles.moveList}>
+                  {group.rows.map((row) => {
+                    const name = localizePlainName(locale, row.playerName);
+                    const from = row.fromTeam ? localizePlainName(locale, row.fromTeam) : '—';
+                    const to = row.toTeam ? localizePlainName(locale, row.toTeam) : '—';
+                    const kindClass =
+                      row.kind === 'loan'
+                        ? styles.kindLoan
+                        : row.kind === 'free'
+                          ? styles.kindFree
+                          : styles.kindOfficial;
+
+                    return (
+                      <li key={row.id}>
+                        <div className={styles.moveCard}>
+                          {/* Player Avatar + Name */}
+                          <div className={styles.movePlayer}>
+                            <TransferFace
+                              src={row.playerPhoto}
+                              name={name}
+                              className={styles.playerAvatar}
+                              fallbackClassName={styles.playerInitial}
+                            />
+                            <div className={styles.playerMeta}>
+                              {row.playerSlug ? (
+                                <Link href={`/player/${row.playerSlug}`} className={styles.playerName}>
+                                  {name}
+                                </Link>
+                              ) : (
+                                <span className={styles.playerName}>{name}</span>
+                              )}
+                              <span className={styles.moveDate}>
+                                {new Intl.DateTimeFormat(locale === 'en' ? 'en-GB' : 'ar-EG', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  timeZone: 'UTC',
+                                }).format(row.date)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Transfer Route Corridor */}
+                          <div className={styles.moveCorridor}>
+                            <span className={styles.teamPill}>
+                              {row.fromLogo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={row.fromLogo} alt="" className={styles.teamLogo} />
+                              ) : null}
+                              {row.fromSlug ? (
+                                <Link href={`/team/${row.fromSlug}`}>{from}</Link>
+                              ) : (
+                                <em>{from}</em>
+                              )}
+                            </span>
+
+                            <span className={styles.corridorArrow}>
+                              {ar ? '←' : '→'}
+                            </span>
+
+                            <span className={styles.teamPill}>
+                              {row.toLogo ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={row.toLogo} alt="" className={styles.teamLogo} />
+                              ) : null}
+                              {row.toSlug ? (
+                                <Link href={`/team/${row.toSlug}`}>{to}</Link>
+                              ) : (
+                                <em>{to}</em>
+                              )}
+                            </span>
+                          </div>
+
+                          {/* Meta: Kind + Fee */}
+                          <div className={styles.moveMeta}>
+                            <span className={`${styles.kindBadge} ${kindClass}`}>
+                              {localizeTransferType(locale, row.type, row.kind)}
+                            </span>
+                            <span className={`${styles.feeBadge} ${row.fee ? '' : styles.feeUndisclosed}`}>
+                              {row.fee || pick(locale, 'غير معلنة', 'Undisclosed')}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+      </div>
     </SalonStage>
   );
 }
+

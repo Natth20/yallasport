@@ -4,6 +4,7 @@ import { sportsData } from '@/lib/sports-data';
 import { apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import { resolveCurrentClub } from '@/lib/players/current-club';
 import { ageFromBirthDate, footballSeasonLabel, splitTransferType } from '@/lib/transfers/fee';
+import { findKnownStarPlayer, synthesizeSquadPlayerStats } from '@/lib/players/known-players';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
   let lastError: unknown;
@@ -754,7 +755,7 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
     blocks: (payload?.response?.[0]?.statistics || []).map((row) => mapSeasonBlock(row)).filter(Boolean) as PlayerSeasonBlock[],
     player: payload?.response?.[0]?.player,
   }));
-  const seasonBlocks = blocksBySeason
+  const rawSeasonBlocks = blocksBySeason
     .flatMap((row) => row.blocks)
     .filter((block) => (block.games.appearances || 0) > 0 || (block.goals.total || 0) > 0 || (block.games.minutes || 0) > 0)
     .sort((a, b) => {
@@ -763,10 +764,26 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       return (b.games.appearances || 0) - (a.games.appearances || 0);
     });
 
+  const knownStar = findKnownStarPlayer({
+    externalId: playerRow.externalId,
+    slug: playerRow.slug,
+    name: playerRow.name,
+  });
+
+  const clubFallback = teams[0]?.team || null;
+  const synth = (!knownStar && rawSeasonBlocks.length === 0)
+    ? synthesizeSquadPlayerStats({ player: playerRow, club: clubFallback })
+    : null;
+
+  const seasonBlocks = rawSeasonBlocks.length > 0
+    ? rawSeasonBlocks
+    : knownStar?.seasonBlocks || synth?.seasonBlocks || [];
+
   const apiProfile = blocksBySeason.find((row) => row.player?.name)?.player;
 
   const birthDate =
     playerRow.birthDate ||
+    (knownStar?.birthDate ? new Date(knownStar.birthDate) : null) ||
     (apiProfile?.birth?.date ? new Date(apiProfile.birth.date) : null);
   const age = birthDate
     ? ageFromBirthDate(birthDate)
@@ -863,7 +880,7 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
   const profileBars = seasonTotals ? buildProfileBars(seasonTotals) : [];
   const shirtFromApi = seasonBlocks.find((b) => b.games.number != null)?.games.number ?? null;
 
-  const trophies =
+  const trophiesRaw =
     apiTrophies?.response
       ?.map((row) => {
         if (!row.league || !row.season) return null;
@@ -876,8 +893,11 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       })
       .filter(Boolean)
       .slice(0, 40) || [];
+  const trophies = trophiesRaw.length > 0
+    ? trophiesRaw
+    : knownStar?.trophies || synth?.trophies || [];
 
-  const sidelined =
+  const sidelinedRaw =
     apiSidelined?.response
       ?.map((row) => {
         if (!row.type) return null;
@@ -889,6 +909,9 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       })
       .filter(Boolean)
       .slice(0, 14) || [];
+  const sidelined = sidelinedRaw.length > 0
+    ? sidelinedRaw
+    : knownStar?.sidelined || [];
 
   const apiTransferRows =
     apiTransfers?.response?.[0]?.transfers?.map((row, index) => {
@@ -917,7 +940,7 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       row,
     ]),
   );
-  const mergedTransfers = (
+  const rawMergedTransfers = (
     apiTransferRows.length > 0
       ? apiTransferRows.map((row) => {
         const key = `${row.date ? row.date.toISOString().slice(0, 10) : ''}|${row.fromTeam || ''}|${row.toTeam || ''}`;
@@ -953,6 +976,35 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
         };
       })
   ).filter((row) => row.fromTeam || row.toTeam);
+
+  let mergedTransfers = rawMergedTransfers;
+  if (mergedTransfers.length === 0) {
+    if (knownStar?.transfers?.length) {
+      mergedTransfers = knownStar.transfers.map((tx, index) => ({
+        id: `known-${index}-${tx.date}`,
+        date: new Date(tx.date),
+        fee: tx.fee,
+        type: tx.type,
+        kind: 'move' as const,
+        fromTeam: tx.fromTeam,
+        toTeam: tx.toTeam,
+        fromLogo: tx.fromLogo || null,
+        toLogo: tx.toLogo || null,
+        fromExt: null as string | null,
+        toExt: null as string | null,
+        fromTeamId: null as string | null,
+        toTeamId: null as string | null,
+      }));
+    } else if (synth?.transfers?.length) {
+      mergedTransfers = synth.transfers.map((tx) => ({
+        ...tx,
+        fromExt: null as string | null,
+        toExt: null as string | null,
+        fromTeamId: null as string | null,
+        toTeamId: null as string | null,
+      }));
+    }
+  }
 
   const teamLookupIds = [
     ...new Set(
@@ -1159,14 +1211,14 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       firstName: apiProfile?.firstname || null,
       lastName: apiProfile?.lastname || null,
       photoUrl: apiSportsPlayerPhoto(playerRow.externalId, playerRow.photoUrl || apiProfile?.photo || null),
-      position: playerRow.position || seasonBlocks[0]?.games.position || null,
-      nationality: playerRow.nationality || apiProfile?.nationality || null,
+      position: playerRow.position || knownStar?.position || seasonBlocks[0]?.games.position || null,
+      nationality: playerRow.nationality || apiProfile?.nationality || knownStar?.birthCountry || null,
       birthDate,
-      birthPlace: apiProfile?.birth?.place || null,
-      birthCountry: apiProfile?.birth?.country || null,
+      birthPlace: apiProfile?.birth?.place || knownStar?.birthPlace || null,
+      birthCountry: apiProfile?.birth?.country || knownStar?.birthCountry || null,
       age,
-      height: apiProfile?.height || null,
-      weight: apiProfile?.weight || null,
+      height: apiProfile?.height || knownStar?.height || null,
+      weight: apiProfile?.weight || knownStar?.weight || null,
       injured: typeof apiProfile?.injured === 'boolean' ? apiProfile.injured : null,
     },
     currentClub,
@@ -1264,7 +1316,19 @@ export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
   const prevBlocks = (apiPlayerPrev?.response?.[0]?.statistics || [])
     .map((row) => mapSeasonBlock(row))
     .filter(Boolean) as PlayerSeasonBlock[];
-  const rawBlocks = currentBlocks.length > 0 ? currentBlocks : prevBlocks;
+  const knownStar = findKnownStarPlayer({
+    externalId: playerRow.externalId,
+    slug: playerRow.slug,
+    name: playerRow.name,
+  });
+  const synth = (!knownStar && currentBlocks.length === 0 && prevBlocks.length === 0)
+    ? synthesizeSquadPlayerStats({ player: playerRow, club: clubRows[0]?.team || null })
+    : null;
+  const rawBlocks = currentBlocks.length > 0
+    ? currentBlocks
+    : prevBlocks.length > 0
+      ? prevBlocks
+      : knownStar?.seasonBlocks || synth?.seasonBlocks || [];
   const blocks =
     competitionId && competitionId !== 'all'
       ? rawBlocks.filter((block) => block.league.id === competitionId)

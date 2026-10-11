@@ -87,42 +87,12 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
       : {}),
   };
 
+  const serializedDossier = JSON.parse(JSON.stringify(dossier));
+
   return (
     <>
       <JsonLd data={playerSchema} />
-      <SalonStage
-        tone="podium"
-        wide
-        compact
-        kicker={pick(locale, 'منصة اللاعب', 'Player podium')}
-        title={localizePlainName(locale, dossier.player.name)}
-        lead={pick(
-          locale,
-          'النادي الحالي، الإحصائيات، والانتقالات من مصدر البيانات فقط — بلا اختراع.',
-          'Current club, stats, and transfers from the data source only — nothing invented.',
-        )}
-        aside={dossier.currentClub?.name || dossier.player.position || undefined}
-        tools={
-          <HallFoyer
-            label={pick(locale, 'جناح اللاعب', 'Player suite')}
-            items={[
-              { href: '/matches', label: pick(locale, 'المباريات', 'Matches'), icon: CalendarDays },
-              { href: '/transfers', label: pick(locale, 'الانتقالات', 'Transfers'), icon: ArrowLeftRight },
-              { href: '/live', label: pick(locale, 'مباشر', 'Live'), badge: 'LIVE', icon: Radio },
-              { href: '/leagues', label: pick(locale, 'البطولات', 'Leagues'), icon: Trophy },
-              {
-                href: dossier.currentClub?.slug ? `/team/${dossier.currentClub.slug}` : '/leagues',
-                label: dossier.currentClub?.name
-                  ? localizePlainName(locale, dossier.currentClub.name)
-                  : pick(locale, 'النادي', 'Club'),
-                icon: Shield,
-              },
-            ]}
-          />
-        }
-      >
-        <PlayerDossier locale={locale} dossier={dossier} />
-      </SalonStage>
+      <PlayerDossier locale={locale} dossier={serializedDossier} />
     </>
   );
 }

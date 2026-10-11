@@ -13,7 +13,7 @@ export const loadBoardPublic = cache(async function loadBoardPublic(bucket: numb
   };
   const participantWhere = { OR: [{ points: { gt: 0 } }, { predictions: { some: {} } }] };
 
-  const [rows, peopleCount, pointsAgg, slipCount, settledCount, openCount, openMatches, moodRows] = await Promise.all([
+  const [rows, peopleCount, pointsAgg, slipCount, settledCount, openCount, rawMatches, moodRows] = await Promise.all([
     prisma.user.findMany({
       where: participantWhere,
       select: {
@@ -65,5 +65,32 @@ export const loadBoardPublic = cache(async function loadBoardPublic(bucket: numb
     }).catch(swallow('board.mood', [] as Array<{ predictedOutcome: string; _count: { _all: number } }>)),
   ]);
 
-  return { rows, peopleCount, pointsAgg, slipCount, settledCount, openCount, openMatches, moodRows, participantWhere };
+  let openMatches = rawMatches;
+  if (!openMatches.length) {
+    openMatches = await prisma.match.findMany({
+      where: { kickoffAt: { gte: now } },
+      orderBy: { kickoffAt: 'asc' },
+      take: 8,
+      select: {
+        id: true,
+        kickoffAt: true,
+        homeTeam: { select: { name: true, logoUrl: true } },
+        awayTeam: { select: { name: true, logoUrl: true } },
+        league: { select: { name: true } },
+        _count: { select: { predictions: true } },
+      },
+    }).catch(swallow('board.kicks.fallback', []));
+  }
+
+  return {
+    rows,
+    peopleCount,
+    pointsAgg,
+    slipCount,
+    settledCount,
+    openCount: openCount || openMatches.length,
+    openMatches,
+    moodRows,
+    participantWhere,
+  };
 });

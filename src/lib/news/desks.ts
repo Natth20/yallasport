@@ -87,11 +87,54 @@ export const NEWS_DESKS: NewsDesk[] = [
     match: /ligue\s?1|paris\ssaint-germain|\bpsg\b|marseille|الدوري\sالفرنسي|باريس\sسان\sجيرمان|مارسيليا/i,
   },
   {
+    key: 'Egyptian Premier',
+    ar: 'الدوري المصري',
+    en: 'Egyptian Premier League',
+    match:
+      /egyptian\spremier|الدوري\sالمصري|الأهلي\sالمصري|الزمالك|بيراميدز|al\s?ahly|zamalek/i,
+  },
+  {
+    key: 'MLS',
+    ar: 'الدوري الأمريكي',
+    en: 'MLS',
+    match: /mls\b|major\sleague\ssoccer|الدوري\sالأمريكي|إنتر\sميامي|inter\smiami/i,
+  },
+  {
+    key: 'Brasileirao',
+    ar: 'الدوري البرازيلي',
+    en: 'Brasileirão',
+    match: /brasileir[aã]o|brazilian\sleague|الدوري\sالبرازيلي|فلامنغو|بالميراس|flamengo|palmeiras/i,
+  },
+  {
+    key: 'Argentine Primera',
+    ar: 'الدوري الأرجنتيني',
+    en: 'Argentine Primera',
+    match: /argentine|الدوري\sالأرجنتيني|بوكا\sجونيورز|ريفر\sبليت|boca|river\splate/i,
+  },
+  {
+    key: 'Eredivisie',
+    ar: 'الدوري الهولندي',
+    en: 'Eredivisie',
+    match: /eredivisie|الدوري\sالهولندي|أياكس|آيندهوفن|ajax|psv/i,
+  },
+  {
+    key: 'Primeira Liga',
+    ar: 'الدوري البرتغالي',
+    en: 'Primeira Liga',
+    match: /primeira\sliga|الدوري\sالبرتغالي|بنفيكا|بورتو|سبورتينغ|benfica|porto|sporting/i,
+  },
+  {
+    key: 'Super Lig',
+    ar: 'الدوري التركي',
+    en: 'Süper Lig',
+    match: /s[uü]per\slig|الدوري\sالتركي|غلطة\sسراي|فنربخشة|بشكتاش|galatasaray|fenerbahce/i,
+  },
+  {
     key: 'Arab Football',
     ar: 'الكرة العربية والإفريقية',
     en: 'Arab & African Football',
     match:
-      /egyptian\spremier|al\s?ahly|zamalek|الترجي|الرجاء|الوداد|الدوري\sالمصري|الأهلي\sالمصري|الزمالك|كأس\sالعرش|أبطال\sإفريقيا/i,
+      /الترجي|الرجاء|الوداد|كأس\sالعرش|أبطال\sإفريقيا/i,
   },
   {
     key: "Women's Football",

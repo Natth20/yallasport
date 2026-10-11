@@ -1,19 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Compass, Layers, Sparkles, TrendingUp } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import styles from './front-design.module.css';
 
 const SECTIONS = [
-  { href: '/news', ar: 'الأخبار', en: 'News' },
-  { href: '/matches', ar: 'المباريات', en: 'Matches' },
+  { href: '/news', ar: 'أهم العناوين والتقارير', en: 'Top Reports' },
+  { href: '/news#news-wall', ar: 'مستجدات الساعة', en: 'Latest News' },
+  { href: '/matches', ar: 'أبرز المباريات', en: 'Top Matches' },
   { href: '/live', ar: 'البث المباشر', en: 'Live' },
-  { href: '/leagues', ar: 'الدوريات', en: 'Leagues' },
-  { href: '/transfers', ar: 'الميركاتو', en: 'Transfers' },
-  { href: '/stats', ar: 'الإحصائيات', en: 'Stats' },
-  { href: '/videos', ar: 'الفيديو والملخصات', en: 'Videos' },
-  { href: '/videos#reels', ar: 'الريلز', en: 'Reels' },
+  { href: '/leagues', ar: 'أخبار الدوريات الكبرى', en: 'Major Leagues' },
+  { href: '/videos', ar: 'الفيديوهات والملخصات', en: 'Videos' },
+  { href: '/videos/reels', ar: 'الريلز', en: 'Reels' },
+  { href: '/photos', ar: 'معرض الصور', en: 'Photos' },
+  { href: '/transfers', ar: 'الميركاتو والانتقالات', en: 'Transfers' },
+  { href: '/stats', ar: 'الإحصائيات والترتيب', en: 'Stats' },
   { href: '/compare-players', ar: 'مقارنة اللاعبين', en: 'Compare' },
 ];
 
@@ -26,18 +28,48 @@ const HOT_TAGS = [
   { ar: 'محمد صلاح', en: 'Salah', query: 'محمد صلاح' },
 ];
 
+function formatSourceName(raw: string, ar: boolean): string {
+  const name = raw.trim();
+  if (/^بي بي سي|bbc/i.test(name)) return ar ? 'BBC عربي' : 'BBC Sport';
+  if (/^آر تي|^rt\b/i.test(name)) return ar ? 'RT العربية' : 'RT Sport';
+  if (/^فرانس 24|^france\s*24/i.test(name)) return ar ? 'فرانس 24' : 'France 24';
+  if (/^سكاي نيوز|^sky\s*news/i.test(name)) return ar ? 'سكاي نيوز' : 'Sky News';
+  if (/^الجزيرة|^al\s*jazeera/i.test(name)) return ar ? 'الجزيرة نت' : 'Al Jazeera';
+  if (/^dw/i.test(name)) return ar ? 'DW عربية' : 'DW Sports';
+  if (/^the\s*guardian/i.test(name)) return 'The Guardian';
+  return name.replace(/\s*-\s*(رياضة|Sport|Football)$/i, '').trim();
+}
+
 export function FrontUniversalSearchBar({ locale, sources = [] }: { locale: string; sources?: string[] }) {
   const ar = locale === 'ar';
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const chips = [ar ? 'جميع المصادر' : 'All Sources', ...sources.slice(0, 10)];
-  const [source, setSource] = useState(chips[0]);
+  const allLabel = ar ? 'جميع المصادر' : 'All Sources';
+  const [activeSourceKey, setActiveSourceKey] = useState<string>('ALL');
 
-  const handleSearch = (searchTerm: string) => {
+  const normalizedSources = useMemo(() => {
+    const seen = new Set<string>();
+    const list: { key: string; label: string; queryKey: string }[] = [
+      { key: 'ALL', label: allLabel, queryKey: '' },
+    ];
+    for (const src of sources) {
+      const cleanLabel = formatSourceName(src, ar);
+      if (!seen.has(cleanLabel)) {
+        seen.add(cleanLabel);
+        list.push({ key: src, label: cleanLabel, queryKey: src });
+      }
+    }
+    return list;
+  }, [sources, ar, allLabel]);
+
+  const handleSearch = (searchTerm: string, chosenSourceKey = activeSourceKey) => {
     const q = searchTerm.trim();
     const params = new URLSearchParams();
     if (q) params.set('q', q);
-    if (source && source !== chips[0]) params.set('source', source);
+    const chosen = normalizedSources.find((s) => s.key === chosenSourceKey);
+    if (chosen && chosen.queryKey) {
+      params.set('source', chosen.queryKey);
+    }
     router.push(`/news${params.toString() ? `?${params}` : ''}`);
   };
 
@@ -64,7 +96,7 @@ export function FrontUniversalSearchBar({ locale, sources = [] }: { locale: stri
           className={styles.searchBarInput}
         />
         <button type="submit" className={styles.searchBarSubmitBtn}>
-          <Sparkles className="w-3.5 h-3.5 inline-block me-1.5" />
+          <Sparkles className="w-3.5 h-3.5 inline-block p-0.5 me-1.5" />
           {ar ? 'بحث فوري' : 'Search'}
         </button>
       </form>
@@ -104,26 +136,32 @@ export function FrontUniversalSearchBar({ locale, sources = [] }: { locale: stri
       </div>
 
       {/* Verified News Sources Filter */}
-      {sources.length > 0 ? (
+      {normalizedSources.length > 1 ? (
         <div className={styles.sourcesChipsRow} aria-label={ar ? 'المصادر المعتمدة' : 'Sources'}>
           <span className={styles.chipsRowLabel}>
             <Layers className="w-3.5 h-3.5 text-emerald-400" />
             {ar ? 'المصادر:' : 'Sources:'}
           </span>
-          {chips.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => {
-                setSource(chip);
-                if (chip !== chips[0]) router.push(`/news?source=${encodeURIComponent(chip)}`);
-                else router.push('/news');
-              }}
-              className={`${styles.sourceChip} ${source === chip ? styles.sourceChipActive : ''}`}
-            >
-              {chip}
-            </button>
-          ))}
+          {normalizedSources.map((item) => {
+            const isActive = activeSourceKey === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => {
+                  setActiveSourceKey(item.key);
+                  if (item.queryKey) {
+                    router.push(`/news?source=${encodeURIComponent(item.queryKey)}`);
+                  } else {
+                    router.push('/news');
+                  }
+                }}
+                className={`${styles.sourceChip} ${isActive ? styles.sourceChipActive : ''}`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
       ) : null}
     </div>

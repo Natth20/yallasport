@@ -363,8 +363,16 @@ export function YoutubeDesk({
         {!isReel && queue.length > 1 ? (
           <aside className={styles['yt-queue']} aria-label={ar ? 'قائمة العرض' : 'Now playing'}>
             <header className={styles['yt-queue-head']}>
-              <p>{ar ? 'الآن على الشاشة' : 'On screen'}</p>
-              <h3>{ar ? 'قائمة العرض' : 'Programme'}</h3>
+              <div className={styles['yt-queue-head-title']}>
+                <span className={styles['yt-queue-kicker']}>
+                  <Radio size={12} className={styles['yt-queue-pulse-icon']} aria-hidden />
+                  {ar ? 'الآن على الشاشة' : 'On screen'}
+                </span>
+                <h3>{ar ? 'قائمة العرض' : 'Programme'}</h3>
+              </div>
+              <span className={styles['yt-queue-count-badge']}>
+                {queue.length} {ar ? 'مقاطع' : 'clips'}
+              </span>
             </header>
             <ol className={styles['yt-queue-list']}>
               {queue.map((clip, index) => {
@@ -377,17 +385,33 @@ export function YoutubeDesk({
                       onClick={() => show(clip.youtubeId)}
                       aria-pressed={on}
                     >
-                      <span className={styles['yt-queue-num']}>{String(index + 1).padStart(2, '0')}</span>
+                      <span className={styles['yt-queue-num']}>
+                        {on ? (
+                          <span className={styles['yt-playing-bars']} aria-hidden>
+                            <span />
+                            <span />
+                            <span />
+                          </span>
+                        ) : (
+                          String(index + 1).padStart(2, '0')
+                        )}
+                      </span>
                       <span className={styles['yt-queue-thumb']}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={clip.thumbnailUrl || `https://i.ytimg.com/vi/${clip.youtubeId}/hqdefault.jpg`}
                           alt=""
+                          loading="lazy"
                         />
+                        <span className={styles['yt-queue-thumb-play']}>
+                          <Play size={10} fill="currentColor" />
+                        </span>
                       </span>
                       <span className={styles['yt-queue-copy']}>
                         <b>{clip.title}</b>
-                        <small>{clip.channelTitle}</small>
+                        <span className={styles['yt-queue-channel-pill']}>
+                          {clip.channelTitle}
+                        </span>
                       </span>
                     </button>
                   </li>

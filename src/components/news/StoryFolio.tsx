@@ -221,13 +221,13 @@ export function StoryFolio({
               locale={locale}
               kicker={pick(locale, 'نفس الباب', 'Same desk')}
               title={pick(locale, 'تقارير ذات صلة', 'Related reports')}
-              stories={related.slice(0, 6)}
+              stories={related.slice(0, 4)}
             />
             <StoryRail
               locale={locale}
               kicker={trendingIsLive ? pick(locale, 'ما يتداول الآن', 'In circulation') : pick(locale, 'أحدث الأخبار', 'Latest')}
               title={trendingIsLive ? pick(locale, 'آخر ست ساعات', 'Last six hours') : pick(locale, 'أحدث التقارير', 'Newest reports')}
-              stories={popular.slice(0, 5)}
+              stories={popular.slice(0, 3)}
             />
           </aside>
         </div>

@@ -852,6 +852,30 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
     if (pick.length > topScorers.length) topScorers = pick;
   }
 
+  if (topScorers.length === 0) {
+    const { getCuratedLeagueStats } = await import('@/lib/stats/known-league-stats');
+    const curated = getCuratedLeagueStats(league.externalId, 'goals');
+    if (curated.length > 0) {
+      topScorers = curated.map((row) => ({
+        goals: row.value,
+        assists: row.secondary,
+        player: {
+          id: row.slug || row.name,
+          name: row.name,
+          slug: row.slug || '',
+          photoUrl: row.photoUrl,
+          position: row.position,
+        },
+        team: {
+          id: row.teamSlug || '',
+          name: row.teamName || '',
+          slug: row.teamSlug || '',
+          logoUrl: row.teamLogo,
+        },
+      }));
+    }
+  }
+
   const assistFromApi = topScorers
     .filter((row) => typeof row.assists === 'number' && (row.assists as number) > 0)
     .map((row) => ({
@@ -874,8 +898,32 @@ export const loadLeagueDossier = cache(async function loadLeagueDossier(
     })
     .filter(Boolean) as LeagueDossierData['topAssists'];
 
-  const topAssists =
+  let topAssists =
     assistFromApi.length > 0 ? assistFromApi.slice(0, 10) : assistFromEvents.slice(0, 10);
+
+  if (topAssists.length === 0) {
+    const { getCuratedLeagueStats } = await import('@/lib/stats/known-league-stats');
+    const curatedAssists = getCuratedLeagueStats(league.externalId, 'assists');
+    if (curatedAssists.length > 0) {
+      topAssists = curatedAssists.map((row) => ({
+        assists: row.value,
+        player: {
+          id: row.slug || row.name,
+          name: row.name,
+          slug: row.slug || '',
+          photoUrl: row.photoUrl,
+          position: row.position,
+        },
+        name: row.name,
+        team: {
+          id: row.teamSlug || '',
+          name: row.teamName || '',
+          slug: row.teamSlug || '',
+          logoUrl: row.teamLogo,
+        },
+      }));
+    }
+  }
 
   const cardMap = new Map<
     string,

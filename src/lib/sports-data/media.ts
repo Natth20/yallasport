@@ -15,3 +15,11 @@ export function apiSportsCoachPhoto(externalId?: string | null, existing?: strin
   if (!id) return null;
   return `https://media.api-sports.io/football/coachs/${id}.png`;
 }
+
+export function apiSportsVenuePhoto(venueId?: string | number | null, existing?: string | null) {
+  if (existing) return existing;
+  if (!venueId) return null;
+  const id = numericId(String(venueId));
+  if (!id) return null;
+  return `https://media.api-sports.io/football/venues/${id}.png`;
+}

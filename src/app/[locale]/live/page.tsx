@@ -382,35 +382,84 @@ async function LivePageBody({
             <section className={styles.bandSection}>
               <div className={styles.bandHead}>
                 <div className={styles.bandMark}>
-                  <h2 className={styles.bandTitle}>{pick(locale, 'مباشر الآن', 'Live now')}</h2>
+                  <div className={styles.livePulseDot} />
+                  <div>
+                    <h2 className={styles.bandTitle}>{pick(locale, 'مباريات تجري الآن مباشرة ⚽', 'Live Matches In Play Now ⚽')}</h2>
+                    <p className={styles.bandLead}>{pick(locale, 'نتائج لحظية وتحديثات حية من قلب الملعب', 'Real-time scores & instant pitch updates')}</p>
+                  </div>
                 </div>
-                <Link href="/matches?status=live" className="text-xs font-bold text-[var(--ys-orange)] hover:underline">
-                  {pick(locale, 'كل المباريات المباشرة', 'All live matches')}
+                <Link href="/matches?status=live" className={styles.viewAllLiveLink}>
+                  <span>{pick(locale, 'كل المباريات المباشرة', 'All live matches')}</span>
+                  <span className="text-sm font-black">{locale === 'ar' ? '←' : '→'}</span>
                 </Link>
               </div>
-              <ul className="grid gap-3 md:grid-cols-2">
-                {deskLive.map((match) => (
-                  <li key={match.id}>
-                    <Link href={`/match/${match.id}`} className="block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
-                      <p className="text-xs text-muted-foreground">
-                        {localizeLeagueName(locale, match.league, match.league.name)}
-                        {match.round ? ` · ${localizeRoundName(locale, match.round)}` : ''}
-                      </p>
-                      <p className="mt-2 flex items-center justify-between gap-3 font-bold">
-                        <span>{localizeTeamName(locale, match.homeTeam.name)}</span>
-                        <span>{formatScore(match.homeScore, match.awayScore)}</span>
-                      </p>
-                      <p className="mt-1 flex items-center justify-between gap-3 font-bold">
-                        <span>{localizeTeamName(locale, match.awayTeam.name)}</span>
-                        <span className="text-xs font-semibold text-red-500">
-                          {pick(locale, 'مباشر', 'LIVE')}
-                          {match.minute != null ? ` ${match.minute}′` : ''}
+
+              <div className={styles.liveMatrixGrid}>
+                {deskLive.map((match) => {
+                  const homeName = localizeTeamName(locale, match.homeTeam.name);
+                  const awayName = localizeTeamName(locale, match.awayTeam.name);
+                  const leagueName = localizeLeagueName(locale, match.league, match.league.name);
+
+                  return (
+                    <Link key={match.id} href={`/match/${match.id}`} className={styles.liveMatchCard}>
+                      <div className={styles.liveMatchHeader}>
+                        <div className={styles.liveMatchLeague}>
+                          {match.league.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={match.league.logoUrl} alt="" className={styles.liveLeagueLogo} />
+                          ) : null}
+                          <span className={styles.liveLeagueName}>{leagueName}</span>
+                          {match.round ? <span className={styles.liveRoundDot}>·</span> : null}
+                          {match.round ? <span className={styles.liveRoundText}>{localizeRoundName(locale, match.round)}</span> : null}
+                        </div>
+
+                        <span className={styles.liveMinuteBadge}>
+                          <span className={styles.liveMiniDot} />
+                          {match.minute != null ? `${match.minute}′` : pick(locale, 'مباشر', 'LIVE')}
                         </span>
-                      </p>
+                      </div>
+
+                      <div className={styles.liveDuelRow}>
+                        {/* Home Team */}
+                        <div className={styles.liveTeamSide}>
+                          {match.homeTeam.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={match.homeTeam.logoUrl} alt="" className={styles.liveTeamCrest} />
+                          ) : (
+                            <span className={styles.liveCrestFallback}>{homeName.charAt(0)}</span>
+                          )}
+                          <span className={styles.liveTeamTitle}>{homeName}</span>
+                        </div>
+
+                        {/* Digital Scoreboard */}
+                        <div className={styles.liveScoreBox}>
+                          <span className={styles.liveScoreDigits}>
+                            {formatScore(match.homeScore, match.awayScore)}
+                          </span>
+                        </div>
+
+                        {/* Away Team */}
+                        <div className={styles.liveTeamSide}>
+                          {match.awayTeam.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={match.awayTeam.logoUrl} alt="" className={styles.liveTeamCrest} />
+                          ) : (
+                            <span className={styles.liveCrestFallback}>{awayName.charAt(0)}</span>
+                          )}
+                          <span className={styles.liveTeamTitle}>{awayName}</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.liveCardFooter}>
+                        <span className={styles.liveEnterHint}>
+                          {pick(locale, 'دخول مركز المباراة والتفاصيل', 'Enter Match Center')}
+                        </span>
+                        <span className={styles.liveEnterArrow}>{locale === 'ar' ? '←' : '→'}</span>
+                      </div>
                     </Link>
-                  </li>
-                ))}
-              </ul>
+                  );
+                })}
+              </div>
             </section>
           ) : null}
 

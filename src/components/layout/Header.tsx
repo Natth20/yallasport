@@ -61,24 +61,23 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
     { name: t('common.leagues') || 'البطولات', href: '/leagues' },
     { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live', badge: 'LIVE' },
     { name: t('common.video') || 'الفيديو', href: '/videos' },
-    { name: ar ? 'الريلز' : 'Reels', href: '/videos#reels' },
+    { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
   ];
 
   const moreGroups: NavGroup[] = [
     {
-      label: ar ? 'المزيد' : 'More',
+      label: ar ? 'أقسام الموقع' : 'Sections',
       items: [
-        { name: ar ? 'الفرق' : 'Teams', href: '/leagues' },
         { name: t('common.transfers') || 'الانتقالات', href: '/transfers' },
-        { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
         { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
         { name: t('common.club_compare') || 'مقارنة الأندية', href: '/compare' },
         { name: t('common.photos') || 'الصور', href: '/photos' },
+        { name: ar ? 'دليل التلفزيون' : 'TV Guide', href: '/tv-guide' },
+        { name: ar ? 'لوحة الصدارة' : 'Leaderboard', href: '/leaderboard' },
       ],
     },
   ];
 
-  const moreItems = moreGroups.flatMap((group) => group.items);
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
   return (
@@ -149,30 +148,6 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
                   </Link>
                 );
               })}
-
-              <Dropdown>
-                <DropdownTrigger
-                  className={`${styles.navItem} ${moreItems.some((item) => isActive(item.href)) ? styles.active : ''}`}
-                  aria-label={ar ? 'المزيد' : 'More'}
-                >
-                  {ar ? 'المزيد' : 'More'}
-                </DropdownTrigger>
-                <DropdownMenu placement="bottom-start" className={styles.moreMenu}>
-                  {moreGroups.map((group) => (
-                    <DropdownGroup key={group.label} label={group.label}>
-                      {group.items.map((item) => (
-                        <DropdownLink
-                          key={`${item.name}-${item.href}`}
-                          href={item.href}
-                          className={isActive(item.href) ? styles.moreActive : undefined}
-                        >
-                          {item.name}
-                        </DropdownLink>
-                      ))}
-                    </DropdownGroup>
-                  ))}
-                </DropdownMenu>
-              </Dropdown>
             </nav>
 
             <div className={styles.tray}>
@@ -228,13 +203,6 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
                   </Link>
                 );
               })}
-              <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(true)}
-                className={styles.mobileNavItem}
-              >
-                <span>{ar ? 'المزيد' : 'More'}</span>
-              </button>
             </div>
           </nav>
         </header>

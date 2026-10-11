@@ -1,0 +1,705 @@
+/* ==========================================================================
+   YALLA SPORT - ROYAL LEAGUE LUXURY SUITE
+   Ultra-luxurious design tokens for Competition Dossier, Title Race,
+   Standings, Scorers, and Championship Archive.
+   ========================================================================== */
+
+/* ---------------- HERO SHOWCASE: TITLE RACE & UPCOMING FIXTURES ---------------- */
+.climaxShowcase {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-block: 1.5rem 2rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .climaxShowcase {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Card Shell */
+.luxuryCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxuryCard:hover {
+  border-color: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* Ambient glow accent behind cards */
+.luxuryCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.6), transparent);
+  opacity: 0.8;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cardTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cardIconBox {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.cardIconBoxGreen {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.cardSubtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.cardBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* ---------------- TITLE RACE DUEL ---------------- */
+.raceDuelGrid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.raceContender {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s ease;
+}
+
+.raceContender:hover {
+  transform: translateY(-2px);
+}
+
+.contenderRankBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.rankLeader {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+}
+
+.rankChaser {
+  background: rgba(148, 163, 184, 0.15);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.contenderCrestWrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: 0.5rem;
+  border-radius: 1.2rem;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.rankLeader .contenderCrestWrap {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.2);
+}
+
+.contenderName {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #f8fafc;
+  max-width: 8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contenderPoints {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.contenderPoints strong {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fbbf24;
+  font-variant-numeric: tabular-nums;
+}
+
+.contenderPoints span {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* VS / Gap Bridge */
+.raceBridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gapPill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.gapDiffNumber {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #fbbf24;
+  line-height: 1;
+}
+
+.gapLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fef08a;
+  text-transform: uppercase;
+}
+
+.raceFormMeta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.metaStatBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(30, 41, 59, 0.4);
+  font-size: 0.75rem;
+}
+
+.metaStatBox span {
+  color: #94a3b8;
+}
+
+.metaStatBox strong {
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- UPCOMING MATCHES LIST ---------------- */
+.fixturesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fixtureTicket {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.fixtureTicket:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(245, 158, 11, 0.3);
+  transform: translateX(-3px);
+}
+
+[dir="ltr"] .fixtureTicket:hover {
+  transform: translateX(3px);
+}
+
+.ticketTeams {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ticketTeamRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticketMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.ticketRound {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+}
+
+.ticketTime {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- STANDINGS PODIUM (TOP 3) ---------------- */
+.podiumSuite {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: end;
+  margin-block: 1rem 1.75rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .podiumSuite {
+    grid-template-columns: 1fr 1.12fr 1fr;
+  }
+}
+
+.podiumBox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.25rem 1.5rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.88) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.podiumBox:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7);
+}
+
+.goldChampion {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0.92) 100%);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 12px 35px -8px rgba(245, 158, 11, 0.25);
+  padding-top: 2.5rem;
+  padding-bottom: 2rem;
+}
+
+.goldChampion:hover {
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 24px 50px -10px rgba(245, 158, 11, 0.4);
+}
+
+.silverChaser {
+  background: linear-gradient(180deg, rgba(203, 213, 225, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(203, 213, 225, 0.3);
+}
+
+.bronzeThird {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.podiumCrownBadge {
+  position: absolute;
+  top: 1rem;
+  inset-inline-start: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+.badgeGold {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badgeSilver {
+  background: rgba(226, 232, 240, 0.12);
+  color: #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.3);
+}
+
+.badgeBronze {
+  background: rgba(249, 115, 22, 0.12);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.podiumCrestWrap {
+  margin-bottom: 0.85rem;
+  padding: 0.65rem;
+  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.goldChampion .podiumCrestWrap {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+}
+
+.podiumBox:hover .podiumCrestWrap {
+  transform: scale(1.06);
+}
+
+.podiumClubName {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 0.35rem;
+}
+
+.podiumMetrics {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.podiumMetrics strong {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fbbf24;
+  font-variant-numeric: tabular-nums;
+}
+
+.podiumMetrics span {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* ---------------- ROYAL STANDINGS TABLE ---------------- */
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 1.25rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.royalTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 48rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.royalTable th {
+  padding: 0.85rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.5);
+  text-align: center;
+}
+
+.royalTable th:first-child,
+.royalTable th:nth-child(2) {
+  text-align: start;
+}
+
+.tableRow {
+  transition: background 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tableRow:hover {
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.tableRow td {
+  padding: 0.75rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tableRow td:first-child,
+.tableRow td:nth-child(2) {
+  text-align: start;
+}
+
+.rankPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+/* Zone glows */
+.zoneCl {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.zoneEl {
+  background: rgba(59, 130, 246, 0.2) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.zoneRel {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.clubCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #f8fafc;
+}
+
+.clubCell:hover strong {
+  color: #fbbf24;
+}
+
+.clubCell strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: color 0.2s ease;
+}
+
+.tablePointsBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.5rem;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* ---------------- ARCHIVE TROPHY VAULT ---------------- */
+.trophyVaultGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.vaultCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.vaultCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 16px 36px -10px rgba(245, 158, 11, 0.2);
+}
+
+.vaultCardCurrent {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(245, 158, 11, 0.25);
+}
+
+.vaultCardCurrent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 2px;
+  background: #fbbf24;
+}
+
+.vaultHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.vaultSeasonYear {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.vaultChampBody {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vaultChampInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vaultChampLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+.vaultChampName {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vaultChampStats {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}

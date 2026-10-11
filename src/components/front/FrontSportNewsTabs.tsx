@@ -10,19 +10,36 @@ import { FrontShareBtn } from './FrontShareBtn';
 import styles from './front-design.module.css';
 
 const TABS = [
-  { id: 'all', ar: 'كل الدوريات', en: 'All Leagues' },
-  { id: 'Premier League', ar: 'الدوري الإنجليزي', en: 'Premier League' },
-  { id: 'La Liga', ar: 'الدوري الإسباني', en: 'La Liga' },
-  { id: 'Saudi League', ar: 'دوري روشن السعودي', en: 'Saudi Pro League' },
-  { id: 'Champions League', ar: 'دوري أبطال أوروبا', en: 'Champions League' },
-  { id: 'International', ar: 'الكرة العالمية', en: 'World Football' },
+  { id: 'all', emoji: '⚽', ar: 'الأهم والأكثر متابعة', en: 'Top & Trending', match: null },
+  { id: 'Champions League', emoji: '🏆', ar: 'دوري أبطال أوروبا', en: 'Champions League', match: /champions\sleague|uefa|دوري\s*أبطال|دوري\sالأبطال/i },
+  { id: 'Premier League', emoji: '🏴', ar: 'الدوري الإنجليزي الممتاز', en: 'Premier League', match: /premier\sleague|\bepl\b|arsenal|liverpool|manchester|chelsea|tottenham|الدوري\sالإنجليزي|البريميرليغ/i },
+  { id: 'La Liga', emoji: '🇪🇸', ar: 'الدوري الإسباني', en: 'La Liga', match: /la\s?liga|real\smadrid|barcelona|atletico|الدوري\sالإسباني|الليغا|ريال\sمدريد|برشلونة/i },
+  { id: 'Serie A', emoji: '🇮🇹', ar: 'الدوري الإيطالي', en: 'Serie A', match: /serie\sa\b|juventus|\bmilan\b|inter\smilan|napoli|\broma\b|الدوري\sالإيطالي|يوفنتوس|ميلان|إنتر/i },
+  { id: 'Bundesliga', emoji: '🇩🇪', ar: 'الدوري الألماني', en: 'Bundesliga', match: /bundesliga|bayern|borussia\sdortmund|leverkusen|الدوري\sالألماني|بايرن|دورتموند/i },
+  { id: 'Ligue 1', emoji: '🇫🇷', ar: 'الدوري الفرنسي', en: 'Ligue 1', match: /ligue\s?1|paris\ssaint-germain|\bpsg\b|marseille|الدوري\sالفرنسي|باريس\sسان\sجيرمان/i },
+  { id: 'Saudi League', emoji: '🇸🇦', ar: 'الدوري السعودي', en: 'Saudi Pro League', match: /saudi|roshn|al\s?hilal|al\s?nassr|al\s?ittihad|دوري\sروشن|الدوري\sالسعودي|الهلال|النصر/i },
+  { id: 'MLS', emoji: '🇺🇸', ar: 'الدوري الأمريكي MLS', en: 'MLS', match: /mls\b|major\sleague\ssoccer|الدوري\sالأمريكي|إنتر\sميامي|inter\smiami/i },
+  { id: 'Brasileirao', emoji: '🇧🇷', ar: 'الدوري البرازيلي', en: 'Brasileirão', match: /brasileir[aã]o|brazilian\sleague|الدوري\sالبرازيلي|فلامنغو|بالميراس|flamengo|palmeiras/i },
+  { id: 'Argentine Primera', emoji: '🇦🇷', ar: 'الدوري الأرجنتيني', en: 'Argentine Primera', match: /argentine|الدوري\sالأرجنتيني|بوكا\sجونيورز|ريفر\sبليت|boca|river\splate/i },
+  { id: 'Eredivisie', emoji: '🇳🇱', ar: 'الدوري الهولندي', en: 'Eredivisie', match: /eredivisie|الدوري\sالهولندي|أياكس|آيندهوفن|ajax|psv/i },
+  { id: 'Primeira Liga', emoji: '🇵🇹', ar: 'الدوري البرتغالي', en: 'Primeira Liga', match: /primeira\sliga|الدوري\sالبرتغالي|بنفيكا|بورتو|سبورتينغ|benfica|porto|sporting/i },
+  { id: 'Super Lig', emoji: '🇹🇷', ar: 'الدوري التركي', en: 'Süper Lig', match: /s[uü]per\slig|الدوري\sالتركي|غلطة\sسراي|فنربخشة|بشكتاش|galatasaray|fenerbahce/i },
+  { id: 'Egyptian Premier', emoji: '🇪🇬', ar: 'الدوري المصري', en: 'Egyptian Premier League', match: /egyptian|الدوري\sالمصري|الأهلي\sالمصري|الزمالك|بيراميدز|al\s?ahly|zamalek/i },
 ] as const;
 
 export function FrontSportNewsTabs({ locale, stories }: { locale: string; stories: FrontStory[] }) {
   const ar = locale === 'ar';
-  const [tab, setTab] = useState<(typeof TABS)[number]['id']>('all');
+  const [tab, setTab] = useState<string>('all');
   const shown = useMemo(() => {
-    const pool = tab === 'all' ? stories : stories.filter((story) => story.category === tab);
+    if (tab === 'all') return stories.slice(0, 4);
+    const activeTabObj = TABS.find((t) => t.id === tab);
+    const pool = stories.filter((story) => {
+      if (story.category === tab) return true;
+      if (activeTabObj?.match) {
+        return activeTabObj.match.test(story.title || '') || activeTabObj.match.test(story.slug || '');
+      }
+      return false;
+    });
     return pool.slice(0, 4);
   }, [stories, tab]);
 
@@ -40,7 +57,7 @@ export function FrontSportNewsTabs({ locale, stories }: { locale: string; storie
               {ar ? 'أخبار كرة القدم والدوريات الكبرى' : 'Football & Major Leagues News'}
             </h3>
             <p className={styles.ledgerSubtitle}>
-              {ar ? 'تغطية مفصلة لأخبار كبرى الدوريات الأوروبية والعربية لحظة بلحظة.' : 'In-depth reporting across top European and Arab leagues.'}
+              {ar ? 'تغطية مفصلة لأخبار كبرى الدوريات الأوروبية والعربية والعالمية لحظة بلحظة.' : 'In-depth reporting across top European, Arab, and global leagues.'}
             </p>
           </div>
         </div>
@@ -58,7 +75,8 @@ export function FrontSportNewsTabs({ locale, stories }: { locale: string; storie
             className={`${styles.sportNewsTabBtn} ${tab === item.id ? styles.sportNewsTabActive : ''}`}
             onClick={() => setTab(item.id)}
           >
-            {ar ? item.ar : item.en}
+            <span className={styles.tabEmoji}>{item.emoji}</span>
+            <span>{ar ? item.ar : item.en}</span>
           </button>
         ))}
       </div>

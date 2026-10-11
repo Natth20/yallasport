@@ -9,9 +9,173 @@
   display: grid;
   gap: 1.15rem;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   color: var(--foreground);
   padding-bottom: 0.4rem;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard {
+    gap: 0.85rem;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
+
+/* ---- Matchday Console & Pitch Strip ---- */
+.daySalon {
+  width: 100%;
+  max-width: 100%;
+}
+
+.dayFrame {
+  border-radius: 1.5rem;
+}
+
+.pitchStrip {
+  display: grid;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pitchStripHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.25rem;
+}
+
+.pitchStripHead p {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ys-orange);
+}
+
+.pitchStripHead h3 {
+  margin: 0.1rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--foreground);
+}
+
+.pitchStripHead span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 15%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.7rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.pitchStripList {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  overflow-x: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.35rem 0.35rem 0.65rem;
+  scroll-padding-inline: 0.5rem;
+  list-style: none;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.pitchStripList::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.pitchCard {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+  min-width: 13.5rem;
+  text-align: start;
+}
+
+.pitchCard:hover {
+  border-color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 10%, var(--card));
+  transform: translateY(-2px);
+}
+
+.pitchCardOn {
+  border-color: var(--ys-orange) !important;
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--ys-orange) 24%, transparent), transparent 65%),
+    color-mix(in srgb, var(--ys-orange) 12%, var(--card)) !important;
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--ys-orange) 22%, transparent);
+}
+
+.pitchNum {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--ys-orange) 18%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.72rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.pitchCardOn .pitchNum {
+  background: var(--ys-orange);
+  color: #0b0b0b;
+}
+
+.pitchCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pitchCopy b {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 11rem;
+}
+
+.pitchCopy i {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 11rem;
 }
 
 /* ---- Floodlight Hero ---- */
@@ -352,6 +516,14 @@
     inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
 }
 
+@media (max-width: 640px) {
+  .dock {
+    padding: 0.75rem 0.65rem 0.85rem;
+    border-radius: 1.25rem;
+    gap: 0.75rem;
+  }
+}
+
 .dockMeta {
   display: flex;
   flex-wrap: wrap;
@@ -362,24 +534,47 @@
 
 .dateStrip {
   display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
   overflow-x: auto;
-  padding-bottom: 0.35rem;
-  scrollbar-width: none;
+  padding: 0.2rem 0.35rem 0.45rem;
+  scroll-padding-inline: 0.35rem;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .dateStrip::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+@media (min-width: 900px) {
+  .dateStrip {
+    gap: 0.65rem;
+    overflow-x: visible;
+    padding: 0.3rem 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .dateStrip {
+    gap: 0.35rem;
+    padding-bottom: 0.25rem;
+  }
 }
 
 .navArrow {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
+  width: 2.2rem;
+  height: 3.8rem;
   flex-shrink: 0;
-  border-radius: 0.9rem;
+  border-radius: 1rem;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--foreground) 3%, var(--card));
   color: var(--muted-foreground);
@@ -387,10 +582,26 @@
   text-decoration: none;
 }
 
+@media (min-width: 900px) {
+  .navArrow {
+    width: 2.85rem;
+    height: 4.4rem;
+    border-radius: 1.15rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .navArrow {
+    width: 1.85rem;
+    height: 3.3rem;
+    border-radius: 0.75rem;
+  }
+}
+
 .navArrow:hover {
   border-color: var(--ys-orange);
   color: var(--ys-orange);
-  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+  background: color-mix(in srgb, var(--ys-orange) 10%, var(--card));
 }
 
 .dateChip {
@@ -399,16 +610,52 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.28rem;
-  min-width: 5.2rem;
-  flex: 1 0 auto;
-  padding: 0.6rem 0.65rem;
+  gap: 0.2rem;
+  min-width: 4.8rem;
+  height: 3.8rem;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  padding: 0.45rem 0.65rem;
   border-radius: 1rem;
   border: 1px solid var(--border);
   background: var(--card);
   text-decoration: none;
   color: var(--foreground);
-  transition: all 180ms ease;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+@media (min-width: 900px) {
+  .dateChip {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 4.4rem;
+    border-radius: 1.15rem;
+    padding: 0.5rem 0.65rem;
+    gap: 0.25rem;
+  }
+
+  .dateChip .chipDay {
+    font-size: 0.78rem;
+  }
+
+  .dateChip .chipNumber {
+    font-size: 1.45rem;
+  }
+
+  .dateChip .chipCount {
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .dateChip {
+    min-width: 4rem;
+    height: 3.3rem;
+    padding: 0.25rem 0.4rem;
+    border-radius: 0.75rem;
+    gap: 0.1rem;
+  }
 }
 
 .dateChip:hover {
@@ -418,29 +665,34 @@
 
 .dateChipActive {
   composes: dateChip;
-  background: linear-gradient(135deg, var(--ys-orange), #ea580c);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 8px 20px -8px rgba(249, 115, 22, 0.7);
+  background: linear-gradient(135deg, #ff7b00 0%, #e05e00 100%) !important;
+  border-color: rgba(255, 140, 0, 0.8) !important;
+  color: #0b0b0b !important;
+  -webkit-text-fill-color: #0b0b0b !important;
+  box-shadow: 0 8px 22px rgba(249, 115, 22, 0.5) !important;
+  transform: scale(1.02);
 }
 
 .dateChipActive .chipDay,
+.dateChipActive .chipNumber,
 .dateChipActive .chipCount {
-  color: rgba(255, 255, 255, 0.85);
+  color: #0b0b0b !important;
+  -webkit-text-fill-color: #0b0b0b !important;
+  font-weight: 900;
 }
 
 .chipDay {
-  font-size: 0.62rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 800;
   color: var(--muted-foreground);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   padding-inline: 0.15rem;
   white-space: nowrap;
 }
 
 .chipNumber {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -458,35 +710,60 @@
 /* ---- Controls Row (Filters + Search) ---- */
 .controlsRow {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 0.85rem;
   padding-top: 1rem;
   border-top: 1px solid color-mix(in srgb, var(--ys-orange) 12%, var(--border));
 }
 
+@media (min-width: 900px) {
+  .controlsRow {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 .filterPills {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem;
-  border-radius: 0.9rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.3rem;
+  border-radius: 1rem;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--foreground) 2%, var(--card));
+  width: 100%;
+}
+
+.filterPills::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .filterPills {
+    width: auto;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
 }
 
 .filterBtn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
   padding: 0.45rem 0.85rem;
-  border-radius: 0.7rem;
+  border-radius: 0.75rem;
   font-size: 0.76rem;
   font-weight: 800;
   text-decoration: none;
   color: var(--muted-foreground);
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 160ms ease;
 }
 
@@ -518,6 +795,7 @@
   width: 1px;
   height: 1.2rem;
   background: var(--border);
+  flex-shrink: 0;
   margin-inline: 0.2rem;
 }
 
@@ -631,43 +909,83 @@
 .leagueBoard {
   overflow: hidden;
   border-radius: 1.4rem;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
   background: var(--card);
   box-shadow: 0 4px 18px -10px color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
+.leagueHead,
 .leagueHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.95rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
+  background: color-mix(in srgb, var(--ys-orange) 4%, var(--card));
 }
 
+.leagueHeadCopy,
 .leagueInfo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
   min-width: 0;
+  flex: 1;
 }
 
+.leagueOrdinal {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.55rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--ys-orange) 16%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.62rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.leagueCrest,
 .leagueLogo {
-  width: 2.25rem;
-  height: 2.25rem;
-  object-fit: contain;
-  padding: 0.2rem;
-  border-radius: 0.7rem;
-  background: var(--card);
+  width: 2.15rem;
+  height: 2.15rem;
+  flex-shrink: 0;
+  border-radius: 0.65rem;
   border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0.18rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leagueCrest img,
+.leagueLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.leagueMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .leagueTitle {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--foreground);
   text-decoration: none;
+  overflow: visible;
+  white-space: normal;
+  line-height: 1.25;
   transition: color 140ms ease;
 }
 
@@ -675,15 +993,80 @@
   color: var(--ys-orange);
 }
 
-.leagueMeta {
+.leagueMeta span {
   font-size: 0.68rem;
+  font-weight: 700;
   color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+.leagueHeadAside {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.liveChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.livePulse {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulseLive 1.4s infinite;
+}
+
+.stateChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card));
+  color: var(--muted-foreground);
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.countChip {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  color: var(--foreground);
+  font-size: 0.68rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.leagueBody,
 .leagueMatchesList {
   display: grid;
-  gap: 0.4rem;
-  padding: 0.6rem;
+  gap: 0.55rem;
+  padding: 0.75rem;
+}
+
+.leagueBodyLive {
+  background: color-mix(in srgb, #ef4444 2%, var(--card));
 }
 
 /* ---- Sidebar Cards ---- */
@@ -1021,6 +1404,13 @@
 .dayFrame {
   aspect-ratio: 2.15 / 1;
   min-height: 23rem;
+}
+
+@media (max-width: 640px) {
+  .dayFrame {
+    min-height: unset;
+    aspect-ratio: 16 / 10;
+  }
 }
 
 @media (min-width: 900px) {
@@ -1391,8 +1781,8 @@
 .matchdayBoard :global(.fixture-card) {
   position: relative;
   display: grid;
-  gap: 0.75rem;
-  padding: 0.92rem 1rem;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
   border-radius: 1.1rem;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
   background:
@@ -1400,7 +1790,16 @@
     color-mix(in srgb, var(--card) 97%, transparent);
   color: inherit;
   text-decoration: none;
+  min-width: 0;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-card) {
+    padding: 0.72rem 0.75rem;
+    border-radius: 0.95rem;
+    gap: 0.5rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-card:hover) {
@@ -1413,47 +1812,86 @@
 
 .matchdayBoard :global(.fixture-card-body) {
   display: grid;
-  grid-template-columns: 4.75rem minmax(0, 1fr);
+  grid-template-columns: 4.2rem minmax(0, 1fr);
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-card-body) {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: 0.55rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-clock) {
   display: grid;
   place-items: center;
-  min-height: 4.4rem;
-  border-radius: 1rem;
+  min-height: 3.2rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 0.85rem;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
   background: color-mix(in srgb, var(--ys-orange) 7%, transparent);
   color: var(--ys-orange);
-  font-size: 0.8rem;
+  font-size: 0.84rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   text-align: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-clock) {
+    min-height: 2.85rem;
+    font-size: 0.76rem;
+    border-radius: 0.7rem;
+    padding: 0.15rem 0.2rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-clock em) {
   color: #ef4444;
   font-style: normal;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-clock em) {
+    font-size: 0.68rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-clock strong) {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   line-height: 1;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-clock strong) {
+    font-size: 0.86rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-teams) {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 
 .matchdayBoard :global(.fixture-team) {
   display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  grid-template-columns: 1.75rem minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.55rem;
   min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-team) {
+    grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+    gap: 0.45rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-team strong) {
@@ -1464,6 +1902,12 @@
   color: var(--foreground);
   font-size: 0.93rem;
   font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-team strong) {
+    font-size: 0.84rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-team strong.is-muted) {
@@ -1522,6 +1966,14 @@
   text-align: center;
 }
 
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-score-n),
+  .matchdayBoard :global(.fixture-vs) {
+    min-width: 1.5rem;
+    font-size: 0.94rem;
+  }
+}
+
 .matchdayBoard :global(.fixture-vs) {
   color: color-mix(in srgb, var(--foreground) 50%, transparent);
   font-size: 0.72rem;
@@ -1533,31 +1985,35 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.7rem;
-  padding-top: 0.75rem;
+  gap: 0.6rem;
+  padding-top: 0.65rem;
   border-top: 1px solid color-mix(in srgb, var(--ys-orange) 12%, var(--border));
 }
 
 .matchdayBoard :global(.fixture-card-foot p) {
   margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: color-mix(in srgb, var(--foreground) 58%, transparent);
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent);
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .matchdayBoard :global(.fixture-card-foot p) {
+    font-size: 0.66rem;
+  }
 }
 
 .matchdayBoard :global(.fixture-chip) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 1.65rem;
-  padding: 0.25rem 0.65rem;
+  min-height: 1.5rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--ys-orange) 10%, transparent);
   color: var(--ys-orange);
-  font-size: 0.66rem;
+  font-size: 0.64rem;
   font-weight: 900;
 }
 
@@ -1874,4 +2330,88 @@
     grid-template-columns: 1fr;
     gap: 0.35rem;
   }
+}
+
+/* --------------------------------------------------------------------------
+   League Jump Horizontal Strip & Programme Column
+   -------------------------------------------------------------------------- */
+.programmeCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.leagueJump {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.35rem 0.2rem 0.65rem;
+  margin-bottom: 0.85rem;
+  width: 100%;
+}
+
+.leagueJump::-webkit-scrollbar {
+  display: none;
+}
+
+.leagueJumpChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.38rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
+  color: var(--foreground);
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.leagueJumpChip:hover {
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--card));
+  border-color: color-mix(in srgb, var(--ys-orange) 50%, var(--border));
+  transform: translateY(-2px);
+  color: var(--ys-orange);
+}
+
+.leagueJumpChip img {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.leagueJumpChip b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--ys-orange) 15%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.leagueJumpLive {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.leagueJumpLive b {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
 }
