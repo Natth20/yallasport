@@ -1,0 +1,496 @@
+.page {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 5rem;
+}
+
+.header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: color-mix(in srgb, #3b82f6 12%, transparent);
+  border: 1px solid color-mix(in srgb, #3b82f6 30%, transparent);
+  border-radius: 9999px;
+  color: #60a5fa;
+  font-size: 0.825rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: clamp(1.85rem, 3.8vw, 2.75rem);
+  font-weight: 900;
+  color: var(--foreground, #f3f4f6);
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  color: var(--muted-foreground, #9ca3af);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.integrityAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: start;
+  padding: 0.85rem 1.25rem;
+  background: color-mix(in srgb, #0ea5e9 8%, var(--card, #111827));
+  border: 1px solid color-mix(in srgb, #0ea5e9 25%, var(--border, rgba(255, 255, 255, 0.1)));
+  border-radius: 14px;
+  font-size: 0.825rem;
+  color: var(--foreground, #f3f4f6);
+  margin: 0 auto 1.5rem;
+  max-width: 760px;
+  line-height: 1.55;
+}
+
+.integrityIcon {
+  color: #38bdf8;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* Multi-Tier Filter Section */
+.filtersSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 2.5rem;
+  background: color-mix(in srgb, var(--foreground) 2%, var(--card, #111827));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.filterRow::-webkit-scrollbar {
+  display: none;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--muted-foreground, #9ca3af);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 5.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: var(--surface-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--foreground, #f3f4f6);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.chip:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.chipActive {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.chipActive:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 3.5rem;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--foreground, #f3f4f6);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.countBadge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+/* Broadcast Matches Grid */
+.matchesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 1.25rem;
+}
+
+.matchCard {
+  background: var(--surface-card, rgba(17, 24, 39, 0.75));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.matchCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.matchTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding-bottom: 0.65rem;
+}
+
+.leagueLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  color: var(--muted-foreground, #9ca3af);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.leagueLink:hover {
+  color: #ea580c;
+}
+
+.leagueLogo {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.kickoffBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 800;
+  color: #ea580c;
+  white-space: nowrap;
+}
+
+.clashArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.teamHead {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.crest {
+  width: 1.85rem;
+  height: 1.85rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teamLink {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--foreground, #f3f4f6);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+
+.teamLink:hover {
+  color: #ea580c;
+}
+
+.scoreDigit {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--foreground, #fff);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Broadcaster & Commentator Section on Card */
+.broadcastMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: color-mix(in srgb, var(--foreground) 3%, var(--card, #111827));
+  border-radius: 12px;
+  padding: 0.75rem;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.channelBadgesRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.channelLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, #3b82f6 14%, transparent);
+  border: 1px solid color-mix(in srgb, #3b82f6 30%, transparent);
+  color: #60a5fa;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.channelLink:hover {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.commentatorRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #9ca3af);
+}
+
+.commentatorName {
+  font-weight: 700;
+  color: var(--foreground, #e5e7eb);
+}
+
+.cardBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding-top: 0.75rem;
+}
+
+.statusIndicator {
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.statusAvailable {
+  color: #10b981;
+}
+
+.statusPending {
+  color: #f59e0b;
+}
+
+.statusLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #ef4444;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.matchCenterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #ea580c;
+  font-size: 0.825rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.matchCenterBtn:hover {
+  color: #fb923c;
+  text-decoration: underline;
+}
+
+/* Channels Directory Grid */
+.directoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.15rem;
+}
+
+.channelDirectoryCard {
+  background: var(--surface-card, rgba(17, 24, 39, 0.75));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.channelDirectoryCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.channelLogoWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.channelLogoWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.channelMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.channelName {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--foreground, #f3f4f6);
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channelCountry {
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #9ca3af);
+  display: block;
+}
+
+.matchesBadge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-top: 0.35rem;
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 1rem;
+  background: var(--surface-card, rgba(17, 24, 39, 0.5));
+  border: 1px dashed var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 16px;
+  color: var(--muted-foreground, #9ca3af);
+}
+
+.emptyState p {
+  margin: 0.75rem 0 1.25rem;
+  font-size: 0.95rem;
+}
+
+.resetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #ea580c;
+  color: #fff;
+  padding: 0.55rem 1.35rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.resetBtn:hover {
+  opacity: 0.9;
+}

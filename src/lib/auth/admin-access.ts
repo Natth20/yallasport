@@ -5,12 +5,16 @@ export const STAFF_ROLES = [
   'MODERATOR',
   'CONTENT_MANAGER',
   'ADS_MANAGER',
+  'SOCIAL_MANAGER',
+  'REVIEWER',
+  'ANALYST',
 ] as const;
 
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 export const ADMIN_NAV: Array<{ href: string; roles: StaffRole[]; ar: string; en: string }> = [
   { href: '/admin', roles: [...STAFF_ROLES], ar: 'الرئيسية', en: 'Home' },
+  { href: '/admin/social', roles: ['SUPER_ADMIN', 'SOCIAL_MANAGER', 'EDITOR', 'NEWS_EDITOR', 'REVIEWER', 'ANALYST'], ar: 'مركز التواصل', en: 'Social Center' },
   { href: '/admin/news', roles: ['SUPER_ADMIN', 'EDITOR', 'NEWS_EDITOR', 'MODERATOR'], ar: 'إدارة الأخبار', en: 'Manage news' },
   { href: '/admin/news/calendar', roles: ['SUPER_ADMIN', 'EDITOR', 'NEWS_EDITOR'], ar: 'التقويم التحريري', en: 'Editorial calendar' },
   { href: '/admin/comments', roles: ['SUPER_ADMIN', 'MODERATOR'], ar: 'إدارة التعليقات', en: 'Manage comments' },

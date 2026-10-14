@@ -27,11 +27,13 @@ import { LiveDataStatus } from '@/components/sports/LiveDataStatus';
 import { TimezoneSelector } from '@/components/layout/TimezoneSelector';
 import {
   ArrowLeftRight,
+  ArrowUpRight,
   BarChart3,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Globe,
   Heart,
   Radio,
   Search,
@@ -45,9 +47,9 @@ import type { NormalizedMatch } from '@/lib/sports-data/types';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
-import { localizeEntityMap } from '@/lib/i18n/localized-content';
+import { localizeEntityMap, newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
 import { localizePlainName, localizeTeamName, sourceSearchQuery } from '@/lib/i18n/sports-lexicon';
-import { localizeLeagueName, localizeRoundName } from '@/lib/i18n/competition-names';
+import { localizeCountryName, localizeLeagueName, localizeRoundName } from '@/lib/i18n/competition-names';
 import { countLabel } from '@/lib/i18n/arabic-count';
 import { formatScore } from '@/lib/sports-data/score-format';
 import { STREAMING_ENABLED } from '@/lib/streaming';
@@ -83,6 +85,7 @@ interface MatchesPageProps {
     q?: string;
     status?: string;
     favorites?: string;
+    country?: string;
     league?: string;
     channel?: string;
     hour?: string;
@@ -97,6 +100,7 @@ type DayMatch = NormalizedMatch & {
   venueCapacity?: number;
   channels: Array<{ name: string; logoUrl?: string | null }>;
   leagueCountry?: string;
+  leagueCountryRaw?: string;
   refereeName?: string;
   commentators: Array<{ name: string; role?: string; language?: string | null }>;
   homeCoach?: string;
@@ -249,21 +253,27 @@ function CompactFixture({
           {live ? (
             <em>{status}</em>
           ) : match.status === 'FINISHED' ? (
-            <span dir="ltr">{score ?? '—'}</span>
+            <div className="flex flex-col items-center justify-center leading-tight">
+              <span className="font-extrabold text-[11px] text-muted-foreground">{pick(locale, 'انتهت', 'FT')}</span>
+              <ClientTime value={match.kickoffAt} variant="day" className="text-[9px] text-muted-foreground font-semibold mt-0.5 whitespace-nowrap" />
+            </div>
           ) : (
-            <ClientTime value={match.kickoffAt} />
+            <div className="flex flex-col items-center justify-center leading-tight">
+              <ClientTime value={match.kickoffAt} variant="clock" className="font-extrabold text-[12px] sm:text-[13px] text-orange-500 tabular-nums" />
+              <ClientTime value={match.kickoffAt} variant="day" className="text-[9px] text-muted-foreground font-semibold mt-0.5 whitespace-nowrap" />
+            </div>
           )}
         </div>
         <div className={styles.fixtureTeams}>
           <div className={styles.fixtureTeam}>
-            <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-7 w-7" />
-            <strong>{match.homeTeam.name}</strong>
-            {live && score ? <b>{match.homeScore}</b> : null}
+            <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6 shrink-0 object-contain" />
+            <strong className="text-xs sm:text-[13px] font-bold text-foreground">{match.homeTeam.name}</strong>
+            {typeof match.homeScore === 'number' ? <b className="shrink-0 font-black">{match.homeScore}</b> : null}
           </div>
           <div className={styles.fixtureTeam}>
-            <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-7 w-7" />
-            <strong>{match.awayTeam.name}</strong>
-            {live && score ? <b>{match.awayScore}</b> : null}
+            <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6 shrink-0 object-contain" />
+            <strong className="text-xs sm:text-[13px] font-bold text-foreground">{match.awayTeam.name}</strong>
+            {typeof match.awayScore === 'number' ? <b className="shrink-0 font-black">{match.awayScore}</b> : null}
           </div>
         </div>
       </div>
@@ -306,6 +316,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     ? params.status as (typeof allowedStatuses)[number]
     : 'all';
   const favoritesOnly = params.favorites === '1';
+  const selectedCountry = params.country?.trim() || '';
   const selectedLeague = params.league?.trim() || '';
   const selectedChannel = params.channel?.trim() || '';
   const hourCandidate = params.hour != null && params.hour !== '' ? Number(params.hour) : NaN;
@@ -436,6 +447,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       venueCapacity: undefined,
       channels: [] as Array<{ name: string; logoUrl?: string | null }>,
       leagueCountry: undefined,
+      leagueCountryRaw: undefined,
       refereeName: undefined,
       commentators: [] as Array<{ name: string; role?: string; language?: string | null }>,
       homeFormation: undefined,
@@ -488,6 +500,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         venueCapacity: row.venue?.capacity ?? undefined,
         channels: (row.channels ?? []).map((entry: { channel: { name: string; logoUrl?: string | null } }) => entry.channel),
         leagueCountry: row.league.country ?? undefined,
+        leagueCountryRaw: row.league.country ?? undefined,
         refereeName: row.referee?.name ?? undefined,
         commentators: row.commentators ?? [],
         homeFormation: homeLineup?.formation ?? undefined,
@@ -547,7 +560,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
       match.league,
       nameLabels.get(`LEAGUE:${match.league.id}`) || sourceLeague,
     );
-    if (match.leagueCountry) match.leagueCountry = localizePlainName(locale, match.leagueCountry);
+    if (match.leagueCountryRaw) match.leagueCountry = localizeCountryName(locale, match.leagueCountryRaw);
+    else if (match.leagueCountry) match.leagueCountry = localizeCountryName(locale, match.leagueCountry);
     if (match.round) match.round = localizeRoundName(locale, match.round);
     searchIndex.set(
       match.id,
@@ -561,6 +575,8 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         match.homeTeam.slug,
         match.awayTeam.slug,
         match.league.slug,
+        match.leagueCountry,
+        match.leagueCountryRaw,
       ]
         .filter(Boolean)
         .join(' ')
@@ -756,13 +772,19 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     favoriteMatchExternalIds.has(match.externalId);
 
   const scopedMatches = queryMatches.filter((match) => {
+    if (selectedCountry) {
+      const raw = match.leagueCountryRaw?.toLowerCase();
+      const localized = match.leagueCountry?.toLowerCase();
+      const target = selectedCountry.toLowerCase();
+      if (raw !== target && localized !== target) return false;
+    }
     if (selectedLeague && match.league.slug !== selectedLeague) return false;
     if (selectedChannel && !match.channels.some((channel) => channel.name === selectedChannel)) return false;
     if (selectedHour != null && hourInTimezone(new Date(match.kickoffAt), timezone) !== selectedHour) return false;
     return true;
   });
 
-  const lockProgrammeSlice = Boolean(query || favoritesOnly || selectedLeague);
+  const lockProgrammeSlice = Boolean(query || favoritesOnly || selectedCountry || selectedLeague);
   const majorScoped = scopedMatches.filter((match) => isMajorLeague(match.league));
   const restScoped = scopedMatches.filter((match) => !isMajorLeague(match.league));
   const hasProgrammeSplit = !lockProgrammeSlice && majorScoped.length > 0 && restScoped.length > 0;
@@ -870,6 +892,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     const nextQuery = overrides.q ?? params.q;
     const nextStatus = overrides.status ?? (statusFilter !== 'all' ? statusFilter : undefined);
     const nextFavorites = 'favorites' in overrides ? overrides.favorites : (favoritesOnly ? '1' : undefined);
+    const nextCountry = 'country' in overrides ? overrides.country : (selectedCountry || undefined);
     const nextLeague = 'league' in overrides ? overrides.league : (selectedLeague || undefined);
     const nextChannel = 'channel' in overrides ? overrides.channel : (selectedChannel || undefined);
     const nextHour = 'hour' in overrides ? overrides.hour : (selectedHour != null ? String(selectedHour) : undefined);
@@ -879,6 +902,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     if (nextQuery) nextParams.set('q', nextQuery);
     if (nextStatus && nextStatus !== 'all') nextParams.set('status', nextStatus);
     if (nextFavorites === '1') nextParams.set('favorites', '1');
+    if (nextCountry) nextParams.set('country', nextCountry);
     if (nextLeague) nextParams.set('league', nextLeague);
     if (nextChannel) nextParams.set('channel', nextChannel);
     if (nextHour) nextParams.set('hour', nextHour);
@@ -904,10 +928,19 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
           : value === afterKey
             ? pick(locale, 'بعد غد', 'In two days')
             : format(date, 'EEEE', { locale: locale === 'ar' ? ar : enUS });
+    const shortDayName =
+      value === todayKey
+        ? pick(locale, 'اليوم', 'Today')
+        : value === tomorrowKey
+          ? pick(locale, 'غداً', 'Tmrw')
+          : value === afterKey
+            ? pick(locale, 'بعد غد', '+2d')
+            : format(date, 'EEE', { locale: locale === 'ar' ? ar : enUS });
     return {
       value,
       isToday: value === todayKey,
       dayName,
+      shortDayName,
       dayNumber: format(date, 'd'),
       month: format(date, 'MMM', { locale: locale === 'ar' ? ar : enUS }),
       fixtures: sheet?.total ?? 0,
@@ -1155,7 +1188,39 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     href: pageHref({ hour: selectedHour === slot.hour ? undefined : String(slot.hour) }),
   }));
 
-  const lensesActive = Boolean(selectedLeague || selectedChannel || selectedHour != null);
+  const countryLenses = Array.from(
+    queryMatches.reduce((groups, match) => {
+      const raw = match.leagueCountryRaw || match.leagueCountry;
+      if (!raw) return groups;
+      const current = groups.get(raw);
+      if (current) {
+        current.count += 1;
+      } else {
+        groups.set(raw, {
+          value: raw,
+          label: localizeCountryName(locale, raw),
+          count: 1,
+        });
+      }
+      return groups;
+    }, new Map<string, { value: string; label: string; count: number }>())
+      .values()
+  )
+    .sort((first, second) => second.count - first.count || first.label.localeCompare(second.label))
+    .map((chip) => ({
+      ...chip,
+      active:
+        selectedCountry.toLowerCase() === chip.value.toLowerCase() ||
+        selectedCountry === chip.label,
+      href: pageHref({
+        country:
+          selectedCountry.toLowerCase() === chip.value.toLowerCase() || selectedCountry === chip.label
+            ? undefined
+            : chip.value,
+      }),
+    }));
+
+  const lensesActive = Boolean(selectedCountry || selectedLeague || selectedChannel || selectedHour != null);
 
   const lastEvents: Record<string, string> = {};
   for (const match of liveBoard) {
@@ -1183,6 +1248,70 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   ];
 
   const dayIds = liveBoardPool.flatMap((match) => [match.id, match.externalId]);
+
+  let matchNewsList: any[] = [];
+  try {
+    const matchNewsRows = await prisma.news.findMany({
+      where: {
+        AND: [
+          newsVisibleWhere(locale),
+          {
+            OR: [
+              { category: { in: ['matches', 'match', 'football', 'الدوري-الإسباني', 'الدوري-الإنجليزي', 'دوري-أبطال-أوروبا', 'مباريات'] } },
+              { tags: { hasSome: ['مباريات', 'match', 'clash', 'derby', 'موعد', 'القنوات الناقلة', 'برشلونة', 'ريال مدريد', 'الهلال', 'النصر'] } },
+            ],
+          },
+        ],
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 6,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        featuredImage: true,
+        ogImage: true,
+        sourceName: true,
+        sourceUrl: true,
+        publishedAt: true,
+        category: true,
+        entityLinks: {
+          where: { entityType: 'MATCH' },
+          select: { entityId: true },
+        },
+      },
+    });
+
+    matchNewsList = await overlayNewsList(matchNewsRows, locale);
+    if (matchNewsList.length < 3) {
+      const fallbackNews = await prisma.news.findMany({
+        where: newsVisibleWhere(locale),
+        orderBy: { publishedAt: 'desc' },
+        take: 6,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          featuredImage: true,
+          ogImage: true,
+          sourceName: true,
+          sourceUrl: true,
+          publishedAt: true,
+          category: true,
+          entityLinks: {
+            where: { entityType: 'MATCH' },
+            select: { entityId: true },
+          },
+        },
+      });
+      const overlaidFallback = await overlayNewsList(fallbackNews, locale);
+      matchNewsList = [...matchNewsList, ...overlaidFallback].slice(0, 6);
+    }
+  } catch (err) {
+    reportCaughtError('src/app/[locale]/matches/page.tsx:matchNews', err);
+  }
 
   const pinnedMatchesData = allMatches.map((m) => ({
     id: m.id,
@@ -1294,7 +1423,7 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                 {pick(locale, 'منتهية', 'Finished')}
               </span>
             )}
-            <span className={styles.countChip}>
+            <span className={`${styles.countChip} hidden sm:inline-flex`}>
               {group.matches.length}
             </span>
           </div>
@@ -1321,6 +1450,9 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   pushReel(spotlightMatch);
   soonDayMatches.forEach(pushReel);
   (programmeScope === 'major' ? majorScoped : scopedMatches).slice(0, 8).forEach(pushReel);
+  const isTomorrow = selectedDateStr === format(addDays(today, 1), 'yyyy-MM-dd');
+  const isYesterday = selectedDateStr === format(addDays(today, -1), 'yyyy-MM-dd');
+
   const dateLabel = formatKickoff(selectedDate, timezone, locale === 'en' ? 'en' : 'ar', {
     weekday: 'long',
     day: 'numeric',
@@ -1328,6 +1460,16 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
     hour: undefined,
     minute: undefined,
   });
+
+  const datePrefix = isToday
+    ? pick(locale, 'اليوم، ', 'Today, ')
+    : isTomorrow
+      ? pick(locale, 'غدًا، ', 'Tomorrow, ')
+      : isYesterday
+        ? pick(locale, 'أمس، ', 'Yesterday, ')
+        : '';
+
+  const fullDateHeading = `${datePrefix}${dateLabel}`;
 
   const dayCensus = [
     ...(totalGoals > 0 ? [{ value: totalGoals, label: t('goal') }] : []),
@@ -1393,7 +1535,10 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                   className={`${active ? styles.dateChipActive : styles.dateChip}${date.live > 0 && !active ? ` ${styles.dateChipLive}` : ''}`}
                 >
                   {date.live > 0 && !active ? <span className={styles.dateLiveDot} /> : null}
-                  <span className={styles.chipDay}>{date.dayName}</span>
+                  <span className={styles.chipDay}>
+                    <span className="hidden sm:inline">{date.dayName}</span>
+                    <span className="sm:hidden">{date.shortDayName}</span>
+                  </span>
                   <span className={styles.chipNumber}>{date.dayNumber}</span>
                   <span className={styles.chipCount}>
                     {date.fixtures > 0 ? `(${date.fixtures})` : '—'}
@@ -1472,12 +1617,53 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
               <input type="hidden" name="date" value={selectedDateStr} />
               {statusFilter !== 'all' && <input type="hidden" name="status" value={statusFilter} />}
               {favoritesOnly && <input type="hidden" name="favorites" value="1" />}
+              {selectedCountry && <input type="hidden" name="country" value={selectedCountry} />}
               {selectedLeague && <input type="hidden" name="league" value={selectedLeague} />}
               {selectedChannel && <input type="hidden" name="channel" value={selectedChannel} />}
               {selectedHour != null && <input type="hidden" name="hour" value={String(selectedHour)} />}
               {requestedScope === 'all' && <input type="hidden" name="scope" value="all" />}
             </form>
           </div>
+
+          {countryLenses.length > 0 ? (
+            <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-1 pt-2 no-scrollbar text-xs border-t border-border/40">
+              <span className="shrink-0 font-extrabold text-muted-foreground flex items-center gap-1 text-[11px] px-1">
+                <Globe className="h-3.5 w-3.5 text-orange-500" />
+                {pick(locale, 'تصفح حسب الدولة:', 'By Country:')}
+              </span>
+              <Link
+                href={pageHref({ country: undefined })}
+                className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-all ${
+                  !selectedCountry
+                    ? 'bg-foreground text-background shadow-xs dark:bg-card dark:text-foreground'
+                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                {pick(locale, 'كل الدول', 'All countries')}
+                <span className="ms-1 opacity-70">({queryMatches.length})</span>
+              </Link>
+              {countryLenses.map((chip) => (
+                <Link
+                  key={chip.value}
+                  href={chip.href}
+                  className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+                    chip.active
+                      ? 'bg-orange-500 text-white shadow-xs'
+                      : 'bg-muted/60 text-foreground/80 hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <span>{chip.label}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[9px] font-extrabold ${
+                      chip.active ? 'bg-black/20 text-white' : 'bg-background/80 text-muted-foreground'
+                    }`}
+                  >
+                    {chip.count}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
 
           {heroStats.length > 0 ? (
             <ul className={styles.dockMeters}>
@@ -1492,10 +1678,12 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         </div>
 
         <MatchdayLenses
+          locale={locale}
+          countries={countryLenses}
           leagues={leagueLenses}
           channels={channelLenses}
           hours={hourLenses}
-          clearHref={pageHref({ league: undefined, channel: undefined, hour: undefined })}
+          clearHref={pageHref({ country: undefined, league: undefined, channel: undefined, hour: undefined })}
         />
 
         <LiveNowBoard seed={liveBoard} dayIds={dayIds} lastEvents={lastEvents} />
@@ -1504,9 +1692,15 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
           <section className={styles.fixtureProgramme} aria-labelledby="fixture-programme-title">
             <div className={styles.fixtureProgrammeHead}>
               <div>
-                <span className={styles.programmeEyebrow}>
-                  {pick(locale, 'البرنامج', 'Programme')}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                  <span className={styles.programmeEyebrow}>
+                    {pick(locale, 'البرنامج', 'Programme')}
+                  </span>
+                  <span className={styles.majorDateBadge}>
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    {fullDateHeading}
+                  </span>
+                </div>
                 <h2 id="fixture-programme-title">
                   {pick(locale, 'مباريات اليوم', "Today's matches")}
                 </h2>
@@ -1542,14 +1736,20 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                         <div id="desk" className={`${styles.majorHall} scroll-mt-[18rem]`}>
                           <div className={styles.majorHead}>
                             <div>
-                              <span className={styles.majorKicker}>
-                                {pick(locale, 'البطولات', 'Competitions')}
-                              </span>
+                              <div className={styles.majorKickerRow}>
+                                <span className={styles.majorKicker}>
+                                  {pick(locale, 'البطولات الكبرى', 'Major competitions')}
+                                </span>
+                                <span className={styles.majorDateBadge}>
+                                  <CalendarDays className="h-3.5 w-3.5" />
+                                  {fullDateHeading}
+                                </span>
+                              </div>
                               <h2>
                                 {pick(locale, 'البطولات الكبرى', 'Major competitions')}
                               </h2>
                               <p>
-                                {pick(
+                                <strong>{fullDateHeading}</strong> · {pick(
                                   locale,
                                   'مباشر أولاً، ثم أقرب ركلة، كما وصلت من المصدر.',
                                   'Live first, then the next kickoff, as filed by the source.'
@@ -1569,14 +1769,20 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                           <div id="rest" className={`${styles.restHall} scroll-mt-[18rem]`}>
                             <div className={styles.majorHead}>
                               <div>
-                                <span className={styles.restKicker}>
-                                  {pick(locale, 'باقي اليوم', 'Rest of the day')}
-                                </span>
+                                <div className={styles.majorKickerRow}>
+                                  <span className={styles.restKicker}>
+                                    {pick(locale, 'باقي اليوم', 'Rest of the day')}
+                                  </span>
+                                  <span className={styles.majorDateBadge}>
+                                    <CalendarDays className="h-3.5 w-3.5" />
+                                    {fullDateHeading}
+                                  </span>
+                                </div>
                                 <h2>
                                   {pick(locale, 'باقي برنامج اليوم', "The rest of today's programme")}
                                 </h2>
                                 <p>
-                                  {pick(
+                                  <strong>{fullDateHeading}</strong> · {pick(
                                     locale,
                                     'نفس الترتيب: مباشر، قادم، منتهٍ — في بطاقات أخف.',
                                     'The same order: live, upcoming, finished — in lighter cards.'
@@ -1604,6 +1810,107 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                     ) : (
                       leagueGroups.map((group, index) => leagueBoard(group, false, index))
                     )}
+
+                    {/* Match-Related News & Peak Fixture Previews */}
+                    {matchNewsList.length > 0 ? (
+                      <section className="mt-8 rounded-3xl border border-orange-500/20 bg-card/90 p-5 shadow-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
+                                <Radio className="h-3.5 w-3.5" />
+                              </span>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500">
+                                {pick(locale, 'تغطية القمم والمواجهات', 'Big match coverage')}
+                              </span>
+                            </div>
+                            <h2 className="mt-1 text-base sm:text-lg font-black text-foreground">
+                              {pick(locale, 'أخبار القمم والمواجهات المنتظرة', 'Upcoming peak & derby news')}
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {pick(locale, 'مواعيد المباريات، القنوات الناقلة، التشكيلات المتوقعة وتحليلات القمم.', 'Kickoff times, broadcast channels, expected lineups, and derby analysis.')}
+                            </p>
+                          </div>
+                          <Link
+                            href="/news"
+                            className="inline-flex items-center gap-1 text-xs font-bold text-orange-500 hover:underline"
+                          >
+                            <span>{pick(locale, 'كل أخبار المباريات', 'All match news')}</span>
+                            <ArrowUpRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {matchNewsList.map((story) => {
+                            const linkedMatchId = story.entityLinks?.[0]?.entityId;
+                            const img = story.featuredImage || story.ogImage;
+                            return (
+                              <article
+                                key={story.id}
+                                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-background/60 transition-all hover:border-orange-500/40 hover:bg-card hover:shadow-md"
+                              >
+                                <div>
+                                  <Link href={`/news/${story.slug}`} className="block relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                                    {img ? (
+                                      <img
+                                        src={img}
+                                        alt={story.title}
+                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center bg-orange-500/10 text-orange-500 font-bold text-xs">
+                                        Yalla Sport
+                                      </div>
+                                    )}
+                                    {story.category ? (
+                                      <span className="absolute top-2.5 inset-inline-end-2.5 rounded-full bg-black/70 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-bold text-white">
+                                        {story.category}
+                                      </span>
+                                    ) : null}
+                                  </Link>
+
+                                  <div className="p-3.5">
+                                    <div className="flex items-center justify-between gap-2 text-[10px] font-semibold text-muted-foreground mb-1.5">
+                                      <span className="truncate">{story.sourceName || 'يلا سبورت'}</span>
+                                      {story.publishedAt ? <ClientTime value={story.publishedAt} variant="day" /> : null}
+                                    </div>
+                                    <h3 className="line-clamp-2 text-xs sm:text-[13px] font-bold leading-snug text-foreground group-hover:text-orange-500 transition-colors">
+                                      <Link href={`/news/${story.slug}`}>
+                                        {story.title}
+                                      </Link>
+                                    </h3>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 border-t border-border/40 p-3 pt-2.5 text-xs">
+                                  <Link
+                                    href={`/news/${story.slug}`}
+                                    className="font-bold text-orange-600 dark:text-orange-400 hover:underline"
+                                  >
+                                    {pick(locale, 'اقرأ الخبر', 'Read story')}
+                                  </Link>
+                                  {linkedMatchId ? (
+                                    <Link
+                                      href={`/match/${linkedMatchId}`}
+                                      className="rounded-lg bg-orange-500/10 px-2.5 py-1 text-[11px] font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500 hover:text-white transition-colors"
+                                    >
+                                      {pick(locale, 'مركز المباراة', 'Match center')}
+                                    </Link>
+                                  ) : (
+                                    <Link
+                                      href="/matches"
+                                      className="rounded-lg bg-muted/60 px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:bg-muted"
+                                    >
+                                      {pick(locale, 'جدول المباريات', 'Fixtures')}
+                                    </Link>
+                                  )}
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ) : null}
                   </>
                 ) : (
                   <div className="rounded-[1.55rem] border border-dashed border-border bg-card/80 px-6 py-20 text-center dark:border-border dark:bg-muted">
@@ -1677,39 +1984,44 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                               <LeagueCrest name={match.league.name} logoUrl={match.league.logoUrl} className="h-4 w-4 shrink-0" />
                               <span className="truncate">{match.league.name}</span>
                             </div>
-                            <ClientTime value={match.kickoffAt} variant="clock" className="tabular-nums font-bold text-orange-500 shrink-0" />
-                          </div>
-
-                          <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6 shrink-0" />
-                              <span className="truncate text-xs font-bold text-foreground">
-                                {match.homeTeam.name}
-                              </span>
-                            </div>
-
-                            <span className="rounded-full bg-foreground/5 px-2 py-0.5 text-[10px] font-black text-muted-foreground">
-                              VS
-                            </span>
-
-                            <div className="flex items-center justify-end gap-2 min-w-0 text-end">
-                              <span className="truncate text-xs font-bold text-foreground">
-                                {match.awayTeam.name}
-                              </span>
-                              <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6 shrink-0" />
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <ClientTime value={match.kickoffAt} variant="clock" className="tabular-nums font-bold text-orange-500" />
+                              <ClientTime value={match.kickoffAt} variant="day" className="text-[9px] text-muted-foreground" />
                             </div>
                           </div>
 
-                          {(formByTeam.get(match.homeTeam.id)?.length || formByTeam.get(match.awayTeam.id)?.length) ? (
-                            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/30 pt-2 text-[9px]">
-                              <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
-                              <span className="text-muted-foreground/30">•</span>
-                              <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
+                          <div className="mt-2.5 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-background p-0.5 border border-border/60 shadow-xs">
+                                  <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full object-contain" />
+                                </div>
+                                <span className="text-xs sm:text-[13px] font-bold text-foreground leading-snug">
+                                  {match.homeTeam.name}
+                                </span>
+                              </div>
+                              {formByTeam.get(match.homeTeam.id)?.length ? (
+                                <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
+                              ) : null}
                             </div>
-                          ) : null}
+
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-background p-0.5 border border-border/60 shadow-xs">
+                                  <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full object-contain" />
+                                </div>
+                                <span className="text-xs sm:text-[13px] font-bold text-foreground leading-snug">
+                                  {match.awayTeam.name}
+                                </span>
+                              </div>
+                              {formByTeam.get(match.awayTeam.id)?.length ? (
+                                <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
+                              ) : null}
+                            </div>
+                          </div>
 
                           {(match.venue || match.channels[0]) && (
-                            <p className="mt-1.5 truncate text-[9px] font-medium text-muted-foreground">
+                            <p className="mt-2 truncate border-t border-border/30 pt-1.5 text-[9px] font-medium text-muted-foreground">
                               {[match.venue, match.venueCity, match.channels[0]?.name].filter(Boolean).join(' · ')}
                             </p>
                           )}

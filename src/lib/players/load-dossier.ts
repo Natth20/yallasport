@@ -1187,7 +1187,42 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
   }));
   const clubFixtures = { upcoming: upcomingClub, recent: recentClub };
 
-  const news = newsRows
+  let allNewsRows = newsRows;
+  if (allNewsRows.length < 4 && currentClub?.name) {
+    const clubNews = await soft(
+      () =>
+        prisma.news.findMany({
+          where: {
+            status: 'PUBLISHED',
+            OR: [
+              { title: { contains: currentClub.name } },
+              { content: { contains: currentClub.name } },
+              { tags: { has: currentClub.name } },
+            ],
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: 6,
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            shortTitle: true,
+            excerpt: true,
+            featuredImage: true,
+            category: true,
+            publishedAt: true,
+            readingTime: true,
+            sourceName: true,
+          },
+        }),
+      []
+    );
+    const existingIds = new Set(allNewsRows.map((r) => r.id));
+    const extra = clubNews.filter((r) => !existingIds.has(r.id));
+    allNewsRows = [...allNewsRows, ...extra].slice(0, 6);
+  }
+
+  const news = allNewsRows
     .filter((row): row is typeof row & { publishedAt: Date } => Boolean(row.publishedAt))
     .map((row) => ({
       id: row.id,

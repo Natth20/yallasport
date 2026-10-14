@@ -38,26 +38,44 @@ export async function FrontLatestNewsGrid() {
 
       <div className={styles.newsGrid3x4}>
         {unique.map((item, idx) => (
-          <Link
+          <div
             key={item.id}
-            href={`/news/${item.slug}`}
             className={`${styles.newsCardGridItem}${idx > 5 ? ` ${styles.hideOnPhone}` : ''}`}
           >
             <div className={styles.newsCardImgWrap}>
-              {item.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.image} alt="" className={styles.newsCardImg} referrerPolicy="no-referrer" />
-              ) : (
-                <div className={styles.newsCardImgFallback} />
-              )}
-              <div className={styles.newsCardImgOverlay} />
-              <span className={styles.storyCategoryPill}>{deskLabel(item.category, locale)}</span>
+              <Link href={`/news/${item.slug}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+                {item.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.image} alt="" className={styles.newsCardImg} referrerPolicy="no-referrer" />
+                ) : (
+                  <div className={styles.newsCardImgFallback} />
+                )}
+                <div className={styles.newsCardImgOverlay} />
+              </Link>
+              <Link
+                href={`/news?desk=${encodeURIComponent(item.category || 'all')}`}
+                className={styles.storyCategoryPill}
+                title={ar ? `فتح قسم ${deskLabel(item.category, locale)} بالكامل` : `Open full section for ${deskLabel(item.category, locale)}`}
+              >
+                {deskLabel(item.category, locale)}
+              </Link>
             </div>
 
             <div className={styles.newsCardBody}>
-              <h4 className={styles.newsCardTitle}>{item.title}</h4>
+              <h4 className={styles.newsCardTitle}>
+                <Link href={`/news/${item.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {item.title}
+                </Link>
+              </h4>
               <div className={styles.newsCardMeta}>
-                <span className={styles.newsSourcePill}>{item.sourceName || 'يلا سبورت'}</span>
+                <Link
+                  href={`/news?source=${encodeURIComponent(item.sourceName || 'يلا سبورت')}`}
+                  className={styles.newsSourcePill}
+                  style={{ textDecoration: 'none' }}
+                  title={ar ? `عرض جميع الأخبار من مصدر ${item.sourceName || 'يلا سبورت'}` : `View all news from source ${item.sourceName || 'Yalla Sport'}`}
+                >
+                  {item.sourceName || 'يلا سبورت'}
+                </Link>
                 <span className={styles.newsTimePill}>
                   <ClientTime value={item.publishedAt} locale={locale} />
                 </span>
@@ -70,7 +88,7 @@ export async function FrontLatestNewsGrid() {
                 <FrontShareBtn href={`/news/${item.slug}`} label={ar ? 'مشاركة' : 'Share'} />
               </div>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
 

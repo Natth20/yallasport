@@ -160,10 +160,12 @@ export function LeagueDeskCard({
         </Link>
 
         <div className="league-desk-identity">
-          <Link href={`/league/${league.slug}`}>
-            <h3>{localizeCompetitionTitle(locale, league)}</h3>
+          <Link href={`/league/${league.slug}`} className="hover:text-orange-500 transition-colors">
+            <h3 className="text-foreground dark:text-foreground font-extrabold text-sm sm:text-base">
+              {localizeCompetitionTitle(locale, league)}
+            </h3>
           </Link>
-          {meta.length > 0 ? <p>{meta.slice(0, 3).join(' · ')}</p> : null}
+          {meta.length > 0 ? <p className="text-muted-foreground">{meta.slice(0, 3).join(' · ')}</p> : null}
         </div>
       </div>
 
@@ -187,18 +189,53 @@ export function LeagueDeskCard({
             }
           />
         ) : league.nextMatch ? (
-          <FaceOff
-            locale={locale}
-            home={league.nextMatch.homeTeam}
-            away={league.nextMatch.awayTeam}
+          <Link
             href={`/match/${league.nextMatch.id}`}
-            centre={
-              <span className="league-desk-kick">
-                <em>{pick(locale, 'قادمة', 'Next')}</em>
-                <ClientTime value={league.nextMatch.kickoffAt} />
+            className="block rounded-xl border border-border/70 bg-card/60 p-2.5 transition-colors hover:border-orange-500/40 hover:bg-card/90"
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1.5 text-[10px]">
+              <span className="font-bold text-orange-600 dark:text-orange-400 shrink-0">
+                {roundText || pick(locale, 'المباراة القادمة', 'Next match')}
               </span>
-            }
-          />
+              <div className="flex items-center gap-1 font-semibold text-muted-foreground shrink-0" dir="ltr">
+                <ClientTime
+                  value={league.nextMatch.kickoffAt}
+                  options={{ month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }}
+                />
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
+                  <LeagueCrest
+                    name={league.nextMatch.homeTeam.name}
+                    logoUrl={league.nextMatch.homeTeam.logoUrl}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <span className="truncate font-bold text-foreground">
+                  {localizeTeamName(locale, league.nextMatch.homeTeam.name)}
+                </span>
+              </div>
+
+              <span className="shrink-0 rounded-full bg-muted/80 px-1.5 py-0.5 text-[9px] font-black uppercase text-muted-foreground">
+                VS
+              </span>
+
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-end">
+                <span className="truncate font-bold text-foreground">
+                  {localizeTeamName(locale, league.nextMatch.awayTeam.name)}
+                </span>
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
+                  <LeagueCrest
+                    name={league.nextMatch.awayTeam.name}
+                    logoUrl={league.nextMatch.awayTeam.logoUrl}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+          </Link>
         ) : hasResult && league.lastResult ? (
           <FaceOff
             locale={locale}

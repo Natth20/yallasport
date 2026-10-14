@@ -19,11 +19,14 @@ export const revalidate = 90;
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ season?: string; league?: string }>;
 }): Promise<Metadata> {
   const locale = await getLocale();
   const { slug } = await params;
+  const sp = searchParams ? await searchParams : undefined;
   const team = await findTeamRowBySlug(slug);
   if (!team) {
     return pageMetadata({
@@ -34,33 +37,51 @@ export async function generateMetadata({
       noIndex: true,
     });
   }
+  const seasonSuffix = sp?.season ? ` - ${pick(locale, 'موسم', 'Season')} ${sp.season}` : '';
+  const localizedName = localizePlainName(locale, team.name);
   return pageMetadata({
     locale,
-    title: localizePlainName(locale, team.name),
+    title: `${localizedName}${seasonSuffix}`,
     description:
       team.bio?.slice(0, 160) ||
       pick(
         locale,
-        `ملف ${team.name} في يلا سبورت: المباريات، اللاعبون، والأخبار المرتبطة من المصدر الحقيقي.`,
-        `${team.name} on Yalla Sport: matches, squad, and linked news from the real source.`
+        `ملف ${team.name} في يلا سبورت: المباريات، اللاعبون، والترتيب والأخبار المرتبطة من المصدر الحقيقي.`,
+        `${team.name} on Yalla Sport: matches, squad, standings, and linked news from the real source.`
       ),
-    path: `/team/${slug}`,
+    path: `/team/${slug}${sp?.season ? `?season=${sp.season}` : ''}`,
     images: [team.logoUrl],
   });
 }
 
-export default function TeamPage({ params }: { params: Promise<{ slug: string }> }) {
+export default function TeamPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ season?: string; league?: string }>;
+}) {
   return (
     <Suspense fallback={<FrontSkeleton kind="hero" />}>
-      <TeamPageBody params={params} />
+      <TeamPageBody params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function TeamPageBody({ params }: { params: Promise<{ slug: string }> }) {
+async function TeamPageBody({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ season?: string; league?: string }>;
+}) {
   const locale = await getLocale();
   const { slug } = await params;
-  const dossier = await loadTeamDossier(slug);
+  const sp = searchParams ? await searchParams : undefined;
+  const dossier = await loadTeamDossier(slug, {
+    season: sp?.season,
+    leagueSlug: sp?.league,
+  });
 
   if (!dossier) notFound();
   walkLocalizeNames(locale, dossier);
@@ -79,7 +100,9 @@ async function TeamPageBody({ params }: { params: Promise<{ slug: string }> }) {
     '@context': 'https://schema.org',
     '@type': 'SportsTeam',
     name: dossier.team.name,
+    sport: 'Soccer',
     logo: dossier.team.logoUrl,
+    ...(dossier.team.country ? { nationality: dossier.team.country } : {}),
     ...(dossier.team.coach?.name
       ? {
         coach: {
@@ -93,6 +116,17 @@ async function TeamPageBody({ params }: { params: Promise<{ slug: string }> }) {
         homeLocation: {
           '@type': 'Place',
           name: dossier.team.venue.name,
+          ...(dossier.team.venue.city
+            ? { address: { '@type': 'PostalAddress', addressLocality: dossier.team.venue.city } }
+            : {}),
+        },
+      }
+      : {}),
+    ...(dossier.standing?.league?.name
+      ? {
+        memberOf: {
+          '@type': 'SportsOrganization',
+          name: dossier.standing.league.name,
         },
       }
       : {}),

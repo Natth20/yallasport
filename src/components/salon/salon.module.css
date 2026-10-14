@@ -516,16 +516,17 @@
   height: 3.4rem;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 30% 26%, color-mix(in srgb, var(--ys-orange) 24%, transparent), transparent 54%),
-    #0b0b0b;
+    radial-gradient(circle at 30% 26%, #ffb36a 0%, transparent 60%),
+    linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ys-orange) 32%, transparent),
-    0 0 18px color-mix(in srgb, var(--ys-orange) 16%, transparent);
+    0 0 0 1px color-mix(in srgb, #f97316 60%, transparent),
+    0 3px 16px color-mix(in srgb, #ea580c 40%, transparent);
 }
 
 .seal :global(img) {
   border-radius: 999px;
   background: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
 }
 
 .kicker {
@@ -1333,7 +1334,7 @@
 
 .stage :global(.stats-league) {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   list-style: none;
   padding: 0;
@@ -1363,6 +1364,29 @@
   font-weight: 800;
   color: var(--muted-foreground);
   margin-top: 0.2rem;
+}
+
+@media (max-width: 640px) {
+  .stage :global(.stats-league) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+
+  .stage :global(.stats-league li) {
+    padding: 0.65rem 0.25rem;
+    border-radius: 0.75rem;
+  }
+
+  .stage :global(.stats-league b) {
+    font-size: 1.15rem;
+  }
+
+  .stage :global(.stats-league span) {
+    font-size: 0.68rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* ==========================================================================

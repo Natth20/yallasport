@@ -64,11 +64,10 @@ export function TacticalPitch({
             setSelectedTeam('home');
             setActivePlayer(null);
           }}
-          className={`flex-1 rounded-xl py-2.5 px-3 text-xs font-black transition-all ${
-            selectedTeam === 'home'
-              ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/25'
-              : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
-          }`}
+          className={`flex-1 rounded-xl py-2.5 px-3 text-xs font-black transition-all ${selectedTeam === 'home'
+            ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/25'
+            : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+            }`}
         >
           {homeTeamName} ({homeLineup?.formation || '4-3-3'})
         </button>
@@ -78,11 +77,10 @@ export function TacticalPitch({
             setSelectedTeam('away');
             setActivePlayer(null);
           }}
-          className={`flex-1 rounded-xl py-2.5 px-3 text-xs font-black transition-all ${
-            selectedTeam === 'away'
-              ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/25'
-              : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
-          }`}
+          className={`flex-1 rounded-xl py-2.5 px-3 text-xs font-black transition-all ${selectedTeam === 'away'
+            ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/25'
+            : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+            }`}
         >
           {awayTeamName} ({awayLineup?.formation || '4-3-3'})
         </button>
@@ -153,20 +151,18 @@ export function TacticalPitch({
                     transform: 'translate(-50%, 50%)',
                   }}
                   onClick={() => setActivePlayer(player)}
-                  className={`group absolute z-20 flex cursor-pointer flex-col items-center transition-all ${
-                    isSelected ? 'scale-125 z-30' : 'hover:scale-115'
-                  }`}
+                  className={`group absolute z-20 flex cursor-pointer flex-col items-center transition-all ${isSelected ? 'scale-125 z-30' : 'hover:scale-115'
+                    }`}
                 >
                   {/* Player Avatar / Token */}
                   <div className="relative">
                     <div
-                      className={`flex h-10 w-10 sm:h-11 sm:sm:w-11 items-center justify-center overflow-hidden rounded-full border-2 shadow-xl transition-all ${
-                        isGk
-                          ? 'border-amber-400 bg-gradient-to-tr from-amber-600 to-amber-400 text-black shadow-amber-500/50'
-                          : selectedTeam === 'home'
+                      className={`flex h-10 w-10 sm:h-11 sm:sm:w-11 items-center justify-center overflow-hidden rounded-full border-2 shadow-xl transition-all ${isGk
+                        ? 'border-amber-400 bg-gradient-to-tr from-amber-600 to-amber-400 text-black shadow-amber-500/50'
+                        : selectedTeam === 'home'
                           ? 'border-orange-400 bg-gradient-to-tr from-orange-700 to-orange-500 text-white shadow-orange-500/50'
                           : 'border-sky-400 bg-gradient-to-tr from-sky-700 to-sky-500 text-white shadow-sky-500/50'
-                      }`}
+                        }`}
                     >
                       {photoUrl ? (
                         <img
@@ -193,11 +189,10 @@ export function TacticalPitch({
                   </div>
 
                   {/* Player Name Pill */}
-                  <span className={`mt-1 max-w-[90px] truncate rounded-md px-1.5 py-0.5 text-center text-[10px] font-bold backdrop-blur-md transition-colors shadow-md ${
-                    isSelected
-                      ? 'bg-orange-500 text-black font-black ring-1 ring-white'
-                      : 'bg-black/80 text-white group-hover:bg-orange-500 group-hover:text-black'
-                  }`}>
+                  <span className={`mt-1 max-w-[66px] sm:max-w-[90px] truncate rounded-md px-1.5 py-0.5 text-center text-[10px] font-bold backdrop-blur-md transition-colors shadow-md ${isSelected
+                    ? 'bg-orange-500 text-black font-black ring-1 ring-white'
+                    : 'bg-black/80 text-white group-hover:bg-orange-500 group-hover:text-black'
+                    }`}>
                     {player.name}
                   </span>
                 </div>

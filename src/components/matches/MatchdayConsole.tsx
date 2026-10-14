@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronLeft, ChevronRight, Radio } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
@@ -69,6 +69,7 @@ export function MatchdayConsole({
   }, [items]);
 
   const [activeId, setActiveId] = useState(reel[0]?.id ?? '');
+  const stripRef = useRef<HTMLOListElement>(null);
   const current = reel.find((item) => item.id === activeId) ?? reel[0];
   const currentIndex = Math.max(0, reel.findIndex((item) => item.id === current?.id));
 
@@ -81,6 +82,13 @@ export function MatchdayConsole({
     if (reel.length < 2) return;
     const next = (currentIndex + dir + reel.length) % reel.length;
     setActiveId(reel[next].id);
+  };
+
+  const scrollStrip = (dir: -1 | 1) => {
+    if (stripRef.current) {
+      const scrollStep = stripRef.current.clientWidth * 0.75 * dir;
+      stripRef.current.scrollBy({ left: scrollStep, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -97,7 +105,7 @@ export function MatchdayConsole({
           </div>
           <div className={hall.duel}>
             <Link href={`/team/${current.homeTeam.slug}`} className={hall.side}>
-              <LeagueCrest name={current.homeTeam.name} logoUrl={current.homeTeam.logoUrl} className="h-24 w-24" />
+              <LeagueCrest name={current.homeTeam.name} logoUrl={current.homeTeam.logoUrl} className="h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18" />
               <strong>{current.homeTeam.name}</strong>
               {current.homeFormation ? <span>{current.homeFormation}</span> : null}
             </Link>
@@ -109,7 +117,7 @@ export function MatchdayConsole({
               <b>{scored ? `${current.homeScore} — ${current.awayScore}` : 'VS'}</b>
             </div>
             <Link href={`/team/${current.awayTeam.slug}`} className={hall.side}>
-              <LeagueCrest name={current.awayTeam.name} logoUrl={current.awayTeam.logoUrl} className="h-24 w-24" />
+              <LeagueCrest name={current.awayTeam.name} logoUrl={current.awayTeam.logoUrl} className="h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18" />
               <strong>{current.awayTeam.name}</strong>
               {current.awayFormation ? <span>{current.awayFormation}</span> : null}
             </Link>
@@ -157,34 +165,68 @@ export function MatchdayConsole({
             <p>{pick(locale, 'مباريات مختارة', 'Selected fixtures')}</p>
             <h3>{pick(locale, 'مباريات مختارة', 'Selected fixtures')}</h3>
           </div>
-          <span>{folio(reel.length - 1)}</span>
+          <div className={board.pitchNavGroup}>
+            <span>{folio(reel.length - 1)}</span>
+            {reel.length > 3 ? (
+              <div className={board.pitchNavArrows}>
+                <button
+                  type="button"
+                  className={board.pitchArrowBtn}
+                  onClick={() => scrollStrip(-1)}
+                  aria-label={pick(locale, 'السابق', 'Previous')}
+                >
+                  <ChevronRight size={15} />
+                </button>
+                <button
+                  type="button"
+                  className={board.pitchArrowBtn}
+                  onClick={() => scrollStrip(1)}
+                  aria-label={pick(locale, 'التالي', 'Next')}
+                >
+                  <ChevronLeft size={15} />
+                </button>
+              </div>
+            ) : null}
+          </div>
         </header>
-        <ol className={board.pitchStripList}>
+        <ol ref={stripRef} className={board.pitchStripList}>
           {reel.map((item, index) => {
             const on = item.id === current.id;
             const itemScored = item.homeScore != null && item.awayScore != null;
             return (
-              <li key={item.id}>
+              <li key={item.id} className={board.pitchItem}>
                 <button
                   type="button"
                   className={`${board.pitchCard}${on ? ` ${board.pitchCardOn}` : ''}`}
                   onClick={() => setActiveId(item.id)}
                   aria-pressed={on}
                 >
-                  <span className={board.pitchNum}>{folio(index)}</span>
-                  <LeagueCrest name={item.homeTeam.name} logoUrl={item.homeTeam.logoUrl} className="h-8 w-8" />
-                  <span className={board.pitchCopy}>
-                    <b>
-                      {item.homeTeam.name} — {item.awayTeam.name}
-                    </b>
-                    <i>
+                  <div className={board.pitchVersus}>
+                    <div className={board.pitchTeamRow}>
+                      <div className={board.pitchTeamHead}>
+                        <LeagueCrest name={item.homeTeam.name} logoUrl={item.homeTeam.logoUrl} className="h-4 w-4 shrink-0 object-contain" />
+                        <span className={board.pitchTeamTitle}>{item.homeTeam.name}</span>
+                      </div>
+                      {itemScored ? <b className={board.pitchScoreDigit}>{item.homeScore}</b> : null}
+                    </div>
+                    <div className={board.pitchTeamRow}>
+                      <div className={board.pitchTeamHead}>
+                        <LeagueCrest name={item.awayTeam.name} logoUrl={item.awayTeam.logoUrl} className="h-4 w-4 shrink-0 object-contain" />
+                        <span className={board.pitchTeamTitle}>{item.awayTeam.name}</span>
+                      </div>
+                      {itemScored ? <b className={board.pitchScoreDigit}>{item.awayScore}</b> : null}
+                    </div>
+                  </div>
+                  <div className={board.pitchCardFooter}>
+                    <span className={board.pitchStatus}>
                       {itemScored
-                        ? `${item.homeScore}–${item.awayScore} · ${statusWord(item, locale)}`
+                        ? statusWord(item, locale)
                         : item.status === 'NOT_STARTED'
                           ? item.league.name
                           : statusWord(item, locale)}
-                    </i>
-                  </span>
+                    </span>
+                    <span className={board.pitchNum}>{folio(index)}</span>
+                  </div>
                 </button>
               </li>
             );

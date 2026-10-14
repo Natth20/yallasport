@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { Eye } from 'lucide-react';
 import { CoverImage } from '@/components/common/CoverImage';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { FrontWhen } from '@/components/front/FrontWhen';
@@ -166,18 +167,35 @@ export function NewsInkFresh({ stories, locale }: { stories: Brief[]; locale: st
           const cover = storyCover(story);
           return (
             <li key={story.id}>
-              <Link href={`/news/${story.slug}`} className={styles['nk-wire-item']}>
-                <span className={styles['nk-wire-media']}>
+              <div className={styles['nk-wire-item']}>
+                <Link href={`/news/${story.slug}`} className={styles['nk-wire-media']}>
                   {cover ? (
                     <CoverImage src={cover} alt="" sizes="(max-width: 900px) 50vw, 22vw" className="object-cover" />
                   ) : null}
                   <b className={styles['nk-wire-num']}>{String(index + 1).padStart(2, '0')}</b>
-                </span>
+                </Link>
                 <span className={styles['nk-wire-copy']}>
-                  <em>{deskLabel(story.category, locale)}</em>
-                  <strong dir={titleDir(story.title)}>{story.title}</strong>
+                  <em>
+                    <Link
+                      href={`/news?desk=${encodeURIComponent(story.category || 'all')}`}
+                      title={pick(locale, `فتح قسم ${deskLabel(story.category, locale)} بالكامل`, `Open full section for ${deskLabel(story.category, locale)}`)}
+                      className="hover:underline"
+                    >
+                      {deskLabel(story.category, locale)}
+                    </Link>
+                  </em>
+                  <Link href={`/news/${story.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    <strong dir={titleDir(story.title)}>{story.title}</strong>
+                  </Link>
                   <small>
-                    {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+                    <Link
+                      href={`/news?source=${encodeURIComponent(story.sourceName || 'يلا سبورت')}`}
+                      title={pick(locale, `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}`, `View all news from source ${story.sourceName || 'Yalla Sport'}`)}
+                      className="hover:underline font-semibold"
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                    >
+                      {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+                    </Link>
                     {story.publishedAt ? (
                       <>
                         {' · '}
@@ -187,7 +205,7 @@ export function NewsInkFresh({ stories, locale }: { stories: Brief[]; locale: st
                     {readingStamp(story, locale)}
                   </small>
                 </span>
-              </Link>
+              </div>
             </li>
           );
         })}
@@ -286,16 +304,33 @@ export function NewsInkQueue({
           const cover = storyCover(story);
           return (
             <li key={story.id}>
-              <Link href={`/news/${story.slug}`} className={styles['nk-queue-item']}>
+              <div className={styles['nk-queue-item']}>
                 <span className={styles['nk-queue-num']}>{String(index + 2).padStart(2, '0')}</span>
-                <span className={styles['nk-queue-thumb']}>
+                <Link href={`/news/${story.slug}`} className={styles['nk-queue-thumb']}>
                   {cover ? <CoverImage src={cover} alt="" sizes="120px" className="object-cover" /> : null}
-                </span>
+                </Link>
                 <span className={styles['nk-queue-copy']}>
-                  <em>{deskLabel(story.category, locale)}</em>
-                  <b dir={titleDir(story.title)}>{story.title}</b>
+                  <em>
+                    <Link
+                      href={`/news?desk=${encodeURIComponent(story.category || 'all')}`}
+                      title={pick(locale, `فتح قسم ${deskLabel(story.category, locale)} بالكامل`, `Open full section for ${deskLabel(story.category, locale)}`)}
+                      className="hover:underline"
+                    >
+                      {deskLabel(story.category, locale)}
+                    </Link>
+                  </em>
+                  <Link href={`/news/${story.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    <b dir={titleDir(story.title)}>{story.title}</b>
+                  </Link>
                   <small>
-                    {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+                    <Link
+                      href={`/news?source=${encodeURIComponent(story.sourceName || 'يلا سبورت')}`}
+                      title={pick(locale, `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}`, `View all news from source ${story.sourceName || 'Yalla Sport'}`)}
+                      className="hover:underline font-semibold"
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                    >
+                      {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+                    </Link>
                     {story.publishedAt ? (
                       <>
                         {' · '}
@@ -304,7 +339,7 @@ export function NewsInkQueue({
                     ) : null}
                   </small>
                 </span>
-              </Link>
+              </div>
             </li>
           );
         })}
@@ -317,8 +352,8 @@ export function NewsInkLead({ story, locale }: { story: CardStory; locale: strin
   const cover = storyCover(story);
   const srcSet = publicStoryImage(story);
   return (
-    <Link href={`/news/${story.slug}`} className={styles['nk-front']}>
-      <span className={styles['nk-front-media']}>
+    <div className={styles['nk-front']}>
+      <Link href={`/news/${story.slug}`} className={styles['nk-front-media']}>
         {cover ? (
           <CoverImage
             src={cover}
@@ -333,25 +368,51 @@ export function NewsInkLead({ story, locale }: { story: CardStory; locale: strin
         <i className={`${styles['nk-bracket']} ${styles['is-tr']}`} />
         <i className={`${styles['nk-bracket']} ${styles['is-bl']}`} />
         <i className={`${styles['nk-bracket']} ${styles['is-br']}`} />
-      </span>
+      </Link>
       <span className={styles['nk-front-copy']}>
         <em>
-          {deskLabel(story.category, locale)}
+          <Link
+            href={`/news?desk=${encodeURIComponent(story.category || 'all')}`}
+            title={pick(locale, `فتح قسم ${deskLabel(story.category, locale)} بالكامل`, `Open full section for ${deskLabel(story.category, locale)}`)}
+            className="hover:underline"
+          >
+            {deskLabel(story.category, locale)}
+          </Link>
           {story.breaking ? ` · ${pick(locale, 'عاجل', 'Breaking')}` : ''}
         </em>
-        <strong dir={titleDir(story.title)}>{story.title}</strong>
-        {story.excerpt ? <b dir={titleDir(story.excerpt)}>{story.excerpt}</b> : null}
+        <Link href={`/news/${story.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+          <strong dir={titleDir(story.title)}>{story.title}</strong>
+        </Link>
+        {story.excerpt ? (
+          <Link href={`/news/${story.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+            <b dir={titleDir(story.excerpt)}>{story.excerpt}</b>
+          </Link>
+        ) : null}
         <small>
-          {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+          <Link
+            href={`/news?source=${encodeURIComponent(story.sourceName || 'يلا سبورت')}`}
+            title={pick(locale, `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}`, `View all news from source ${story.sourceName || 'Yalla Sport'}`)}
+            className="hover:underline font-semibold"
+            style={{ color: 'inherit', textDecoration: 'none' }}
+          >
+            {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+          </Link>
           {story.publishedAt ? (
             <>
               {' · '}
               <FrontWhen value={story.publishedAt} />
             </>
           ) : null}
+          {story.views > 0 ? (
+            <span className="inline-flex items-center gap-1 font-bold text-primary">
+              {' · '}
+              <Eye className="h-3 w-3 inline" />
+              {story.views} {pick(locale, 'مشاهدة', 'views')}
+            </span>
+          ) : null}
         </small>
       </span>
-    </Link>
+    </div>
   );
 }
 
@@ -433,15 +494,32 @@ export function NewsInkTools({
 export function NewsInkCard({ story, locale }: { story: CardStory; locale: string }) {
   const cover = storyCover(story);
   return (
-    <Link href={`/news/${story.slug}`} className={styles['nk-card']}>
-      <span className={styles['nk-card-media']}>
+    <div className={styles['nk-card']}>
+      <Link href={`/news/${story.slug}`} className={styles['nk-card-media']}>
         {cover ? <CoverImage src={cover} alt="" sizes="220px" className="object-cover" /> : null}
-      </span>
+      </Link>
       <span className={styles['nk-card-copy']}>
-        <em>{deskLabel(story.category, locale)}</em>
-        <strong dir={titleDir(story.title)}>{story.title}</strong>
+        <em>
+          <Link
+            href={`/news?desk=${encodeURIComponent(story.category || 'all')}`}
+            title={pick(locale, `فتح قسم ${deskLabel(story.category, locale)} بالكامل`, `Open full section for ${deskLabel(story.category, locale)}`)}
+            className="hover:underline"
+          >
+            {deskLabel(story.category, locale)}
+          </Link>
+        </em>
+        <Link href={`/news/${story.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+          <strong dir={titleDir(story.title)}>{story.title}</strong>
+        </Link>
         <small>
-          {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+          <Link
+            href={`/news?source=${encodeURIComponent(story.sourceName || 'يلا سبورت')}`}
+            title={pick(locale, `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}`, `View all news from source ${story.sourceName || 'Yalla Sport'}`)}
+            className="hover:underline font-semibold"
+            style={{ color: 'inherit', textDecoration: 'none' }}
+          >
+            {story.sourceName || pick(locale, 'مصدر موثوق', 'Trusted source')}
+          </Link>
           {story.publishedAt ? (
             <>
               {' · '}
@@ -452,7 +530,7 @@ export function NewsInkCard({ story, locale }: { story: CardStory; locale: strin
           {'views' in story && story.views ? ` · ${story.views} ${pick(locale, 'مشاهدة', 'views')}` : ''}
         </small>
       </span>
-    </Link>
+    </div>
   );
 }
 
@@ -501,7 +579,9 @@ export function NewsInkLanes({
         {lanes.map((lane) => (
           <article key={lane.desk.key} className={styles['nk-lane']}>
             <header>
-              <p>{deskLabel(lane.desk.key, locale)}</p>
+              <Link href={hrefFor({ desk: lane.desk.key, page: 1 })}>
+                {deskLabel(lane.desk.key, locale)}
+              </Link>
               <Link href={hrefFor({ desk: lane.desk.key, page: 1 })}>
                 {lane.desk.count} {pick(locale, 'تقرير', 'reports')}
               </Link>
@@ -509,10 +589,19 @@ export function NewsInkLanes({
             <ol>
               {lane.items.map((story) => (
                 <li key={story.id}>
-                  <Link href={`/news/${story.slug}`}>
-                    <strong dir={titleDir(story.title)}>{story.title}</strong>
+                  <div style={{ display: 'contents' }}>
+                    <Link href={`/news/${story.slug}`}>
+                      <strong dir={titleDir(story.title)}>{story.title}</strong>
+                    </Link>
                     <small>
-                      {story.sourceName || pick(locale, 'المصدر', 'Source')}
+                      <Link
+                        href={`/news?source=${encodeURIComponent(story.sourceName || 'يلا سبورت')}`}
+                        title={pick(locale, `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}`, `View all news from source ${story.sourceName || 'Yalla Sport'}`)}
+                        className="hover:underline"
+                        style={{ color: 'inherit', textDecoration: 'none' }}
+                      >
+                        {story.sourceName || pick(locale, 'المصدر', 'Source')}
+                      </Link>
                       {story.publishedAt ? (
                         <>
                           {' · '}
@@ -520,7 +609,7 @@ export function NewsInkLanes({
                         </>
                       ) : null}
                     </small>
-                  </Link>
+                  </div>
                 </li>
               ))}
             </ol>

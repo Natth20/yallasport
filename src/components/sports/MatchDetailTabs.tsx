@@ -124,31 +124,31 @@ export function MatchDetailTabs({
   return (
     <div className={styles.panelCard}>
       <Tabs defaultValue={defaultTab} variant="pills">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-3 border-b border-border">
-          <TabsList className={styles.tabsNav}>
-            <TabsTrigger value="events" icon={<Activity className="h-4 w-4" />}>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-3 border-b border-border w-full min-w-0">
+          <TabsList className={`${styles.tabsNav} w-full sm:w-auto min-w-0 max-w-full`}>
+            <TabsTrigger value="events" icon={<Activity className="h-4 w-4 shrink-0" />}>
               {t('events')} ({events.length})
             </TabsTrigger>
-            <TabsTrigger value="lineups" icon={<Users className="h-4 w-4" />}>
+            <TabsTrigger value="lineups" icon={<Users className="h-4 w-4 shrink-0" />}>
               {t('lineups')}
             </TabsTrigger>
-            <TabsTrigger value="statistics" icon={<PlayCircle className="h-4 w-4" />}>
+            <TabsTrigger value="statistics" icon={<PlayCircle className="h-4 w-4 shrink-0" />}>
               {t('statistics')}
             </TabsTrigger>
             {homeStanding || awayStanding ? (
-              <TabsTrigger value="standings" icon={<Trophy className="h-4 w-4" />}>
+              <TabsTrigger value="standings" icon={<Trophy className="h-4 w-4 shrink-0" />}>
                 {pick(locale, 'الترتيب', 'Standings')}
               </TabsTrigger>
             ) : null}
             {h2hMatches.length > 0 ? (
-              <TabsTrigger value="h2h" icon={<History className="h-4 w-4" />}>
+              <TabsTrigger value="h2h" icon={<History className="h-4 w-4 shrink-0" />}>
                 {t('head_to_head')}
               </TabsTrigger>
             ) : null}
           </TabsList>
 
           {updating ? (
-            <span className="flex items-center gap-1.5 text-xs text-orange-500 font-bold">
+            <span className="flex items-center gap-1.5 text-xs text-orange-500 font-bold shrink-0">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
               {t('live')}
             </span>

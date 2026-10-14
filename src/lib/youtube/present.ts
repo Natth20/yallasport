@@ -27,6 +27,8 @@ export function toYoutubeCards(
   }));
 }
 
+export type YoutubeCard = ReturnType<typeof toYoutubeCards>[number];
+
 export function youtubeCopy(locale: string) {
   const ar = locale !== 'en';
   return {

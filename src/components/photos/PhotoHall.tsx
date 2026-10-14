@@ -17,6 +17,13 @@ import {
   Play,
   Search,
   Sparkles,
+  Trophy,
+  Swords,
+  Shield,
+  Layers,
+  ArrowRight,
+  ExternalLink,
+  Flame,
   X,
 } from 'lucide-react';
 import styles from './photo-hall.module.css';
@@ -29,6 +36,24 @@ export type PhotoFrame = {
   srcSet?: string;
   sourceName: string | null;
   publishedAt: string;
+  categoryGroup?: 'ALL' | 'TOURNAMENT' | 'LEAGUE' | 'MATCH' | 'EVENT';
+  categoryLabel?: string;
+  categoryTag?: string;
+  relatedNewsSlug?: string;
+  relatedTeam?: {
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  } | null;
+  relatedLeague?: {
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  } | null;
+  relatedMatch?: {
+    id: string;
+    label: string;
+  } | null;
 };
 
 function folio(index: number) {
@@ -47,60 +72,57 @@ export function PhotoHall({
   emptyLead: string;
 }) {
   const [frames, setFrames] = useState(initialFrames);
+  const [activeTab, setActiveTab] = useState<'ALL' | 'TOURNAMENT' | 'LEAGUE' | 'MATCH' | 'EVENT'>('ALL');
   const [paused, setPaused] = useState(false);
   const [theater, setTheater] = useState(false);
-  const [source, setSource] = useState('ALL');
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(initialFrames[0]?.id || null);
   const touchX = useRef<number | null>(null);
   const ar = locale === 'ar';
-
-  const sourceNames = useMemo(() => {
-    const names = new Set<string>();
-    for (const frame of frames) {
-      if (frame.sourceName) names.add(frame.sourceName);
-    }
-    return Array.from(names);
-  }, [frames]);
-
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return frames.filter((frame) => {
-      if (source !== 'ALL' && frame.sourceName !== source) return false;
-      if (!q) return true;
-      return `${frame.title} ${frame.sourceName || ''}`.toLowerCase().includes(q);
-    });
-  }, [frames, query, source]);
-
-  const current = visible.find((frame) => frame.id === active) || visible[0] || frames[0];
-  const currentIndex = Math.max(0, visible.findIndex((frame) => frame.id === current?.id));
-  const queue = visible.slice(0, 8);
 
   useEffect(() => {
     setFrames(initialFrames);
     setActive((prev) => (prev && initialFrames.some((frame) => frame.id === prev) ? prev : initialFrames[0]?.id || null));
   }, [initialFrames]);
 
-  useEffect(() => {
-    const pull = async () => {
-      try {
-        const res = await fetch(`/api/media/photos?locale=${locale}`, { cache: 'no-store' });
-        if (!res.ok) return;
-        const data = (await res.json()) as { frames?: PhotoFrame[] };
-        if (!Array.isArray(data.frames) || data.frames.length === 0) return;
-        setFrames(data.frames);
-        setActive((prev) => (prev && data.frames!.some((frame) => frame.id === prev) ? prev : data.frames![0]?.id || null));
-      } catch {
-        // keep the last wall
+  // Tab definitions
+  const tabs = [
+    { id: 'ALL' as const, label: ar ? 'كل الصور' : 'All Photos', icon: Layers },
+    { id: 'TOURNAMENT' as const, label: ar ? 'البطولات القارية' : 'Continental Cups', icon: Trophy },
+    { id: 'LEAGUE' as const, label: ar ? 'الدوريات الكبرى' : 'Domestic Leagues', icon: Flame },
+    { id: 'MATCH' as const, label: ar ? 'المباريات والقمم' : 'Matches & Clashes', icon: Swords },
+    { id: 'EVENT' as const, label: ar ? 'الانتقالات والأحداث' : 'Transfers & Events', icon: Sparkles },
+  ];
+
+  // Tab counts
+  const tabCounts = useMemo(() => {
+    const counts: Record<string, number> = { ALL: frames.length, TOURNAMENT: 0, LEAGUE: 0, MATCH: 0, EVENT: 0 };
+    for (const f of frames) {
+      if (f.categoryGroup && counts[f.categoryGroup] !== undefined) {
+        counts[f.categoryGroup] += 1;
       }
-    };
-    const timer = window.setInterval(pull, 120_000);
-    const first = window.setTimeout(pull, 8_000);
-    return () => {
-      window.clearInterval(timer);
-      window.clearTimeout(first);
-    };
-  }, [locale]);
+    }
+    return counts;
+  }, [frames]);
+
+  // Filtered frames
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return frames.filter((frame) => {
+      // Tab filter
+      if (activeTab !== 'ALL' && frame.categoryGroup !== activeTab) {
+        return false;
+      }
+      // Text search
+      if (!q) return true;
+      const haystack = `${frame.title} ${frame.sourceName || ''} ${frame.categoryLabel || ''} ${frame.relatedTeam?.name || ''} ${frame.relatedLeague?.name || ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [activeTab, frames, query]);
+
+  const current = visible.find((frame) => frame.id === active) || visible[0] || frames[0];
+  const currentIndex = Math.max(0, visible.findIndex((frame) => frame.id === current?.id));
+  const queue = visible.slice(0, 8);
 
   useEffect(() => {
     if (paused || theater || visible.length < 2) return undefined;
@@ -160,6 +182,37 @@ export function PhotoHall({
 
   return (
     <div className={styles.hall}>
+      {/* ----------------- TOP CATEGORY TABS NAVIGATION ----------------- */}
+      <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-card/70 border border-border/60 backdrop-blur-md mb-6">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          const count = tabCounts[tab.id] || 0;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all ${
+                isActive
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              <Icon size={15} />
+              <span>{tab.label}</span>
+              <span
+                className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+                  isActive ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className={styles.console}>
         <section id="photos-cinema" className={styles.screen} aria-live="polite">
           <div
@@ -182,7 +235,7 @@ export function PhotoHall({
                   <span />
                   <span />
                 </span>
-                <span>{pick(locale, 'الصور', 'Photos')}</span>
+                <span>{current.categoryLabel || pick(locale, 'الصور المعتمدة', 'Official Photos')}</span>
               </div>
               <div className={styles.bezelRight}>
                 <span className={styles.clock}>
@@ -245,11 +298,32 @@ export function PhotoHall({
           </div>
 
           <div className={styles.program}>
+            {/* Classification & Relation Badges */}
             <div className={styles.chips}>
-              <span className={styles.chipOn}>
-                <Camera size={13} aria-hidden />
-                <b>{current.sourceName || pick(locale, 'الصور', 'Photos')}</b>
-              </span>
+              {current.categoryLabel ? (
+                <span className={styles.chipOn}>
+                  <Trophy size={13} aria-hidden />
+                  <b>{current.categoryLabel}</b>
+                </span>
+              ) : null}
+
+              {current.relatedTeam ? (
+                <Link
+                  href={`/team/${current.relatedTeam.slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <Shield size={12} />
+                  <span>{current.relatedTeam.name}</span>
+                </Link>
+              ) : null}
+
+              {current.sourceName ? (
+                <span className={styles.chip}>
+                  <Camera size={12} aria-hidden />
+                  <span>{current.sourceName}</span>
+                </span>
+              ) : null}
+
               {current.publishedAt ? (
                 <span className={styles.chip}>
                   <Calendar size={12} aria-hidden />
@@ -260,20 +334,39 @@ export function PhotoHall({
                   />
                 </span>
               ) : null}
-              <span className={styles.chip}>
-                {folio(currentIndex)} / {folio(visible.length)}
-              </span>
             </div>
 
             <h2 dir="auto" className={styles.programTitle}>
               {current.title}
             </h2>
 
-            <div className={styles.acts}>
+            {/* Direct Related News, Match, and Team Actions */}
+            <div className="flex flex-wrap items-center gap-2 pt-2">
               <Link href={`/news/${current.slug}`} className={styles.go}>
-                <span>{pick(locale, 'اقرأ التقرير', 'Read the report')}</span>
+                <span>{pick(locale, 'اقرأ التقرير الإخباري الكامل', 'Read Full Report')}</span>
                 <ArrowUpRight size={14} />
               </Link>
+
+              {current.relatedLeague ? (
+                <Link
+                  href={`/league/${current.relatedLeague.slug}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/70 hover:border-orange-500 text-xs font-bold text-foreground transition-all"
+                >
+                  <Trophy size={13} className="text-orange-500" />
+                  <span>{current.relatedLeague.name}</span>
+                </Link>
+              ) : null}
+
+              {current.relatedMatch ? (
+                <Link
+                  href={`/matches`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/70 hover:border-orange-500 text-xs font-bold text-foreground transition-all"
+                >
+                  <Swords size={13} className="text-orange-500" />
+                  <span>{current.relatedMatch.label}</span>
+                </Link>
+              ) : null}
+
               <button
                 type="button"
                 className={styles.ghost}
@@ -283,8 +376,9 @@ export function PhotoHall({
                 }}
               >
                 <Maximize2 size={13} aria-hidden />
-                <span>{pick(locale, 'تكبير', 'Enlarge')}</span>
+                <span>{pick(locale, 'تكبير الصورة', 'Enlarge')}</span>
               </button>
+
               {visible.length > 1 ? (
                 <button
                   type="button"
@@ -322,7 +416,7 @@ export function PhotoHall({
                       </span>
                       <span className={styles.queueCopy}>
                         <b dir="auto">{frame.title}</b>
-                        <small>{frame.sourceName || pick(locale, 'المصدر', 'Source')}</small>
+                        <small>{frame.categoryLabel || frame.sourceName || pick(locale, 'المصدر', 'Source')}</small>
                       </span>
                     </button>
                   </li>
@@ -333,15 +427,22 @@ export function PhotoHall({
         ) : null}
       </div>
 
+      {/* ----------------- PHOTO WALL / GRID ----------------- */}
       <section id="photos-wall" className={styles.shelf}>
         <header className={styles.shelfHead}>
           <div>
             <div className={styles.shelfTitle}>
               <Sparkles size={18} aria-hidden />
-              <h3>{pick(locale, 'معرض الصور', 'Photo gallery')}</h3>
+              <h3>{pick(locale, 'معرض الصور المصنّفة', 'Categorized Photo Gallery')}</h3>
               <span>{visible.length}</span>
             </div>
-            <p>{pick(locale, 'شبكة واحدة. صفِّ بالمصدر أو بالعنوان، ثم اضغط الصورة للعرض.', 'One grid. Filter by source or title, then tap a photo to view.')}</p>
+            <p>
+              {pick(
+                locale,
+                'صور موثقة مرتبطة بالبطولات والأندية والمباريات المنشورة. اضغط على أي صورة للعرض والاطلاع على التقرير المرتبط.',
+                'Verified sports photos linked to matches, tournaments, and clubs. Tap any photo to view.',
+              )}
+            </p>
           </div>
         </header>
 
@@ -351,7 +452,7 @@ export function PhotoHall({
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={pick(locale, 'ابحث في العناوين أو المصادر…', 'Search titles or sources…')}
+              placeholder={pick(locale, 'ابحث في العناوين أو الأندية أو البطولات…', 'Search titles, clubs, or tournaments…')}
             />
             {query ? (
               <button type="button" onClick={() => setQuery('')} aria-label={pick(locale, 'مسح البحث', 'Clear search')}>
@@ -359,48 +460,21 @@ export function PhotoHall({
               </button>
             ) : null}
           </div>
-
-          {sourceNames.length > 1 ? (
-            <div id="photos-sources" className={styles.rail} role="tablist" aria-label={pick(locale, 'تصفية بالمصدر', 'Filter by source')}>
-              <button
-                type="button"
-                className={`${styles.pill}${source === 'ALL' ? ` ${styles.on}` : ''}`}
-                onClick={() => setSource('ALL')}
-              >
-                <span>{pick(locale, 'كل المصادر', 'All sources')}</span>
-                <em>{frames.length}</em>
-              </button>
-              {sourceNames.map((name) => {
-                const count = frames.filter((frame) => frame.sourceName === name).length;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    className={`${styles.pill}${source === name ? ` ${styles.on}` : ''}`}
-                    onClick={() => setSource(name)}
-                  >
-                    <span>{name}</span>
-                    <em>{count}</em>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
         </div>
 
         {visible.length === 0 ? (
           <div className={styles.quiet}>
             <Search size={22} aria-hidden />
-            <p>{pick(locale, 'لا إطار يطابق هذا البحث.', 'No print matches this filter.')}</p>
+            <p>{pick(locale, 'لا توجد صور تطابق هذا التصنيف أو البحث.', 'No photos match this category or search.')}</p>
             <button
               type="button"
               className={styles.reset}
               onClick={() => {
                 setQuery('');
-                setSource('ALL');
+                setActiveTab('ALL');
               }}
             >
-              {pick(locale, 'إعادة ضبط', 'Reset')}
+              {pick(locale, 'عرض كل الصور', 'Show All Photos')}
             </button>
           </div>
         ) : (
@@ -427,19 +501,26 @@ export function PhotoHall({
                     />
                     <span className={styles.scrim} aria-hidden />
                     <span className={styles.folio}>{folio(index)}</span>
+
+                    {/* Category Pill on top of photo */}
+                    {frame.categoryLabel ? (
+                      <span className="absolute top-2.5 start-2.5 inline-flex items-center gap-1 rounded-full bg-black/75 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white border border-white/10 z-10">
+                        {frame.categoryLabel}
+                      </span>
+                    ) : null}
                   </span>
                   <span className={styles.copy}>
-                    <small>{frame.sourceName || pick(locale, 'المصدر', 'Source')}</small>
-                    <b dir="auto">{frame.title}</b>
-                    {frame.publishedAt ? (
-                      <em>
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span>{frame.sourceName || pick(locale, 'المصدر', 'Source')}</span>
+                      {frame.publishedAt ? (
                         <ClientTime
                           value={frame.publishedAt}
                           locale={locale}
                           options={{ day: 'numeric', month: 'short' }}
                         />
-                      </em>
-                    ) : null}
+                      ) : null}
+                    </div>
+                    <b dir="auto">{frame.title}</b>
                   </span>
                 </button>
               );
@@ -448,6 +529,7 @@ export function PhotoHall({
         )}
       </section>
 
+      {/* ----------------- FULLSCREEN LIGHTBOX / THEATER MODAL ----------------- */}
       {theater
         ? createPortal(
             <div className={styles.theater} role="dialog" aria-modal="true" aria-label={current.title}>
@@ -477,12 +559,48 @@ export function PhotoHall({
                   ) : null}
                 </div>
                 <figcaption>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {current.categoryLabel ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-black text-orange-500 border border-orange-500/20">
+                        {current.categoryLabel}
+                      </span>
+                    ) : null}
+                    {current.relatedTeam ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-black text-emerald-500 border border-emerald-500/20">
+                        {current.relatedTeam.name}
+                      </span>
+                    ) : null}
+                  </div>
+
                   <strong dir="auto">{current.title}</strong>
-                  <div className={styles.theaterActs}>
+
+                  {/* Related story and entities links */}
+                  <div className="flex flex-wrap items-center gap-3 mt-4 pt-3 border-t border-border/40">
                     <Link href={`/news/${current.slug}`} className={styles.go}>
-                      <span>{pick(locale, 'اقرأ التقرير', 'Read the report')}</span>
+                      <span>{pick(locale, 'اقرأ التقرير الإخباري الكامل', 'Read Full Report')}</span>
                       <ArrowUpRight size={14} />
                     </Link>
+
+                    {current.relatedTeam ? (
+                      <Link
+                        href={`/team/${current.relatedTeam.slug}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/70 hover:border-orange-500 text-xs font-bold text-foreground transition-all"
+                      >
+                        <Shield size={13} className="text-emerald-500" />
+                        <span>{current.relatedTeam.name}</span>
+                      </Link>
+                    ) : null}
+
+                    {current.relatedLeague ? (
+                      <Link
+                        href={`/league/${current.relatedLeague.slug}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/70 hover:border-orange-500 text-xs font-bold text-foreground transition-all"
+                      >
+                        <Trophy size={13} className="text-orange-500" />
+                        <span>{current.relatedLeague.name}</span>
+                      </Link>
+                    ) : null}
+
                     <button type="button" className={styles.ghost} onClick={() => setTheater(false)}>
                       {pick(locale, 'إغلاق', 'Close')}
                     </button>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { deskLabel } from '@/lib/news/desks';
 import type { FrontStory } from '@/lib/front/types';
@@ -29,6 +29,7 @@ const TABS = [
 
 export function FrontSportNewsTabs({ locale, stories }: { locale: string; stories: FrontStory[] }) {
   const ar = locale === 'ar';
+  const router = useRouter();
   const [tab, setTab] = useState<string>('all');
   const shown = useMemo(() => {
     if (tab === 'all') return stories.slice(0, 4);
@@ -96,13 +97,38 @@ export function FrontSportNewsTabs({ locale, stories }: { locale: string; storie
                 ) : (
                   <div className={styles.newsCardImgFallback} />
                 )}
-                <div className={styles.newsCardImgOverlay} />
-                <span className={styles.storyCategoryPill}>{deskLabel(story.category, locale)}</span>
+                <button
+                  type="button"
+                  className={styles.storyCategoryPill}
+                  style={{ cursor: 'pointer', border: 'none' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetDesk = story.category || 'all';
+                    router.push(`/news?desk=${encodeURIComponent(targetDesk)}`);
+                  }}
+                  title={ar ? `فتح قسم ${deskLabel(story.category, locale)} بالكامل` : `Open full section for ${deskLabel(story.category, locale)}`}
+                >
+                  {deskLabel(story.category, locale)}
+                </button>
               </div>
               <div className={styles.newsCardBody}>
                 <h4 className={styles.newsCardTitle}>{story.title}</h4>
                 <div className={styles.newsCardMeta}>
-                  <span className={styles.newsSourcePill}>{story.sourceName || 'يلا سبورت'}</span>
+                  <button
+                    type="button"
+                    className={styles.newsSourcePill}
+                    style={{ cursor: 'pointer', border: 'none', background: 'transparent', padding: 0 }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const src = story.sourceName || 'يلا سبورت';
+                      router.push(`/news?source=${encodeURIComponent(src)}`);
+                    }}
+                    title={ar ? `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}` : `View all news from source ${story.sourceName || 'Yalla Sport'}`}
+                  >
+                    {story.sourceName || 'يلا سبورت'}
+                  </button>
                   <span className={styles.newsTimePill}>
                     <ClientTime value={story.publishedAt} locale={locale} />
                   </span>

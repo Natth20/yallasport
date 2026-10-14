@@ -27,12 +27,15 @@
 .dayRail {
   display: grid;
   gap: 0.85rem;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
+  overflow: hidden;
 }
 
 .dayRailHead {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
 }
@@ -61,30 +64,62 @@
 
 .dayRailList {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.85rem;
   margin: 0;
-  padding: 0.15rem 0 0.35rem;
+  padding: 0.35rem 0.2rem 0.75rem;
   list-style: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   overflow-x: auto;
-  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dayRailList::-webkit-scrollbar {
+  display: none;
+}
+
+.dayRailItem,
+.dayRailList > li {
+  flex: 0 0 16.5rem !important;
+  width: 16.5rem !important;
+  min-width: 16.5rem !important;
+  max-width: 82vw !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  scroll-snap-align: start;
 }
 
 .dayRailCard {
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.7rem;
-  min-width: 16.5rem;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
   padding: 0.8rem 0.95rem;
   border-radius: 1.15rem;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
   background: color-mix(in srgb, var(--card) 94%, transparent);
   text-decoration: none;
   color: inherit;
+  transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
 }
 
 .dayRailCard:hover {
-  border-color: color-mix(in srgb, var(--ys-orange) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--ys-orange) 45%, var(--border));
+  background: color-mix(in srgb, var(--card) 98%, transparent);
 }
 
 .dayRailNum {
@@ -588,6 +623,14 @@
   background: var(--card);
   padding: 1.5rem;
   box-shadow: 0 4px 20px -10px color-mix(in srgb, var(--foreground) 6%, transparent);
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .panelCard {
+    padding: 1.15rem 0.85rem;
+  }
 }
 
 .panelTitle {
@@ -603,17 +646,25 @@
 /* ---- Tabs Navigation Container ---- */
 .tabsNav {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.4rem;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0.35rem 0.45rem;
   border-radius: 1.2rem;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--foreground) 2%, var(--card));
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tabsNav::-webkit-scrollbar {
   display: none;
+}
+
+.tabsNav > * {
+  flex-shrink: 0 !important;
 }
 
 .tabButton {

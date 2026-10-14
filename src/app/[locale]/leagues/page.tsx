@@ -330,7 +330,43 @@ async function LeaguesPageBody({
       leagueSlug: league?.slug ?? '',
     });
   }
-  const leagueNews = (await overlayNewsList([...newsById.values()], locale)).slice(0, 4);
+  let leagueNewsList = await overlayNewsList([...newsById.values()], locale);
+  if (leagueNewsList.length < 6) {
+    const fallbackNews = await prisma.news.findMany({
+      where: {
+        status: 'PUBLISHED',
+        id: { notIn: leagueNewsList.map((n) => n.id) },
+        OR: [
+          { category: { in: ['Champions League', 'Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Football'] } },
+          { title: { contains: 'دوري' } },
+          { title: { contains: 'بطولة' } },
+          { title: { contains: 'كأس' } },
+        ],
+      },
+      orderBy: { publishedAt: 'desc' },
+      take: 6 - leagueNewsList.length,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        excerpt: true,
+        publishedAt: true,
+        featuredImage: true,
+        sourceLocale: true,
+        category: true,
+      },
+    });
+    const overlaidFallback = await overlayNewsList(
+      fallbackNews.map((n) => ({
+        ...n,
+        leagueName: n.category || '',
+        leagueSlug: '',
+      })),
+      locale
+    );
+    leagueNewsList = [...leagueNewsList, ...overlaidFallback];
+  }
+  const leagueNews = leagueNewsList.slice(0, 6);
 
   const followedSet = new Set(followedLeagueIds.map((favorite) => favorite.entityId));
   const liveLeagueIds = new Set(liveMatches.map((match) => match.league.id));

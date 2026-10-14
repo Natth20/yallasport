@@ -5,16 +5,13 @@ import { Link } from '@/i18n/navigation';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { prisma } from '@/lib/prisma';
 import { swallow } from '@/lib/ops/caught';
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { countLiveMatches } from '@/lib/sports-data/live-census';
 import { FooterBrief } from './FooterBrief';
 import styles from './footer.module.css';
 
-const FOOTER_LEAGUE_IDS = ['2', '39', '140', '307', '135'] as const;
 const FOOTER_DESK_TTL_MS = 60_000;
 
-type FooterLeague = { name: string; slug: string; externalId: string };
-type FooterDesk = { leagues: FooterLeague[]; liveNow: number; todayStories: number };
+type FooterDesk = { liveNow: number; todayStories: number };
 
 let footerDeskMemo: { at: number; value: FooterDesk } | null = null;
 
@@ -23,14 +20,7 @@ async function loadFooterDesk(): Promise<FooterDesk> {
     return footerDeskMemo.value;
   }
 
-  const empty: FooterLeague[] = [];
-  const [leagues, liveNow, todayStories] = await Promise.all([
-    prisma.league
-      .findMany({
-        where: { externalId: { in: [...FOOTER_LEAGUE_IDS] } },
-        select: { name: true, slug: true, externalId: true },
-      })
-      .catch(swallow('footer.leagues', empty, { persist: false })),
+  const [liveNow, todayStories] = await Promise.all([
     countLiveMatches(),
     prisma.news
       .count({
@@ -42,7 +32,7 @@ async function loadFooterDesk(): Promise<FooterDesk> {
       .catch(swallow('footer.stories', 0, { persist: false })),
   ]);
 
-  const value = { leagues, liveNow, todayStories };
+  const value = { liveNow, todayStories };
   footerDeskMemo = { at: Date.now(), value };
   return value;
 }
@@ -53,65 +43,70 @@ export async function Footer() {
   const year = new Date().getFullYear();
   const ar = locale === 'ar';
 
-  const { leagues: featuredLeagues, liveNow, todayStories } = await loadFooterDesk();
-  const leagueLinks = FOOTER_LEAGUE_IDS
-    .map((id) => featuredLeagues.find((row) => row.externalId === id))
-    .filter((row): row is NonNullable<typeof row> => Boolean(row))
-    .map((row) => ({ name: localizePlainName(locale, row.name), href: `/league/${row.slug}` }));
+  const { liveNow } = await loadFooterDesk();
 
-  const session = await auth();
+  const session = await auth().catch(swallow('footer.auth', null, { persist: false }));
   const staff = isStaffRole(session?.user?.role);
+
+  const mastLinks = [
+    { name: ar ? '🏠 الرئيسية' : '🏠 Home', href: '/' },
+    { name: ar ? 'ℹ️ من نحن' : 'ℹ️ About Us', href: '/about' },
+    { name: ar ? '📩 تواصل معنا' : '📩 Contact Us', href: '/contact' },
+    { name: ar ? '🚩 إبلاغ عن محتوى' : '🚩 Report Content', href: '/report' },
+  ];
 
   const columns = [
     {
-      title: ar ? 'المنافسات والمباريات' : 'Matches & Leagues',
+      title: ar ? 'المجموعة الأولى — المحتوى' : 'Group 1 — Content',
       links: [
-        { name: t('common.matches') || 'المباريات والنتائج', href: '/matches' },
-        { name: t('common.leagues') || 'البطولات والدوريات', href: '/leagues' },
-        { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live' },
-        { name: ar ? 'دليل القنوات والبث' : 'TV Guide', href: '/tv-guide' },
-        { name: ar ? 'لوحة الصدارة والتوقعات' : 'Leaderboard', href: '/leaderboard' },
-        ...leagueLinks.slice(0, 3),
+        { name: ar ? '📰 الأخبار' : '📰 News', href: '/news' },
+        { name: ar ? '🎥 الفيديو' : '🎥 Videos', href: '/videos' },
+        { name: ar ? '🎬 الريلز' : '🎬 Reels', href: '/reels' },
+        { name: ar ? '📷 الصور' : '📷 Photos', href: '/photos' },
+        { name: ar ? '🔄 الانتقالات' : '🔄 Transfers', href: '/transfers' },
       ],
     },
     {
-      title: ar ? 'الأخبار والوسائط' : 'News & Media',
+      title: ar ? 'المجموعة الثانية — الرياضة' : 'Group 2 — Sports',
       links: [
-        { name: t('common.news') || 'أحدث الأخبار والتقارير', href: '/news' },
-        { name: t('common.video') || 'مكتبة الفيديو والأهداف', href: '/videos' },
-        { name: ar ? 'ريلز ولقطات سريعة' : 'Reels', href: '/videos#reels' },
-        { name: t('common.photos') || 'الصور والعدسة', href: '/photos' },
-        { name: t('common.transfers') || 'سوق الانتقالات', href: '/transfers' },
+        { name: ar ? '🏟️ المباريات' : '🏟️ Matches', href: '/matches' },
+        { name: ar ? '🏆 البطولات' : '🏆 Tournaments & Leagues', href: '/leagues' },
+        { name: ar ? '👥 الفرق' : '👥 Teams & Clubs', href: '/teams' },
+        { name: ar ? '👤 اللاعبون' : '👤 Players', href: '/players' },
+        { name: ar ? '🧑‍💼 المدربون' : '🧑‍💼 Coaches', href: '/coaches' },
+        { name: ar ? '📺 القنوات الناقلة' : '📺 TV Channels', href: '/channels' },
+        { name: ar ? '📺 يلا سبورت مباشر' : '📺 Yalla Sport Live', href: '/live', badge: 'LIVE' },
       ],
     },
     {
-      title: ar ? 'الإحصائيات والمقارنات' : 'Stats & Compare',
+      title: ar ? 'المجموعة الثالثة — الإحصائيات والتفاعل' : 'Group 3 — Stats & Interaction',
       links: [
-        { name: t('common.stats') || 'إحصائيات المواسم والفرق', href: '/stats' },
-        { name: t('common.player_compare') || 'مقارنة اللاعبين', href: '/compare-players' },
-        { name: t('common.club_compare') || 'مقارنة الأندية', href: '/compare' },
-        { name: ar ? 'البحث الرياضي الشامل' : 'Search', href: '/search' },
+        { name: ar ? '📊 مركز الإحصائيات' : '📊 Stats Center', href: '/stats' },
+        { name: ar ? 'الأحداث' : 'Events', href: '/events' },
+        { name: ar ? '⚖️ مقارنة اللاعبين' : '⚖️ Compare Players', href: '/compare-players' },
+        { name: ar ? '🆚 مقارنة الأندية' : '🆚 Compare Clubs', href: '/compare' },
+        { name: ar ? '🏆 لوحة الصدارة والتوقعات' : '🏆 Leaderboard & Predictions', href: '/leaderboard' },
+        { name: ar ? '📱 مركز التواصل الاجتماعي' : '📱 Social Media Hub', href: '/social' },
       ],
     },
     {
-      title: ar ? 'المنصة والحساب' : 'Account & About',
+      title: ar ? 'المجموعة الرابعة — الحساب والخدمات' : 'Group 4 — Account & Services',
       links: [
-        { name: ar ? 'حسابي والإشعارات' : 'My Account & Alerts', href: '/profile' },
-        { name: t('common.favorites') || 'الفرق والمباريات المفضلة', href: '/favorites' },
-        { name: t('common.settings') || 'الإعدادات والمظهر', href: '/settings' },
-        { name: t('footer.about') || 'من نحن', href: '/about' },
-        { name: t('footer.connect') || 'تواصل معنا', href: '/contact' },
-        { name: t('common.report') || 'إبلاغ عن محتوى', href: '/report' },
-        ...(staff ? [{ name: ar ? 'لوحة الإدارة والتحكم' : 'Control Desk', href: '/admin' }] : []),
+        { name: ar ? '⭐ المفضلة' : '⭐ Favorites', href: '/favorites' },
+        { name: ar ? '🔔 تابع فريقك' : '🔔 Follow Your Team', href: '/follow' },
+        { name: ar ? '👤 حسابي' : '👤 My Account', href: '/profile' },
+        { name: ar ? '⚙️ الإعدادات' : '⚙️ Settings', href: '/settings' },
+        { name: ar ? '📱 تطبيق يلا سبورت' : '📱 Yalla Sport App', href: '/app' },
+        ...(staff ? [{ name: ar ? '🛡️ لوحة الإدارة' : '🛡️ Control Desk', href: '/admin' }] : []),
       ],
     },
   ];
 
-  const legalLinks = [
-    { name: t('common.privacy') || 'الخصوصية', href: '/privacy' },
-    { name: t('common.terms') || 'الشروط والأحكام', href: '/terms' },
-    { name: t('common.cookies') || 'ملفات تعريف الارتباط', href: '/cookies' },
-    { name: t('footer.copyright') || 'حقوق الملكية الفكرية', href: '/copyright' },
+  const legalPolicies = [
+    { name: ar ? '🔒 سياسة الخصوصية' : '🔒 Privacy Policy', href: '/privacy' },
+    { name: ar ? '📜 الشروط والأحكام' : '📜 Terms & Conditions', href: '/terms' },
+    { name: ar ? '⚖️ حقوق الملكية الفكرية' : '⚖️ Copyright & IP', href: '/copyright' },
+    { name: ar ? '🍪 ملفات تعريف الارتباط' : '🍪 Cookie Policy', href: '/cookies' },
   ];
 
   return (
@@ -131,38 +126,31 @@ export async function Footer() {
       </div>
 
       <div className={styles.container}>
+        {/* 24. أسفل الصفحة — الفوتر: الشعار والروابط الرئيسية */}
         <div className={styles.mast}>
           <div>
             <Link href="/" className={styles.brandLink} aria-label="Yalla Sport">
-              <span className={styles.seal}>
-                <span className={styles.orbitRing} aria-hidden />
-                <BrandMark size={40} />
-              </span>
-              <span>
-                <span className={styles.brandName}>
-                  {ar ? (
-                    <>
-                      <span className={styles.brandAccent}>يلا</span> سبورت
-                    </>
-                  ) : (
-                    <>
-                      <span className={styles.brandAccent}>Yalla</span> Sport
-                    </>
-                  )}
-                </span>
-                <span className={styles.brandMark} aria-hidden />
-              </span>
+              <BrandMark size={48} />
             </Link>
             <p className={styles.brandDesc}>
               {ar
                 ? 'يلا سبورت منصة رياضية متكاملة تجمع الأخبار الرياضية، المباريات والنتائج المباشرة، البطولات والدوريات، الفرق واللاعبين والمدربين، الإحصائيات، الانتقالات، الفيديو والصور، مع تغطية رياضية شاملة من مصادر موثوقة.'
-                : 'Yalla Sport is a comprehensive sports platform that aggregates sports news, live match coverage and scores, tournaments and leagues, teams, players, coaches, statistics, transfers, video, and photos, with extensive coverage from reliable sources.'}
+                : 'Yalla Sport is a comprehensive sports platform aggregating sports news, live fixtures, scores, tournaments, teams, players, coaches, statistics, transfers, video highlights, and photos from verified sources.'}
             </p>
+
+            {/* Direct Masthead Links (الرئيسية، من نحن، تواصل معنا، إبلاغ عن محتوى) */}
+            <div className={styles.mastLinks}>
+              {mastLinks.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.mastLinkItem}>
+                  {link.name}
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className={styles.invite}>
             <h4 className={styles.inviteTitle}>
-              {ar ? 'النشرة' : 'Briefing'}
+              {ar ? 'النشرة البريدية الرياضية' : 'Sports Briefing'}
             </h4>
             <p className={styles.inviteDesc}>
               {ar
@@ -194,6 +182,7 @@ export async function Footer() {
           </Link>
         </div>
 
+        {/* 4 Categorized Columns */}
         <div className={styles.grid}>
           {columns.map((column, index) => (
             <section key={column.title} className={styles.column}>
@@ -204,7 +193,10 @@ export async function Footer() {
               <nav className={styles.linksList} aria-label={column.title}>
                 {column.links.map((link) => (
                   <Link key={link.href} href={link.href} className={styles.linkItem}>
-                    {link.name}
+                    <span>{link.name}</span>
+                    {link.badge ? (
+                      <span className={styles.linkBadge}>{link.badge}</span>
+                    ) : null}
                   </Link>
                 ))}
               </nav>
@@ -213,35 +205,26 @@ export async function Footer() {
         </div>
 
         <div className={styles.closer}>
-          {/* <span className={styles.monogram} aria-hidden>
-            YS
-          </span> */}
           <p>
             {ar
-              ? 'يلا سبورت منصة رياضية متكاملة'
-              : 'Yalla Sport is a comprehensive sports platform'}
+              ? 'يلا سبورت — منصة رياضية متكاملة تقدم أحدث الأخبار، البث المباشر، إحصائيات كرة القدم، ومقارنات النجوم والأندية بدقة واحترافية.'
+              : 'Yalla Sport — Complete sports coverage platform delivering verified news, live coverage, football analytics, and club comparisons.'}
           </p>
         </div>
 
+        {/* أسفلهم السياسات بطريقة مرتبة */}
         <div className={styles.bottom}>
-          <div className={styles.socialRow}>
-            <Link href="/contact" className={styles.socialIcon}>
-              {ar ? 'غرفة التحرير' : 'Newsroom'}
-            </Link>
-            <Link href="/report" className={styles.socialIcon}>
-              {ar ? 'إبلاغ' : 'Report'}
-            </Link>
-            <Link href="/about" className={styles.socialIcon}>
-              {ar ? 'من نحن' : 'About'}
-            </Link>
-          </div>
-
-          <div className={styles.legalLinks}>
-            {legalLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={styles.legalLink}>
-                {link.name}
-              </Link>
-            ))}
+          <div className={styles.policiesContainer}>
+            <div className={styles.policyHeading}>
+              {ar ? 'السياسات والشروط القانونية' : 'Legal Policies & Compliance'}
+            </div>
+            <div className={styles.legalLinks}>
+              {legalPolicies.map((link) => (
+                <Link key={link.href} href={link.href} className={styles.legalLink}>
+                  {link.name}
+                </Link>
+              ))}
+            </div>
           </div>
 
           <p className={styles.copyright}>

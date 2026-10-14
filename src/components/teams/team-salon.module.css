@@ -249,6 +249,68 @@
   background: color-mix(in srgb, #fff 22%, transparent);
 }
 
+@media (max-width: 768px) {
+  .heroInner {
+    padding-block: 1.25rem 1.75rem;
+    gap: 1.25rem;
+  }
+
+  .heroTop {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .crumb {
+    justify-content: center;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+
+  .heroStage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+  }
+
+  .crestWrap {
+    margin-inline: auto;
+    width: 8.5rem;
+    height: 8.5rem;
+    padding: 0.95rem;
+    border-radius: 1.6rem;
+  }
+
+  .heroCopy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+
+  .heroCopy h1 {
+    text-align: center;
+    font-size: clamp(1.85rem, 6.5vw, 2.4rem);
+  }
+
+  .kicker {
+    text-align: center;
+  }
+
+  .chips {
+    justify-content: center;
+  }
+
+  .pips {
+    justify-content: center;
+  }
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -1254,42 +1316,153 @@
 }
 
 .standingsTableWrapper {
+  width: 100%;
   overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
   margin-top: 1rem;
-  border-radius: 0.85rem;
+  border-radius: 1.15rem;
   border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.standingsTableWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .standingsTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   text-align: center;
-  background: var(--card);
+  table-layout: auto;
 }
 
 .standingsTable th {
-  padding: 0.75rem 0.5rem;
+  padding: 0.75rem 0.35rem;
   font-size: 0.72rem;
   font-weight: 800;
   color: var(--muted-foreground);
   text-transform: uppercase;
   background: color-mix(in srgb, var(--foreground) 3%, var(--card));
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 .standingsTable td {
-  padding: 0.85rem 0.5rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 0.3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+
+.standingsTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.standingsTable tbody tr:hover {
+  background: color-mix(in srgb, var(--foreground) 2.5%, transparent);
 }
 
 .standingRowUs {
   background: color-mix(in srgb, var(--ys-orange) 14%, var(--card)) !important;
   font-weight: 900 !important;
+  position: relative;
 }
 
 .standingRowUs td {
   color: var(--foreground);
+}
+
+.standingTeamCell {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.standingRank {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--muted-foreground);
+  min-width: 1.45rem;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.standingRankUs {
+  color: var(--ys-orange);
+  font-weight: 900;
+}
+
+.standingTeamName {
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 6.8rem;
+  color: var(--foreground);
+}
+
+@media (min-width: 380px) {
+  .standingTeamName {
+    max-width: 8rem;
+  }
+}
+
+@media (min-width: 520px) {
+  .standingTeamName {
+    max-width: 11rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .standingTeamName {
+    max-width: 16rem;
+  }
+}
+
+.colGoalsDesktop {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .colGoalsDesktop {
+    display: table-cell;
+  }
+}
+
+.diffPositive {
+  color: #10b981;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.diffNegative {
+  color: #ef4444;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.diffZero {
+  color: var(--muted-foreground);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.pointsBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  padding: 0 0.25rem;
+  border-radius: 0.5rem;
+  font-weight: 900;
+  font-size: 0.86rem;
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 14%, transparent);
 }
 
 .transferItem {
@@ -1596,6 +1769,14 @@
   justify-content: center;
 }
 
+@media (max-width: 640px) {
+  .pitchNodeAvatar {
+    width: 2.45rem;
+    height: 2.45rem;
+    border-width: 2px;
+  }
+}
+
 .pitchNodeAvatar img {
   width: 100%;
   height: 100%;
@@ -1617,9 +1798,18 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+@media (max-width: 640px) {
+  .pitchNodeShirt {
+    font-size: 0.55rem;
+    padding: 0 3px;
+    top: -3px;
+    right: -3px;
+  }
+}
+
 .pitchNodeName {
   margin-top: 0.3rem;
-  background: rgba(10, 10, 10, 0.82);
+  background: rgba(10, 10, 10, 0.88);
   color: #fff;
   backdrop-filter: blur(6px);
   padding: 0.15rem 0.55rem;
@@ -1627,8 +1817,21 @@
   font-size: 0.72rem;
   font-weight: 800;
   white-space: nowrap;
+  max-width: 5.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 640px) {
+  .pitchNodeName {
+    margin-top: 0.15rem;
+    font-size: 0.58rem;
+    padding: 0.08rem 0.35rem;
+    max-width: 4.1rem;
+  }
 }
 
 /* ==========================================================================

@@ -1,16 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import type { PlayerCompareCard } from '@/lib/players/load-dossier';
+import {
+  ComparisonGroupCard,
+  type ComparisonCategory,
+  type ComparisonMetric,
+} from '@/components/common/ComparisonIndicators';
+import { Activity, Flame, Shield, Target, Award } from 'lucide-react';
 import folio from './compare-folio.module.css';
-
-type Row = { key: string; label: string; left: number | null; right: number | null; better?: 'high' | 'low' };
-
-function cell(value: number | null | undefined, empty = '—') {
-  if (value == null || Number.isNaN(value)) return empty;
-  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
-}
 
 function Radar({ left, right, labels }: { left: number[]; right: number[]; labels: string[] }) {
   const n = labels.length;
@@ -23,7 +22,7 @@ function Radar({ left, right, labels }: { left: number[]; right: number[]; label
   };
   const poly = (vals: number[]) => vals.map((v, i) => point(i, Math.max(0.04, Math.min(1, v))).join(',')).join(' ');
   return (
-    <svg viewBox="0 0 240 240" className={folio.radar} role="img">
+    <svg viewBox="0 0 240 240" className={folio.radar} role="img" aria-label="Player Comparison Radar Chart">
       {[0.33, 0.66, 1].map((ring) => (
         <polygon
           key={ring}
@@ -68,12 +67,18 @@ export function PlayerCompareBoard({
   const [copied, setCopied] = useState(false);
   const ar = locale === 'ar';
 
-  const rows: Row[] = useMemo(() => {
+  const seasonNote = left.season || right.season || season;
+  const periodLabel = per90
+    ? (ar ? 'معدلات لكل 90 دقيقة' : 'Per 90 Mins')
+    : (ar ? `إجمالي موسم ${seasonNote ? `${seasonNote}/${seasonNote + 1}` : ''}` : `Season Totals ${seasonNote ? `${seasonNote}/${seasonNote + 1}` : ''}`);
+
+  const categories: ComparisonCategory[] = useMemo(() => {
     const take = (card: PlayerCompareCard, key: keyof NonNullable<PlayerCompareCard['totals']>) => {
       if (!card.totals) return null;
       const value = card.totals[key];
       return typeof value === 'number' ? value : value ? Number(value) : null;
     };
+
     const per = (card: PlayerCompareCard, key: 'goals' | 'assists' | 'shotsOn' | 'keyPasses' | 'tackles' | 'saves') => {
       if (!per90) return take(card, key);
       const minutes = take(card, 'minutes') || 0;
@@ -81,37 +86,164 @@ export function PlayerCompareBoard({
       if (raw == null || minutes <= 0) return null;
       return Number(((raw * 90) / minutes).toFixed(2));
     };
-    const list: Row[] = [
-      { key: 'apps', label: ar ? 'المشاركات' : 'Appearances', left: take(left, 'appearances'), right: take(right, 'appearances') },
-      { key: 'mins', label: ar ? 'الدقائق' : 'Minutes', left: take(left, 'minutes'), right: take(right, 'minutes') },
-      { key: 'rating', label: ar ? 'التقييم' : 'Rating', left: take(left, 'rating' as never) ?? (left.totals?.rating ? Number(left.totals.rating) : null), right: right.totals?.rating ? Number(right.totals.rating) : null },
-      { key: 'goals', label: per90 ? (ar ? 'هدف / 90' : 'Goals / 90') : ar ? 'الأهداف' : 'Goals', left: per(left, 'goals'), right: per(right, 'goals') },
-      { key: 'assists', label: per90 ? (ar ? 'صناعة / 90' : 'Assists / 90') : ar ? 'الصناعات' : 'Assists', left: per(left, 'assists'), right: per(right, 'assists') },
-      { key: 'pass', label: ar ? 'دقة التمرير %' : 'Pass accuracy %', left: left.totals?.passAccuracy ?? null, right: right.totals?.passAccuracy ?? null },
-      { key: 'duel', label: ar ? 'الفوز بالالتحام %' : 'Duel win %', left: left.rates?.duelWinPct ?? null, right: right.rates?.duelWinPct ?? null },
-      { key: 'drib', label: ar ? 'نجاح المراوغة %' : 'Dribble success %', left: left.rates?.dribbleSuccessPct ?? null, right: right.rates?.dribbleSuccessPct ?? null },
-      { key: 'shotsOn', label: ar ? 'تسديدات على المرمى' : 'Shots on target', left: per(left, 'shotsOn'), right: per(right, 'shotsOn') },
-      { key: 'key', label: ar ? 'تمريرات حاسمة' : 'Key passes', left: per(left, 'keyPasses'), right: per(right, 'keyPasses') },
-      { key: 'tackles', label: ar ? 'التدخلات' : 'Tackles', left: per(left, 'tackles'), right: per(right, 'tackles') },
-      { key: 'yellow', label: ar ? 'صفراء' : 'Yellow', left: take(left, 'yellow'), right: take(right, 'yellow'), better: 'low' },
-      { key: 'red', label: ar ? 'حمراء' : 'Red', left: take(left, 'red'), right: take(right, 'red'), better: 'low' },
+
+    const result: ComparisonCategory[] = [
+      {
+        id: 'overview',
+        title: ar ? 'المشاركة والتقييم العام' : 'Appearances & Rating',
+        periodBadge: seasonNote ? (ar ? `موسم ${seasonNote}/${seasonNote + 1}` : `${seasonNote}/${seasonNote + 1} Season`) : undefined,
+        icon: <Activity size={16} />,
+        metrics: [
+          {
+            key: 'rating',
+            label: ar ? 'التقييم العام' : 'Overall Rating',
+            subLabel: ar ? 'من 10' : 'out of 10',
+            left: take(left, 'rating' as never) ?? (left.totals?.rating ? Number(left.totals.rating) : null),
+            right: right.totals?.rating ? Number(right.totals.rating) : null,
+          },
+          {
+            key: 'apps',
+            label: ar ? 'المشاركات الرسمية' : 'Appearances',
+            subLabel: ar ? 'مباراة' : 'matches',
+            left: take(left, 'appearances'),
+            right: take(right, 'appearances'),
+          },
+          {
+            key: 'mins',
+            label: ar ? 'الدقائق الملعوبة' : 'Minutes Played',
+            subLabel: ar ? 'دقيقة' : 'mins',
+            left: take(left, 'minutes'),
+            right: take(right, 'minutes'),
+          },
+        ],
+      },
+      {
+        id: 'attacking',
+        title: ar ? 'الإنتاج الهجومي والتهديف' : 'Attacking & Goals',
+        periodBadge: periodLabel,
+        icon: <Flame size={16} />,
+        metrics: [
+          {
+            key: 'goals',
+            label: per90 ? (ar ? 'أهداف / 90 دقيقة' : 'Goals / 90') : (ar ? 'الأهداف المسجلة' : 'Goals Scored'),
+            left: per(left, 'goals'),
+            right: per(right, 'goals'),
+          },
+          {
+            key: 'assists',
+            label: per90 ? (ar ? 'صناعات / 90 دقيقة' : 'Assists / 90') : (ar ? 'التمريرات الحاسمة (أسيست)' : 'Assists'),
+            left: per(left, 'assists'),
+            right: per(right, 'assists'),
+          },
+          {
+            key: 'shotsOn',
+            label: per90 ? (ar ? 'تسديدات على المرمى / 90' : 'Shots on target / 90') : (ar ? 'التسديدات على المرمى' : 'Shots on Target'),
+            left: per(left, 'shotsOn'),
+            right: per(right, 'shotsOn'),
+          },
+          {
+            key: 'shotAcc',
+            label: ar ? 'دقة التسديد' : 'Shot Accuracy',
+            suffix: '%',
+            left: left.rates?.shotAccuracy ?? null,
+            right: right.rates?.shotAccuracy ?? null,
+          },
+        ],
+      },
+      {
+        id: 'playmaking',
+        title: ar ? 'صناعة اللعب والتمرير' : 'Passing & Creation',
+        periodBadge: periodLabel,
+        icon: <Target size={16} />,
+        metrics: [
+          {
+            key: 'key',
+            label: per90 ? (ar ? 'فرص مصنوعة / 90' : 'Key Passes / 90') : (ar ? 'الفرص المصنوعة' : 'Key Passes'),
+            left: per(left, 'keyPasses'),
+            right: per(right, 'keyPasses'),
+          },
+          {
+            key: 'pass',
+            label: ar ? 'دقة التمرير' : 'Pass Accuracy',
+            suffix: '%',
+            left: left.totals?.passAccuracy ?? null,
+            right: right.totals?.passAccuracy ?? null,
+          },
+          {
+            key: 'drib',
+            label: ar ? 'نجاح المراوغات' : 'Dribble Success',
+            suffix: '%',
+            left: left.rates?.dribbleSuccessPct ?? null,
+            right: right.rates?.dribbleSuccessPct ?? null,
+          },
+        ],
+      },
+      {
+        id: 'discipline',
+        title: ar ? 'الالتحامات والانضباط الدفاعي' : 'Duels & Discipline',
+        periodBadge: ar ? 'السجل البدني والانضباطي' : 'Physical & Disciplinary',
+        icon: <Shield size={16} />,
+        metrics: [
+          {
+            key: 'duel',
+            label: ar ? 'الفوز بالالتحامات' : 'Duel Win %',
+            suffix: '%',
+            left: left.rates?.duelWinPct ?? null,
+            right: right.rates?.duelWinPct ?? null,
+          },
+          {
+            key: 'tackles',
+            label: per90 ? (ar ? 'تدخلات / 90' : 'Tackles / 90') : (ar ? 'التدخلات الدفاعية الناجحة' : 'Successful Tackles'),
+            left: per(left, 'tackles'),
+            right: per(right, 'tackles'),
+          },
+          {
+            key: 'yellow',
+            label: ar ? 'البطاقات الصفراء' : 'Yellow Cards',
+            subLabel: ar ? 'الأقل أفضل' : 'lower is better',
+            better: 'low',
+            left: take(left, 'yellow'),
+            right: take(right, 'yellow'),
+          },
+          {
+            key: 'red',
+            label: ar ? 'البطاقات الحمراء' : 'Red Cards',
+            subLabel: ar ? 'الأقل أفضل' : 'lower is better',
+            better: 'low',
+            left: take(left, 'red'),
+            right: take(right, 'red'),
+          },
+        ],
+      },
     ];
+
     if (gk) {
-      list.splice(5, 0, {
-        key: 'saves',
-        label: ar ? 'التصديات' : 'Saves',
-        left: per(left, 'saves'),
-        right: per(right, 'saves'),
-      }, {
-        key: 'conc',
-        label: ar ? 'أهداف استقبلها' : 'Conceded',
-        left: take(left, 'conceded'),
-        right: take(right, 'conceded'),
-        better: 'low',
+      result.push({
+        id: 'goalkeeping',
+        title: ar ? 'كفاءة حراسة المرمى' : 'Goalkeeping Efficiency',
+        periodBadge: periodLabel,
+        icon: <Award size={16} />,
+        metrics: [
+          {
+            key: 'saves',
+            label: per90 ? (ar ? 'تصديات / 90 د' : 'Saves / 90') : (ar ? 'إجمالي التصديات' : 'Total Saves'),
+            left: per(left, 'saves'),
+            right: per(right, 'saves'),
+          },
+          {
+            key: 'conc',
+            label: ar ? 'الأهداف المستقبلة' : 'Goals Conceded',
+            subLabel: ar ? 'الأقل أفضل' : 'lower is better',
+            better: 'low',
+            left: take(left, 'conceded'),
+            right: take(right, 'conceded'),
+          },
+        ],
       });
     }
-    return list;
-  }, [ar, gk, left, per90, right]);
+
+    return result;
+  }, [ar, gk, left, per90, periodLabel, right, seasonNote]);
 
   const radarKeys = gk
     ? ([
@@ -143,75 +275,96 @@ export function PlayerCompareBoard({
   };
 
   return (
-    <div className={folio.board}>
-      <div className={folio.boardTools}>
-        <button type="button" onClick={() => setPer90((v) => !v)}>
-          {per90 ? (ar ? 'إجمالي الموسم' : 'Season totals') : (ar ? 'لكل 90 دقيقة' : 'Per 90')}
+    <div className="flex flex-col gap-6">
+      {/* Interactive Tool Actions Ribbon */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 p-2 rounded-2xl bg-card/60 border border-border/50 backdrop-blur-md">
+        <button
+          type="button"
+          onClick={() => setPer90((v) => !v)}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all ${
+            per90
+              ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+              : 'bg-muted/70 text-foreground hover:bg-muted'
+          }`}
+        >
+          {per90 ? (ar ? '✓ لكل 90 دقيقة' : '✓ Per 90 Mins') : (ar ? 'إجمالي الموسم' : 'Season Totals')}
         </button>
-        <button type="button" onClick={() => router.push(qs(p2, p1))}>
-          {ar ? '⇄ تبديل' : '⇄ Swap'}
+
+        <button
+          type="button"
+          onClick={() => router.push(qs(p2, p1))}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black bg-muted/70 text-foreground hover:bg-muted transition-all"
+        >
+          {ar ? '⇄ تبديل اللاعبين' : '⇄ Swap'}
         </button>
-        <button type="button" onClick={copyLink} data-on={copied}>
+
+        <button
+          type="button"
+          onClick={copyLink}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black transition-all ${
+            copied
+              ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+              : 'bg-muted/70 text-foreground hover:bg-muted'
+          }`}
+        >
           {copied ? (ar ? 'تم النسخ ✓' : 'Copied ✓') : (ar ? 'نسخ الرابط' : 'Copy link')}
         </button>
       </div>
+
+      {/* Radar Chart (Visual Poly Map) */}
       {left.totals || right.totals ? (
         radarKeys.filter((row) => row[1] > 0 || row[2] > 0).length >= 3 ? (
-          <Radar
-            labels={radarKeys.map((row) => row[0])}
-            left={radarKeys.map((row, i) => row[1] / max[i])}
-            right={radarKeys.map((row, i) => row[2] / max[i])}
-          />
+          <div className="flex flex-col items-center justify-center p-4 rounded-3xl bg-card/60 border border-border/60 backdrop-blur-md">
+            <span className="text-xs font-black text-muted-foreground mb-1">
+              {ar ? 'رادار التوازن الإحصائي' : 'Statistical Balance Radar'}
+            </span>
+            <Radar
+              labels={radarKeys.map((row) => row[0])}
+              left={radarKeys.map((row, i) => row[1] / max[i])}
+              right={radarKeys.map((row, i) => row[2] / max[i])}
+            />
+            <div className="flex items-center gap-5 text-xs font-extrabold mt-1">
+              <span className="flex items-center gap-1.5 text-foreground/80">
+                <span className="h-2 w-2 rounded-full bg-foreground/60" />
+                {left.name}
+              </span>
+              <span className="flex items-center gap-1.5 text-orange-500">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                {right.name}
+              </span>
+            </div>
+          </div>
         ) : null
       ) : (
-        <p className={folio.hint}>
+        <p className="text-center text-xs text-muted-foreground py-6">
           {ar
-            ? 'لا تتوفر بيانات لهذا اللاعب في الموسم المحدد.'
+            ? 'لا تتوفر إحصائيات كافية لهذا اللاعب في الموسم المحدد.'
             : 'No stats are available for these players in the selected season.'}
         </p>
       )}
-      <div className={folio.statList}>
-        {rows.map((stat) => {
-          const bothMissing = stat.left == null && stat.right == null;
-          if (bothMissing) return null;
-          const l = stat.left ?? 0;
-          const r = stat.right ?? 0;
-          const total = l + r;
-          const pct = bothMissing || total <= 0 ? 50 : Math.round((l / total) * 100);
-          const leftWins =
-            !bothMissing && stat.left != null && stat.right != null && (stat.better === 'low' ? l < r : l > r);
-          const rightWins =
-            !bothMissing && stat.left != null && stat.right != null && (stat.better === 'low' ? r < l : r > l);
-          return (
-            <div key={stat.key} className={folio.stat}>
-              <div className={folio.statHead}>
-                <span className={leftWins ? folio.win : undefined}>
-                  {leftWins ? '▲ ' : ''}
-                  {cell(stat.left)}
-                </span>
-                <em>{stat.label}</em>
-                <span className={rightWins ? folio.win : undefined}>
-                  {cell(stat.right)}
-                  {rightWins ? ' ▲' : ''}
-                </span>
-              </div>
-              <div className={folio.bar} aria-hidden>
-                <i style={{ width: `${pct}%`, opacity: bothMissing ? 0.35 : 1 }} />
-                <i style={{ width: `${100 - pct}%`, opacity: bothMissing ? 0.25 : 1 }} />
-              </div>
-            </div>
-          );
-        })}
+
+      {/* Unified Categorical Comparison Groups */}
+      <div className="grid grid-cols-1 gap-5">
+        {categories.map((cat) => (
+          <ComparisonGroupCard
+            key={cat.id}
+            category={cat}
+            leftLabel={left.name}
+            rightLabel={right.name}
+          />
+        ))}
       </div>
-      <p className={folio.hint}>
+
+      {/* Provenance and Data Source Footer */}
+      <div className="p-3 rounded-2xl bg-muted/30 border border-border/40 text-center text-[11px] text-muted-foreground">
         {ar
-          ? `مصدر البيانات: ${left.provider === 'api-football' || right.provider === 'api-football' ? 'API-Football' : 'السجلات المحفوظة'} · آخر تحديث: ${new Date(
+          ? `مصدر البيانات: ${left.provider === 'api-football' || right.provider === 'api-football' ? 'شبكة البيانات الرياضية API-Football المعتمدة' : 'السجلات الرسمية المحفوظة'} · التحديث الموثق: ${new Date(
             Math.max(new Date(left.fetchedAt).getTime(), new Date(right.fetchedAt).getTime()),
-          ).toLocaleString(locale === 'ar' ? 'ar' : 'en')}`
-          : `Source: ${left.provider === 'api-football' || right.provider === 'api-football' ? 'API-Football' : 'stored records'} · Updated: ${new Date(
+          ).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US')}`
+          : `Source: ${left.provider === 'api-football' || right.provider === 'api-football' ? 'Official API-Football Sports Data' : 'Verified Database Records'} · Updated: ${new Date(
             Math.max(new Date(left.fetchedAt).getTime(), new Date(right.fetchedAt).getTime()),
-          ).toLocaleString('en')}`}
-      </p>
+          ).toLocaleDateString('en-US')}`}
+      </div>
     </div>
   );
 }

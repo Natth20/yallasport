@@ -40,9 +40,9 @@ export function NewsReadingProgress({ targetId = 'news-report-prose' }: { target
   if (progress <= 0) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-1 bg-transparent" aria-hidden>
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-1.5 bg-black/10 dark:bg-white/5" aria-hidden>
       <div
-        className="h-full bg-gradient-to-r from-primary via-orange-500 to-amber-400 transition-all duration-150 ease-out shadow-sm shadow-primary/30"
+        className="h-full bg-gradient-to-r from-orange-600 via-orange-500 to-amber-400 transition-all duration-150 ease-out shadow-sm shadow-orange-500/40"
         style={{ width: `${progress}%` }}
       />
     </div>

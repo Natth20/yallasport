@@ -148,10 +148,13 @@ export async function MatchCard({
               </em>
               {!isHalftime && match.minute != null ? <strong>{match.minute}′</strong> : null}
             </>
+          ) : statusText ? (
+            <span className="is-status">{statusText}</span>
           ) : (
-            <span className={statusText ? 'is-status' : undefined}>
-              {statusText ?? <ClientTime value={match.kickoffAt} variant="clock" />}
-            </span>
+            <div className="flex flex-col items-center justify-center leading-tight">
+              <ClientTime value={match.kickoffAt} variant="clock" className="font-black text-xs sm:text-[13px] text-orange-500 tabular-nums" />
+              <ClientTime value={match.kickoffAt} variant="day" className="fixture-clock-day text-[10px] font-bold text-muted-foreground mt-0.5 whitespace-nowrap" />
+            </div>
           )}
         </div>
 
@@ -250,10 +253,22 @@ export async function MatchCard({
                     .join(' · ')}
                 </p>
               ) : match.venue ? (
-                <p>{[match.venue, venueCity].filter(Boolean).join(' · ')}</p>
+                <p>
+                  {[match.venue, venueCity].filter(Boolean).join(' · ')}
+                  {' · '}
+                  <ClientTime value={match.kickoffAt} variant="day" />
+                </p>
               ) : country ? (
-                <p>{country}</p>
-              ) : null}
+                <p>
+                  {country}
+                  {' · '}
+                  <ClientTime value={match.kickoffAt} variant="day" />
+                </p>
+              ) : (
+                <p>
+                  <ClientTime value={match.kickoffAt} variant="day" />
+                </p>
+              )}
               {(round ||
                 yellowCount > 0 ||
                 redCount > 0 ||

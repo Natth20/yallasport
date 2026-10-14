@@ -1,0 +1,204 @@
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 5rem;
+}
+
+.header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 3rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(234, 88, 12, 0.12);
+  border: 1px solid rgba(234, 88, 12, 0.3);
+  border-radius: 9999px;
+  color: #fb923c;
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  color: var(--foreground, #f3f4f6);
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  color: var(--muted-foreground, #9ca3af);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.storeStatus {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: start;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.statusIcon {
+  padding-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.statusContent {
+  flex: 1;
+}
+
+.statusHeading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 0 0 0.4rem;
+}
+
+.statusDesc {
+  font-size: 0.85rem;
+  color: var(--foreground, #e5e7eb);
+  line-height: 1.6;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.installGuides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.guideCard {
+  background: var(--surface-card, rgba(17, 24, 39, 0.75));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.guideBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted-foreground, #9ca3af);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.guideTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--foreground, #fff);
+  margin: 0 0 1.25rem;
+}
+
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.steps li {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.stepNum {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(234, 88, 12, 0.15);
+  border: 1px solid rgba(234, 88, 12, 0.3);
+  color: #fb923c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.steps strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--foreground, #f3f4f6);
+  margin-bottom: 0.2rem;
+}
+
+.steps p {
+  font-size: 0.85rem;
+  color: var(--muted-foreground, #9ca3af);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.featuresSection {
+  background: var(--surface-card, rgba(17, 24, 39, 0.75));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 2rem 1.5rem;
+}
+
+.featuresHeading {
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--foreground, #fff);
+  margin: 0 0 2rem;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.featureItem {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.featureIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(234, 88, 12, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.featureTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--foreground, #f3f4f6);
+  margin: 0 0 0.35rem;
+}
+
+.featureDesc {
+  font-size: 0.825rem;
+  color: var(--muted-foreground, #9ca3af);
+  margin: 0;
+  line-height: 1.5;
+}

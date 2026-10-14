@@ -10,6 +10,7 @@ import { Button, Badge, Input } from '@/components/ui';
 import { LanguageToggle } from './LanguageToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { DataSaverToggle } from './DataSaverToggle';
+import { VoiceSearch } from './VoiceSearch';
 import styles from './mobile-menu.module.css';
 
 export interface MobileMenuProps {
@@ -19,6 +20,7 @@ export interface MobileMenuProps {
   moreGroups?: Array<{ label: string; items: Array<{ name: string; href: string }> }>;
   desk?: React.ReactNode;
   onSearch?: () => void;
+  onVoiceSearch?: (query: string) => void;
 }
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
@@ -28,6 +30,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   moreGroups = [],
   desk,
   onSearch,
+  onVoiceSearch,
 }) => {
   const { t, dir, language } = useLanguage();
   const pathname = usePathname();
@@ -90,20 +93,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
         <div className={styles.drawerHeader}>
           <Link href="/" className={styles.brandLink} onClick={onClose} aria-label="Yalla Sport">
             <BrandMark size={36} />
-            <div className={styles.brandText}>
-              <span className={styles.brandName}>
-                {dir === 'rtl' ? (
-                  <>
-                    <span className={styles.brandAccent}>يلا</span> سبورت
-                  </>
-                ) : (
-                  <>
-                    <span className={styles.brandAccent}>Yalla</span> Sport
-                  </>
-                )}
-              </span>
-              <span className={styles.brandTagline} aria-hidden />
-            </div>
           </Link>
           <button
             type="button"
@@ -117,37 +106,84 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
         <div className={styles.searchBox}>
           {onSearch ? (
-            <button type="button" className={styles.searchLaunch} onClick={onSearch}>
-              <Search className="h-4 w-4" />
-              <span>{language === 'ar' ? 'ابحث في المصدر…' : 'Search the source…'}</span>
-            </button>
-          ) : (
-            <form onSubmit={handleSearchSubmit}>
-              <Input
-                placeholder={t('common.search') || 'بحث عن مباراة، فريق، لاعب...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                leftIcon={<Search className="w-4 w-4" />}
-                inputSize="sm"
+            <div className={styles.searchRow}>
+              <button type="button" className={styles.searchLaunch} onClick={onSearch}>
+                <Search className="h-4 w-4" />
+                <span>{language === 'ar' ? 'ابحث في المصدر…' : 'Search the source…'}</span>
+              </button>
+              <VoiceSearch
+                onResult={(text) => {
+                  if (onVoiceSearch) {
+                    onVoiceSearch(text);
+                  } else if (onSearch) {
+                    onSearch();
+                  }
+                }}
+                className={styles.menuVoice}
               />
-            </form>
+            </div>
+          ) : (
+            <div className={styles.searchRow}>
+              <form onSubmit={handleSearchSubmit} className="flex-1">
+                <Input
+                  placeholder={t('common.search') || 'بحث عن مباراة، فريق، لاعب...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  leftIcon={<Search className="w-4 w-4" />}
+                  inputSize="sm"
+                />
+              </form>
+              <VoiceSearch
+                onResult={(text) => {
+                  setSearchQuery(text);
+                  router.push(`/search?q=${encodeURIComponent(text)}`);
+                  onClose();
+                }}
+                className={styles.menuVoice}
+              />
+            </div>
           )}
         </div>
 
         <nav className={styles.navList}>
-          {navItems.map(renderLink)}
+          <Link
+            href="/"
+            onClick={onClose}
+            className={`${styles.navLink} ${pathname === '/' ? styles.active : ''}`}
+          >
+            <span className={styles.navLabel}>{language === 'ar' ? '🏠 الرئيسية' : '🏠 Home'}</span>
+          </Link>
+
           {moreGroups.map((group) => (
             <div key={group.label} className={styles.navGroup}>
               <p className={styles.navGroupLabel}>{group.label}</p>
               {group.items.map(renderLink)}
             </div>
           ))}
+
           {desk ? (
             <div className={styles.navGroup} onClick={onClose}>
               <p className={styles.navGroupLabel}>{language === 'ar' ? 'المكتب' : 'Desk'}</p>
               {desk}
             </div>
           ) : null}
+
+          {/* Quick legal/about section at bottom of menu */}
+          <div className={styles.navGroup}>
+            <p className={styles.navGroupLabel}>{language === 'ar' ? 'عن يلا سبورت' : 'About Platform'}</p>
+            <Link href="/about" onClick={onClose} className={styles.navLink}>
+              <span className={styles.navLabel}>{language === 'ar' ? 'ℹ️ من نحن' : 'ℹ️ About Us'}</span>
+            </Link>
+            <Link href="/contact" onClick={onClose} className={styles.navLink}>
+              <span className={styles.navLabel}>{language === 'ar' ? '📩 تواصل معنا' : '📩 Contact Us'}</span>
+            </Link>
+            <Link href="/report" onClick={onClose} className={styles.navLink}>
+              <span className={styles.navLabel}>{language === 'ar' ? '🚩 إبلاغ عن محتوى' : '🚩 Report Content'}</span>
+            </Link>
+            <Link href="/privacy" onClick={onClose} className={styles.navLink}>
+              <span className={styles.navLabel}>{language === 'ar' ? '🔒 سياسة الخصوصية' : '🔒 Privacy Policy'}</span>
+            </Link>
+          </div>
         </nav>
 
         <div className={styles.drawerFooter}>

@@ -6,6 +6,7 @@ import { Search, X } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { isAbortError } from '@/lib/ops/caught';
 import { seekHref } from '@/components/search/seek';
+import { VoiceSearch } from './VoiceSearch';
 import styles from './header-seek.module.css';
 
 type Hit = {
@@ -27,19 +28,27 @@ export function HeaderSeek({
   open,
   onClose,
   locale,
+  initialQuery = '',
 }: {
   open: boolean;
   onClose: () => void;
   locale: string;
+  initialQuery?: string;
 }) {
   const router = useRouter();
   const ar = locale === 'ar';
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [hits, setHits] = useState<Hit[]>([]);
   const [loading, setLoading] = useState(false);
   const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (open) {
+      setQuery(initialQuery);
+    }
+  }, [open, initialQuery]);
 
   useEffect(() => {
     if (!open) return;
@@ -146,6 +155,13 @@ export function HeaderSeek({
             role="combobox"
             aria-expanded={hits.length > 0}
             aria-controls={listId}
+          />
+          <VoiceSearch
+            onResult={(text) => {
+              setQuery(text);
+              inputRef.current?.focus();
+            }}
+            className={styles.seekMic}
           />
           {query ? (
             <button type="button" className={styles.clear} onClick={() => setQuery('')} aria-label={ar ? 'مسح' : 'Clear'}>

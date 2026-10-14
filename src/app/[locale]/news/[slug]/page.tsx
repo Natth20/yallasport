@@ -242,11 +242,171 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
     linkedEntitiesForNews([news.id], locale),
   ]);
 
-  const [related, latest, popular] = await Promise.all([
+  const otherDeskNewsRaw = await prisma.news.findMany({
+    where: {
+      AND: [
+        newsVisibleWhere(locale),
+        { id: { not: news.id } },
+        { category: { not: news.category } },
+      ],
+    },
+    orderBy: [{ publishedAt: 'desc' }],
+    take: 8,
+    select: storyPick,
+  });
+
+  const [related, latest, popular, otherDeskNews] = await Promise.all([
     overlayNewsList(relatedRaw, locale),
     overlayNewsList(latestRaw, locale),
     overlayNewsList(popularRaw, locale),
+    overlayNewsList(otherDeskNewsRaw, locale),
   ]);
+
+  // Query primary linked entity & linked upcoming match
+  const teamLink = news.entityLinks.find((l) => l.entityType === 'TEAM');
+  const leagueLink = news.entityLinks.find((l) => l.entityType === 'LEAGUE');
+  const playerLink = news.entityLinks.find((l) => l.entityType === 'PLAYER');
+
+  let primaryEntity: {
+    type: 'TEAM' | 'LEAGUE' | 'PLAYER';
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl?: string | null;
+    meta?: string;
+    city?: string;
+    country?: string;
+  } | null = null;
+
+  let upcomingMatch: {
+    id: string;
+    kickoffAt: string | Date;
+    homeTeam: { name: string; logoUrl?: string | null };
+    awayTeam: { name: string; logoUrl?: string | null };
+    league: { name: string };
+  } | null = null;
+
+  if (teamLink) {
+    const team = await prisma.team.findUnique({
+      where: { id: teamLink.entityId },
+      select: { id: true, name: true, slug: true, logoUrl: true, founded: true, venue: { select: { name: true, city: true } } },
+    });
+    if (team) {
+      primaryEntity = {
+        type: 'TEAM',
+        id: team.id,
+        name: team.name,
+        slug: team.slug,
+        logoUrl: team.logoUrl,
+        meta: team.venue?.name ?? (team.founded ? `تأسس ${team.founded}` : undefined),
+        city: team.venue?.city ?? undefined,
+      };
+      const match = await prisma.match.findFirst({
+        where: {
+          OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+          kickoffAt: { gte: new Date(Date.now() - 4 * 60 * 60 * 1000) },
+        },
+        orderBy: { kickoffAt: 'asc' },
+        include: {
+          homeTeam: { select: { name: true, logoUrl: true } },
+          awayTeam: { select: { name: true, logoUrl: true } },
+          league: { select: { name: true } },
+        },
+      });
+      if (match) {
+        upcomingMatch = {
+          id: match.id,
+          kickoffAt: match.kickoffAt,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+          league: match.league,
+        };
+      }
+    }
+  } else if (leagueLink) {
+    const league = await prisma.league.findUnique({
+      where: { id: leagueLink.entityId },
+      select: { id: true, name: true, slug: true, logoUrl: true, country: true },
+    });
+    if (league) {
+      primaryEntity = {
+        type: 'LEAGUE',
+        id: league.id,
+        name: league.name,
+        slug: league.slug,
+        logoUrl: league.logoUrl,
+        country: league.country ?? undefined,
+      };
+      const match = await prisma.match.findFirst({
+        where: {
+          leagueId: league.id,
+          kickoffAt: { gte: new Date(Date.now() - 4 * 60 * 60 * 1000) },
+        },
+        orderBy: { kickoffAt: 'asc' },
+        include: {
+          homeTeam: { select: { name: true, logoUrl: true } },
+          awayTeam: { select: { name: true, logoUrl: true } },
+          league: { select: { name: true } },
+        },
+      });
+      if (match) {
+        upcomingMatch = {
+          id: match.id,
+          kickoffAt: match.kickoffAt,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+          league: match.league,
+        };
+      }
+    }
+  } else if (playerLink) {
+    const player = await prisma.player.findUnique({
+      where: { id: playerLink.entityId },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        photoUrl: true,
+        position: true,
+        nationality: true,
+        teams: { select: { team: { select: { id: true, name: true, logoUrl: true } } }, take: 1 },
+      },
+    });
+    if (player) {
+      primaryEntity = {
+        type: 'PLAYER',
+        id: player.id,
+        name: player.name,
+        slug: player.slug,
+        logoUrl: player.photoUrl || player.teams[0]?.team.logoUrl,
+        meta: player.position ?? player.teams[0]?.team.name,
+        country: player.nationality ?? undefined,
+      };
+      if (player.teams[0]?.team.id) {
+        const match = await prisma.match.findFirst({
+          where: {
+            OR: [{ homeTeamId: player.teams[0].team.id }, { awayTeamId: player.teams[0].team.id }],
+            kickoffAt: { gte: new Date(Date.now() - 4 * 60 * 60 * 1000) },
+          },
+          orderBy: { kickoffAt: 'asc' },
+          include: {
+            homeTeam: { select: { name: true, logoUrl: true } },
+            awayTeam: { select: { name: true, logoUrl: true } },
+            league: { select: { name: true } },
+          },
+        });
+        if (match) {
+          upcomingMatch = {
+            id: match.id,
+            kickoffAt: match.kickoffAt,
+            homeTeam: match.homeTeam,
+            awayTeam: match.awayTeam,
+            league: match.league,
+          };
+        }
+      }
+    }
+  }
 
   const toCard = (story: (typeof related)[number]) => ({
     id: story.id,
@@ -323,6 +483,7 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
         related={related.map(toCard)}
         latest={latest.map(toCard)}
         popular={trending.map(toCard)}
+        otherDeskNews={otherDeskNews.map(toCard)}
         trendingIsLive={trendingFresh}
         comments={publicComments.map((comment) => ({
           id: comment.id,
@@ -331,6 +492,8 @@ async function NewsDetailBody({ params }: { params: Promise<{ slug: string }> })
           user: { name: comment.user.name, role: comment.user.role },
         }))}
         isLoggedIn={Boolean(session?.user?.id)}
+        primaryEntity={primaryEntity}
+        upcomingMatch={upcomingMatch}
       />
     </>
   );

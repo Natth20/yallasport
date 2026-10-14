@@ -5,6 +5,7 @@ import { getLocale } from 'next-intl/server';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { Link } from '@/i18n/navigation';
+import { prisma } from '@/lib/prisma';
 import { loadTransferDesk } from '@/lib/transfers/load-desk';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { localizeTransferType } from '@/lib/transfers/fee';
@@ -102,6 +103,82 @@ async function TransfersPageBody({
   const frees = desk.rows.filter((row) => row.kind === 'free').length;
   const ar = locale === 'ar';
 
+  const transferNewsRaw = await prisma.news.findMany({
+    where: {
+      status: 'PUBLISHED',
+      OR: [
+        { category: { in: ['Transfers', 'Premier League', 'Champions League', 'Football'] } },
+        { title: { contains: 'انتقال' } },
+        { title: { contains: 'صفقة' } },
+        { title: { contains: 'ميركاتو' } },
+        { title: { contains: 'ضم' } },
+      ],
+    },
+    orderBy: { publishedAt: 'desc' },
+    take: 6,
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      publishedAt: true,
+      featuredImage: true,
+      sourceName: true,
+      category: true,
+      entityLinks: {
+        select: {
+          entityType: true,
+          entityId: true,
+        },
+      },
+    },
+  });
+
+  const allTeamIds = [
+    ...new Set(
+      transferNewsRaw.flatMap((n) =>
+        n.entityLinks.filter((e) => e.entityType === 'TEAM').map((e) => e.entityId)
+      )
+    ),
+  ];
+  const allPlayerIds = [
+    ...new Set(
+      transferNewsRaw.flatMap((n) =>
+        n.entityLinks.filter((e) => e.entityType === 'PLAYER').map((e) => e.entityId)
+      )
+    ),
+  ];
+
+  const linkedTeamsMap = new Map<string, { id: string; name: string; slug: string | null }>();
+  if (allTeamIds.length > 0) {
+    const teams = await prisma.team.findMany({
+      where: { id: { in: allTeamIds } },
+      select: { id: true, name: true, slug: true },
+    });
+    for (const t of teams) linkedTeamsMap.set(t.id, t);
+  }
+
+  const linkedPlayersMap = new Map<string, { id: string; name: string; slug: string | null }>();
+  if (allPlayerIds.length > 0) {
+    const players = await prisma.player.findMany({
+      where: { id: { in: allPlayerIds } },
+      select: { id: true, name: true, slug: true },
+    });
+    for (const p of players) linkedPlayersMap.set(p.id, p);
+  }
+
+  const transferNews = transferNewsRaw.map((n) => ({
+    ...n,
+    teams: n.entityLinks
+      .filter((e) => e.entityType === 'TEAM')
+      .map((e) => linkedTeamsMap.get(e.entityId))
+      .filter((t): t is { id: string; name: string; slug: string | null } => Boolean(t && t.slug)),
+    players: n.entityLinks
+      .filter((e) => e.entityType === 'PLAYER')
+      .map((e) => linkedPlayersMap.get(e.entityId))
+      .filter((p): p is { id: string; name: string; slug: string | null } => Boolean(p && p.slug)),
+  }));
+
   const tally = [
     { value: desk.rows.length, label: pick(locale, 'حركة موثقة', 'Verified Moves'), icon: Activity },
     ...(paid > 0 ? [{ value: paid, label: pick(locale, 'صفقة برسم مالي', 'Deals with Fee'), icon: Coins }] : []),
@@ -177,10 +254,16 @@ async function TransfersPageBody({
               />
             </div>
             <div className={styles.heroContent}>
-              <span className={styles.heroKicker}>
-                <Flame className="h-3 w-3" />
-                {pick(locale, 'أبرز الصفقات الموثقة', 'Top Verified Transfer')}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={styles.heroKicker}>
+                  <Flame className="h-3 w-3" />
+                  {pick(locale, 'أبرز الصفقات الموثقة', 'Top Verified Transfer')}
+                </span>
+                <span className={styles.verifiedBadge}>
+                  <CheckCircle2 className="h-3 w-3" />
+                  {pick(locale, 'صفقة مؤكدة رسمياً', 'Officially Confirmed')}
+                </span>
+              </div>
               <h2 className={styles.heroName}>
                 {localizePlainName(locale, desk.headline.playerName)}
               </h2>
@@ -234,6 +317,98 @@ async function TransfersPageBody({
           </div>
         ) : null}
 
+        {/* 2.5. TRANSFER NEWS & MERCATO WIRE REPORTS (أخبار وتقارير الانتقالات والميركاتو) */}
+        {transferNews.length > 0 ? (
+          <section className={styles.transferNewsSection}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitleBox}>
+                <div className={styles.sectionIcon}>
+                  <Radio className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={styles.sectionTitle}>
+                    {pick(locale, 'أخبار وتقارير الانتقالات والميركاتو', 'Mercato & Transfer News Reports')}
+                  </h3>
+                  <p className={styles.sectionDesc}>
+                    {pick(
+                      locale,
+                      'تغطية صحفية لأنباء المفاوضات وتقارير الميركاتو مع روابط مباشرة لصفحات اللاعبين والأندية المذكورة',
+                      'Press reports and rumors linked directly to relevant club and player profiles',
+                    )}
+                  </p>
+                </div>
+              </div>
+              <span className={styles.rumorBadge}>
+                <Radio className="h-3 w-3" />
+                {pick(locale, 'تقارير وأنباء صحفية (غير مؤكدة)', 'Press Reports / Rumors')}
+              </span>
+            </div>
+
+            <div className={styles.newsGrid}>
+              {transferNews.map((article) => (
+                <article key={article.id} className={styles.newsCard}>
+                  <Link href={`/news/${article.slug}`} className={styles.newsImageWrap}>
+                    {article.featuredImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={article.featuredImage} alt={article.title} className={styles.newsImage} />
+                    ) : (
+                      <div className={styles.newsImageFallback}>
+                        <ArrowLeftRight className="h-8 w-8 text-orange-500/50" />
+                      </div>
+                    )}
+                  </Link>
+
+                  <div className={styles.newsBody}>
+                    <div className={styles.newsMetaRow}>
+                      <span className={styles.newsSource}>
+                        {article.sourceName || pick(locale, 'يلا سبورت ميركاتو', 'Yalla Sport Mercato')}
+                      </span>
+                      {article.publishedAt ? (
+                        <ClientTime
+                          value={article.publishedAt}
+                          options={{ day: 'numeric', month: 'short', year: 'numeric' }}
+                        />
+                      ) : null}
+                    </div>
+
+                    <Link href={`/news/${article.slug}`}>
+                      <h4 className={styles.newsTitle}>{article.title}</h4>
+                    </Link>
+
+                    {/* Entity Links: Players and Clubs */}
+                    {article.players.length > 0 || article.teams.length > 0 ? (
+                      <div className={styles.newsEntityLinks}>
+                        {article.players.map((player) => (
+                          <Link
+                            key={`p-${player.id}`}
+                            href={`/player/${player.slug}`}
+                            className={styles.newsEntityChip}
+                            title={pick(locale, 'ملف اللاعب', 'Player Profile')}
+                          >
+                            <span>👤</span>
+                            <span>{localizePlainName(locale, player.name)}</span>
+                          </Link>
+                        ))}
+                        {article.teams.map((team) => (
+                          <Link
+                            key={`t-${team.id}`}
+                            href={`/team/${team.slug}`}
+                            className={styles.newsEntityChip}
+                            title={pick(locale, 'ملف النادي', 'Club Profile')}
+                          >
+                            <span>👥</span>
+                            <span>{localizePlainName(locale, team.name)}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {/* 3. LARGEST VERIFIED FEES (أعلى الصفقات قيمة) */}
         {desk.topFees.length > 1 ? (
           <section className={styles.showcaseSection}>
@@ -260,6 +435,10 @@ async function TransfersPageBody({
                   <div className={styles.feeCardHead}>
                     <span className={`${styles.rankBadge} ${styles[`rank${index + 1}`] || ''}`}>
                       #{index + 1}
+                    </span>
+                    <span className={styles.verifiedBadge}>
+                      <CheckCircle2 className="h-2.5 w-2.5" />
+                      {pick(locale, 'مؤكدة رسمياً', 'Confirmed')}
                     </span>
                     <span className={styles.feeAmount}>{row.fee}</span>
                   </div>
@@ -510,6 +689,10 @@ async function TransfersPageBody({
 
                           {/* Meta: Kind + Fee */}
                           <div className={styles.moveMeta}>
+                            <span className={styles.verifiedBadge}>
+                              <CheckCircle2 className="h-2.5 w-2.5" />
+                              {pick(locale, 'مؤكدة رسمياً', 'Confirmed')}
+                            </span>
                             <span className={`${styles.kindBadge} ${kindClass}`}>
                               {localizeTransferType(locale, row.type, row.kind)}
                             </span>

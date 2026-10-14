@@ -102,10 +102,14 @@ function Portrait({
         <span className={folio.team}>{team}</span>
       ) : null}
       {meta ? <span className={folio.meta}>{meta}</span> : null}
-      {card.competitions[0] ? (
+      {card.season ? (
+        <span className={folio.comp}>
+          📅 {pick(locale, 'موسم', 'Season')} {card.season}/{card.season + 1}
+          {card.competitions[0] ? ` · ${localizePlainName(locale, card.competitions[0].name)}` : ''}
+        </span>
+      ) : card.competitions[0] ? (
         <span className={folio.comp}>
           {localizePlainName(locale, card.competitions[0].name)}
-          {card.season ? ` · ${card.season}/${card.season + 1}` : ''}
         </span>
       ) : null}
     </div>

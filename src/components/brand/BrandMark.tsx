@@ -13,8 +13,7 @@ export function BrandMark({ size = 40, priority = false, className = '' }: Brand
     <img
       src={LOGO_PATH}
       alt="Yalla Sport"
-      width={size}
-      height={size}
+      style={{ height: size, width: 'auto' }}
       decoding="async"
       {...(priority ? { fetchPriority: 'high' as const } : {})}
       className={`shrink-0 object-contain select-none transition-transform duration-200 ${className}`}

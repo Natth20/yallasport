@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Crown,
+  Eye,
   Flame,
   Newspaper,
   Shield,
@@ -670,19 +671,44 @@ export function LeagueDossier({
             </div>
             <span className={styles.shelfBadge}>{news.length}</span>
           </header>
-          <ul className={styles.people}>
+          <div className={styles.leagueNewsGrid}>
             {news.map((item) => (
-              <li key={item.id}>
-                <Link href={`/news/${item.slug}`}>
-                  <span className={styles.ghostFace}>N</span>
-                  <span>
-                    <strong>{item.title}</strong>
-                    <em>{item.category}</em>
-                  </span>
-                </Link>
-              </li>
+              <Link key={item.id} href={`/news/${item.slug}`} className={styles.leagueNewsCard}>
+                <div className={styles.leagueNewsThumbWrap}>
+                  {item.featuredImage ? (
+                    <img
+                      src={item.featuredImage}
+                      alt={item.title}
+                      className={styles.leagueNewsThumb}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className={styles.leagueNewsThumbFallback}>
+                      <Newspaper size={24} />
+                    </div>
+                  )}
+                </div>
+                <div className={styles.leagueNewsBody}>
+                  <div className={styles.leagueNewsMetaTop}>
+                    <span className={styles.leagueNewsCategory}>{item.category || league.name}</span>
+                    <span className={styles.leagueNewsDate}>
+                      <ClientTime value={item.publishedAt} locale={locale} />
+                    </span>
+                  </div>
+                  <h4 className={styles.leagueNewsTitle}>{item.title}</h4>
+                  <div className={styles.leagueNewsMetaBottom}>
+                    <span className={styles.leagueNewsSource}>
+                      {pick(locale, 'يلا سبورت', 'Yalla Sport')}
+                    </span>
+                    <span className={styles.leagueNewsViews}>
+                      <Eye size={12} className="text-amber-400" />
+                      <span>0</span>
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
-          </ul>
+          </div>
         </section>
       ) : null}
 
@@ -695,46 +721,36 @@ export function LeagueDossier({
             </div>
           </div>
         </header>
-        <ul className={styles.people}>
+        <ul className={styles.factsList}>
           {standings[0] ? (
-            <li>
-              <span>
-                <strong>{pick(locale, 'من يتصدر الآن؟', 'Who is leading?')}</strong>
-                <em>{localizeTeamName(locale, standings[0].team.name)} · {standings[0].points} {pick(locale, 'نقطة', 'pts')}</em>
-              </span>
+            <li className={styles.factRow}>
+              <strong className={styles.factQuestion}>{pick(locale, 'من يتصدر الآن؟', 'Who is leading?')}</strong>
+              <span className={styles.factAnswer}>{localizeTeamName(locale, standings[0].team.name)} · {standings[0].points} {pick(locale, 'نقطة', 'pts')}</span>
             </li>
           ) : null}
           {seasonLabel ? (
-            <li>
-              <span>
-                <strong>{pick(locale, 'ما الموسم المعروض؟', 'Which season is shown?')}</strong>
-                <em>{seasonLabel}</em>
-              </span>
+            <li className={styles.factRow}>
+              <strong className={styles.factQuestion}>{pick(locale, 'ما الموسم المعروض؟', 'Which season is shown?')}</strong>
+              <span className={styles.factAnswer}>{seasonLabel}</span>
             </li>
           ) : null}
           {currentArchive?.start || currentArchive?.end ? (
-            <li>
-              <span>
-                <strong>{pick(locale, 'متى يبدأ الموسم ومتى ينتهي؟', 'When does the season start and end?')}</strong>
-                <em>
-                  {[currentArchive.start, currentArchive.end].filter(Boolean).join(' — ')}
-                </em>
+            <li className={styles.factRow}>
+              <strong className={styles.factQuestion}>{pick(locale, 'متى يبدأ الموسم ومتى ينتهي؟', 'When does the season start and end?')}</strong>
+              <span className={styles.factAnswer}>
+                {[currentArchive.start, currentArchive.end].filter(Boolean).join(' — ')}
               </span>
             </li>
           ) : null}
           {standings.length > 0 ? (
-            <li>
-              <span>
-                <strong>{pick(locale, 'كم فريقًا يظهر في الجدول؟', 'How many teams are in the table?')}</strong>
-                <em>{standings.length}</em>
-              </span>
+            <li className={styles.factRow}>
+              <strong className={styles.factQuestion}>{pick(locale, 'كم فريقًا يظهر في الجدول؟', 'How many teams are in the table?')}</strong>
+              <span className={styles.factAnswer}>{standings.length}</span>
             </li>
           ) : (
-            <li>
-              <span>
-                <strong>{pick(locale, 'هل جدول الترتيب متاح؟', 'Are standings available?')}</strong>
-                <em>{pick(locale, 'البيانات غير متاحة من المصدر لهذا الموسم.', 'Standings are not available from the source for this season.')}</em>
-              </span>
+            <li className={styles.factRow}>
+              <strong className={styles.factQuestion}>{pick(locale, 'هل جدول الترتيب متاح؟', 'Are standings available?')}</strong>
+              <span className={styles.factAnswer}>{pick(locale, 'البيانات غير متاحة من المصدر لهذا الموسم.', 'Standings are not available from the source for this season.')}</span>
             </li>
           )}
         </ul>

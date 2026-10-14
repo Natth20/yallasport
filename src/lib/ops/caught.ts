@@ -21,6 +21,8 @@ export function isUnreachableDatabase(error: unknown) {
     code === 'P1001' ||
     /Can't reach database server/i.test(message) ||
     /Timed out fetching a new connection from the connection pool/i.test(message) ||
+    /unable to check out connection from the pool/i.test(message) ||
+    /ECHECKOUTTIMEOUT/i.test(message) ||
     /the database system is (starting up|shutting down)/i.test(message)
   );
 }

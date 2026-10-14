@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpLeft, Globe, Radio, Search, Star, Target } from 'lucide-react';
+import { ArrowUpLeft, Globe, Radio, Search, Star, Target, Trophy } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
@@ -120,6 +120,14 @@ function raceLine(locale: string, gap: number, leader: string, runner: string) {
     `الفارق بين الفريقين: ${gap} نقطة. ${leader} و ${runner}`,
     `The gap between the two teams is ${gap} pts — ${leader} and ${runner}`
   );
+}
+
+function formatGap(locale: string, gap: number) {
+  if (gap === 0) return pick(locale, 'تساوي في النقاط', 'Level on points');
+  if (gap === 1) return pick(locale, 'فارق نقطة واحدة', '1 pt gap');
+  if (gap === 2) return pick(locale, 'فارق نقطتين', '2 pts gap');
+  if (gap <= 10) return pick(locale, `فارق ${gap} نقاط`, `${gap} pts gap`);
+  return pick(locale, `فارق ${gap} نقطة`, `${gap} pts gap`);
 }
 
 function hasScore(home: number | null | undefined, away: number | null | undefined) {
@@ -759,7 +767,9 @@ export function LeaguesAtlas({
                         <div className="flex flex-wrap items-end justify-between gap-2">
                           <div>
                             <span className="atlas-section-kicker">
-                              {pick(locale, 'دولة', 'Country')} {String(chapterIndex + 1).padStart(2, '0')}
+                              {country === 'World' || country === 'International' || country === 'عالمي'
+                                ? pick(locale, 'بطولات دولية وعالمية', 'International & Global')
+                                : `${pick(locale, 'دولة', 'Country')} ${String(chapterIndex + 1).padStart(2, '0')}`}
                             </span>
                             <h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">{countryLabel(locale, country)}</h3>
                           </div>
@@ -836,24 +846,64 @@ export function LeaguesAtlas({
             {upcomingMatches.length > 0 && (
               <div className={`${styles.atlasDesk} atlas-desk is-upcoming`}>
                 <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
-                  <h2 className="text-base font-bold text-foreground dark:text-foreground">{pick(locale, 'أقرب المباريات', 'Upcoming matches')}</h2>
-                  <Link href="/matches" className="text-[11px] font-semibold text-muted-foreground hover:text-orange-500">
-                    {pick(locale, 'الجدول', 'Schedule')}
+                  <div>
+                    <h2 className="text-base font-bold text-foreground dark:text-foreground">{pick(locale, 'أقرب المباريات', 'Upcoming matches')}</h2>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{pick(locale, 'المواجهات القادمة بالتوقيت والبطولة', 'Next fixtures with kickoff and competition')}</p>
+                  </div>
+                  <Link href="/matches" className="shrink-0 rounded-lg border border-border/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-orange-500/50 hover:text-orange-500">
+                    {pick(locale, 'جدول المباريات', 'All matches')}
                   </Link>
                 </div>
-                <div className="divide-y divide-slate-100 dark:divide-white/10">
+                <div className="p-3 sm:p-4 space-y-2.5">
                   {upcomingMatches.map((match) => (
-                    <Link key={match.id} href={`/match/${match.id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-card/[0.04]">
-                      <div className="hidden w-32 sm:block">
-                        <span className="block truncate text-[9px] text-muted-foreground">
+                    <Link
+                      key={match.id}
+                      href={`/match/${match.id}`}
+                      className="group block rounded-2xl border border-border/70 bg-card/60 p-3 sm:p-3.5 transition-all duration-200 hover:border-orange-500/40 hover:bg-card hover:shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2 text-[11px]">
+                        <span className="min-w-0 truncate font-semibold text-muted-foreground">
                           {leagueLabel(locale, match.league)}
-                          {match.round ? ` · ${roundLabel(locale, match.round)}` : ''}
+                          {match.round ? <span className="opacity-75 font-normal"> · {roundLabel(locale, match.round)}</span> : null}
                         </span>
-                        <ClientTime value={match.kickoffAt} className="mt-1 block text-[11px] font-bold text-orange-500" />
+                        <div className="flex shrink-0 items-center gap-1.5 rounded-md bg-orange-500/10 px-2 py-0.5 text-xs font-bold text-orange-600 dark:text-orange-400">
+                          <ClientTime value={match.kickoffAt} />
+                        </div>
                       </div>
-                      <span className="min-w-0 flex-1 truncate text-end text-[12px] font-semibold">{teamLabel(locale, match.homeTeam.name)}</span>
-                      <span className="text-[9px] text-muted-foreground">×</span>
-                      <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">{teamLabel(locale, match.awayTeam.name)}</span>
+
+                      <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background p-1 shadow-xs border border-border/60">
+                            <LeagueCrest
+                              name={teamLabel(locale, match.homeTeam.name)}
+                              logoUrl={match.homeTeam.logoUrl}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                          <span className="truncate text-xs sm:text-[13px] font-bold text-foreground transition-colors group-hover:text-orange-500">
+                            {teamLabel(locale, match.homeTeam.name)}
+                          </span>
+                        </div>
+
+                        <div className="flex shrink-0 items-center justify-center px-1">
+                          <span className="rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                            VS
+                          </span>
+                        </div>
+
+                        <div className="flex min-w-0 items-center justify-end gap-2.5 text-end">
+                          <span className="truncate text-xs sm:text-[13px] font-bold text-foreground transition-colors group-hover:text-orange-500">
+                            {teamLabel(locale, match.awayTeam.name)}
+                          </span>
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-background p-1 shadow-xs border border-border/60">
+                            <LeagueCrest
+                              name={teamLabel(locale, match.awayTeam.name)}
+                              logoUrl={match.awayTeam.logoUrl}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -862,34 +912,81 @@ export function LeaguesAtlas({
 
             {titleRaces.length > 0 && (
               <div className={`${styles.atlasDesk} atlas-desk is-race`}>
-                <div className="border-b border-border px-5 py-4 dark:border-border">
-                  <h2 className="text-base font-bold text-foreground dark:text-foreground">
-                    {pick(locale, 'أقرب المنافسات على الصدارة', 'Closest races for first place')}
-                  </h2>
+                <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
+                  <div>
+                    <h2 className="text-base font-bold text-foreground dark:text-foreground">
+                      {pick(locale, 'أقرب المنافسات على الصدارة', 'Closest races for first place')}
+                    </h2>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{pick(locale, 'صراع النقاط بين المتصدر وأقرب ملاحقيه', 'Points battle between #1 and #2')}</p>
+                  </div>
+                  <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                    {pick(locale, 'صراع القمة', 'Title fight')}
+                  </span>
                 </div>
-                <div className="divide-y divide-slate-100 dark:divide-white/10">
+                <div className="p-3 sm:p-4 space-y-2.5">
                   {titleRaces.map((race) => (
                     <Link
                       key={race.league.id}
                       href={`/league/${race.league.slug}/standings`}
-                      className="flex items-center gap-4 px-5 py-4 hover:bg-orange-500/[0.04] dark:hover:bg-muted"
+                      className="group block rounded-2xl border border-border/70 bg-card/60 p-3 sm:p-3.5 transition-all duration-200 hover:border-amber-500/40 hover:bg-card hover:shadow-sm"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-card p-1.5">
-                        <LeagueCrest name={teamLabel(locale, race.leader.team.name)} logoUrl={race.leader.team.logoUrl} className="h-full w-full" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <strong className="block truncate text-[12px] text-foreground dark:text-foreground">{teamLabel(locale, race.leader.team.name)}</strong>
-                        <span className="mt-1 block truncate text-[10px] text-muted-foreground">
-                          {race.league.name} · {raceLine(locale, race.gap, teamLabel(locale, race.leader.team.name), teamLabel(locale, race.runnerUp.team.name))}
+                      <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2 text-[11px]">
+                        <span className="min-w-0 truncate font-bold text-foreground">
+                          {leagueLabel(locale, race.league)}
                         </span>
+                        <div className="flex shrink-0 items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                          {formatGap(locale, race.gap)}
+                        </div>
                       </div>
-                      <div className="text-start">
-                        <strong className="block text-lg tabular-nums text-orange-500">{race.gap}</strong>
-                        <span className="text-[10px] text-muted-foreground">
-                          {race.gap === 0
-                            ? pick(locale, 'الفارق بين المتصدر والمنافس: 0 نقطة', 'Gap to second: 0 pts')
-                            : pick(locale, 'نقطة فارق', 'point gap')}
-                        </span>
+
+                      <div className="mt-2.5 space-y-2">
+                        <div className="flex items-center gap-2.5 rounded-xl bg-background/50 px-2.5 py-1.5 transition-colors group-hover:bg-background/80">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-[10px] font-black text-amber-600 dark:text-amber-400">
+                            1
+                          </span>
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-card p-0.5 border border-border/50">
+                            <LeagueCrest
+                              name={teamLabel(locale, race.leader.team.name)}
+                              logoUrl={race.leader.team.logoUrl}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                          <span className="min-w-0 flex-1 truncate text-xs sm:text-[13px] font-bold text-foreground">
+                            {teamLabel(locale, race.leader.team.name)}
+                          </span>
+                          <div className="shrink-0 text-end">
+                            <span className="tabular-nums text-xs font-black text-amber-500">
+                              {race.leader.points}
+                            </span>
+                            <span className="ms-1 text-[10px] text-muted-foreground">
+                              {pick(locale, 'ن', 'pts')}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 rounded-xl bg-background/50 px-2.5 py-1.5 transition-colors group-hover:bg-background/80">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-500/15 text-[10px] font-black text-slate-500 dark:text-slate-400">
+                            2
+                          </span>
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-card p-0.5 border border-border/50">
+                            <LeagueCrest
+                              name={teamLabel(locale, race.runnerUp.team.name)}
+                              logoUrl={race.runnerUp.team.logoUrl}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                          <span className="min-w-0 flex-1 truncate text-xs sm:text-[13px] font-bold text-foreground/85">
+                            {teamLabel(locale, race.runnerUp.team.name)}
+                          </span>
+                          <div className="shrink-0 text-end">
+                            <span className="tabular-nums text-xs font-bold text-foreground/80">
+                              {race.runnerUp.points}
+                            </span>
+                            <span className="ms-1 text-[10px] text-muted-foreground">
+                              {pick(locale, 'ن', 'pts')}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </Link>
                   ))}
@@ -912,33 +1009,49 @@ export function LeaguesAtlas({
                 <div className="atlas-results-grid">
                   {recentResults.map((match) => (
                     <Link key={match.id} href={`/match/${match.id}`} className="atlas-result-slip">
-                      <div className="atlas-result-slip-meta">
-                        <span className="truncate pe-10">
-                          {leagueLabel(locale, match.league)}
-                          {match.round ? ` · ${roundLabel(locale, match.round)}` : ''}
-                        </span>
-                        <ClientTime value={match.kickoffAt} />
+                      <div className="atlas-result-slip-meta flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <Trophy className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                          <span className="font-extrabold text-xs sm:text-[12px] text-foreground truncate">
+                            {leagueLabel(locale, match.league)}
+                          </span>
+                          {match.round ? (
+                            <span className="text-[10px] font-semibold text-orange-600 dark:text-orange-400 truncate opacity-90">
+                              · {roundLabel(locale, match.round)}
+                            </span>
+                          ) : null}
+                        </div>
+                        {/* Date explicitly pinned to the Left */}
+                        <div className="shrink-0 text-left" dir="ltr">
+                          <ClientTime
+                            value={match.kickoffAt}
+                            options={{ day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }}
+                            className="inline-flex items-center rounded-md bg-muted/60 dark:bg-card px-2 py-0.5 text-[10px] font-bold text-foreground/80 tabular-nums border border-border/50"
+                          />
+                        </div>
                       </div>
                       <div className="atlas-result-slip-body">
-                        <span className="atlas-result-side is-home">
+                        <div className="atlas-result-side is-home">
                           <span className="atlas-result-crest">
-                            <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full" />
+                            <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full object-contain" />
                           </span>
-                          <strong className="truncate">{teamLabel(locale, match.homeTeam.name)}</strong>
-                        </span>
-                        <span className="atlas-result-score" aria-label={`${match.homeScore}-${match.awayScore}`}>
-                          <b className="tabular-nums">{match.homeScore}</b>
-                          <i>–</i>
-                          <b className="tabular-nums">{match.awayScore}</b>
-                        </span>
-                        <span className="atlas-result-side is-away">
+                          <strong className="atlas-result-team-name">{teamLabel(locale, match.homeTeam.name)}</strong>
+                        </div>
+                        <div className="atlas-result-center">
+                          <span className="atlas-result-score" aria-label={`${match.homeScore}-${match.awayScore}`}>
+                            <b className="tabular-nums">{match.homeScore ?? '–'}</b>
+                            <i>–</i>
+                            <b className="tabular-nums">{match.awayScore ?? '–'}</b>
+                          </span>
+                          <span className="atlas-result-slip-mark">{pick(locale, 'نهاية', 'FT')}</span>
+                        </div>
+                        <div className="atlas-result-side is-away">
                           <span className="atlas-result-crest">
-                            <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full" />
+                            <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full object-contain" />
                           </span>
-                          <strong className="truncate">{teamLabel(locale, match.awayTeam.name)}</strong>
-                        </span>
+                          <strong className="atlas-result-team-name">{teamLabel(locale, match.awayTeam.name)}</strong>
+                        </div>
                       </div>
-                      <span className="atlas-result-slip-mark">{pick(locale, 'نهاية', 'FT')}</span>
                     </Link>
                   ))}
                 </div>
@@ -993,26 +1106,96 @@ export function LeaguesAtlas({
             <div className="flex items-center justify-between border-b border-border px-5 py-4 dark:border-border">
               <div>
                 <span className="atlas-section-kicker">{pick(locale, 'من الأطلس', 'From the atlas')}</span>
-                <h2 className="mt-1 text-base font-bold tracking-[-0.03em] text-foreground dark:text-foreground">{pick(locale, 'تقارير البطولات المعتمدة', 'Verified league reports')}</h2>
+                <h2 className="mt-1 text-base font-bold tracking-[-0.03em] text-foreground dark:text-foreground">
+                  {pick(locale, 'أخبار وتقارير البطولات المعتمدة', 'Verified Competition News & Reports')}
+                </h2>
               </div>
-              <Link href="/news" className="text-[11px] font-semibold text-orange-500">
-                {pick(locale, 'الموجز', 'Briefing')}
+              <Link href="/news" className="text-[11px] font-semibold text-orange-500 hover:underline">
+                {pick(locale, 'المزيد من الأخبار', 'More news')}
               </Link>
             </div>
-            <div className="grid gap-0 md:grid-cols-2">
-              {leagueNews.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/news/${article.slug}`}
-                  className="border-b border-border px-5 py-4 last:border-b-0 hover:bg-orange-500/[0.04] dark:border-border dark:hover:bg-muted md:border-e md:odd:border-e md:[&:nth-last-child(2)]:border-b-0"
-                >
-                  {article.leagueName && (
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-orange-500">{article.leagueName}</span>
-                  )}
-                  <strong className="mt-1 block text-[13px] leading-6 text-foreground dark:text-foreground">{article.title}</strong>
-                  {article.publishedAt && <ClientTime value={article.publishedAt} className="mt-1 block text-[10px] text-muted-foreground" />}
-                </Link>
-              ))}
+            <div className="grid gap-3 p-4 md:grid-cols-2">
+              {/* Right column: 3 news items */}
+              <div className="space-y-3">
+                {leagueNews.slice(0, 3).map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/news/${article.slug}`}
+                    className="group flex gap-3.5 rounded-2xl border border-border/70 bg-card/60 p-3 transition-all hover:border-orange-500/40 hover:bg-card hover:shadow-xs"
+                  >
+                    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
+                      {article.featuredImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={article.featuredImage}
+                          alt={article.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-orange-500/10 text-orange-500">
+                          <Trophy className="h-6 w-6 opacity-60" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
+                      <div>
+                        {article.leagueName ? (
+                          <span className="inline-block text-[10px] font-black uppercase text-orange-500">
+                            {article.leagueName}
+                          </span>
+                        ) : null}
+                        <h4 className="line-clamp-2 text-xs sm:text-[13px] font-bold leading-snug text-foreground group-hover:text-orange-500 transition-colors">
+                          {article.title}
+                        </h4>
+                      </div>
+                      {article.publishedAt ? (
+                        <ClientTime value={article.publishedAt} className="text-[10px] font-medium text-muted-foreground" />
+                      ) : null}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Left column: 3 news items */}
+              <div className="space-y-3">
+                {leagueNews.slice(3, 6).map((article) => (
+                  <Link
+                    key={article.id}
+                    href={`/news/${article.slug}`}
+                    className="group flex gap-3.5 rounded-2xl border border-border/70 bg-card/60 p-3 transition-all hover:border-orange-500/40 hover:bg-card hover:shadow-xs"
+                  >
+                    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
+                      {article.featuredImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={article.featuredImage}
+                          alt={article.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-orange-500/10 text-orange-500">
+                          <Trophy className="h-6 w-6 opacity-60" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
+                      <div>
+                        {article.leagueName ? (
+                          <span className="inline-block text-[10px] font-black uppercase text-orange-500">
+                            {article.leagueName}
+                          </span>
+                        ) : null}
+                        <h4 className="line-clamp-2 text-xs sm:text-[13px] font-bold leading-snug text-foreground group-hover:text-orange-500 transition-colors">
+                          {article.title}
+                        </h4>
+                      </div>
+                      {article.publishedAt ? (
+                        <ClientTime value={article.publishedAt} className="text-[10px] font-medium text-muted-foreground" />
+                      ) : null}
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         )}

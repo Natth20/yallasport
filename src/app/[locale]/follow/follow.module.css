@@ -1,0 +1,235 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 5rem;
+}
+
+.header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 3rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 9999px;
+  color: #facc15;
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  color: var(--foreground, #f3f4f6);
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  color: var(--muted-foreground, #9ca3af);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.statusNotice {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: start;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.noticeIcon {
+  padding-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.noticeBody {
+  flex: 1;
+}
+
+.noticeTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin: 0 0 0.4rem;
+}
+
+.noticeText {
+  font-size: 0.85rem;
+  color: var(--foreground, #e5e7eb);
+  line-height: 1.6;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.quickLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.favBtn,
+.settingsBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.favBtn {
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: #facc15;
+}
+
+.favBtn:hover {
+  background: rgba(234, 179, 8, 0.25);
+}
+
+.settingsBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--foreground, #e5e7eb);
+}
+
+.settingsBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.section {
+  margin-top: 3rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--foreground, #fff);
+  margin: 0;
+}
+
+.allTeamsLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: #fb923c;
+  text-decoration: none;
+}
+
+.allTeamsLink:hover {
+  text-decoration: underline;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--surface-card, rgba(17, 24, 39, 0.75));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.2s;
+}
+
+.card:hover {
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.crestWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.crest {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fallbackCrest {
+  width: 20px;
+  height: 20px;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.teamName {
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: var(--foreground, #f3f4f6);
+  margin: 0 0 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leagueName {
+  font-size: 0.75rem;
+  color: var(--muted-foreground, #9ca3af);
+  display: block;
+}
+
+.followBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(234, 88, 12, 0.12);
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  color: #fb923c;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.775rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.followBtn:hover {
+  background: #ea580c;
+  color: #fff;
+}

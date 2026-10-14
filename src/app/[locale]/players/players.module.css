@@ -1,0 +1,281 @@
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 5rem;
+}
+
+.header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 3rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 9999px;
+  color: #60a5fa;
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  color: var(--foreground, #f3f4f6);
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  color: var(--muted-foreground, #9ca3af);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.75rem;
+}
+
+.searchForm {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface-subtle, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 0.35rem 0.5rem 0.35rem 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.searchIcon {
+  color: var(--muted-foreground, #9ca3af);
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-inline-end: 0.75rem;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--foreground, #fff);
+  font-size: 0.95rem;
+}
+
+.searchBtn {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.searchBtn:hover {
+  opacity: 0.9;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.card {
+  background: var(--surface-card, rgba(17, 24, 39, 0.75));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatarWrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 28px;
+  height: 28px;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.playerName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  line-height: 1.3;
+}
+
+.playerLink {
+  color: var(--foreground, #f3f4f6);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.playerLink:hover {
+  color: #60a5fa;
+}
+
+.tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.positionTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  font-size: 0.725rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.nationTag {
+  font-size: 0.725rem;
+  color: var(--muted-foreground, #9ca3af);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.teamTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted-foreground, #d1d5db);
+  font-size: 0.775rem;
+  text-decoration: none;
+  margin-top: 0.2rem;
+  transition: color 0.15s;
+}
+
+.teamTag:hover {
+  color: #fb923c;
+}
+
+.teamLogo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding-top: 0.85rem;
+}
+
+.primaryAction {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--foreground, #f3f4f6);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.primaryAction:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  color: var(--muted-foreground, #9ca3af);
+  text-decoration: none;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.secondaryAction:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--foreground, #fff);
+}
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--muted-foreground, #9ca3af);
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  opacity: 0.4;
+}
+
+.resetLink {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #60a5fa;
+  text-decoration: underline;
+}

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter, usePathname } from '@/i18n/navigation';
+import { useSearchParams } from 'next/navigation';
 import { FollowButton } from '@/components/common/FollowButton';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
@@ -10,12 +11,15 @@ import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { apiSportsCoachPhoto, apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import {
   Activity,
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   Award,
   Calendar,
+  CheckCircle2,
   Clock,
   Compass,
+  Eye,
   FileText,
   Flame,
   Info,
@@ -24,6 +28,7 @@ import {
   Newspaper,
   Repeat,
   Shield,
+  SlidersHorizontal,
   Sparkles,
   Trophy,
   User,
@@ -36,6 +41,7 @@ import type {
 } from '@/lib/teams/load-dossier';
 import styles from '@/components/salon/entity-hall.module.css';
 import board from '@/components/teams/team-salon.module.css';
+import { EditorialNewsSixGrid } from '@/components/news/EditorialNewsSixGrid';
 
 type SquadFilter = SquadGroupKey | 'ALL';
 const SQUAD_ORDER: SquadGroupKey[] = ['GK', 'DF', 'MF', 'FW', 'OTHER'];
@@ -112,7 +118,31 @@ export function TeamDossier({
     news,
     tableWindow,
     seasonSlice,
+    availableSeasons = [],
+    selectedSeason,
+    selectedLeagueSlug,
+    sectionStatus,
   } = dossier;
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleSeasonChange = (season: string) => {
+    const next = new URLSearchParams(searchParams?.toString() || '');
+    if (season) next.set('season', season);
+    else next.delete('season');
+    const qs = next.toString();
+    router.push((qs ? `${pathname}?${qs}` : pathname) as any);
+  };
+
+  const handleLeagueChange = (leagueSlug: string) => {
+    const next = new URLSearchParams(searchParams?.toString() || '');
+    if (leagueSlug) next.set('league', leagueSlug);
+    else next.delete('league');
+    const qs = next.toString();
+    router.push((qs ? `${pathname}?${qs}` : pathname) as any);
+  };
 
   const [squadFilter, setSquadFilter] = useState<SquadFilter>('ALL');
   const [transfersTab, setTransfersTab] = useState<'in' | 'out'>('in');
@@ -340,8 +370,131 @@ export function TeamDossier({
           ========================================================================= */}
       <main style={{ maxWidth: '1320px', margin: '2rem auto 0', padding: '0 1rem', display: 'grid', gap: '2rem' }}>
 
+        {/* =========================================================================
+            SEASON & COMPETITION CONTROL BAR
+            ========================================================================= */}
+        <section
+          aria-label={pick(locale, 'تصفية الموسم والبطولة', 'Season & Competition Filter')}
+          className={board.glassCard}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            padding: '0.85rem 1.25rem',
+            borderRadius: '1rem',
+            border: '1px solid color-mix(in srgb, var(--ys-orange) 20%, var(--border))',
+            background: 'color-mix(in srgb, var(--card) 85%, transparent)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', fontWeight: 900, color: 'var(--ys-orange)' }}>
+              <SlidersHorizontal size={15} />
+              {pick(locale, 'تصفية البيانات:', 'Filter View:')}
+            </span>
+
+            {/* Season Selector */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', fontWeight: 700 }}>
+                {pick(locale, 'الموسم:', 'Season:')}
+              </span>
+              <select
+                value={selectedSeason || ''}
+                onChange={(e) => handleSeasonChange(e.target.value)}
+                style={{
+                  background: 'var(--background)',
+                  color: 'var(--foreground)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '0.5rem',
+                  padding: '0.3rem 0.65rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                {availableSeasons.map((s) => (
+                  <option key={s} value={s}>
+                    {s} - {parseInt(s, 10) + 1}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Competitions Selector */}
+            {competitions && competitions.length > 0 ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', fontWeight: 700 }}>
+                  {pick(locale, 'البطولة:', 'League:')}
+                </span>
+                <select
+                  value={selectedLeagueSlug || ''}
+                  onChange={(e) => handleLeagueChange(e.target.value)}
+                  style={{
+                    background: 'var(--background)',
+                    color: 'var(--foreground)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    padding: '0.3rem 0.65rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    outline: 'none',
+                    cursor: 'pointer',
+                    maxWidth: '220px',
+                  }}
+                >
+                  <option value="">{pick(locale, 'جميع البطولات', 'All Competitions')}</option>
+                  {competitions.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {localizePlainName(locale, c.name)} ({c.matches})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Quick status pill */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.2rem 0.55rem',
+              borderRadius: '999px',
+              fontWeight: 800,
+              background: 'color-mix(in srgb, #22c55e 15%, transparent)',
+              color: '#22c55e',
+            }}>
+              <CheckCircle2 size={12} />
+              {pick(locale, 'بيانات معتمدة ومحدثة', 'Verified Data')}
+            </span>
+            {(selectedSeason || selectedLeagueSlug) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  router.push(pathname as any);
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--muted-foreground)',
+                  textDecoration: 'underline',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                {pick(locale, 'إلغاء التصفية', 'Reset Filter')}
+              </button>
+            ) : null}
+          </div>
+        </section>
+
         {/* ----------------- ROW 1: NEXT MATCH & RECENT FORM SPOTLIGHT ----------------- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        <div id="fixtures" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', scrollMarginTop: '6rem' }}>
           {/* Next Match Card */}
           <div className={board.spotlightCard} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -624,7 +777,7 @@ export function TeamDossier({
         ) : null}
 
         {/* ----------------- ROW 4: 2D TACTICAL STARTING XI PITCH ----------------- */}
-        <section className={board.glassCard}>
+        <section id="squad" className={board.glassCard} style={{ scrollMarginTop: '6rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--foreground)' }}>
@@ -697,7 +850,7 @@ export function TeamDossier({
                   key={item.id}
                   href={`/player/${item.player.slug}`}
                   className={board.pitchNode}
-                  style={{ bottom: '7%', left: '50%' }}
+                  style={{ bottom: '8%', left: '50%' }}
                 >
                   <div className={board.pitchNodeAvatar}>
                     {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
@@ -739,7 +892,7 @@ export function TeamDossier({
                   key={item.id}
                   href={`/player/${item.player.slug}`}
                   className={board.pitchNode}
-                  style={{ bottom: '54%', left: `${leftPct}%` }}
+                  style={{ bottom: '49%', left: `${leftPct}%` }}
                 >
                   <div className={board.pitchNodeAvatar}>
                     {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
@@ -760,7 +913,7 @@ export function TeamDossier({
                   key={item.id}
                   href={`/player/${item.player.slug}`}
                   className={board.pitchNode}
-                  style={{ bottom: '79%', left: `${leftPct}%` }}
+                  style={{ bottom: '70%', left: `${leftPct}%` }}
                 >
                   <div className={board.pitchNodeAvatar}>
                     {shot ? <img src={shot} alt={item.player.name} /> : <span style={{ color: 'var(--ys-orange)', fontWeight: 900 }}>{item.player.name.charAt(0)}</span>}
@@ -861,8 +1014,8 @@ export function TeamDossier({
         </section>
 
         {/* ----------------- ROW 5: LEAGUE STANDINGS TABLE ----------------- */}
-        {standing ? (
-          <section className={board.glassCard}>
+        {standing && tableWindow.length > 0 ? (
+          <section id="standings" className={board.glassCard} style={{ scrollMarginTop: '6rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                 <Trophy size={18} style={{ color: '#eab308' }} />
@@ -888,43 +1041,72 @@ export function TeamDossier({
                   <tr>
                     <th style={{ textAlign: 'start' }}>{pick(locale, 'الترتيب والنادي', 'Rank & Team')}</th>
                     <th>{pick(locale, 'لعب', 'P')}</th>
-                    <th>{pick(locale, 'فاز', 'W')}</th>
-                    <th>{pick(locale, 'تعادل', 'D')}</th>
-                    <th>{pick(locale, 'خسر', 'L')}</th>
-                    <th>{pick(locale, 'له:عليه', 'GF:GA')}</th>
-                    <th>{pick(locale, 'فارق', 'GD')}</th>
+                    <th>
+                      <span className="hidden sm:inline">{pick(locale, 'فاز', 'W')}</span>
+                      <span className="sm:hidden">{pick(locale, 'ف', 'W')}</span>
+                    </th>
+                    <th>
+                      <span className="hidden sm:inline">{pick(locale, 'تعادل', 'D')}</span>
+                      <span className="sm:hidden">{pick(locale, 'ت', 'D')}</span>
+                    </th>
+                    <th>
+                      <span className="hidden sm:inline">{pick(locale, 'خسر', 'L')}</span>
+                      <span className="sm:hidden">{pick(locale, 'خ', 'L')}</span>
+                    </th>
+                    <th className={board.colGoalsDesktop}>{pick(locale, 'له:عليه', 'GF:GA')}</th>
+                    <th>
+                      <span className="hidden sm:inline">{pick(locale, 'فارق', 'GD')}</span>
+                      <span className="sm:hidden">{pick(locale, '+/-', '+/-')}</span>
+                    </th>
                     <th style={{ fontWeight: 900, color: 'var(--ys-orange)' }}>{pick(locale, 'نقاط', 'PTS')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tableWindow.map((row) => (
-                    <tr
-                      key={row.team.id}
-                      className={row.isUs ? board.standingRowUs : undefined}
-                    >
-                      <td style={{ textAlign: 'start', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                        <span style={{ minWidth: '1.5rem', color: row.isUs ? 'var(--ys-orange)' : 'inherit', fontWeight: 800 }}>#{row.rank}</span>
-                        <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-5 w-5" />
-                        <span>{localizePlainName(locale, row.team.name)}</span>
-                      </td>
-                      <td>{row.played}</td>
-                      <td>{row.won}</td>
-                      <td>{row.drawn}</td>
-                      <td>{row.lost}</td>
-                      <td>{row.goalsFor}:{row.goalsAgainst}</td>
-                      <td style={{ color: row.goalsFor - row.goalsAgainst > 0 ? '#16a34a' : row.goalsFor - row.goalsAgainst < 0 ? '#dc2626' : 'inherit' }}>
-                        {goalDiffLabel(row.goalsFor - row.goalsAgainst)}
-                      </td>
-                      <td style={{ fontWeight: 900, color: 'var(--ys-orange)', fontSize: '0.95rem' }}>
-                        {row.points}
-                      </td>
-                    </tr>
-                  ))}
+                  {tableWindow.map((row) => {
+                    const diff = row.goalsFor - row.goalsAgainst;
+                    return (
+                      <tr
+                        key={row.team.id}
+                        className={row.isUs ? board.standingRowUs : undefined}
+                      >
+                        <td style={{ textAlign: 'start' }}>
+                          <div className={board.standingTeamCell}>
+                            <span className={`${board.standingRank} ${row.isUs ? board.standingRankUs : ''}`}>#{row.rank}</span>
+                            <LeagueCrest name={row.team.name} logoUrl={row.team.logoUrl} className="h-5 w-5 shrink-0" />
+                            <span className={board.standingTeamName}>{localizePlainName(locale, row.team.name)}</span>
+                          </div>
+                        </td>
+                        <td>{row.played}</td>
+                        <td>{row.won}</td>
+                        <td>{row.drawn}</td>
+                        <td>{row.lost}</td>
+                        <td className={board.colGoalsDesktop}>{row.goalsFor}:{row.goalsAgainst}</td>
+                        <td className={diff > 0 ? board.diffPositive : diff < 0 ? board.diffNegative : board.diffZero}>
+                          {goalDiffLabel(diff)}
+                        </td>
+                        <td>
+                          <span className={board.pointsBadge}>
+                            {row.points}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </section>
-        ) : null}
+        ) : (
+          <section id="standings" className={board.glassCard} style={{ padding: '2rem 1.5rem', textAlign: 'center', scrollMarginTop: '6rem' }}>
+            <Trophy size={26} style={{ color: '#eab308', margin: '0 auto 0.75rem', opacity: 0.8 }} />
+            <h3 style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--foreground)', marginBottom: '0.35rem' }}>
+              {pick(locale, 'جدول الترتيب والمنافسات', 'Official Standings & Competitions')}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', margin: 0 }}>
+              {pick(locale, 'بيانات جدول الترتيب غير متوفرة لهذا الموسم أو البطولة المحددة حالياً.', 'Standings data is not currently recorded for the selected season or competition.')}
+            </p>
+          </section>
+        )}
 
         {/* ----------------- ROW 6: TRANSFERS & CLUB INFO/VENUE ----------------- */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
@@ -1046,6 +1228,32 @@ export function TeamDossier({
             </div>
           ) : null}
         </div>
+
+        {/* News Section (3 on the right, 3 on the left - Luxury Editorial Studio) */}
+        {news && news.length > 0 ? (
+          <div id="news" style={{ scrollMarginTop: '6rem' }}>
+            <EditorialNewsSixGrid
+              locale={locale}
+              news={news}
+              title={pick(locale, 'أحدث الأخبار والتقارير', 'Latest News & Reports')}
+              subtitle={pick(
+                locale,
+                `تغطية حصرية وشاملة لآخر مستجدات وكواليس ${team.name} من المصادر المعتمدة`,
+                `Exclusive reporting and verified updates for ${team.name}`
+              )}
+            />
+          </div>
+        ) : (
+          <div id="news" className={board.glassCard} style={{ padding: '2rem 1.5rem', textAlign: 'center', scrollMarginTop: '6rem' }}>
+            <Newspaper size={26} style={{ color: 'var(--ys-orange)', margin: '0 auto 0.75rem', opacity: 0.8 }} />
+            <h3 style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--foreground)', marginBottom: '0.35rem' }}>
+              {pick(locale, 'أخبار وتقارير النادي', 'Club News & Reports')}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', margin: 0 }}>
+              {pick(locale, 'لا توجد أخبار مخصصة مسجلة للنادي حالياً من المصادر المعتمدة.', 'No verified news items currently linked to this club.')}
+            </p>
+          </div>
+        )}
 
       </main>
     </div>

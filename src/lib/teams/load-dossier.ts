@@ -225,6 +225,18 @@ export type TeamDossierData = {
     views?: number;
     sourceName?: string;
   }>;
+  availableSeasons?: string[];
+  selectedSeason?: string;
+  selectedLeagueSlug?: string;
+  sectionStatus?: {
+    overview: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+    fixtures: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+    standings: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+    stats: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+    squad: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+    transfers: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+    news: 'AVAILABLE' | 'UNAVAILABLE' | 'PENDING' | 'STALE' | 'ERROR';
+  };
 };
 
 function classifyPosition(position: string | null | undefined): SquadGroupKey {
@@ -869,13 +881,79 @@ async function fetchTransfersFromApi(teamExternalId: string) {
     .slice(0, 8) as TeamDossierData['transfers'];
 }
 
-export const loadTeamDossier = cache(async function loadTeamDossier(slug: string): Promise<TeamDossierData | null> {
+export const loadTeamDossier = cache(async function loadTeamDossier(
+  slug: string,
+  options?: { season?: string; leagueSlug?: string }
+): Promise<TeamDossierData | null> {
   const teamRow = await findTeamRowBySlug(slug);
 
   if (!teamRow) return null;
 
   const teamId = teamRow.id;
   const now = new Date();
+
+  const [matchSeasons, standingSeasons] = await Promise.all([
+    soft(
+      () =>
+        prisma.match.findMany({
+          where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] },
+          select: { seasonId: true },
+          distinct: ['seasonId'],
+          orderBy: { seasonId: 'desc' },
+          take: 10,
+        }),
+      []
+    ),
+    soft(
+      () =>
+        prisma.standing.findMany({
+          where: { teamId },
+          select: { seasonId: true },
+          distinct: ['seasonId'],
+          orderBy: { seasonId: 'desc' },
+          take: 10,
+        }),
+      []
+    ),
+  ]);
+
+  const seasonSet = new Set<string>();
+  const currentFootballYear = footballSeason(now);
+  seasonSet.add(String(currentFootballYear));
+  seasonSet.add(String(currentFootballYear - 1));
+  for (const s of matchSeasons) {
+    if (s.seasonId) seasonSet.add(s.seasonId);
+  }
+  for (const s of standingSeasons) {
+    if (s.seasonId) seasonSet.add(s.seasonId);
+  }
+  const availableSeasons = Array.from(seasonSet).sort((a, b) => b.localeCompare(a));
+  const activeSeason = options?.season || availableSeasons[0] || String(currentFootballYear);
+
+  const matchLeagueFilter = options?.leagueSlug ? { league: { slug: options.leagueSlug } } : {};
+  const finishedMatchWhere = {
+    OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+    status: 'FINISHED' as const,
+    ...(options?.season ? { seasonId: options.season } : {}),
+    ...matchLeagueFilter,
+  };
+  const upcomingMatchWhere = {
+    OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+    status: 'NOT_STARTED' as const,
+    kickoffAt: { gte: now },
+    ...matchLeagueFilter,
+  };
+  const liveMatchWhere = {
+    OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+    status: { in: ['LIVE' as const, 'HALFTIME' as const] },
+    kickoffAt: { gte: liveKickoffFloor() },
+    ...matchLeagueFilter,
+  };
+  const standingWhere = {
+    teamId,
+    ...(options?.season ? { seasonId: options.season } : {}),
+    ...matchLeagueFilter,
+  };
 
   // eslint-disable-next-line prefer-const
   let [players, finished, upcoming, liveMatches, standingRow, newsRows, teamEvents, apiProfile, transfers] =
@@ -909,10 +987,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.match.findMany({
-              where: {
-                OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                status: 'FINISHED',
-              },
+              where: finishedMatchWhere,
               orderBy: { kickoffAt: 'desc' },
               take: 50,
               select: matchSelect,
@@ -923,11 +998,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.match.findMany({
-              where: {
-                OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                status: 'NOT_STARTED',
-                kickoffAt: { gte: now },
-              },
+              where: upcomingMatchWhere,
               orderBy: { kickoffAt: 'asc' },
               take: 8,
               select: matchSelect,
@@ -938,11 +1009,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.match.findMany({
-              where: {
-                OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                status: { in: ['LIVE', 'HALFTIME'] },
-                kickoffAt: { gte: liveKickoffFloor() },
-              },
+              where: liveMatchWhere,
               orderBy: { kickoffAt: 'asc' },
               take: 4,
               select: matchSelect,
@@ -953,7 +1020,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.standing.findFirst({
-              where: { teamId },
+              where: standingWhere,
               orderBy: { seasonId: 'desc' },
               select: {
                 rank: true,
@@ -974,13 +1041,13 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         ),
       () =>
         soft(
-          () =>
-            prisma.news.findMany({
+          async () => {
+            const specific = await prisma.news.findMany({
               where: {
                 status: 'PUBLISHED',
                 OR: [
-                  { title: { contains: teamRow.name } },
-                  { content: { contains: teamRow.name } },
+                  { title: { contains: teamRow.name, mode: 'insensitive' } },
+                  { content: { contains: teamRow.name, mode: 'insensitive' } },
                   { tags: { has: teamRow.name } },
                   {
                     entityLinks: {
@@ -990,7 +1057,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
                 ],
               },
               orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
-              take: 8,
+              take: 6,
               select: {
                 id: true,
                 slug: true,
@@ -1007,7 +1074,34 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
                 views: true,
                 sourceName: true,
               },
-            }),
+            });
+            if (specific.length >= 6) return specific;
+            const fallback = await prisma.news.findMany({
+              where: {
+                status: 'PUBLISHED',
+                id: { notIn: specific.map((s) => s.id) },
+              },
+              orderBy: [{ featured: 'desc' }, { publishedAt: 'desc' }],
+              take: 6 - specific.length,
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+                shortTitle: true,
+                excerpt: true,
+                featuredImage: true,
+                category: true,
+                publishedAt: true,
+                isPremium: true,
+                featured: true,
+                breaking: true,
+                readingTime: true,
+                views: true,
+                sourceName: true,
+              },
+            });
+            return [...specific, ...fallback];
+          },
           []
         ),
       () =>
@@ -1069,10 +1163,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.match.findMany({
-              where: {
-                OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                status: 'FINISHED',
-              },
+              where: finishedMatchWhere,
               orderBy: { kickoffAt: 'desc' },
               take: 50,
               select: matchSelect,
@@ -1083,11 +1174,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.match.findMany({
-              where: {
-                OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                status: 'NOT_STARTED',
-                kickoffAt: { gte: now },
-              },
+              where: upcomingMatchWhere,
               orderBy: { kickoffAt: 'asc' },
               take: 8,
               select: matchSelect,
@@ -1098,11 +1185,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
         soft(
           () =>
             prisma.match.findMany({
-              where: {
-                OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                status: { in: ['LIVE', 'HALFTIME'] },
-                kickoffAt: { gte: liveKickoffFloor() },
-              },
+              where: liveMatchWhere,
               orderBy: { kickoffAt: 'asc' },
               take: 4,
               select: matchSelect,
@@ -1160,7 +1243,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
     standingRow?.league.externalId ||
     (finished[0] as DossierMatch | undefined)?.league.externalId ||
     (upcoming[0] as DossierMatch | undefined)?.league.externalId;
-  const seasonHint = standingRow?.seasonId || String(footballSeason(now));
+  const seasonHint = options?.season || standingRow?.seasonId || activeSeason;
 
   let apiStanding = standingRow;
   if (!apiStanding && leagueHint && isLiveSportsApi()) {
@@ -1516,140 +1599,140 @@ export const loadTeamDossier = cache(async function loadTeamDossier(slug: string
       sourceName: row.sourceName ?? undefined,
     }));
 
-const KNOWN_VENUE_DATA: Record<
-  string,
-  { image: string; surface: string; capacity: number; address: string; city: string }
-> = {
-  '541': {
-    image: 'https://media.api-sports.io/football/venues/1456.png',
-    surface: 'Grass (Hybrid)',
-    capacity: 81044,
-    address: 'Av. de Concha Espina, 1, 28036 Madrid',
-    city: 'Madrid',
-  },
-  '529': {
-    image: 'https://media.api-sports.io/football/venues/1454.png',
-    surface: 'Grass',
-    capacity: 99354,
-    address: "Carrer d'Aristides Maillol, 12, 08028 Barcelona",
-    city: 'Barcelona',
-  },
-  '530': {
-    image: 'https://media.api-sports.io/football/venues/1457.png',
-    surface: 'Grass',
-    capacity: 70460,
-    address: 'Av. de Luis Aragonés, 4, 28022 Madrid',
-    city: 'Madrid',
-  },
-  '50': {
-    image: 'https://media.api-sports.io/football/venues/555.png',
-    surface: 'Grass',
-    capacity: 53400,
-    address: 'Ashton New Rd, Manchester M11 3FF',
-    city: 'Manchester',
-  },
-  '40': {
-    image: 'https://media.api-sports.io/football/venues/550.png',
-    surface: 'Grass',
-    capacity: 61276,
-    address: 'Anfield Rd, Liverpool L4 0TH',
-    city: 'Liverpool',
-  },
-  '42': {
-    image: 'https://media.api-sports.io/football/venues/494.png',
-    surface: 'Grass',
-    capacity: 60704,
-    address: 'Hornsey Rd, London N7 7AJ',
-    city: 'London',
-  },
-  '33': {
-    image: 'https://media.api-sports.io/football/venues/556.png',
-    surface: 'Grass',
-    capacity: 74310,
-    address: 'Sir Matt Busby Way, Old Trafford, Manchester M16 0RA',
-    city: 'Manchester',
-  },
-  '49': {
-    image: 'https://media.api-sports.io/football/venues/519.png',
-    surface: 'Grass',
-    capacity: 40343,
-    address: 'Fulham Rd., London SW6 1HS',
-    city: 'London',
-  },
-  '157': {
-    image: 'https://media.api-sports.io/football/venues/700.png',
-    surface: 'Grass',
-    capacity: 75024,
-    address: 'Werner-Heisenberg-Allee 25, 80939 München',
-    city: 'München',
-  },
-  '85': {
-    image: 'https://media.api-sports.io/football/venues/671.png',
-    surface: 'Grass',
-    capacity: 47929,
-    address: '24 Rue du Commandant Guilbaud, 75016 Paris',
-    city: 'Paris',
-  },
-  '505': {
-    image: 'https://media.api-sports.io/football/venues/910.png',
-    surface: 'Grass',
-    capacity: 75817,
-    address: 'Piazzale Angelo Moratti, 20151 Milano',
-    city: 'Milano',
-  },
-  '489': {
-    image: 'https://media.api-sports.io/football/venues/910.png',
-    surface: 'Grass',
-    capacity: 75817,
-    address: 'Piazzale Angelo Moratti, 20151 Milano',
-    city: 'Milano',
-  },
-  '496': {
-    image: 'https://media.api-sports.io/football/venues/909.png',
-    surface: 'Grass',
-    capacity: 41507,
-    address: 'Corso Gaetano Scirea, 50, 10151 Torino',
-    city: 'Torino',
-  },
-  '2566': {
-    image: 'https://media.api-sports.io/football/venues/19894.png',
-    surface: 'Grass',
-    capacity: 30000,
-    address: 'Hitteen, Riyadh 13516',
-    city: 'Riyadh',
-  },
-  '2564': {
-    image: 'https://media.api-sports.io/football/venues/19895.png',
-    surface: 'Grass',
-    capacity: 25000,
-    address: 'King Saud University, Riyadh 12372',
-    city: 'Riyadh',
-  },
-  '2565': {
-    image: 'https://media.api-sports.io/football/venues/1115.png',
-    surface: 'Grass',
-    capacity: 62241,
-    address: 'King Abdullah Sports City, Jeddah 23737',
-    city: 'Jeddah',
-  },
-};
+  const KNOWN_VENUE_DATA: Record<
+    string,
+    { image: string; surface: string; capacity: number; address: string; city: string }
+  > = {
+    '541': {
+      image: 'https://media.api-sports.io/football/venues/1456.png',
+      surface: 'Grass (Hybrid)',
+      capacity: 81044,
+      address: 'Av. de Concha Espina, 1, 28036 Madrid',
+      city: 'Madrid',
+    },
+    '529': {
+      image: 'https://media.api-sports.io/football/venues/1454.png',
+      surface: 'Grass',
+      capacity: 99354,
+      address: "Carrer d'Aristides Maillol, 12, 08028 Barcelona",
+      city: 'Barcelona',
+    },
+    '530': {
+      image: 'https://media.api-sports.io/football/venues/1457.png',
+      surface: 'Grass',
+      capacity: 70460,
+      address: 'Av. de Luis Aragonés, 4, 28022 Madrid',
+      city: 'Madrid',
+    },
+    '50': {
+      image: 'https://media.api-sports.io/football/venues/555.png',
+      surface: 'Grass',
+      capacity: 53400,
+      address: 'Ashton New Rd, Manchester M11 3FF',
+      city: 'Manchester',
+    },
+    '40': {
+      image: 'https://media.api-sports.io/football/venues/550.png',
+      surface: 'Grass',
+      capacity: 61276,
+      address: 'Anfield Rd, Liverpool L4 0TH',
+      city: 'Liverpool',
+    },
+    '42': {
+      image: 'https://media.api-sports.io/football/venues/494.png',
+      surface: 'Grass',
+      capacity: 60704,
+      address: 'Hornsey Rd, London N7 7AJ',
+      city: 'London',
+    },
+    '33': {
+      image: 'https://media.api-sports.io/football/venues/556.png',
+      surface: 'Grass',
+      capacity: 74310,
+      address: 'Sir Matt Busby Way, Old Trafford, Manchester M16 0RA',
+      city: 'Manchester',
+    },
+    '49': {
+      image: 'https://media.api-sports.io/football/venues/519.png',
+      surface: 'Grass',
+      capacity: 40343,
+      address: 'Fulham Rd., London SW6 1HS',
+      city: 'London',
+    },
+    '157': {
+      image: 'https://media.api-sports.io/football/venues/700.png',
+      surface: 'Grass',
+      capacity: 75024,
+      address: 'Werner-Heisenberg-Allee 25, 80939 München',
+      city: 'München',
+    },
+    '85': {
+      image: 'https://media.api-sports.io/football/venues/671.png',
+      surface: 'Grass',
+      capacity: 47929,
+      address: '24 Rue du Commandant Guilbaud, 75016 Paris',
+      city: 'Paris',
+    },
+    '505': {
+      image: 'https://media.api-sports.io/football/venues/910.png',
+      surface: 'Grass',
+      capacity: 75817,
+      address: 'Piazzale Angelo Moratti, 20151 Milano',
+      city: 'Milano',
+    },
+    '489': {
+      image: 'https://media.api-sports.io/football/venues/910.png',
+      surface: 'Grass',
+      capacity: 75817,
+      address: 'Piazzale Angelo Moratti, 20151 Milano',
+      city: 'Milano',
+    },
+    '496': {
+      image: 'https://media.api-sports.io/football/venues/909.png',
+      surface: 'Grass',
+      capacity: 41507,
+      address: 'Corso Gaetano Scirea, 50, 10151 Torino',
+      city: 'Torino',
+    },
+    '2566': {
+      image: 'https://media.api-sports.io/football/venues/19894.png',
+      surface: 'Grass',
+      capacity: 30000,
+      address: 'Hitteen, Riyadh 13516',
+      city: 'Riyadh',
+    },
+    '2564': {
+      image: 'https://media.api-sports.io/football/venues/19895.png',
+      surface: 'Grass',
+      capacity: 25000,
+      address: 'King Saud University, Riyadh 12372',
+      city: 'Riyadh',
+    },
+    '2565': {
+      image: 'https://media.api-sports.io/football/venues/1115.png',
+      surface: 'Grass',
+      capacity: 62241,
+      address: 'King Abdullah Sports City, Jeddah 23737',
+      city: 'Jeddah',
+    },
+  };
 
-function lookupVenueByName(name?: string | null) {
-  if (!name) return null;
-  const n = name.toLowerCase();
-  if (n.includes('bernabeu') || n.includes('برنابيو')) return KNOWN_VENUE_DATA['541'];
-  if (n.includes('camp nou') || n.includes('كامب نو')) return KNOWN_VENUE_DATA['529'];
-  if (n.includes('metropolitano') || n.includes('ميتروبوليتانو')) return KNOWN_VENUE_DATA['530'];
-  if (n.includes('etihad') || n.includes('الاتحاد')) return KNOWN_VENUE_DATA['50'];
-  if (n.includes('anfield') || n.includes('أنفيلد')) return KNOWN_VENUE_DATA['40'];
-  if (n.includes('emirates') || n.includes('الإمارات')) return KNOWN_VENUE_DATA['42'];
-  if (n.includes('old trafford') || n.includes('أولد ترافورد')) return KNOWN_VENUE_DATA['33'];
-  if (n.includes('stamford') || n.includes('ستامفورد')) return KNOWN_VENUE_DATA['49'];
-  if (n.includes('allianz arena') || n.includes('أليانز أرينا')) return KNOWN_VENUE_DATA['157'];
-  if (n.includes('parc des princes') || n.includes('حديقة الأمراء')) return KNOWN_VENUE_DATA['85'];
-  if (n.includes('san siro') || n.includes('meazza') || n.includes('سان سيرو')) return KNOWN_VENUE_DATA['505'];
-  return null;
-}
+  function lookupVenueByName(name?: string | null) {
+    if (!name) return null;
+    const n = name.toLowerCase();
+    if (n.includes('bernabeu') || n.includes('برنابيو')) return KNOWN_VENUE_DATA['541'];
+    if (n.includes('camp nou') || n.includes('كامب نو')) return KNOWN_VENUE_DATA['529'];
+    if (n.includes('metropolitano') || n.includes('ميتروبوليتانو')) return KNOWN_VENUE_DATA['530'];
+    if (n.includes('etihad') || n.includes('الاتحاد')) return KNOWN_VENUE_DATA['50'];
+    if (n.includes('anfield') || n.includes('أنفيلد')) return KNOWN_VENUE_DATA['40'];
+    if (n.includes('emirates') || n.includes('الإمارات')) return KNOWN_VENUE_DATA['42'];
+    if (n.includes('old trafford') || n.includes('أولد ترافورد')) return KNOWN_VENUE_DATA['33'];
+    if (n.includes('stamford') || n.includes('ستامفورد')) return KNOWN_VENUE_DATA['49'];
+    if (n.includes('allianz arena') || n.includes('أليانز أرينا')) return KNOWN_VENUE_DATA['157'];
+    if (n.includes('parc des princes') || n.includes('حديقة الأمراء')) return KNOWN_VENUE_DATA['85'];
+    if (n.includes('san siro') || n.includes('meazza') || n.includes('سان سيرو')) return KNOWN_VENUE_DATA['505'];
+    return null;
+  }
 
   const knownVenue =
     KNOWN_VENUE_DATA[teamRow.externalId] ||
@@ -1702,6 +1785,16 @@ function lookupVenueByName(name?: string | null) {
   const upcomingTyped = upcoming as DossierMatch[];
   const liveTyped = liveMatches as DossierMatch[];
 
+  const sectionStatus: NonNullable<TeamDossierData['sectionStatus']> = {
+    overview: 'AVAILABLE',
+    fixtures: upcoming.length > 0 || finished.length > 0 ? 'AVAILABLE' : 'PENDING',
+    standings: apiStanding ? 'AVAILABLE' : 'UNAVAILABLE',
+    stats: stats.played > 0 ? 'AVAILABLE' : 'PENDING',
+    squad: players.length > 0 ? 'AVAILABLE' : 'PENDING',
+    transfers: transfers.length > 0 ? 'AVAILABLE' : 'UNAVAILABLE',
+    news: news.length > 0 ? 'AVAILABLE' : 'PENDING',
+  };
+
   return {
     team,
     squad,
@@ -1735,5 +1828,9 @@ function lookupVenueByName(name?: string | null) {
     },
     transfers,
     news,
+    availableSeasons,
+    selectedSeason: options?.season || seasonHint,
+    selectedLeagueSlug: options?.leagueSlug,
+    sectionStatus,
   };
 });

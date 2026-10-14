@@ -28,9 +28,17 @@ import { loadNewsDesk, loadNewsSidecars, type NewsDeskData } from '@/lib/news/lo
 import { normalizeTimezone } from '@/lib/datetime/format';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
+import { FrontTopMatchesShowcase } from '@/components/front/FrontTopMatchesShowcase';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { YoutubeFoyer } from '@/components/youtube/YoutubeFoyer';
+import { NewsQuickNavHub } from '@/components/news/NewsQuickNavHub';
+import { NewsVideosBand, NewsReelsBand, NewsPhotosBand } from '@/components/news/NewsMediaBands';
+import { listYoutubeShelf } from '@/lib/youtube/ingest';
+import { toYoutubeCards, type YoutubeCard } from '@/lib/youtube/present';
+import { loadPhotoFrames } from '@/lib/photos/load-frames';
+import type { PhotoFrame } from '@/components/photos/PhotoHall';
+import { swallow } from '@/lib/ops/caught';
 
 import styles from '@/components/news/news-chamber.module.css';
 
@@ -77,11 +85,17 @@ async function NewsPageBody({
   const day = params.day?.trim() || '';
   const timezone = normalizeTimezone((await cookies()).get('yalla-tz')?.value);
 
-  const [data, side] = await Promise.all([
+  const [data, side, rawVideos, rawReels, rawPhotos] = await Promise.all([
     loadNewsDesk({ locale, timezone, query, desk, source, page, day: day || undefined }),
     loadNewsSidecars({ locale, timezone }),
+    listYoutubeShelf('VIDEO', 8, locale).catch(swallow('news.videos', [])),
+    listYoutubeShelf('SHORT', 8, locale).catch(swallow('news.reels', [])),
+    loadPhotoFrames(locale).catch(swallow('news.photos', [])),
   ]);
   const deskData = { ...data, ...side };
+  const videos = toYoutubeCards(rawVideos, locale);
+  const reels = toYoutubeCards(rawReels, locale);
+  const photos = rawPhotos.slice(0, 4);
 
   const hrefFor = (next: { q?: string; desk?: string; source?: string; page?: number; day?: string | null }) => {
     const search = new URLSearchParams();
@@ -137,6 +151,9 @@ async function NewsPageBody({
         desk={desk}
         source={source}
         hrefFor={hrefFor}
+        videos={videos}
+        reels={reels}
+        photos={photos}
       />
     </SalonStage>
   );
@@ -149,6 +166,9 @@ function NewsHall({
   desk,
   source,
   hrefFor,
+  videos,
+  reels,
+  photos,
 }: {
   locale: string;
   data: NewsDeskData;
@@ -156,13 +176,14 @@ function NewsHall({
   desk: string;
   source: string;
   hrefFor: (next: { q?: string; desk?: string; source?: string; page?: number; day?: string | null }) => string;
+  videos: YoutubeCard[];
+  reels: YoutubeCard[];
+  photos: PhotoFrame[];
 }) {
   const programme = [...data.subLeads, ...data.rest].slice(0, 4);
   const taken = new Set([data.lead?.id, ...programme.map((story) => story.id)].filter(Boolean) as string[]);
   const wall = data.lead ? data.rest.filter((story) => !taken.has(story.id)) : data.rest;
   wall.forEach((story) => taken.add(story.id));
-  const circulating = data.mostRead.filter((story) => story.views > 0 && !taken.has(story.id)).slice(0, 6);
-  const trending = data.freshest.filter((story) => !taken.has(story.id) && !circulating.some((row) => row.id === story.id)).slice(0, 6);
   const sameDesk = data.sameDesk.filter((story) => !taken.has(story.id)).slice(0, 6);
   const folio = '01';
   const total = String(Math.max(1, data.total)).padStart(2, '0');
@@ -171,8 +192,7 @@ function NewsHall({
   return (
     <div className={styles['nk-hall']}>
       <div className={styles['nk-inner']}>
-        {data.pitch.length > 0 ? <EditionWire matches={data.pitch} locale={locale} /> : null}
-
+        {/* أولاً: أعلى الصفحة */}
         {data.breaking ? (
           <BreakingStrip
             slug={data.breaking.slug}
@@ -182,6 +202,7 @@ function NewsHall({
           />
         ) : null}
 
+        {/* الخبر الرئيسي وأهم العناوين والتقارير الرياضية */}
         {data.lead ? (
           <div className={styles['nk-console']}>
             <NewsInkCover story={data.lead} locale={locale} folio={folio} total={total} />
@@ -191,7 +212,19 @@ function NewsHall({
           <EmptyDesk locale={locale} filtered={data.filtered} />
         )}
 
-        <NewsInkTools
+        {/* ⚽ أبرز مباريات اليوم والقمم الكروية */}
+        {firstPage && !query ? (
+          <div className="w-full my-3">
+            <Suspense fallback={<FrontSkeleton kind="chapter" />}>
+              <FrontTopMatchesShowcase locale={locale} />
+            </Suspense>
+          </div>
+        ) : null}
+
+        {data.pitch.length > 0 ? <EditionWire matches={data.pitch} locale={locale} /> : null}
+
+        {/* ثانياً: مربع التنقل السريع */}
+        <NewsQuickNavHub
           locale={locale}
           query={query}
           selectedDesk={desk}
@@ -201,15 +234,16 @@ function NewsHall({
           hrefFor={hrefFor}
         />
 
+        {/* ثالثاً: أحدث الأخبار ومستجدات الساعة */}
         {wall.length > 0 ? (
           <section id="news-wall" className={styles['nk-wall']}>
             <header className={styles['nk-wall-head']}>
               <div>
-                <p>{pick(locale, 'السجل', 'The log')}</p>
-                <h2>{pick(locale, 'التقارير', 'Reports')}</h2>
+                <p>{pick(locale, 'مستجدات الساعة', 'Live Wire')}</p>
+                <h2>{pick(locale, 'أحدث التقارير والأخبار', 'Latest News & Reports')}</h2>
               </div>
               <p>
-                {data.total} {pick(locale, 'تقرير مطابق', 'matching reports')}
+                {data.total} {pick(locale, 'تقرير معتمد', 'verified reports')}
                 {data.filtered ? (
                   <>
                     {' · '}
@@ -241,6 +275,7 @@ function NewsHall({
           </section>
         ) : null}
 
+        {/* أخبار كرة القدم والدوريات الكبرى */}
         {firstPage ? (
           <NewsInkLanes
             stories={data.weekFile}
@@ -251,35 +286,51 @@ function NewsHall({
           />
         ) : null}
 
+        {/* مركز المباريات والبث الحي وجدول القنوات الناقلة */}
+        {firstPage && data.broadcasts.length > 0 ? (
+          <BroadcastBand broadcasts={data.broadcasts} locale={locale} />
+        ) : null}
+
+        {/* أحدث الفيديوهات وملخصات المباريات */}
+        {firstPage && videos.length > 0 ? (
+          <NewsVideosBand videos={videos} locale={locale} />
+        ) : null}
+
+        {/* قسم الريلز واللقطات القصيرة */}
+        {firstPage && reels.length > 0 ? (
+          <NewsReelsBand reels={reels} locale={locale} />
+        ) : null}
+
+        {/* معرض صور وأحداث اليوم */}
+        {firstPage && photos.length > 0 ? (
+          <NewsPhotosBand photos={photos} locale={locale} />
+        ) : null}
+
+        {/* رابعاً: الأقسام الموجودة المحفوظة (الجداول، فرق في الأخبار) */}
         {firstPage ? (
           <div className={styles['nk-more']}>
-            {data.pitch.length > 0 || sameDesk.length > 0 || data.teamsInNews.length > 0 ? (
-              <div className={styles['nk-context']}>
-                {data.pitch.length > 0 ? <PitchPanel matches={data.pitch} locale={locale} /> : null}
-                <div className={styles['nk-stack']}>
-                  {sameDesk.length > 0 && data.lead ? (
-                    <SameDeskRail articles={sameDesk} category={data.lead.category} locale={locale} />
-                  ) : null}
-                  <TeamsInNewsRail teams={data.teamsInNews} locale={locale} />
-                </div>
-              </div>
-            ) : null}
             <TablesBand tables={data.tables} locale={locale} />
             <GoalsBand goals={data.goals} locale={locale} />
-            <BroadcastBand broadcasts={data.broadcasts} locale={locale} />
+            {data.teamsInNews.length > 0 || sameDesk.length > 0 ? (
+              <div className={styles['nk-context']}>
+                <TeamsInNewsRail teams={data.teamsInNews} locale={locale} />
+                {sameDesk.length > 0 && data.lead ? (
+                  <SameDeskRail articles={sameDesk} category={data.lead.category} locale={locale} />
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
 
-        {circulating.length > 0 || trending.length > 0 || data.archive.length > 0 ? (
+        {/* خامساً: تطوير قسم الأكثر قراءة (6 أخبار وتبويبات اليوم/الأسبوع/الشهر) + إيقاع الأسبوع */}
+        {firstPage ? (
           <div className={styles['nk-floor']}>
-            {circulating.length > 0 ? <MostReadRail articles={circulating} locale={locale} /> : null}
-            {trending.length > 0 ? (
-              <MostReadRail
-                articles={trending}
-                locale={locale}
-                title={pick(locale, 'الأخبار الرائجة', 'Trending')}
-              />
-            ) : null}
+            <MostReadRail
+              todayArticles={data.mostReadToday}
+              weekArticles={data.mostReadWeek}
+              monthArticles={data.mostReadMonth}
+              locale={locale}
+            />
             <NewsInkPulse archive={data.archive} locale={locale} hrefFor={hrefFor} />
           </div>
         ) : null}

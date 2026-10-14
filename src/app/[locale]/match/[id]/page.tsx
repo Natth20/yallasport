@@ -41,6 +41,7 @@ import { SiteAd } from '@/components/ads/SiteAd';
 import { MatchDetailTabs } from '@/components/sports/MatchDetailTabs';
 import { MatchContextPack } from '@/components/sports/MatchContextPack';
 import { sportsData } from '@/lib/sports-data';
+import { toChannelSlug } from '@/lib/channels/catalog';
 import styles from '@/components/sports/match-dossier.module.css';
 
 export const revalidate = 60;
@@ -435,7 +436,7 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
         {
           icon: Ticket,
           label: pick(locale, 'الحضور', 'Attendance'),
-          value: match.attendance.toLocaleString(locale),
+          value: match.attendance.toLocaleString(locale), 
         },
       ]
       : []),
@@ -444,7 +445,20 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
         {
           icon: Radio,
           label: pick(locale, 'النقل', 'Broadcast'),
-          value: match.channels.map((channel) => channel.name).join(', '),
+          value: (
+            <span className="inline-flex flex-wrap items-center gap-1">
+              {match.channels.map((channel, i) => (
+                <Link
+                  key={channel.id || i}
+                  href={`/channel/${toChannelSlug(channel.name)}`}
+                  className="font-bold text-orange-600 dark:text-orange-400 hover:underline inline-block"
+                >
+                  {channel.name}
+                  {i < match.channels.length - 1 ? '، ' : ''}
+                </Link>
+              ))}
+            </span>
+          ),
         },
       ]
       : []),
@@ -636,7 +650,7 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
               {sameDayMatches.slice(0, 10).map((row, index) => {
                 const scored = row.homeScore != null && row.awayScore != null;
                 return (
-                  <li key={row.id}>
+                  <li key={row.id} className={styles.dayRailItem}>
                     <Link href={`/match/${row.id}`} className={styles.dayRailCard}>
                       <span className={styles.dayRailNum}>{String(index + 1).padStart(2, '0')}</span>
                       <LeagueCrest name={row.homeTeam.name} logoUrl={row.homeTeam.logoUrl} className="h-8 w-8" />

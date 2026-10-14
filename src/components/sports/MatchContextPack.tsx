@@ -29,7 +29,7 @@ type SheetIcon = typeof Goal | typeof Flame | typeof History | typeof Trophy;
 export type MatchSheetRow = {
   icon: SheetIcon;
   label: string;
-  value: string;
+  value: React.ReactNode;
 };
 
 export type RelatedMatchNews = {

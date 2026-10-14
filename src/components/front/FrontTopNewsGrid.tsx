@@ -42,31 +42,46 @@ export async function FrontTopNewsGrid() {
       <div className={styles.topNewsGrid}>
         
         {/* Main Lead Story Card (Right Side in RTL) */}
-        <Link href={`/news/${main.slug}`} className={styles.featuredStoryLarge}>
+        <div className={styles.featuredStoryLarge}>
           <div className={styles.storyImgWrap}>
-            {main.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={main.image} alt={main.title} className={styles.storyImg} referrerPolicy="no-referrer" />
-            ) : (
-              <div className={styles.storyImgFallback} />
-            )}
-            <div className={styles.storyGradientOverlay} />
-            <span className={styles.storyCategoryPill}>
+            <Link href={`/news/${main.slug}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+              {main.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={main.image} alt={main.title} className={styles.storyImg} referrerPolicy="no-referrer" />
+              ) : (
+                <div className={styles.storyImgFallback} />
+              )}
+              <div className={styles.storyGradientOverlay} />
+            </Link>
+            <Link
+              href={`/news?desk=${encodeURIComponent(main.category || 'all')}`}
+              className={styles.storyCategoryPill}
+              title={ar ? `فتح قسم ${deskLabel(main.category, locale)} بالكامل` : `Open full section for ${deskLabel(main.category, locale)}`}
+            >
               <Flame className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
               {deskLabel(main.category, locale) || (ar ? 'تقرير القمة' : 'Lead Story')}
-            </span>
+            </Link>
           </div>
 
           <div className={styles.storyBodyLarge}>
-            <h4 className={styles.storyTitleLarge}>{main.title}</h4>
+            <h4 className={styles.storyTitleLarge}>
+              <Link href={`/news/${main.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                {main.title}
+              </Link>
+            </h4>
             {main.excerpt ? <p className={styles.storyExcerptLarge}>{main.excerpt}</p> : null}
 
             <div className={styles.storyMetaRow}>
               <div className={styles.storyMetaLeft}>
-                <span className={styles.sourceVerifiedBadge}>
+                <Link
+                  href={`/news?source=${encodeURIComponent(main.sourceName || 'يلا سبورت')}`}
+                  className={styles.sourceVerifiedBadge}
+                  style={{ textDecoration: 'none' }}
+                  title={ar ? `عرض جميع الأخبار من مصدر ${main.sourceName || 'يلا سبورت'}` : `View all news from source ${main.sourceName || 'Yalla Sport'}`}
+                >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 inline-block me-1" />
                   {main.sourceName || 'يلا سبورت'}
-                </span>
+                </Link>
                 <span>•</span>
                 <ClientTime value={main.publishedAt} locale={locale} />
               </div>
@@ -77,40 +92,58 @@ export async function FrontTopNewsGrid() {
               </div>
             </div>
           </div>
-        </Link>
+        </div>
 
         {/* Side 3 Compact Stories (Equal dimensions aligned with Main Card) */}
         <div className={styles.storiesStackSide}>
           {side.map((story) => (
-            <Link key={story.id} href={`/news/${story.slug}`} className={styles.storyCardCompact}>
+            <div key={story.id} className={styles.storyCardCompact}>
               <div className={styles.storyThumbWrap}>
-                {story.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={story.image} alt="" className={styles.storyThumb} referrerPolicy="no-referrer" />
-                ) : (
-                  <div className={styles.storyThumbFallback} />
-                )}
+                <Link href={`/news/${story.slug}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+                  {story.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={story.image} alt="" className={styles.storyThumb} referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className={styles.storyThumbFallback} />
+                  )}
+                </Link>
               </div>
               <div className={styles.storyCompactContent}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem' }}>
-                  <span className={styles.storyCompactCategory}>{deskLabel(story.category, locale)}</span>
+                  <Link
+                    href={`/news?desk=${encodeURIComponent(story.category || 'all')}`}
+                    className={styles.storyCompactCategory}
+                    style={{ textDecoration: 'none' }}
+                    title={ar ? `فتح قسم ${deskLabel(story.category, locale)} بالكامل` : `Open full section for ${deskLabel(story.category, locale)}`}
+                  >
+                    {deskLabel(story.category, locale)}
+                  </Link>
                   <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
                     <ClientTime value={story.publishedAt} locale={locale} />
                   </span>
                 </div>
-                <h5 className={styles.storyTitleCompact}>{story.title}</h5>
+                <h5 className={styles.storyTitleCompact}>
+                  <Link href={`/news/${story.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {story.title}
+                  </Link>
+                </h5>
                 <div className={styles.storyMetaRow} style={{ marginTop: 'auto', paddingTop: '0.35rem', borderTop: 'none' }}>
-                  <span className={styles.storyCompactSource}>
+                  <Link
+                    href={`/news?source=${encodeURIComponent(story.sourceName || 'يلا سبورت')}`}
+                    className={styles.storyCompactSource}
+                    style={{ textDecoration: 'none' }}
+                    title={ar ? `عرض جميع الأخبار من مصدر ${story.sourceName || 'يلا سبورت'}` : `View all news from source ${story.sourceName || 'Yalla Sport'}`}
+                  >
                     <ShieldCheck className="w-3 h-3 text-emerald-500 inline-block me-1" />
                     {story.sourceName || 'يلا سبورت'}
-                  </span>
+                  </Link>
                   <div className={styles.storyViews}>
                     <Eye size={12} className="text-amber-500" />
                     <span>{story.views ?? 0}</span>
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

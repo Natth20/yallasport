@@ -1,6 +1,7 @@
 import { Link } from '@/i18n/navigation';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
 import { getTranslations } from 'next-intl/server';
+import { Clock } from 'lucide-react';
 
 export type KickoffSlot = {
   hour: number;
@@ -21,105 +22,125 @@ export async function KickoffTimeline({
   const t = await getTranslations('sports');
   if (slots.length === 0) return null;
 
-  const peak = Math.max(...slots.map((slot) => slot.matches.length), 1);
+  const totalMatches = slots.reduce((total, slot) => total + slot.matches.length, 0);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-card/90 dark:border-emerald-400/10 dark:bg-muted">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-900/10 px-5 py-4 dark:border-border">
+    <section className="overflow-hidden rounded-3xl border border-emerald-900/10 bg-card/90 dark:border-emerald-400/10 dark:bg-muted shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-5 py-4 dark:border-border">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-500">{t('kickoff_clock')}</span>
-          <h2 className="mt-0.5 text-base font-bold text-foreground dark:text-foreground">{t('daily_rhythm')}</h2>
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-500">
+            {t('kickoff_clock')}
+          </span>
+          <h2 className="mt-0.5 text-base font-bold text-foreground dark:text-foreground">
+            {t('daily_rhythm')}
+          </h2>
         </div>
-        <span className="rounded-full bg-orange-500/10 px-3 py-1 text-[11px] font-bold text-orange-600 dark:text-orange-400">
-          {t('timeline_fixtures', { count: slots.reduce((total, slot) => total + slot.matches.length, 0) })}
+        <span className="rounded-full bg-orange-500/10 px-3 py-1 text-[11px] font-bold text-orange-600 dark:text-orange-400 tabular-nums">
+          {t('timeline_fixtures', { count: totalMatches })}
         </span>
       </div>
 
-      <div className="relative px-4 py-5">
-        <div className="timeline-pulse pointer-events-none absolute inset-x-8 top-[4.35rem] h-px" />
-        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x snap-mandatory">
-          {slots.map((slot) => {
-            const active = activeHour === slot.hour;
-            const hourLabel = (
-              <span className={`text-[12px] font-bold tabular-nums ${active ? 'text-white' : slot.isNow ? 'text-orange-600 dark:text-orange-400' : 'text-foreground/80 dark:text-foreground/70'
-                }`}>
-                {slot.label}
-              </span>
-            );
-            return (
-              <div
-                key={slot.hour}
-                className={`relative flex shrink-0 w-[145px] sm:w-[160px] snap-start flex-col rounded-2xl border p-3 transition-all ${active
-                  ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        {slots.map((slot) => {
+          const active = activeHour === slot.hour;
+          return (
+            <div
+              key={slot.hour}
+              className={`rounded-2xl border p-3 transition-all ${
+                active
+                  ? 'border-orange-500 bg-orange-500/10 dark:bg-orange-500/15 ring-1 ring-orange-500'
                   : slot.isNow
-                    ? 'border-orange-500/40 bg-orange-50/90 dark:border-orange-500/40 dark:bg-orange-500/15'
-                    : 'border-border/80 bg-card/90 dark:border-border/60 dark:bg-card/[0.04]'
-                  }`}
-              >
-                <div className="flex items-center justify-between gap-2">
+                    ? 'border-orange-500/50 bg-orange-500/5'
+                    : 'border-border/70 bg-background/50 hover:border-orange-500/30 hover:bg-card'
+              }`}
+            >
+              {/* Hour Header */}
+              <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500">
+                    <Clock className="h-3.5 w-3.5" />
+                  </span>
                   {hrefForHour ? (
-                    <Link href={hrefForHour(slot.hour)} className="hover:underline">
-                      {hourLabel}
+                    <Link
+                      href={hrefForHour(slot.hour)}
+                      className={`text-xs font-black tabular-nums transition-colors hover:text-orange-500 ${
+                        active ? 'text-orange-600 dark:text-orange-400' : 'text-foreground'
+                      }`}
+                    >
+                      {slot.label}
                     </Link>
-                  ) : hourLabel}
+                  ) : (
+                    <span className="text-xs font-black tabular-nums text-foreground">
+                      {slot.label}
+                    </span>
+                  )}
                   {slot.isNow && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${active ? 'bg-white/20 text-white' : 'bg-orange-500 text-white'
-                      }`}>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[9px] font-black text-white">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                       {t('now')}
                     </span>
                   )}
                 </div>
-                <div
-                  className={`mt-2.5 h-1.5 overflow-hidden rounded-full ${active ? 'bg-white/25' : 'bg-slate-200/80 dark:bg-muted/30'}`}
-                  aria-hidden
-                >
-                  <div
-                    className={`h-full rounded-full transition-all ${active ? 'bg-white' : slot.isNow ? 'bg-orange-500' : 'bg-orange-400 dark:bg-orange-400/70'}`}
-                    style={{ width: `${Math.max(18, (slot.matches.length / peak) * 100)}%` }}
-                  />
-                </div>
-                <div className="mt-3 space-y-1.5">
-                  {slot.matches.slice(0, 4).map((match) => {
-                    const live = match.status === 'LIVE' || match.status === 'HALFTIME';
-                    return (
-                      <Link
-                        key={match.id}
-                        href={`/match/${match.id}`}
-                        title={t('versus', { home: match.homeTeam.name, away: match.awayTeam.name })}
-                        className={`flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition-colors ${active
-                          ? 'hover:bg-white/10'
-                          : live
-                            ? 'bg-red-50 hover:bg-card dark:bg-red-500/10 dark:hover:bg-muted'
-                            : 'hover:bg-card dark:hover:bg-muted'
-                          }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${live ? 'animate-pulse bg-red-500' : match.status === 'FINISHED' ? 'bg-slate-400' : 'bg-orange-400'
-                            }`}
-                        />
-                        <span className={`truncate text-[10px] font-semibold ${active
-                          ? 'text-white'
-                          : live
-                            ? 'font-black text-red-600 dark:text-red-300'
-                            : 'text-foreground dark:text-muted-foreground'
-                          }`}>
-                          {typeof match.homeScore === 'number' && typeof match.awayScore === 'number'
-                            ? `${slot.label} — ${match.homeTeam.name} ${match.homeScore} × ${match.awayScore} ${match.awayTeam.name}`
-                            : `${slot.label} — ${match.homeTeam.name} × ${match.awayTeam.name}`}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                  {slot.matches.length > 4 && (
-                    <span className={`block px-1 text-[9px] font-bold ${active ? 'text-white/80' : 'text-orange-500'}`}>
-                      {t('more_matches', { count: slot.matches.length - 4 })}
-                    </span>
-                  )}
-                </div>
+                <span className="text-[10px] font-bold text-muted-foreground tabular-nums">
+                  {slot.matches.length} {t('matches')}
+                </span>
               </div>
-            );
-          })}
-        </div>
+
+              {/* Matches List for this Hour */}
+              <div className="mt-2.5 space-y-1.5">
+                {slot.matches.map((match) => {
+                  const live = match.status === 'LIVE' || match.status === 'HALFTIME';
+                  const hasScore = typeof match.homeScore === 'number' && typeof match.awayScore === 'number';
+                  return (
+                    <Link
+                      key={match.id}
+                      href={`/match/${match.id}`}
+                      className={`flex items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-xs transition-colors ${
+                        live
+                          ? 'bg-red-500/10 hover:bg-red-500/15'
+                          : 'bg-muted/40 hover:bg-muted/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${
+                            live
+                              ? 'animate-pulse bg-red-500'
+                              : match.status === 'FINISHED'
+                                ? 'bg-slate-400'
+                                : 'bg-orange-400'
+                          }`}
+                        />
+                        <span className="truncate text-[11px] font-bold text-foreground">
+                          {match.homeTeam.name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-bold shrink-0">×</span>
+                        <span className="truncate text-[11px] font-bold text-foreground">
+                          {match.awayTeam.name}
+                        </span>
+                      </div>
+                      <div className="shrink-0 text-start">
+                        {hasScore ? (
+                          <span className={`text-[11px] font-black tabular-nums ${live ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
+                            {match.homeScore} - {match.awayScore}
+                          </span>
+                        ) : live ? (
+                          <span className="text-[10px] font-bold text-red-500">
+                            {match.minute ? `${match.minute}′` : t('live')}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-muted-foreground">
+                            {match.league.name}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

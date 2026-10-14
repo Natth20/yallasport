@@ -148,6 +148,9 @@ export type NewsDeskData = {
   deskChips: DeskChip[];
   sources: SourceTally[];
   mostRead: Brief[];
+  mostReadToday: Brief[];
+  mostReadWeek: Brief[];
+  mostReadMonth: Brief[];
   freshest: Brief[];
   sameDesk: Brief[];
   weekFile: Brief[];
@@ -208,7 +211,9 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
 }: NewsDeskParams): Promise<NewsDeskData> {
   const now = new Date();
   const { start, end } = dayBoundsInTimezone(dateKeyInTimezone(now, timezone), timezone);
+  const dayAgo = new Date(now.getTime() - 24 * 3600 * 1000);
   const weekAgo = new Date(now.getTime() - 7 * 864e5);
+  const monthAgo = new Date(now.getTime() - 30 * 864e5);
   const archiveDay = day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
   const archiveBounds = archiveDay ? dayBoundsInTimezone(archiveDay, timezone) : null;
   const freshSince = newsFreshSince(now);
@@ -217,19 +222,49 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
   const listingScope: Prisma.NewsWhereInput = archiveBounds
     ? { publishedAt: { gte: archiveBounds.start, lt: archiveBounds.end } }
     : {};
+  const cleanDesk = desk.trim();
+  const matchedDesk = NEWS_DESKS.find(
+    (d) =>
+      d.key.toLowerCase() === cleanDesk.toLowerCase() ||
+      d.ar === cleanDesk ||
+      d.en.toLowerCase() === cleanDesk.toLowerCase()
+  );
+  const resolvedDesk = matchedDesk ? matchedDesk.key : cleanDesk;
+
   const where: Prisma.NewsWhereInput = {
     AND: [
       visible,
       listingScope,
       ...searchClause(query, locale),
-      ...(desk !== 'all' ? [{ category: desk }] : []),
-      ...(source !== 'all' ? [{ sourceName: source }] : []),
+      ...(cleanDesk !== 'all'
+        ? [
+            {
+              OR: [
+                { category: resolvedDesk },
+                { category: cleanDesk },
+                { tags: { has: cleanDesk } },
+              ],
+            },
+          ]
+        : []),
+      ...(source !== 'all'
+        ? [
+            {
+              OR: [
+                { sourceName: { equals: source, mode: 'insensitive' as const } },
+                { sourceName: { contains: source, mode: 'insensitive' as const } },
+              ],
+            },
+          ]
+        : []),
     ],
   };
   const [
     articles,
     total,
     extras,
+    todayMostReadRows,
+    monthMostReadRows,
     deskGroups,
     sourceGroups,
     archiveRows,
@@ -249,6 +284,18 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
       take: 120,
       select: briefSelect,
     }),
+    prisma.news.findMany({
+      where: { AND: [visible, { publishedAt: { gte: dayAgo } }] },
+      orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
+      take: 6,
+      select: briefSelect,
+    }),
+    prisma.news.findMany({
+      where: { AND: [visible, { publishedAt: { gte: monthAgo } }] },
+      orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
+      take: 6,
+      select: briefSelect,
+    }),
     prisma.news.groupBy({ by: ['category'], where: visible, _count: { _all: true } }),
     prisma.news.groupBy({ by: ['sourceName', 'sourceLocale'], where: visible, _count: { _all: true } }),
     prisma.news.findMany({
@@ -261,6 +308,16 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
 
   const localized = (await overlayNewsList(articles, locale)) as Story[];
   const localizedExtras = (await overlayNewsList(extras, locale)) as Brief[];
+  const localizedToday = (await overlayNewsList(todayMostReadRows, locale)) as Brief[];
+  const localizedMonth = (await overlayNewsList(monthMostReadRows, locale)) as Brief[];
+
+  const mostReadWeek = [...localizedExtras].sort((a, b) => b.views - a.views).slice(0, 6);
+  const mostReadToday = localizedToday.length >= 6
+    ? localizedToday.slice(0, 6)
+    : [...localizedToday, ...mostReadWeek.filter((w) => !localizedToday.some((t) => t.id === w.id))].slice(0, 6);
+  const mostReadMonth = localizedMonth.length >= 6
+    ? localizedMonth.slice(0, 6)
+    : [...localizedMonth, ...mostReadWeek.filter((w) => !localizedMonth.some((m) => m.id === w.id))].slice(0, 6);
 
   // ── front page slots ──────────────────────────────────────────────────────
   const onFirstPage = page === 1;
@@ -342,7 +399,10 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     breaking,
     deskChips,
     sources,
-    mostRead: [...localizedExtras].sort((a, b) => b.views - a.views).slice(0, 6),
+    mostRead: mostReadWeek,
+    mostReadToday,
+    mostReadWeek,
+    mostReadMonth,
     freshest: localizedExtras.slice(0, 10),
     sameDesk,
     weekFile: localizedExtras,

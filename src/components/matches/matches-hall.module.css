@@ -29,8 +29,35 @@
   max-width: 100%;
 }
 
-.dayFrame {
+.daySalon .dayFrame {
   border-radius: 1.5rem;
+  min-height: 12.5rem !important;
+  max-height: 18rem !important;
+  aspect-ratio: auto !important;
+}
+
+@media (min-width: 900px) {
+  .daySalon .dayFrame {
+    min-height: 13.5rem !important;
+    max-height: 17.5rem !important;
+  }
+}
+
+.daySalon :global(.duel) {
+  padding: 1.1rem 1.4rem 2.6rem !important;
+  gap: 1rem !important;
+}
+
+.daySalon :global(.side) {
+  gap: 0.35rem !important;
+}
+
+.daySalon :global(.side strong) {
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem) !important;
+}
+
+.daySalon :global(.score b) {
+  font-size: clamp(1.4rem, 2.5vw, 2rem) !important;
 }
 
 .pitchStrip {
@@ -65,7 +92,13 @@
   color: var(--foreground);
 }
 
-.pitchStripHead span {
+.pitchNavGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.pitchNavGroup > span {
   display: inline-flex;
   align-items: center;
   padding: 0.15rem 0.55rem;
@@ -77,16 +110,45 @@
   font-variant-numeric: tabular-nums;
 }
 
+.pitchNavArrows {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pitchArrowBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 24%, var(--border));
+  background: color-mix(in srgb, var(--card) 95%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.pitchArrowBtn:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--card));
+  transform: translateY(-1px);
+}
+
 .pitchStripList {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
+  align-items: stretch;
+  gap: 0.75rem;
   overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
   -webkit-overflow-scrolling: touch;
-  padding: 0.35rem 0.35rem 0.65rem;
-  scroll-padding-inline: 0.5rem;
+  padding: 0.35rem 0.2rem 0.65rem;
+  scroll-padding-inline: 0.2rem;
   list-style: none;
   margin: 0;
   width: 100%;
@@ -99,21 +161,49 @@
   height: 0 !important;
 }
 
+.pitchItem {
+  flex-shrink: 0;
+  width: calc((100% - 3 * 0.75rem) / 4);
+  min-width: 14.5rem;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 1100px) {
+  .pitchItem {
+    width: calc((100% - 2 * 0.75rem) / 3);
+    min-width: 13.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pitchItem {
+    width: calc((100% - 0.75rem) / 2);
+    min-width: 12.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .pitchItem {
+    width: 86%;
+    min-width: 12rem;
+  }
+}
+
 .pitchCard {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.55rem 0.85rem;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.55rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.65rem 0.85rem;
   border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
   background: color-mix(in srgb, var(--card) 92%, transparent);
   color: inherit;
   text-decoration: none;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
   transition: all 0.18s ease;
-  min-width: 13.5rem;
   text-align: start;
 }
 
@@ -131,15 +221,75 @@
   box-shadow: 0 4px 18px color-mix(in srgb, var(--ys-orange) 22%, transparent);
 }
 
+.pitchVersus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.pitchTeamRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.pitchTeamHead {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.pitchTeamTitle {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pitchScoreDigit {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: var(--ys-orange);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.pitchCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  padding-top: 0.4rem;
+}
+
+.pitchStatus {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 750;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 9rem;
+}
+
 .pitchNum {
   display: inline-grid;
   place-items: center;
-  min-width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 0.45rem;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.35rem;
   background: color-mix(in srgb, var(--ys-orange) 18%, transparent);
   color: var(--ys-orange);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
@@ -148,34 +298,6 @@
 .pitchCardOn .pitchNum {
   background: var(--ys-orange);
   color: #0b0b0b;
-}
-
-.pitchCopy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.pitchCopy b {
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--foreground);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 11rem;
-}
-
-.pitchCopy i {
-  font-style: normal;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--muted-foreground);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 11rem;
 }
 
 /* ---- Floodlight Hero ---- */
@@ -495,7 +617,7 @@
 
 @media (min-width: 1200px) {
   .contentGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 21rem);
+    grid-template-columns: minmax(0, 1fr) minmax(21.5rem, 24.5rem);
     gap: 1.55rem;
   }
 }
@@ -535,21 +657,12 @@
 .dateStrip {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  overflow-x: auto;
-  padding: 0.2rem 0.35rem 0.45rem;
-  scroll-padding-inline: 0.35rem;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  gap: 0.35rem;
   width: 100%;
-}
-
-.dateStrip::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0.2rem 0 0.35rem;
 }
 
 @media (min-width: 900px) {
@@ -560,10 +673,10 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .dateStrip {
-    gap: 0.35rem;
-    padding-bottom: 0.25rem;
+    gap: 0.25rem;
+    padding-bottom: 0.2rem;
   }
 }
 
@@ -571,30 +684,34 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.2rem;
-  height: 3.8rem;
-  flex-shrink: 0;
-  border-radius: 1rem;
+  width: 1.6rem;
+  height: 3.5rem;
+  flex: 0 0 1.6rem;
+  border-radius: 0.75rem;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--foreground) 3%, var(--card));
   color: var(--muted-foreground);
   transition: all 160ms ease;
   text-decoration: none;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 @media (min-width: 900px) {
   .navArrow {
     width: 2.85rem;
     height: 4.4rem;
+    flex: 0 0 2.85rem;
     border-radius: 1.15rem;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .navArrow {
-    width: 1.85rem;
+    width: 1.4rem;
     height: 3.3rem;
-    border-radius: 0.75rem;
+    flex: 0 0 1.4rem;
+    border-radius: 0.65rem;
   }
 }
 
@@ -610,25 +727,24 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
-  min-width: 4.8rem;
-  height: 3.8rem;
-  flex: 0 0 auto;
-  scroll-snap-align: center;
-  padding: 0.45rem 0.65rem;
-  border-radius: 1rem;
+  gap: 0.12rem;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 3.5rem;
+  padding: 0.3rem 0.15rem;
+  border-radius: 0.85rem;
   border: 1px solid var(--border);
   background: var(--card);
   text-decoration: none;
   color: var(--foreground);
   transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 @media (min-width: 900px) {
   .dateChip {
-    flex: 1 1 0;
-    min-width: 0;
     height: 4.4rem;
     border-radius: 1.15rem;
     padding: 0.5rem 0.65rem;
@@ -648,13 +764,24 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .dateChip {
-    min-width: 4rem;
     height: 3.3rem;
-    padding: 0.25rem 0.4rem;
-    border-radius: 0.75rem;
-    gap: 0.1rem;
+    padding: 0.25rem 0.1rem;
+    border-radius: 0.7rem;
+    gap: 0.08rem;
+  }
+
+  .dateChip .chipDay {
+    font-size: 0.62rem;
+  }
+
+  .dateChip .chipNumber {
+    font-size: 1.05rem;
+  }
+
+  .dateChip .chipCount {
+    font-size: 0.58rem;
   }
 }
 
@@ -1338,6 +1465,27 @@
   margin-bottom: 0.95rem;
 }
 
+.majorKickerRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.majorDateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ys-orange) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 28%, transparent);
+  color: var(--ys-orange);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: normal;
+}
+
 .majorKicker {
   display: block;
   font-size: 0.68rem;
@@ -1408,8 +1556,8 @@
 
 @media (max-width: 640px) {
   .dayFrame {
-    min-height: unset;
-    aspect-ratio: 16 / 10;
+    min-height: 285px;
+    aspect-ratio: auto;
   }
 }
 
@@ -1686,18 +1834,30 @@
 }
 
 .fixtureClock {
-  display: grid;
-  place-items: center;
-  width: 3.65rem;
-  min-height: 3.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 5.4rem;
+  min-width: 5.4rem;
+  min-height: 3.2rem;
+  padding: 0.25rem 0.4rem;
   flex-shrink: 0;
   border-radius: 0.9rem;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 14%, var(--border));
   background: color-mix(in srgb, var(--ys-orange) 7%, transparent);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--ys-orange);
+}
+
+@media (max-width: 640px) {
+  .fixtureClock {
+    width: 4.8rem;
+    min-width: 4.8rem;
+    padding: 0.2rem 0.25rem;
+  }
 }
 
 .fixtureClock em {
@@ -1812,24 +1972,26 @@
 
 .matchdayBoard :global(.fixture-card-body) {
   display: grid;
-  grid-template-columns: 4.2rem minmax(0, 1fr);
+  grid-template-columns: 5.4rem minmax(0, 1fr);
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   min-width: 0;
 }
 
 @media (max-width: 640px) {
   .matchdayBoard :global(.fixture-card-body) {
-    grid-template-columns: 3.5rem minmax(0, 1fr);
-    gap: 0.55rem;
+    grid-template-columns: 4.8rem minmax(0, 1fr);
+    gap: 0.65rem;
   }
 }
 
 .matchdayBoard :global(.fixture-clock) {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 3.2rem;
-  padding: 0.25rem 0.35rem;
+  padding: 0.25rem 0.45rem;
   border-radius: 0.85rem;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
   background: color-mix(in srgb, var(--ys-orange) 7%, transparent);
@@ -1843,11 +2005,20 @@
 
 @media (max-width: 640px) {
   .matchdayBoard :global(.fixture-clock) {
-    min-height: 2.85rem;
-    font-size: 0.76rem;
-    border-radius: 0.7rem;
-    padding: 0.15rem 0.2rem;
+    min-height: 3.1rem;
+    font-size: 0.78rem;
+    border-radius: 0.75rem;
+    padding: 0.2rem 0.25rem;
   }
+}
+
+.matchdayBoard :global(.fixture-clock-day) {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--foreground) 75%, transparent);
+  line-height: 1.15;
+  margin-top: 0.15rem;
 }
 
 .matchdayBoard :global(.fixture-clock em) {
@@ -1967,6 +2138,7 @@
 }
 
 @media (max-width: 640px) {
+
   .matchdayBoard :global(.fixture-score-n),
   .matchdayBoard :global(.fixture-vs) {
     min-width: 1.5rem;
@@ -2086,12 +2258,54 @@
   color: var(--muted-foreground);
 }
 
+.lensScrollContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.lensArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 30%, var(--border));
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+  flex-shrink: 0;
+  z-index: 2;
+  transition: all 0.16s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.lensArrow:hover {
+  border-color: var(--ys-orange);
+  color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 12%, var(--card));
+  transform: scale(1.08);
+}
+
+.lensArrowPrev {
+  margin-inline-end: 0.35rem;
+}
+
+.lensArrowNext {
+  margin-inline-start: 0.35rem;
+}
+
 .lensRail {
   display: flex;
   gap: 0.4rem;
   overflow-x: auto;
+  scroll-behavior: smooth;
   padding-bottom: 0.15rem;
   scrollbar-width: none;
+  width: 100%;
 }
 
 .lensRail::-webkit-scrollbar {

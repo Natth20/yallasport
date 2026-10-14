@@ -398,6 +398,8 @@ model User {
   pushSubscriptions  PushSubscription[]
   matchReminders     MatchReminder[]
   deskMessages       DeskMessage[]
+  socialPosts        SocialPost[]       @relation("UserSocialPosts")
+  reviewedSocialPosts SocialPost[]      @relation("UserReviewedSocialPosts")
   accounts           Account[]
   sessions           Session[]
   createdAt          DateTime           @default(now())
@@ -527,6 +529,9 @@ enum UserRole {
   MODERATOR
   CONTENT_MANAGER
   ADS_MANAGER
+  SOCIAL_MANAGER
+  REVIEWER
+  ANALYST
 }
 
 model UserFavorite {
@@ -944,3 +949,97 @@ model ApiRequestLog {
   @@index([providerKey, createdAt])
   @@index([outcome, createdAt])
 }
+
+enum SocialPlatform {
+  TELEGRAM
+  TWITTER
+  FACEBOOK
+  INSTAGRAM
+  YOUTUBE
+  WHATSAPP
+}
+
+enum SocialAccountStatus {
+  CONNECTED
+  DISCONNECTED
+  EXPIRED
+  ERROR
+}
+
+enum SocialPostStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+model SocialAccount {
+  id             String              @id @default(cuid())
+  platform       SocialPlatform
+  accountName    String
+  accountHandle  String
+  avatarUrl      String?
+  profileUrl     String?
+  status         SocialAccountStatus @default(DISCONNECTED)
+  authConfig     Json?               // credentials e.g. bot token, channel ID, webhook keys
+  followersCount Int?                // nullable: if not available, do not fake 0
+  verified       Boolean             @default(true)
+  lastSyncAt     DateTime?
+  errorMessage   String?
+  posts          SocialPost[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([platform, accountHandle])
+}
+
+model SocialPost {
+  id              String             @id @default(cuid())
+  accountId       String?
+  account         SocialAccount?     @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  platform        SocialPlatform
+  content         String             @db.Text
+  mediaUrls       Json?              // string[]
+  status          SocialPostStatus   @default(DRAFT)
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  idempotencyKey  String             @unique
+  platformPostId  String?
+  platformPostUrl String?
+  viewsCount      Int?               // null if unavailable
+  likesCount      Int?               // null if unavailable
+  sharesCount     Int?               // null if unavailable
+  commentsCount   Int?               // null if unavailable
+  authorId        String?
+  author          User?              @relation(name: "UserSocialPosts", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewerId      String?
+  reviewer        User?              @relation(name: "UserReviewedSocialPosts", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewNotes     String?
+  relatedType     String?            // "MATCH", "NEWS", "TRANSFER", "TEAM", "LEAGUE"
+  relatedId       String?
+  logs            SocialPublishLog[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([platform, status])
+  @@index([publishedAt])
+}
+
+model SocialPublishLog {
+  id           String     @id @default(cuid())
+  postId       String
+  post         SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  status       String     // SUCCESS | FAILED | RETRIED
+  attempt      Int        @default(1)
+  statusCode   Int?
+  responseJson Json?
+  errorMessage String?
+  executedAt   DateTime   @default(now())
+
+  @@index([postId, executedAt])
+}
+

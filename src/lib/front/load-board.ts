@@ -29,7 +29,32 @@ async function _loadFrontBoard(locale: string): Promise<FrontMatch[]> {
         .catch(swallow('front.board', [])),
     );
 
-    const rows = raw || [];
+    let rows = raw || [];
+
+    // Ensure at least 6 real matches are loaded from the database
+    if (rows.length < 6) {
+      const fallbackUpcoming = await prisma.match
+        .findMany({
+          where: { kickoffAt: { gte: now } },
+          orderBy: { kickoffAt: 'asc' },
+          take: 24,
+          select: frontMatchSelect,
+        })
+        .catch(swallow('front.board.fallbackUpcoming', []));
+      rows = [...rows, ...(fallbackUpcoming || [])];
+    }
+
+    if (rows.length < 6) {
+      const fallbackRecent = await prisma.match
+        .findMany({
+          orderBy: { kickoffAt: 'desc' },
+          take: 24,
+          select: frontMatchSelect,
+        })
+        .catch(swallow('front.board.fallbackRecent', []));
+      rows = [...rows, ...(fallbackRecent || [])];
+    }
+
     await paintNormalizedMatches(locale, rows);
     const seen = new Set<string>();
     const unique = rows.filter((row) => {

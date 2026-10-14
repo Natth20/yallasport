@@ -7,23 +7,43 @@ import { isLiveStatus } from '@/lib/sports-data/match-window';
 import { Trophy, Radio, Flame, Sparkles, ChevronLeft, ArrowLeft, ArrowRight } from 'lucide-react';
 import styles from './front-design.module.css';
 
-export async function FrontTopMatchesShowcase() {
-  const locale = await getLocale();
+interface FrontTopMatchesShowcaseProps {
+  locale?: string;
+  limit?: number;
+  className?: string;
+}
+
+export async function FrontTopMatchesShowcase({
+  locale: propLocale,
+  limit = 6,
+  className,
+}: FrontTopMatchesShowcaseProps = {}) {
+  const locale = propLocale || (await getLocale());
   const ar = locale === 'ar';
   const board = await loadFrontBoard(locale);
 
   if (board.length === 0) return null;
 
-  // Show top 6 most relevant matches (Live first, then upcoming, then finished)
-  const topMatches = board.slice(0, 6);
+  // Show top most relevant matches (Live first, then upcoming, then finished)
+  const topMatches = board.slice(0, limit);
   const liveMatches = board.filter((m) => isLiveStatus(m.status));
 
   return (
-    <section className={styles.featuredMatchesSection} aria-label={ar ? 'أبرز المباريات' : 'Featured Matches'}>
+    <section
+      className={`${styles.featuredMatchesSection} ${className || ''}`}
+      aria-label={ar ? 'أبرز المباريات' : 'Featured Matches'}
+    >
       {/* Header */}
       <div className={styles.sectionHeaderRow}>
         <div className={styles.ledgerHeaderTitleGroup}>
-          <span className={styles.ledgerIconBadge} style={{ background: 'rgba(245, 158, 11, 0.12)', borderColor: 'rgba(245, 158, 11, 0.35)' }}>
+          <span
+            className={styles.ledgerIconBadge}
+            style={{
+              background: 'rgba(245, 158, 11, 0.12)',
+              borderColor: 'rgba(245, 158, 11, 0.35)',
+              borderRadius: '9999px',
+            }}
+          >
             <Trophy className="w-4 h-4 text-amber-400" />
           </span>
           <div>
@@ -39,7 +59,9 @@ export async function FrontTopMatchesShowcase() {
               ) : null}
             </div>
             <p className={styles.ledgerSubtitle}>
-              {ar ? 'متابعة حية للنتائج، التشكيلات، وأوقات انطلاق أهم مواجهات الدوريات العالمية والعربية.' : 'Live scores, starting lineups, and kickoff countdown for top leagues.'}
+              {ar
+                ? 'متابعة حية للنتائج، التشكيلات، وأوقات انطلاق أهم مواجهات الدوريات العالمية والعربية.'
+                : 'Live scores, starting lineups, and kickoff countdown for top leagues.'}
             </p>
           </div>
         </div>
@@ -53,7 +75,6 @@ export async function FrontTopMatchesShowcase() {
         {topMatches.map((match) => {
           const live = isLiveStatus(match.status);
           const finished = match.status === 'FINISHED';
-          const notStarted = match.status === 'NOT_STARTED';
 
           return (
             <Link
@@ -61,7 +82,7 @@ export async function FrontTopMatchesShowcase() {
               href={`/match/${match.id}`}
               className={`${styles.featuredMatchCard} ${live ? styles.featuredMatchCardLive : ''}`}
             >
-              {/* Card Header: League */}
+              {/* Card Header: League and Kickoff Badge */}
               <div className={styles.matchCardTopRow}>
                 <span className={styles.matchCardLeagueName}>
                   {match.league?.name || (ar ? 'مباراة ودية' : 'Fixture')}
@@ -71,13 +92,18 @@ export async function FrontTopMatchesShowcase() {
                     <span className={styles.livePulseDot} />
                     {match.minute != null ? `${match.minute}′` : ar ? 'مباشر' : 'LIVE'}
                   </span>
-                ) : finished ? (
-                  <span className={styles.finishedBadge}>
-                    {ar ? 'انتهت' : 'FT'}
-                  </span>
                 ) : (
                   <span className={styles.kickoffBadge}>
-                    <ClientTime value={match.kickoffAt} options={{ hour: '2-digit', minute: '2-digit' }} />
+                    <ClientTime
+                      value={match.kickoffAt}
+                      options={{
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }}
+                    />
                   </span>
                 )}
               </div>
@@ -106,7 +132,17 @@ export async function FrontTopMatchesShowcase() {
                     </div>
                   )}
                   <span className={styles.matchSubActionText}>
-                    {live ? (ar ? 'جارية الآن' : 'In play') : finished ? (ar ? 'النتيجة النهائية' : 'Full time') : (ar ? 'توقع النتيجة' : 'Predict')}
+                    {live
+                      ? ar
+                        ? 'جارية الآن'
+                        : 'In play'
+                      : finished
+                      ? ar
+                        ? 'النتيجة النهائية'
+                        : 'Full time'
+                      : ar
+                      ? 'توقع النتيجة'
+                      : 'Predict'}
                   </span>
                 </div>
 
