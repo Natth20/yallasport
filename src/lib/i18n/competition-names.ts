@@ -225,7 +225,7 @@ export function localizeRoundName(locale: string, raw?: string | null) {
 
   // Regular Season - 14
   const regMatch = value.match(/^regular[\s_-]*season[\s_-]*(\d+)$/i);
-  if (regMatch) return `الجولة ${arabicOrdinal(regMatch[1])}`;
+  if (regMatch) return `الموسم العادي – الجولة ${arabicOrdinal(regMatch[1])}`;
 
   // Matchweek 5 / Week 5
   const weekMatch = value.match(/^(?:matchweek|week)[\s_-]*(\d+)$/i);

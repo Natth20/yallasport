@@ -164,6 +164,52 @@ export type NewsDeskData = {
   stats: DeskStats;
 };
 
+export const EMPTY_NEWS_SIDECARS: Pick<
+  NewsDeskData,
+  'pitch' | 'liveCount' | 'tables' | 'goals' | 'broadcasts' | 'teamsInNews'
+> = {
+  pitch: [],
+  liveCount: 0,
+  tables: [],
+  goals: [],
+  broadcasts: [],
+  teamsInNews: [],
+};
+
+export const EMPTY_NEWS_DESK_DATA: NewsDeskData = {
+  page: 1,
+  totalPages: 1,
+  total: 0,
+  filtered: false,
+  query: '',
+  selectedDesk: 'all',
+  selectedSource: 'all',
+  lead: null,
+  subLeads: [],
+  rest: [],
+  breaking: null,
+  deskChips: [],
+  sources: [],
+  mostRead: [],
+  mostReadToday: [],
+  mostReadWeek: [],
+  mostReadMonth: [],
+  freshest: [],
+  sameDesk: [],
+  weekFile: [],
+  ...EMPTY_NEWS_SIDECARS,
+  archive: [],
+  stats: {
+    stories: 0,
+    sources: 0,
+    desks: 0,
+    todayCount: 0,
+    weekCount: 0,
+    latestAt: null,
+    totalReadingTime: 0,
+  },
+};
+
 export type NewsDeskParams = {
   locale: string;
   timezone: string;
@@ -270,48 +316,82 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     archiveRows,
     readingAgg,
   ] = await Promise.all([
-    prisma.news.findMany({
-      where,
-      orderBy: [{ publishedAt: 'desc' }],
-      skip: (page - 1) * NEWS_PAGE_SIZE,
-      take: NEWS_PAGE_SIZE,
-      select: storySelect,
-    }),
-    prisma.news.count({ where }),
-    prisma.news.findMany({
-      where: { AND: [visible, { publishedAt: { gte: weekAgo } }] },
-      orderBy: { publishedAt: 'desc' },
-      take: 120,
-      select: briefSelect,
-    }),
-    prisma.news.findMany({
-      where: { AND: [visible, { publishedAt: { gte: dayAgo } }] },
-      orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
-      take: 6,
-      select: briefSelect,
-    }),
-    prisma.news.findMany({
-      where: { AND: [visible, { publishedAt: { gte: monthAgo } }] },
-      orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
-      take: 6,
-      select: briefSelect,
-    }),
-    prisma.news.groupBy({ by: ['category'], where: visible, _count: { _all: true } }),
-    prisma.news.groupBy({ by: ['sourceName', 'sourceLocale'], where: visible, _count: { _all: true } }),
-    prisma.news.findMany({
-      where: { AND: [visible, { publishedAt: { gte: weekAgo } }] },
-      select: { publishedAt: true },
-      orderBy: { publishedAt: 'desc' },
-    }),
-    prisma.news.aggregate({ where: visible, _sum: { readingTime: true }, _max: { publishedAt: true } }),
+    prisma.news
+      .findMany({
+        where,
+        orderBy: [{ publishedAt: 'desc' }],
+        skip: (page - 1) * NEWS_PAGE_SIZE,
+        take: NEWS_PAGE_SIZE,
+        select: storySelect,
+      })
+      .catch(swallow('loadNewsDesk.articles', [] as Story[])),
+    prisma.news.count({ where }).catch(swallow('loadNewsDesk.total', 0)),
+    prisma.news
+      .findMany({
+        where: { AND: [visible, { publishedAt: { gte: weekAgo } }] },
+        orderBy: { publishedAt: 'desc' },
+        take: 120,
+        select: briefSelect,
+      })
+      .catch(swallow('loadNewsDesk.extras', [] as Brief[])),
+    prisma.news
+      .findMany({
+        where: { AND: [visible, { publishedAt: { gte: dayAgo } }] },
+        orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
+        take: 6,
+        select: briefSelect,
+      })
+      .catch(swallow('loadNewsDesk.todayMostReadRows', [] as Brief[])),
+    prisma.news
+      .findMany({
+        where: { AND: [visible, { publishedAt: { gte: monthAgo } }] },
+        orderBy: [{ views: 'desc' }, { publishedAt: 'desc' }],
+        take: 6,
+        select: briefSelect,
+      })
+      .catch(swallow('loadNewsDesk.monthMostReadRows', [] as Brief[])),
+    prisma.news
+      .groupBy({ by: ['category'], where: visible, _count: { _all: true } })
+      .catch(swallow('loadNewsDesk.deskGroups', [] as Array<{ category: string; _count: { _all: number } }>)),
+    prisma.news
+      .groupBy({ by: ['sourceName', 'sourceLocale'], where: visible, _count: { _all: true } })
+      .catch(
+        swallow(
+          'loadNewsDesk.sourceGroups',
+          [] as Array<{ sourceName: string | null; sourceLocale: string | null; _count: { _all: number } }>
+        )
+      ),
+    prisma.news
+      .findMany({
+        where: { AND: [visible, { publishedAt: { gte: weekAgo } }] },
+        select: { publishedAt: true },
+        orderBy: { publishedAt: 'desc' },
+      })
+      .catch(swallow('loadNewsDesk.archiveRows', [] as Array<{ publishedAt: Date | null }>)),
+    prisma.news
+      .aggregate({ where: visible, _sum: { readingTime: true }, _max: { publishedAt: true } })
+      .catch(
+        swallow('loadNewsDesk.readingAgg', {
+          _sum: { readingTime: 0 },
+          _max: { publishedAt: null },
+        })
+      ),
   ]);
 
-  const localized = (await overlayNewsList(articles, locale)) as Story[];
-  const localizedExtras = (await overlayNewsList(extras, locale)) as Brief[];
-  const localizedToday = (await overlayNewsList(todayMostReadRows, locale)) as Brief[];
-  const localizedMonth = (await overlayNewsList(monthMostReadRows, locale)) as Brief[];
+  const safeArticles = articles ?? [];
+  const safeExtras = extras ?? [];
+  const safeToday = todayMostReadRows ?? [];
+  const safeMonth = monthMostReadRows ?? [];
+  const safeDeskGroups = deskGroups ?? [];
+  const safeSourceGroups = sourceGroups ?? [];
+  const safeArchiveRows = archiveRows ?? [];
 
-  const mostReadWeek = [...localizedExtras].sort((a, b) => b.views - a.views).slice(0, 6);
+  const localized = (await overlayNewsList(safeArticles, locale)) as Story[];
+  const localizedExtras = (await overlayNewsList(safeExtras, locale)) as Brief[];
+  const localizedToday = (await overlayNewsList(safeToday, locale)) as Brief[];
+  const localizedMonth = (await overlayNewsList(safeMonth, locale)) as Brief[];
+
+  const mostReadWeek = [...localizedExtras].sort((a, b) => (b.views ?? 0) - (a.views ?? 0)).slice(0, 6);
   const mostReadToday = localizedToday.length >= 6
     ? localizedToday.slice(0, 6)
     : [...localizedToday, ...mostReadWeek.filter((w) => !localizedToday.some((t) => t.id === w.id))].slice(0, 6);
@@ -342,27 +422,29 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
 
   // ── desk + source indexes ─────────────────────────────────────────────────
   const deskOrder = new Map(NEWS_DESKS.map((entry, index) => [entry.key, index]));
-  const deskChips: DeskChip[] = deskGroups
-    .map((row) => ({ key: row.category, label: row.category, count: row._count._all }))
+  const deskChips: DeskChip[] = safeDeskGroups
+    .map((row) => ({ key: row.category, label: row.category, count: row._count?._all ?? 0 }))
     .sort((a, b) => {
       const rank = (key: string) => deskOrder.get(key) ?? (key === DEFAULT_DESK.key ? 900 : 500);
       return rank(a.key) - rank(b.key) || b.count - a.count;
     });
 
   const sourceMap = new Map<string, SourceTally>();
-  for (const row of sourceGroups) {
+  for (const row of safeSourceGroups) {
     const name = row.sourceName?.trim();
     if (!name) continue;
     const entry = sourceMap.get(name) ?? { name, count: 0, locales: [] };
-    entry.count += row._count._all;
-    if (!entry.locales.includes(row.sourceLocale)) entry.locales.push(row.sourceLocale);
+    entry.count += row._count?._all ?? 0;
+    if (row.sourceLocale && !entry.locales.includes(row.sourceLocale)) {
+      entry.locales.push(row.sourceLocale);
+    }
     sourceMap.set(name, entry);
   }
   const sources = [...sourceMap.values()].sort((a, b) => b.count - a.count);
 
   // ── archive ───────────────────────────────────────────────────────────────
   const dayCounts = new Map<string, { date: Date; count: number }>();
-  for (const row of archiveRows) {
+  for (const row of safeArchiveRows) {
     if (!row.publishedAt) continue;
     const key = dateKeyInTimezone(row.publishedAt, timezone);
     const entry = dayCounts.get(key);
@@ -371,18 +453,23 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
   }
   const archive: ArchiveDay[] = [...dayCounts.entries()]
     .map(([key, value]) => ({ key, ...value }))
-    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 7);
+
+  let storyCount = 0;
+  for (const row of safeDeskGroups) {
+    storyCount += row._count?._all ?? 0;
+  }
 
   const todayKey = dateKeyInTimezone(now, timezone);
   const stats: DeskStats = {
-    stories: deskGroups.reduce((sum, row) => sum + row._count._all, 0),
+    stories: storyCount,
     sources: sources.length,
     desks: deskChips.length,
     todayCount: archive.find((day) => day.key === todayKey)?.count ?? 0,
-    weekCount: archiveRows.length,
-    latestAt: readingAgg._max.publishedAt,
-    totalReadingTime: readingAgg._sum.readingTime ?? 0,
+    weekCount: safeArchiveRows.length,
+    latestAt: readingAgg?._max?.publishedAt ?? null,
+    totalReadingTime: readingAgg?._sum?.readingTime ?? 0,
   };
 
   return {
@@ -518,48 +605,54 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
     .sort((a, b) => {
       const liveDelta = Number(isLive(b.status)) - Number(isLive(a.status));
       if (liveDelta) return liveDelta;
-      return b.kickoffAt.getTime() - a.kickoffAt.getTime();
+      return new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime();
     })
     .slice(0, 10);
 
-  const leagueIds = standingLeagues.map((row) => row.leagueId);
+  const leagueIds = (standingLeagues ?? []).map((row) => row.leagueId);
   const tables: TableSnapshot[] = [];
   if (leagueIds.length > 0) {
     const [leagues, rows] = await Promise.all([
-      prisma.league.findMany({
-        where: { id: { in: leagueIds } },
-        select: { id: true, name: true, slug: true, logoUrl: true, country: true },
-      }),
-      prisma.standing.findMany({
-        where: { leagueId: { in: leagueIds } },
-        orderBy: [{ leagueId: 'asc' }, { rank: 'asc' }],
-        select: {
-          leagueId: true,
-          rank: true,
-          played: true,
-          won: true,
-          drawn: true,
-          lost: true,
-          goalsFor: true,
-          goalsAgainst: true,
-          points: true,
-          team: { select: { name: true, slug: true, logoUrl: true } },
-        },
-      }),
+      prisma.league
+        .findMany({
+          where: { id: { in: leagueIds } },
+          select: { id: true, name: true, slug: true, logoUrl: true, country: true },
+        })
+        .catch(swallow('src/lib/news/load-desk.ts:sidecars.tables.leagues', [])),
+      prisma.standing
+        .findMany({
+          where: { leagueId: { in: leagueIds } },
+          orderBy: [{ leagueId: 'asc' }, { rank: 'asc' }],
+          select: {
+            leagueId: true,
+            rank: true,
+            played: true,
+            won: true,
+            drawn: true,
+            lost: true,
+            goalsFor: true,
+            goalsAgainst: true,
+            points: true,
+            team: { select: { name: true, slug: true, logoUrl: true } },
+          },
+        })
+        .catch(swallow('src/lib/news/load-desk.ts:sidecars.tables.rows', [])),
     ]);
-    const byLeague = new Map(leagues.map((entry) => [entry.id, entry]));
+    const safeLeagues = leagues ?? [];
+    const safeRows = rows ?? [];
+    const byLeague = new Map(safeLeagues.map((entry) => [entry.id, entry]));
     for (const leagueId of leagueIds) {
       const league = byLeague.get(leagueId);
       if (!league) continue;
-      const leagueRows = rows.filter((row) => row.leagueId === leagueId).slice(0, 6);
+      const leagueRows = safeRows.filter((row) => row.leagueId === leagueId).slice(0, 6);
       if (leagueRows.length === 0) continue;
       tables.push({ league, rows: leagueRows });
     }
   }
 
   const goals: GoalMoment[] = [];
-  for (const match of recentMatches) {
-    for (const event of match.events) {
+  for (const match of (recentMatches ?? [])) {
+    for (const event of (match.events ?? [])) {
       const scoringTeam =
         event.teamId === match.homeTeam.id
           ? match.homeTeam
@@ -584,26 +677,28 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
       });
     }
   }
-  goals.sort((a, b) => b.kickoffAt.getTime() - a.kickoffAt.getTime() || b.minute - a.minute);
+  goals.sort((a, b) => new Date(b.kickoffAt).getTime() - new Date(a.kickoffAt).getTime() || (b.minute ?? 0) - (a.minute ?? 0));
 
-  const broadcasts: Broadcast[] = broadcastRows.map((match) => ({
+  const broadcasts: Broadcast[] = (broadcastRows ?? []).map((match) => ({
     matchId: match.id,
     kickoffAt: match.kickoffAt,
     status: match.status,
     homeTeam: match.homeTeam,
     awayTeam: match.awayTeam,
     league: match.league,
-    channels: match.channels.map((row) => row.channel),
+    channels: (match.channels ?? []).map((row) => row.channel),
   }));
 
   let teamsInNews: TeamInNews[] = [];
   if (teamLinkGroups.length > 0) {
-    const teams = await prisma.team.findMany({
-      where: { id: { in: teamLinkGroups.map((row) => row.entityId) } },
-      select: { id: true, name: true, slug: true, logoUrl: true },
-    });
-    const counts = new Map(teamLinkGroups.map((row) => [row.entityId, row._count._all]));
-    teamsInNews = teams
+    const teams = await prisma.team
+      .findMany({
+        where: { id: { in: teamLinkGroups.map((row) => row.entityId) } },
+        select: { id: true, name: true, slug: true, logoUrl: true },
+      })
+      .catch(swallow('src/lib/news/load-desk.ts:sidecars.teamsInNews', []));
+    const counts = new Map(teamLinkGroups.map((row) => [row.entityId, row._count?._all ?? 0]));
+    teamsInNews = (teams ?? [])
       .map((team) => ({ ...team, count: counts.get(team.id) ?? 0 }))
       .filter((team) => {
         const label = team.name.trim();

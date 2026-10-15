@@ -24,7 +24,13 @@ import {
   SameDeskRail,
   TeamsInNewsRail,
 } from '@/components/news/desk/DeskRails';
-import { loadNewsDesk, loadNewsSidecars, type NewsDeskData } from '@/lib/news/load-desk';
+import {
+  loadNewsDesk,
+  loadNewsSidecars,
+  EMPTY_NEWS_DESK_DATA,
+  EMPTY_NEWS_SIDECARS,
+  type NewsDeskData,
+} from '@/lib/news/load-desk';
 import { normalizeTimezone } from '@/lib/datetime/format';
 import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
@@ -86,13 +92,25 @@ async function NewsPageBody({
   const timezone = normalizeTimezone((await cookies()).get('yalla-tz')?.value);
 
   const [data, side, rawVideos, rawReels, rawPhotos] = await Promise.all([
-    loadNewsDesk({ locale, timezone, query, desk, source, page, day: day || undefined }),
-    loadNewsSidecars({ locale, timezone }),
+    loadNewsDesk({ locale, timezone, query, desk, source, page, day: day || undefined }).catch(
+      swallow('news.page.desk', EMPTY_NEWS_DESK_DATA)
+    ),
+    loadNewsSidecars({ locale, timezone }).catch(
+      swallow('news.page.sidecars', EMPTY_NEWS_SIDECARS)
+    ),
     listYoutubeShelf('VIDEO', 8, locale).catch(swallow('news.videos', [])),
     listYoutubeShelf('SHORT', 8, locale).catch(swallow('news.reels', [])),
     loadPhotoFrames(locale).catch(swallow('news.photos', [])),
   ]);
-  const deskData = { ...data, ...side };
+  const deskData: NewsDeskData = {
+    ...EMPTY_NEWS_DESK_DATA,
+    ...data,
+    ...side,
+    stats: {
+      ...EMPTY_NEWS_DESK_DATA.stats,
+      ...(data?.stats ?? {}),
+    },
+  };
   const videos = toYoutubeCards(rawVideos, locale);
   const reels = toYoutubeCards(rawReels, locale);
   const photos = rawPhotos.slice(0, 4);

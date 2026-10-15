@@ -49,64 +49,64 @@ export async function Footer() {
   const staff = isStaffRole(session?.user?.role);
 
   const mastLinks = [
-    { name: ar ? '🏠 الرئيسية' : '🏠 Home', href: '/' },
-    { name: ar ? 'ℹ️ من نحن' : 'ℹ️ About Us', href: '/about' },
-    { name: ar ? '📩 تواصل معنا' : '📩 Contact Us', href: '/contact' },
-    { name: ar ? '🚩 إبلاغ عن محتوى' : '🚩 Report Content', href: '/report' },
+    { name: ar ? ' الرئيسية' : ' Home', href: '/' },
+    { name: ar ? 'ℹ من نحن' : 'ℹ About Us', href: '/about' },
+    { name: ar ? ' تواصل معنا' : ' Contact Us', href: '/contact' },
+    { name: ar ? ' إبلاغ عن محتوى' : ' Report Content', href: '/report' },
   ];
 
   const columns = [
     {
-      title: ar ? 'المجموعة الأولى — المحتوى' : 'Group 1 — Content',
+      title: ar ? 'المحتوى' : 'Content',
       links: [
-        { name: ar ? '📰 الأخبار' : '📰 News', href: '/news' },
-        { name: ar ? '🎥 الفيديو' : '🎥 Videos', href: '/videos' },
-        { name: ar ? '🎬 الريلز' : '🎬 Reels', href: '/reels' },
-        { name: ar ? '📷 الصور' : '📷 Photos', href: '/photos' },
-        { name: ar ? '🔄 الانتقالات' : '🔄 Transfers', href: '/transfers' },
+        { name: ar ? ' الأخبار' : ' News', href: '/news' },
+        { name: ar ? ' الفيديو' : ' Videos', href: '/videos' },
+        { name: ar ? ' الريلز' : ' Reels', href: '/reels' },
+        { name: ar ? ' الصور' : ' Photos', href: '/photos' },
+        { name: ar ? ' الانتقالات' : ' Transfers', href: '/transfers' },
       ],
     },
     {
-      title: ar ? 'المجموعة الثانية — الرياضة' : 'Group 2 — Sports',
+      title: ar ? ' الرياضة' : ' Sports',
       links: [
-        { name: ar ? '🏟️ المباريات' : '🏟️ Matches', href: '/matches' },
-        { name: ar ? '🏆 البطولات' : '🏆 Tournaments & Leagues', href: '/leagues' },
-        { name: ar ? '👥 الفرق' : '👥 Teams & Clubs', href: '/teams' },
-        { name: ar ? '👤 اللاعبون' : '👤 Players', href: '/players' },
-        { name: ar ? '🧑‍💼 المدربون' : '🧑‍💼 Coaches', href: '/coaches' },
-        { name: ar ? '📺 القنوات الناقلة' : '📺 TV Channels', href: '/channels' },
-        { name: ar ? '📺 يلا سبورت مباشر' : '📺 Yalla Sport Live', href: '/live', badge: 'LIVE' },
+        { name: ar ? ' المباريات' : ' Matches', href: '/matches' },
+        { name: ar ? ' البطولات' : ' Tournaments & Leagues', href: '/leagues' },
+        { name: ar ? ' الفرق' : ' Teams & Clubs', href: '/teams' },
+        { name: ar ? ' اللاعبون' : ' Players', href: '/players' },
+        { name: ar ? ' المدربون' : ' Coaches', href: '/coaches' },
+        { name: ar ? ' القنوات الناقلة' : ' TV Channels', href: '/channels' },
+        { name: ar ? ' يلا سبورت مباشر' : ' Yalla Sport Live', href: '/live', badge: 'LIVE' },
       ],
     },
     {
-      title: ar ? 'المجموعة الثالثة — الإحصائيات والتفاعل' : 'Group 3 — Stats & Interaction',
+      title: ar ? "الإحصائيات والتفاعل" : ' Stats & Interaction',
       links: [
-        { name: ar ? '📊 مركز الإحصائيات' : '📊 Stats Center', href: '/stats' },
+        { name: ar ? ' مركز الإحصائيات' : ' Stats Center', href: '/stats' },
         { name: ar ? 'الأحداث' : 'Events', href: '/events' },
-        { name: ar ? '⚖️ مقارنة اللاعبين' : '⚖️ Compare Players', href: '/compare-players' },
-        { name: ar ? '🆚 مقارنة الأندية' : '🆚 Compare Clubs', href: '/compare' },
-        { name: ar ? '🏆 لوحة الصدارة والتوقعات' : '🏆 Leaderboard & Predictions', href: '/leaderboard' },
-        { name: ar ? '📱 مركز التواصل الاجتماعي' : '📱 Social Media Hub', href: '/social' },
+        { name: ar ? ' مقارنة اللاعبين' : ' Compare Players', href: '/compare-players' },
+        { name: ar ? ' مقارنة الأندية' : ' Compare Clubs', href: '/compare' },
+        { name: ar ? ' لوحة الصدارة والتوقعات' : ' Leaderboard & Predictions', href: '/leaderboard' },
+        { name: ar ? ' مركز التواصل الاجتماعي' : ' Social Media Hub', href: '/social' },
       ],
     },
     {
-      title: ar ? 'المجموعة الرابعة — الحساب والخدمات' : 'Group 4 — Account & Services',
+      title: ar ? 'الحساب والخدمات' : 'Account & Services',
       links: [
-        { name: ar ? '⭐ المفضلة' : '⭐ Favorites', href: '/favorites' },
-        { name: ar ? '🔔 تابع فريقك' : '🔔 Follow Your Team', href: '/follow' },
-        { name: ar ? '👤 حسابي' : '👤 My Account', href: '/profile' },
-        { name: ar ? '⚙️ الإعدادات' : '⚙️ Settings', href: '/settings' },
-        { name: ar ? '📱 تطبيق يلا سبورت' : '📱 Yalla Sport App', href: '/app' },
-        ...(staff ? [{ name: ar ? '🛡️ لوحة الإدارة' : '🛡️ Control Desk', href: '/admin' }] : []),
+        { name: ar ? ' المفضلة' : ' Favorites', href: '/favorites' },
+        { name: ar ? ' تابع فريقك' : ' Follow Your Team', href: '/follow' },
+        { name: ar ? ' حسابي' : ' My Account', href: '/profile' },
+        { name: ar ? ' الإعدادات' : ' Settings', href: '/settings' },
+        { name: ar ? ' تطبيق يلا سبورت' : ' Yalla Sport App', href: '/app' },
+        ...(staff ? [{ name: ar ? ' لوحة الإدارة' : ' Control Desk', href: '/admin' }] : []),
       ],
     },
   ];
 
   const legalPolicies = [
-    { name: ar ? '🔒 سياسة الخصوصية' : '🔒 Privacy Policy', href: '/privacy' },
-    { name: ar ? '📜 الشروط والأحكام' : '📜 Terms & Conditions', href: '/terms' },
-    { name: ar ? '⚖️ حقوق الملكية الفكرية' : '⚖️ Copyright & IP', href: '/copyright' },
-    { name: ar ? '🍪 ملفات تعريف الارتباط' : '🍪 Cookie Policy', href: '/cookies' },
+    { name: ar ? ' سياسة الخصوصية' : ' Privacy Policy', href: '/privacy' },
+    { name: ar ? ' الشروط والأحكام' : ' Terms & Conditions', href: '/terms' },
+    { name: ar ? ' حقوق الملكية الفكرية' : ' Copyright & IP', href: '/copyright' },
+    { name: ar ? ' ملفات تعريف الارتباط' : ' Cookie Policy', href: '/cookies' },
   ];
 
   return (
@@ -134,7 +134,7 @@ export async function Footer() {
             </Link>
             <p className={styles.brandDesc}>
               {ar
-                ? 'يلا سبورت منصة رياضية متكاملة تجمع الأخبار الرياضية، المباريات والنتائج المباشرة، البطولات والدوريات، الفرق واللاعبين والمدربين، الإحصائيات، الانتقالات، الفيديو والصور، مع تغطية رياضية شاملة من مصادر موثوقة.'
+                ? 'يلا سبورت منصة رياضية متكاملة تجمع الأخبار الرياضية، المباريات والنتائج المباشرة، البطولات والدوريات، الفرق واللاعبين والمدربين، الإحصائيات، الانتقالات، الفيديو والصور، مع تغطية شاملة من مصادر موثوقة.'
                 : 'Yalla Sport is a comprehensive sports platform aggregating sports news, live fixtures, scores, tournaments, teams, players, coaches, statistics, transfers, video highlights, and photos from verified sources.'}
             </p>
 
@@ -207,8 +207,8 @@ export async function Footer() {
         <div className={styles.closer}>
           <p>
             {ar
-              ? 'يلا سبورت — منصة رياضية متكاملة تقدم أحدث الأخبار، البث المباشر، إحصائيات كرة القدم، ومقارنات النجوم والأندية بدقة واحترافية.'
-              : 'Yalla Sport — Complete sports coverage platform delivering verified news, live coverage, football analytics, and club comparisons.'}
+              ? "يلا سبورت — منصة رياضية متكاملة"
+              : 'Yalla Sport — Complete sports'}
           </p>
         </div>
 
