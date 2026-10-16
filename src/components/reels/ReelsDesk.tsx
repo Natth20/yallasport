@@ -463,7 +463,7 @@ export function ReelsDesk({
                     <span className="text-[10px] font-bold text-orange-400 truncate">
                       {clip.channelTitle}
                     </span>
-                    <h3 className="text-xs font-bold text-white leading-snug line-clamp-2 drop-shadow-sm">
+                    <h3 className="text-xs font-bold text-white leading-snug line-clamp-3 drop-shadow-sm">
                       {clip.title}
                     </h3>
                   </div>

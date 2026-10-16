@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { swallow } from '@/lib/ops/caught';
 import {
   FOOTBALL_YOUTUBE_CHANNELS,
+  YOUTUBE_EMBED_BLOCKED,
   YOUTUBE_KEEP,
   channelById,
   displayChannelName,
@@ -224,7 +225,7 @@ export const listYoutubeShelf = cache(async function listYoutubeShelf(
   take: number,
   locale?: string,
 ) {
-  const roster = orderedRoster(locale);
+  const roster = orderedRoster(locale).filter((channel) => !YOUTUBE_EMBED_BLOCKED.has(channel.id));
   const per = YOUTUBE_KEEP[kind];
   const ids = roster.map((channel) => channel.id);
   const rows = await prisma.youtubeClip.findMany({
