@@ -435,14 +435,14 @@ export function ReelsDesk({
               <div
                 key={clip.youtubeId}
                 onClick={() => playReel(clip.youtubeId)}
-                className={`group relative flex flex-col rounded-2xl overflow-hidden border transition-all duration-300 cursor-pointer ${
+                className={`group relative flex flex-col rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer ${
                   isPlaying
-                    ? 'border-orange-500 shadow-xl shadow-orange-500/20 ring-2 ring-orange-500/40 scale-[1.02]'
-                    : 'border-border/70 bg-card/80 hover:border-orange-500/50 hover:shadow-lg hover:-translate-y-1'
+                    ? 'border-2 border-orange-500 shadow-lg shadow-orange-500/20 scale-[1.01]'
+                    : 'border-border/70 bg-card hover:border-orange-500/50 hover:shadow-md hover:-translate-y-0.5'
                 }`}
               >
-                {/* 4:5 Aspect Ratio Poster - modern, compact & elegant */}
-                <div className="relative  aspect-[4/5] w-full overflow-hidden bg-neutral-900 rounded-2xl">
+                {/* Poster Thumbnail - seamless fit with no inner rounding to avoid double border */}
+                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/25">
                   {clip.thumbnailUrl ? (
                     <img
                       src={clip.thumbnailUrl}
@@ -452,45 +452,46 @@ export function ReelsDesk({
                     />
                   ) : (
                     <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-muted/40">
-                      <Smartphone size={28} className="text-muted-foreground/40" />
+                      <Smartphone size={26} className="text-muted-foreground/40" />
                     </div>
                   )}
 
-                  {/* Gradient shade overlays */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/10 pointer-events-none" />
-
-                  {/* Play button overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-500 text-white shadow-xl shadow-orange-500/40 transform scale-75 group-hover:scale-100 transition-transform">
-                      <Play size={18} fill="currentColor" className="translate-x-0.5" />
+                  {/* Play button overlay on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/25 pointer-events-none">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/40 transform scale-75 group-hover:scale-100 transition-transform">
+                      <Play size={16} fill="currentColor" className="translate-x-0.5" />
                     </span>
                   </div>
 
-                  {/* Top badges */}
+                  {/* Top badges on poster */}
                   <div className="absolute top-2 start-2 end-2 flex items-center justify-between pointer-events-none z-10">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white border border-white/10">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/70 backdrop-blur-md px-2 py-0.5 text-[9.5px] font-bold text-white border border-white/10">
                       <Flame size={10} className="text-orange-400" />
                       <span>Shorts</span>
                     </span>
 
                     {typeof clip.durationSec === 'number' && clip.durationSec > 0 ? (
-                      <span className="rounded-md bg-black/75 px-1.5 py-0.5 text-[10px] font-mono font-bold text-white">
+                      <span className="rounded-md bg-black/75 px-1.5 py-0.5 text-[9.5px] font-mono font-bold text-white">
                         {clock(clip.durationSec)}
                       </span>
                     ) : null}
                   </div>
+                </div>
 
-                  {/* Bottom info on the card */}
-                  <div className="absolute bottom-2 start-2 end-2 flex flex-col gap-0.5 pointer-events-none z-10">
-                    <span className="text-[9px] font-bold text-orange-400 truncate tracking-wide">
+                {/* Bottom Card Body - 100% theme adaptive for light/day & dark mode */}
+                <div className="flex flex-col p-2.5 sm:p-3 gap-1 bg-card border-t border-border/50">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-bold text-orange-500 truncate tracking-wide">
                       {clip.channelTitle}
                     </span>
-                    <h3
-                      className="text-[0.68rem] sm:text-[0.70rem] font-medium leading-[1.3] line-clamp-2 text-white drop-shadow-sm"
-                    >
-                      {clip.title}
-                    </h3>
+                    <span className="text-[9.5px] text-muted-foreground font-semibold shrink-0">
+                      <ClientTime value={clip.publishedAt} options={{ day: 'numeric', month: 'short' }} />
+                    </span>
                   </div>
+
+                  <h3 className="text-[0.68rem] sm:text-[0.71rem] font-semibold leading-[1.32] line-clamp-2 text-foreground group-hover:text-orange-500 transition-colors">
+                    {clip.title}
+                  </h3>
                 </div>
               </div>
             );
