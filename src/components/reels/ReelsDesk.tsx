@@ -92,6 +92,30 @@ export function ReelsDesk({
     }
   }, [initialClips, initialId]);
 
+  // Continuous auto-refresh for real-time live reels feed
+  useEffect(() => {
+    let active = true;
+    const pull = async () => {
+      try {
+        const res = await fetch(`/api/media/videos?kind=SHORT&locale=${locale}`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = (await res.json()) as { clips?: YoutubeClipCard[] };
+        if (!active || !Array.isArray(data.clips) || data.clips.length === 0) return;
+        const valid = data.clips.filter((c) => !isBlockedChannel(c.channelId));
+        if (valid.length > 0) {
+          setClips(valid);
+        }
+      } catch {}
+    };
+    const timer = window.setInterval(pull, 45_000);
+    const initialTimer = window.setTimeout(pull, 3_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.clearTimeout(initialTimer);
+    };
+  }, [locale]);
+
   // Unique channel list (excluding blocked channels)
   const channelList = useMemo(() => {
     const map = new Map<string, string>();
@@ -246,27 +270,27 @@ export function ReelsDesk({
       {currentClip ? (
         <div
           ref={playerModalRef}
-          className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0c0d14] text-white p-3.5 sm:p-5 shadow-2xl mb-6 animate-in fade-in zoom-in-95 duration-200"
+          className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/95 text-foreground p-3.5 sm:p-5 shadow-xl backdrop-blur-xl mb-6 animate-in fade-in zoom-in-95 duration-200"
         >
           {/* Player Header Bar */}
-          <div className="relative z-10 flex items-center justify-between gap-3 pb-3 mb-3 border-b border-white/10">
+          <div className="relative z-10 flex items-center justify-between gap-3 pb-3 mb-3 border-b border-border/60">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white font-black shadow-md shadow-orange-500/30">
                 <Smartphone size={15} />
               </span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] sm:text-xs font-black text-orange-400 tracking-wide uppercase">
+                  <span className="text-[10px] sm:text-xs font-black text-orange-500 tracking-wide uppercase">
                     {ar ? 'مشغل الريلز المباشر' : 'Live Reels Theater'}
                   </span>
                   {typeof currentClip.durationSec === 'number' && currentClip.durationSec > 0 ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-neutral-300 border border-white/10">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/40">
                       <Clock size={10} />
                       <span>{clock(currentClip.durationSec)}</span>
                     </span>
                   ) : null}
                 </div>
-                <h2 className="text-xs sm:text-sm font-bold text-white truncate max-w-xl">
+                <h2 className="text-xs sm:text-[0.82rem] font-bold text-foreground truncate max-w-xl">
                   {currentClip.title}
                 </h2>
               </div>
@@ -276,7 +300,7 @@ export function ReelsDesk({
             <button
               type="button"
               onClick={closePlayer}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-border/60"
               title={ar ? 'إغلاق والعودة للمعرض' : 'Close player'}
             >
               <X size={16} />
@@ -286,7 +310,7 @@ export function ReelsDesk({
           {/* Main Stage & Side Actions: constrained height to fit viewports */}
           <div className="relative z-10 flex flex-col lg:flex-row items-center justify-center gap-4 sm:gap-6">
             {/* The 9:16 Vertical Screen with screen-bounded height */}
-            <div className="relative h-[min(54vh,460px)] aspect-[9/16] w-auto mx-auto shrink-0 rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-white/15">
+            <div className="relative h-[min(54vh,460px)] aspect-[9/16] w-auto mx-auto shrink-0 rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-border/50">
               <iframe
                 key={currentClip.youtubeId}
                 src={embedSrc(currentClip.youtubeId, origin)}
@@ -300,28 +324,28 @@ export function ReelsDesk({
             {/* Sidebar Controls & Info */}
             <div className="flex flex-col justify-between w-full lg:max-w-md gap-3">
               {/* Channel & Details Box */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3.5 backdrop-blur-md text-white">
-                <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-white/10">
+              <div className="rounded-2xl border border-border/70 bg-card/80 p-3.5 backdrop-blur-md">
+                <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-border/50">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <strong className="text-xs sm:text-sm font-bold text-white">{currentClip.channelTitle}</strong>
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <strong className="text-xs sm:text-sm font-bold text-foreground">{currentClip.channelTitle}</strong>
                   </div>
-                  <span className="text-[11px] text-neutral-400 font-semibold">
+                  <span className="text-[11px] text-muted-foreground font-semibold">
                     <ClientTime value={currentClip.publishedAt} />
                   </span>
                 </div>
 
-                <p className="text-xs text-neutral-300 leading-relaxed line-clamp-3">
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
                   {currentClip.description || currentClip.title}
                 </p>
 
                 {/* Direct External Link */}
-                <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between">
+                <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between">
                   <a
                     href={`https://www.youtube.com/shorts/${currentClip.youtubeId}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors"
                   >
                     <span>{ar ? 'فتح في تطبيق يوتيوب شورتس' : 'Open in YouTube Shorts'}</span>
                     <ExternalLink size={12} />
@@ -330,21 +354,21 @@ export function ReelsDesk({
                   <button
                     type="button"
                     onClick={handleShare}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold text-white border border-white/10 transition-all"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 hover:bg-muted text-xs font-bold text-foreground border border-border/60 transition-all"
                   >
-                    {copied ? <Check size={13} className="text-emerald-400" /> : <Share2 size={13} />}
+                    {copied ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} />}
                     <span>{copied ? (ar ? 'تم النسخ!' : 'Copied!') : (ar ? 'مشاركة الرابط' : 'Share Link')}</span>
                   </button>
                 </div>
               </div>
 
               {/* Navigation Controls */}
-              <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl border border-white/10 bg-white/[0.04]">
+              <div className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl border border-border/70 bg-card/80">
                 <button
                   type="button"
                   onClick={() => step(-1)}
                   disabled={visible.length < 2}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all border border-white/10 disabled:opacity-40"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-muted/60 hover:bg-muted text-foreground text-xs font-bold transition-all border border-border/60 disabled:opacity-40"
                 >
                   <ChevronRight size={16} className={ar ? 'rotate-180' : ''} />
                   <span>{ar ? 'الريل السابق' : 'Previous Reel'}</span>
@@ -354,7 +378,7 @@ export function ReelsDesk({
                   type="button"
                   onClick={() => step(1)}
                   disabled={visible.length < 2}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/25 disabled:opacity-40"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all shadow-md shadow-orange-500/20 disabled:opacity-40"
                 >
                   <span>{ar ? 'الريل التالي' : 'Next Reel'}</span>
                   <ChevronLeft size={16} className={ar ? 'rotate-180' : ''} />
@@ -363,7 +387,7 @@ export function ReelsDesk({
 
               {/* Up Next Mini Shelf */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[11px] font-bold text-neutral-400">
+                <span className="text-[11px] font-bold text-muted-foreground">
                   {ar ? 'التالي في قائمة الريلز:' : 'Up Next in Reels:'}
                 </span>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
@@ -372,7 +396,7 @@ export function ReelsDesk({
                       key={next.youtubeId}
                       type="button"
                       onClick={() => playReel(next.youtubeId)}
-                      className="group relative flex h-20 w-14 shrink-0 rounded-xl overflow-hidden border border-white/10 bg-black text-start transition-transform hover:scale-105"
+                      className="group relative flex h-20 w-14 shrink-0 rounded-xl overflow-hidden border border-border/60 bg-muted/40 text-start transition-transform hover:scale-105"
                     >
                       {next.thumbnailUrl ? (
                         <img
@@ -418,7 +442,7 @@ export function ReelsDesk({
                 }`}
               >
                 {/* 4:5 Aspect Ratio Poster - modern, compact & elegant */}
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-neutral-900 rounded-2xl">
+                <div className="relative  aspect-[4/5] w-full overflow-hidden bg-neutral-900 rounded-2xl">
                   {clip.thumbnailUrl ? (
                     <img
                       src={clip.thumbnailUrl}
@@ -458,12 +482,11 @@ export function ReelsDesk({
 
                   {/* Bottom info on the card */}
                   <div className="absolute bottom-2 start-2 end-2 flex flex-col gap-0.5 pointer-events-none z-10">
-                    <span className="text-[10px] font-bold text-orange-400 truncate tracking-wide">
+                    <span className="text-[9px] font-bold text-orange-400 truncate tracking-wide">
                       {clip.channelTitle}
                     </span>
                     <h3
-                      className="text-[0.74rem] sm:text-[0.76rem] font-semibold leading-[1.35] line-clamp-2 drop-shadow-sm"
-                      style={{ color: '#ffffff' }}
+                      className="text-[0.68rem] sm:text-[0.70rem] font-medium leading-[1.3] line-clamp-2 text-white drop-shadow-sm"
                     >
                       {clip.title}
                     </h3>
