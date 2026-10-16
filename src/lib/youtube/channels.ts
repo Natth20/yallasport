@@ -39,7 +39,13 @@ export const YOUTUBE_KEEP = {
 /** Official desks that disable playback on other sites. */
 export const YOUTUBE_EMBED_BLOCKED = new Set([
   'UCJUCcJUeh0Cz2xyKwkw5Q1w', // beIN SPORTS
+  'UCnj0TjaM0wyxkAWW_nz8_1g', // The AFC Hub
+  'UCXTRFt1vLvZpahQtiKJjLaQ', // AFC Asian Cup
 ]);
+
+export function isBlockedChannel(channelId?: string): boolean {
+  return channelId ? YOUTUBE_EMBED_BLOCKED.has(channelId) : false;
+}
 
 export function channelById(id: string) {
   return FOOTBALL_YOUTUBE_CHANNELS.find((channel) => channel.id === id);

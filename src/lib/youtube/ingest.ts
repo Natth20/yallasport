@@ -252,7 +252,10 @@ export const listYoutubeShelf = cache(async function listYoutubeShelf(
 
 export function listYoutubeArchive(take = 48) {
   return prisma.youtubeClip.findMany({
-    where: { status: 'ARCHIVED' },
+    where: {
+      status: 'ARCHIVED',
+      channelId: { notIn: Array.from(YOUTUBE_EMBED_BLOCKED) },
+    },
     orderBy: { publishedAt: 'desc' },
     take,
   });
@@ -279,12 +282,26 @@ export function emptyYoutubeDeskStats(): YoutubeDeskStats {
 }
 
 export async function youtubeDeskStats(): Promise<YoutubeDeskStats> {
+  const blockedList = Array.from(YOUTUBE_EMBED_BLOCKED);
+  const playableChannels = FOOTBALL_YOUTUBE_CHANNELS.filter(
+    (c) => !YOUTUBE_EMBED_BLOCKED.has(c.id)
+  );
+
   const [groups, lastFetch] = await Promise.all([
     prisma.youtubeClip.groupBy({
       by: ['status', 'kind', 'lang'],
+      where: {
+        channelId: { notIn: blockedList },
+      },
       _count: { _all: true },
     }),
-    prisma.youtubeClip.findFirst({ orderBy: { fetchedAt: 'desc' }, select: { fetchedAt: true } }),
+    prisma.youtubeClip.findFirst({
+      where: {
+        channelId: { notIn: blockedList },
+      },
+      orderBy: { fetchedAt: 'desc' },
+      select: { fetchedAt: true },
+    }),
   ]);
 
   let videos = 0;
@@ -300,7 +317,7 @@ export async function youtubeDeskStats(): Promise<YoutubeDeskStats> {
   }
 
   return {
-    channels: FOOTBALL_YOUTUBE_CHANNELS.length,
+    channels: playableChannels.length,
     videos,
     reels,
     archived,
