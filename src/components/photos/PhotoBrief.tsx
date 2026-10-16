@@ -44,7 +44,7 @@ export function PhotoBrief({
         </div>
       </div>
 
-      <div className={styles['yt-brief-grid']}>
+      <div className={`${styles['yt-brief-grid']} ${styles['photo-brief-grid']}`}>
         {cells.map((cell) => {
           const Icon = cell.icon;
           return (

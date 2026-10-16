@@ -214,6 +214,57 @@
   }
 }
 
+.photo-brief-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .photo-brief-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.35rem;
+  }
+
+  .photo-brief-grid .yt-brief-card {
+    padding: 0.65rem 0.35rem 0.6rem;
+    gap: 0.3rem;
+    border-radius: 0.95rem;
+    text-align: center;
+    align-items: center;
+  }
+
+  .photo-brief-grid .yt-card-top {
+    justify-content: center;
+    gap: 0;
+  }
+
+  .photo-brief-grid .yt-card-hint {
+    display: none;
+  }
+
+  .photo-brief-grid .yt-card-icon-wrap {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .photo-brief-grid .yt-card-icon-wrap svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .photo-brief-grid .yt-card-value {
+    font-size: 1.25rem;
+  }
+
+  .photo-brief-grid .yt-card-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
 .yt-brief-card {
   display: grid;
   gap: 0.4rem;
