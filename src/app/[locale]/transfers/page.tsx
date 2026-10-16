@@ -299,7 +299,12 @@ async function TransfersPageBody({
 
         {/* 2. TALLY HUD STATS */}
         {desk.rows.length > 0 ? (
-          <div className={styles.tallyGrid}>
+          <div
+            className={styles.tallyGrid}
+            style={{
+              gridTemplateColumns: `repeat(${Math.min(tally.length, 4)}, minmax(0, 1fr))`,
+            }}
+          >
             {tally.map((item) => {
               const Icon = item.icon;
               return (
