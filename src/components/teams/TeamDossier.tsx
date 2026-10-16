@@ -664,11 +664,11 @@ export function TeamDossier({
           {/* Home vs Away Mini Split */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginTop: '1.25rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted-foreground)' }}>🏠 {pick(locale, 'سجل المباريات داخل الديار', 'Home Record')}</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted-foreground)' }}>{pick(locale, 'سجل المباريات داخل الديار', 'Home Record')}</span>
               <strong style={{ fontSize: '0.85rem', color: 'var(--foreground)' }}>{homeStats.won} {pick(locale, 'فوز', 'W')} · {homeStats.drawn} {pick(locale, 'تعادل', 'D')} · {homeStats.lost} {pick(locale, 'خسارة', 'L')}</strong>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'color-mix(in srgb, var(--foreground) 3%, var(--card))', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted-foreground)' }}>✈️ {pick(locale, 'سجل المباريات خارج الديار', 'Away Record')}</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--muted-foreground)' }}>{pick(locale, 'سجل المباريات خارج الديار', 'Away Record')}</span>
               <strong style={{ fontSize: '0.85rem', color: 'var(--foreground)' }}>{awayStats.won} {pick(locale, 'فوز', 'W')} · {awayStats.drawn} {pick(locale, 'تعادل', 'D')} · {awayStats.lost} {pick(locale, 'خسارة', 'L')}</strong>
             </div>
           </div>
@@ -691,7 +691,7 @@ export function TeamDossier({
                 </div>
                 <div>
                   <span style={{ fontSize: '0.74rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--ys-orange)' }}>
-                    ⚽ {pick(locale, 'هداف النادي', 'Top Goalscorer')}
+                    {pick(locale, 'هداف النادي', 'Top Goalscorer')}
                   </span>
                   <strong style={{ display: 'block', fontSize: '1.05rem', fontWeight: 900, margin: '0.2rem 0' }}>
                     {resolvePlayerSlug(topScorer.slug, topScorer.name) ? (
@@ -745,7 +745,7 @@ export function TeamDossier({
             {competitions.length > 0 ? (
               <div className={board.glassCard} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.65rem' }}>
                 <span style={{ fontSize: '0.74rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>
-                  🏆 {pick(locale, 'البطولات المشارك بها', 'Competitions')}
+                  {pick(locale, 'البطولات المشارك بها', 'Competitions')}
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                   {competitions.map((c) => (
@@ -1171,7 +1171,7 @@ export function TeamDossier({
                 )}
                 <div className={board.stadiumBannerOverlay}>
                   <span style={{ fontSize: '0.78rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--ys-orange)', letterSpacing: '0.12em' }}>
-                    🏟️ {pick(locale, 'الملعب الرسمي والمعقل التاريخي', 'Official Stadium & Ground')}
+                    {pick(locale, 'الملعب الرسمي والمعقل التاريخي', 'Official Stadium & Ground')}
                   </span>
                   <h2 className={board.stadiumTitle}>{venue.name}</h2>
                   <p className={board.stadiumSubtitle}>

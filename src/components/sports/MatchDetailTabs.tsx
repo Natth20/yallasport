@@ -234,7 +234,7 @@ export function MatchDetailTabs({
                       : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
-                  ⚽ {pick(locale, 'الملعب', 'Pitch')}
+                  {pick(locale, 'الملعب', 'Pitch')}
                 </button>
                 <button
                   type="button"
@@ -244,7 +244,7 @@ export function MatchDetailTabs({
                       : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
-                  📋 {pick(locale, 'القائمة', 'List')}
+                  {pick(locale, 'القائمة', 'List')}
                 </button>
               </div>
             </div>

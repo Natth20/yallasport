@@ -232,17 +232,17 @@ export function PlayerDossier({
 
                 {onLoanFrom ? (
                   <span className={board.chip}>
-                    🔄 {pick(locale, 'معار من:', 'On loan from:')} {localizePlainName(locale, onLoanFrom.name)}
+                    {pick(locale, 'معار من:', 'On loan from:')} {localizePlainName(locale, onLoanFrom.name)}
                   </span>
                 ) : null}
 
                 {player.injured === true ? (
                   <span className={board.chip} style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)', color: '#ef4444', fontWeight: 900 }}>
-                    🚨 {pick(locale, 'مصاب حالياً', 'Injured')}
+                    {pick(locale, 'مصاب حالياً', 'Injured')}
                   </span>
                 ) : player.injured === false ? (
                   <span className={board.chip} style={{ background: 'rgba(34, 197, 94, 0.12)', borderColor: 'rgba(34, 197, 94, 0.35)', color: '#16a34a', fontWeight: 900 }}>
-                    🟢 {pick(locale, 'جاهز للمشاركة', 'Match Fit')}
+                    {pick(locale, 'جاهز للمشاركة', 'Match Fit')}
                   </span>
                 ) : null}
 

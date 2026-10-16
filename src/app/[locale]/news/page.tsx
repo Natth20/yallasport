@@ -149,13 +149,13 @@ async function NewsPageBody({
           <HallFoyer
             label={pick(locale, 'فهرس الغرفة والأقسام', 'Desk & sections index')}
             items={[
-              { href: '/news', label: pick(locale, 'أهم العناوين', 'Top Headlines'), badge: pick(locale, 'معتمد', 'Approved'), icon: Newspaper, current: true },
-              { href: '/news#news-wall', label: pick(locale, 'مستجدات الساعة', 'Live Wire'), icon: Radio },
-              { href: '/news?desk=all#news-wall', label: pick(locale, 'الدوريات الكبرى', 'Major Leagues'), icon: Clapperboard },
-              { href: '/matches', label: pick(locale, 'أبرز المباريات', 'Matches'), badge: 'LIVE', icon: Radio },
-              { href: '/videos', label: pick(locale, 'الفيديوهات', 'Videos'), icon: Clapperboard },
-              { href: '/videos/reels', label: pick(locale, 'الريلز', 'Reels'), badge: 'HOT', icon: Radio },
-              { href: '/photos', label: pick(locale, 'الصور', 'Photos'), icon: Camera },
+              { href: '/news', label: pick(locale, 'أهم العناوين', 'Top Headlines'), badge: pick(locale, 'معتمد', 'Approved'), current: true },
+              { href: '/news#news-wall', label: pick(locale, 'مستجدات الساعة', 'Live Wire') },
+              { href: '/news?desk=all#news-wall', label: pick(locale, 'الدوريات الكبرى', 'Major Leagues') },
+              { href: '/matches', label: pick(locale, 'أبرز المباريات', 'Matches'), badge: 'LIVE' },
+              { href: '/videos', label: pick(locale, 'الفيديوهات', 'Videos') },
+              { href: '/videos/reels', label: pick(locale, 'الريلز', 'Reels'), badge: 'HOT' },
+              { href: '/photos', label: pick(locale, 'الصور', 'Photos') },
             ]}
           />
           <NewsInkMast locale={locale} stats={deskData.stats} compact />

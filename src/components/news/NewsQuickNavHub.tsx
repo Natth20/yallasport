@@ -45,14 +45,14 @@ export function NewsQuickNavHub({
   };
 
   const platformSections = [
-    { label: pick(locale, 'الأخبار', 'News'), href: '/news', icon: Newspaper, active: true },
-    { label: pick(locale, 'المباريات', 'Matches'), href: '/matches', icon: Trophy },
-    { label: pick(locale, 'البث الحي', 'Live'), href: '/live', icon: Radio, badge: 'LIVE' },
-    { label: pick(locale, 'البطولات', 'Leagues'), href: '/leagues', icon: Trophy },
-    { label: pick(locale, 'الفيديوهات', 'Videos'), href: '/videos', icon: Film },
-    { label: pick(locale, 'الريلز', 'Reels'), href: '/videos/reels', icon: Film, badge: 'HOT' },
-    { label: pick(locale, 'الصور', 'Photos'), href: '/photos', icon: Camera },
-    { label: pick(locale, 'الإحصائيات', 'Stats'), href: '/stats', icon: BarChart2 },
+    { label: pick(locale, 'الأخبار', 'News'), href: '/news', active: true },
+    { label: pick(locale, 'المباريات', 'Matches'), href: '/matches' },
+    { label: pick(locale, 'البث الحي', 'Live'), href: '/live', badge: 'LIVE' },
+    { label: pick(locale, 'البطولات', 'Leagues'), href: '/leagues' },
+    { label: pick(locale, 'الفيديوهات', 'Videos'), href: '/videos' },
+    { label: pick(locale, 'الريلز', 'Reels'), href: '/videos/reels', badge: 'HOT' },
+    { label: pick(locale, 'الصور', 'Photos'), href: '/photos' },
+    { label: pick(locale, 'الإحصائيات', 'Stats'), href: '/stats' },
   ];
 
   return (
@@ -120,30 +120,26 @@ export function NewsQuickNavHub({
           <span>{pick(locale, 'أقسام المنصة الرئيسية:', 'Platform Sections:')}</span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {platformSections.map((sec) => {
-            const Icon = sec.icon;
-            return (
-              <Link
-                key={sec.href}
-                href={sec.href}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all ${
-                  sec.active
-                    ? 'border-primary/40 bg-primary/10 text-primary'
-                    : 'border-border/60 bg-background/50 text-foreground hover:border-primary/40 hover:text-primary'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span>{sec.label}</span>
-                {sec.badge && (
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-black ${
-                    sec.badge === 'LIVE' ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white'
-                  }`}>
-                    {sec.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {platformSections.map((sec) => (
+            <Link
+              key={sec.href}
+              href={sec.href}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all ${
+                sec.active
+                  ? 'border-primary/40 bg-primary/10 text-primary'
+                  : 'border-border/60 bg-background/50 text-foreground hover:border-primary/40 hover:text-primary'
+              }`}
+            >
+              <span>{sec.label}</span>
+              {sec.badge && (
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-black ${
+                  sec.badge === 'LIVE' ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white'
+                }`}>
+                  {sec.badge}
+                </span>
+              )}
+            </Link>
+          ))}
         </div>
       </div>
 
