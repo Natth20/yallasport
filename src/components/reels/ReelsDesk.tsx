@@ -441,45 +441,45 @@ export function ReelsDesk({
                     : 'border-border/70 bg-card hover:border-orange-500/50 hover:shadow-md hover:-translate-y-0.5'
                 }`}
               >
-                {/* Poster Thumbnail - seamless fit with no inner rounding to avoid double border */}
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted/25">
+                {/* Poster Thumbnail - compact aspect ratio to eliminate grey gap and excessive height */}
+                <div className="relative aspect-[16/11] w-full overflow-hidden bg-black">
                   {clip.thumbnailUrl ? (
                     <img
                       src={clip.thumbnailUrl}
                       alt={clip.title}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
                   ) : (
                     <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-muted/40">
-                      <Smartphone size={26} className="text-muted-foreground/40" />
+                      <Smartphone size={24} className="text-muted-foreground/40" />
                     </div>
                   )}
 
                   {/* Play button overlay on hover */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/25 pointer-events-none">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/40 transform scale-75 group-hover:scale-100 transition-transform">
-                      <Play size={16} fill="currentColor" className="translate-x-0.5" />
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/40 transform scale-75 group-hover:scale-100 transition-transform">
+                      <Play size={15} fill="currentColor" className="translate-x-0.5" />
                     </span>
                   </div>
 
                   {/* Top badges on poster */}
-                  <div className="absolute top-2 start-2 end-2 flex items-center justify-between pointer-events-none z-10">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-black/70 backdrop-blur-md px-2 py-0.5 text-[9.5px] font-bold text-white border border-white/10">
+                  <div className="absolute top-1.5 start-1.5 end-1.5 flex items-center justify-between pointer-events-none z-10">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/75 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold text-white border border-white/10">
                       <Flame size={10} className="text-orange-400" />
                       <span>Shorts</span>
                     </span>
 
                     {typeof clip.durationSec === 'number' && clip.durationSec > 0 ? (
-                      <span className="rounded-md bg-black/75 px-1.5 py-0.5 text-[9.5px] font-mono font-bold text-white">
+                      <span className="rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-white">
                         {clock(clip.durationSec)}
                       </span>
                     ) : null}
                   </div>
                 </div>
 
-                {/* Bottom Card Body - 100% theme adaptive for light/day & dark mode */}
-                <div className="flex flex-col p-2.5 sm:p-3 gap-1 bg-card border-t border-border/50">
+                {/* Bottom Card Body - compact height & theme adaptive */}
+                <div className="flex flex-col p-2 sm:p-2.5 gap-1 bg-card border-t border-border/50">
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-bold text-orange-500 truncate tracking-wide">
                       {clip.channelTitle}
