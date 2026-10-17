@@ -7,6 +7,8 @@ import React, {
   useRef,
   useEffect,
   forwardRef,
+  cloneElement,
+  isValidElement,
   type ReactNode,
   type HTMLAttributes,
   type ButtonHTMLAttributes,
@@ -94,8 +96,32 @@ export interface DropdownTriggerProps extends ButtonHTMLAttributes<HTMLButtonEle
 }
 
 export const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
-  ({ className, children, onClick, ...props }, ref) => {
+  ({ className, children, onClick, asChild, ...props }, ref) => {
     const { isOpen, toggle } = useDropdownContext();
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e);
+      toggle();
+    };
+
+    if (asChild && isValidElement(children)) {
+      const child = children as React.ReactElement<{
+        ref?: any;
+        onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+        className?: string;
+      }>;
+      return cloneElement(child, {
+        ref,
+        'aria-haspopup': 'true',
+        'aria-expanded': isOpen,
+        onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+          child.props.onClick?.(e);
+          handleClick(e);
+        },
+        className: `${child.props.className || ''} ${className || ''}`.trim(),
+        ...props,
+      } as any);
+    }
 
     return (
       <button
@@ -103,10 +129,7 @@ export const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProp
         type="button"
         aria-haspopup="true"
         aria-expanded={isOpen}
-        onClick={(e) => {
-          onClick?.(e);
-          toggle();
-        }}
+        onClick={handleClick}
         className={`${styles.trigger} ${className || ''}`}
         {...props}
       >
