@@ -5,7 +5,7 @@
   width: 100%;
 }
 
-/* ---------------- PODIUM (TOP 3) ---------------- */
+/* ==================== PODIUM (TOP 3) ==================== */
 .podiumGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -21,6 +21,7 @@
   }
 }
 
+/* Default / Light Mode Podium Card */
 .podiumCard {
   position: relative;
   display: flex;
@@ -29,51 +30,87 @@
   text-align: center;
   padding: 2rem 1.25rem 1.5rem;
   border-radius: 1.5rem;
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--card) 92%, var(--muted)) 100%);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   backdrop-filter: blur(16px);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.08);
   overflow: hidden;
 }
 
 .podiumCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 18px 35px -10px rgba(15, 23, 42, 0.15);
 }
 
-/* Specific ranks */
+/* Rank 1 - Gold Champion */
 .rank1 {
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.16) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border-color: rgba(245, 158, 11, 0.35);
-  box-shadow: 0 12px 35px -8px rgba(245, 158, 11, 0.25);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, #ffffff 80%);
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 14px 35px -8px rgba(245, 158, 11, 0.22);
   padding-top: 2.4rem;
   padding-bottom: 1.8rem;
 }
 
 .rank1:hover {
-  border-color: rgba(245, 158, 11, 0.55);
-  box-shadow: 0 24px 50px -10px rgba(245, 158, 11, 0.35);
+  border-color: rgba(245, 158, 11, 0.7);
+  box-shadow: 0 22px 45px -8px rgba(245, 158, 11, 0.32);
 }
 
+/* Rank 2 - Silver */
 .rank2 {
-  background: linear-gradient(180deg, rgba(203, 213, 225, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border-color: rgba(203, 213, 225, 0.25);
-  box-shadow: 0 10px 30px -10px rgba(148, 163, 184, 0.15);
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.15) 0%, #ffffff 80%);
+  border: 1.5px solid rgba(148, 163, 184, 0.4);
+  box-shadow: 0 10px 25px -8px rgba(148, 163, 184, 0.16);
 }
 
 .rank2:hover {
-  border-color: rgba(203, 213, 225, 0.45);
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
+/* Rank 3 - Bronze */
 .rank3 {
-  background: linear-gradient(180deg, rgba(249, 115, 22, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border-color: rgba(249, 115, 22, 0.25);
-  box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.15);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.12) 0%, #ffffff 80%);
+  border: 1.5px solid rgba(249, 115, 22, 0.4);
+  box-shadow: 0 10px 25px -8px rgba(249, 115, 22, 0.16);
 }
 
 .rank3:hover {
-  border-color: rgba(249, 115, 22, 0.45);
+  border-color: rgba(249, 115, 22, 0.6);
+}
+
+/* Dark Mode Overrides for Podium Cards */
+:global(.dark) .podiumCard,
+:global([data-theme="dark"]) .podiumCard {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+:global(.dark) .podiumCard:hover,
+:global([data-theme="dark"]) .podiumCard:hover {
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7);
+}
+
+:global(.dark) .rank1,
+:global([data-theme="dark"]) .rank1 {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 12px 35px -8px rgba(245, 158, 11, 0.3);
+}
+
+:global(.dark) .rank2,
+:global([data-theme="dark"]) .rank2 {
+  background: linear-gradient(180deg, rgba(203, 213, 225, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(203, 213, 225, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(148, 163, 184, 0.15);
+}
+
+:global(.dark) .rank3,
+:global([data-theme="dark"]) .rank3 {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.15);
 }
 
 /* Medal badges */
@@ -89,27 +126,47 @@
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
 }
 
 .medalTag1 {
-  color: #fbbf24;
+  color: #d97706;
   border-color: rgba(245, 158, 11, 0.4);
   background: rgba(245, 158, 11, 0.12);
 }
 
 .medalTag2 {
-  color: #e2e8f0;
-  border-color: rgba(226, 232, 240, 0.3);
-  background: rgba(226, 232, 240, 0.1);
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.14);
 }
 
 .medalTag3 {
+  color: #ea580c;
+  border-color: rgba(249, 115, 22, 0.4);
+  background: rgba(249, 115, 22, 0.12);
+}
+
+:global(.dark) .medalTag {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .medalTag1 {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+:global(.dark) .medalTag2 {
+  color: #e2e8f0;
+  background: rgba(226, 232, 240, 0.1);
+}
+
+:global(.dark) .medalTag3 {
   color: #fb923c;
-  border-color: rgba(249, 115, 22, 0.35);
-  background: rgba(249, 115, 22, 0.1);
+  background: rgba(249, 115, 22, 0.12);
 }
 
 /* Avatar showcase */
@@ -123,26 +180,26 @@
   height: 5.5rem;
   border-radius: 50%;
   object-fit: cover;
-  background: #0f172a;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: var(--muted);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
 
 .rank1 .avatar {
   width: 6.25rem;
   height: 6.25rem;
-  border: 3px solid #fbbf24;
-  box-shadow: 0 0 30px rgba(245, 158, 11, 0.35);
+  border: 3px solid #f59e0b;
+  box-shadow: 0 0 28px rgba(245, 158, 11, 0.35);
 }
 
 .rank2 .avatar {
-  border: 2.5px solid #cbd5e1;
-  box-shadow: 0 0 20px rgba(148, 163, 184, 0.25);
+  border: 2.5px solid #94a3b8;
+  box-shadow: 0 0 18px rgba(148, 163, 184, 0.25);
 }
 
 .rank3 .avatar {
   border: 2.5px solid #f97316;
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.25);
+  box-shadow: 0 0 18px rgba(249, 115, 22, 0.25);
 }
 
 .podiumCard:hover .avatar {
@@ -155,8 +212,8 @@
   width: 5.5rem;
   height: 5.5rem;
   border-radius: 50%;
-  background: #1e293b;
-  color: #f8fafc;
+  background: var(--muted);
+  color: var(--foreground);
   font-size: 1.75rem;
   font-weight: 800;
   font-style: normal;
@@ -179,7 +236,7 @@
 .playerName {
   font-size: 1.15rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--foreground);
   margin-bottom: 0.35rem;
   line-height: 1.3;
 }
@@ -191,7 +248,7 @@
 }
 
 .playerName a:hover {
-  color: #f59e0b;
+  color: var(--ys-orange);
 }
 
 .rank1 .playerName {
@@ -203,13 +260,13 @@
   align-items: center;
   gap: 0.45rem;
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--muted-foreground);
   text-decoration: none;
   margin-bottom: 1.1rem;
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--muted) 85%, transparent);
+  border: 1px solid var(--border);
 }
 
 .clubBadge a {
@@ -218,7 +275,7 @@
 }
 
 .clubBadge a:hover {
-  color: #f8fafc;
+  color: var(--foreground);
 }
 
 .clubCrest {
@@ -235,26 +292,36 @@
   gap: 0.2rem;
   padding: 0.75rem 1.5rem;
   border-radius: 1rem;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--muted) 65%, transparent);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 180px;
 }
 
 .rank1 .valueBox {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+:global(.dark) .valueBox {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 .bigValue {
   font-size: 2.1rem;
   font-weight: 900;
   line-height: 1;
-  color: #f8fafc;
+  color: var(--foreground);
   font-variant-numeric: tabular-nums;
 }
 
 .rank1 .bigValue {
+  color: #d97706;
+}
+
+:global(.dark) .rank1 .bigValue,
+:global([data-theme="dark"]) .rank1 .bigValue {
   color: #fbbf24;
   text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
 }
@@ -262,20 +329,16 @@
 .unitLabel {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #94a3b8;
-}
-
-.rank1 .unitLabel {
-  color: #fde68a;
+  color: var(--muted-foreground);
 }
 
 .secondaryNote {
   font-size: 0.72rem;
-  color: #64748b;
+  color: var(--muted-foreground);
   margin-top: 0.2rem;
 }
 
-/* ---------------- LEADERBOARD LIST (4th+) ---------------- */
+/* ==================== LEADERBOARD LIST (4th+) ==================== */
 .boardList {
   list-style: none;
   margin: 0;
@@ -292,35 +355,55 @@
   gap: 1rem;
   padding: 0.85rem 1.25rem;
   border-radius: 1.15rem;
-  background: linear-gradient(90deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
   backdrop-filter: blur(12px);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .leaderRow:hover {
-  transform: translateX(-4px);
-  border-color: rgba(245, 158, 11, 0.3);
-  background: linear-gradient(90deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+  border-color: var(--ys-orange);
+  background: color-mix(in srgb, var(--ys-orange) 4%, var(--card));
+  box-shadow: 0 8px 24px -6px rgba(245, 158, 11, 0.16);
 }
 
 html[dir="ltr"] .leaderRow:hover {
   transform: translateX(4px);
 }
 
+:global(.dark) .leaderRow,
+:global([data-theme="dark"]) .leaderRow {
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+:global(.dark) .leaderRow:hover,
+:global([data-theme="dark"]) .leaderRow:hover {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+}
+
 .rankBadge {
   font-size: 0.85rem;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
   display: grid;
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.65rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+}
+
+:global(.dark) .rankBadge {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
 }
 
 .leaderAvatar {
@@ -328,8 +411,8 @@ html[dir="ltr"] .leaderRow:hover {
   height: 2.75rem;
   border-radius: 50%;
   object-fit: cover;
-  background: #0f172a;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: var(--muted);
+  border: 1.5px solid var(--border);
 }
 
 .leaderAvatarFallback {
@@ -338,8 +421,8 @@ html[dir="ltr"] .leaderRow:hover {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 50%;
-  background: #1e293b;
-  color: #94a3b8;
+  background: var(--muted);
+  color: var(--muted-foreground);
   font-size: 1rem;
   font-weight: 800;
   font-style: normal;
@@ -355,7 +438,7 @@ html[dir="ltr"] .leaderRow:hover {
 .playerTitle {
   font-size: 0.98rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -368,7 +451,7 @@ html[dir="ltr"] .leaderRow:hover {
 }
 
 .playerTitle a:hover {
-  color: #f59e0b;
+  color: var(--ys-orange);
 }
 
 .clubSub {
@@ -376,7 +459,7 @@ html[dir="ltr"] .leaderRow:hover {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: var(--muted-foreground);
 }
 
 .clubSub a {
@@ -385,7 +468,7 @@ html[dir="ltr"] .leaderRow:hover {
 }
 
 .clubSub a:hover {
-  color: #e2e8f0;
+  color: var(--foreground);
 }
 
 .clubSubCrest {
@@ -400,9 +483,13 @@ html[dir="ltr"] .leaderRow:hover {
   max-width: 280px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--muted) 85%, var(--border));
   overflow: hidden;
   margin-top: 0.15rem;
+}
+
+:global(.dark) .meterTrack {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .meterFill {
@@ -421,8 +508,8 @@ html[dir="ltr"] .leaderRow:hover {
   text-align: end;
   padding: 0.35rem 0.85rem;
   border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--ys-orange) 8%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 22%, var(--border));
 }
 
 html[dir="ltr"] .scorePill {
@@ -430,10 +517,15 @@ html[dir="ltr"] .scorePill {
   text-align: end;
 }
 
+:global(.dark) .scorePill {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
 .scoreVal {
   font-size: 1.35rem;
   font-weight: 900;
-  color: #f8fafc;
+  color: var(--foreground);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -441,7 +533,7 @@ html[dir="ltr"] .scorePill {
 .scoreUnit {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--muted-foreground);
   margin-top: 0.15rem;
 }
 
@@ -462,5 +554,172 @@ html[dir="ltr"] .scorePill {
   }
   .meterTrack {
     max-width: 140px;
+  }
+}
+
+/* ==================== LUXURY CONTROLS (SEARCH & FILTER CONSOLE) ==================== */
+.filterConsole {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.85rem 0 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ys-orange) 16%, var(--border));
+  box-shadow: 0 4px 18px -4px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 2.45rem;
+  padding-inline: 2.25rem 2rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 70%, var(--card));
+  color: var(--foreground);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--ys-orange);
+  background: var(--card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ys-orange) 18%, transparent);
+}
+
+.clearBtn {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 0.65rem;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: none;
+  background: color-mix(in srgb, var(--muted-foreground) 25%, transparent);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+}
+
+.clearBtn:hover {
+  background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+}
+
+.sortWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.sortIcon {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.sortSelect {
+  height: 2.45rem;
+  padding-inline: 2.25rem 1.25rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 70%, var(--card));
+  color: var(--foreground);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.sortSelect:focus {
+  border-color: var(--ys-orange);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ys-orange) 18%, transparent);
+}
+
+.applyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.45rem;
+  padding: 0 1.1rem;
+  border-radius: 0.85rem;
+  border: none;
+  background: linear-gradient(135deg, var(--ys-orange), #ea580c);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--ys-orange) 30%, transparent);
+}
+
+.applyBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--ys-orange) 45%, transparent);
+}
+
+.liveAutoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, #10b981 12%, transparent);
+  border: 1px solid color-mix(in srgb, #10b981 25%, transparent);
+  color: #059669;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+:global(.dark) .liveAutoBadge {
+  color: #34d399;
+}
+
+.pulseDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulseLive 1.8s infinite;
+}
+
+@keyframes pulseLive {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.7);
+    opacity: 0.4;
   }
 }

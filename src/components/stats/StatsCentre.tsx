@@ -1,15 +1,16 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { pick } from '@/i18n/pick';
-import { Link } from '@/i18n/navigation';
-import { ALL_STAT_KINDS, STAT_BOARDS, type StatKind, type StatSort, type loadStatsDesk } from '@/lib/stats/load-desk';
+import { Link, useRouter } from '@/i18n/navigation';
+import { ALL_STAT_KINDS, STAT_BOARDS, type StatKind, type StatSort, type Desk } from '@/lib/stats/types';
 import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
 import { Stagger, StaggerItem } from '@/components/motion/PageMotion';
-import { ArrowLeftRight, BarChart3, CalendarDays, Crown, Medal, Radio, Trophy } from 'lucide-react';
+import { ArrowLeftRight, ArrowUpDown, BarChart3, CalendarDays, Crown, Medal, Radio, Search, SlidersHorizontal, Trophy, X } from 'lucide-react';
 import { ClientTime } from '@/components/datetime/ClientTime';
 import styles from './stats-centre.module.css';
-
-type Desk = Awaited<ReturnType<typeof loadStatsDesk>>;
 
 const KIND_META: Record<StatKind, { ar: string; en: string; group: 'players' | 'attack' | 'defense' | 'keep' | 'cards' }> = {
   goals: { ar: 'الهدافون', en: 'Scorers', group: 'players' },
@@ -71,6 +72,21 @@ export function StatsCentre({
   q?: string;
   sort: StatSort;
 }) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState(q || '');
+
+  useEffect(() => {
+    setSearchQuery(q || '');
+  }, [q]);
+
+  // Continuous auto-sync: Poll every 60 seconds from the live source without full reload
+  useEffect(() => {
+    const timer = setInterval(() => {
+      router.refresh();
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [router]);
+
   const href = (next: { league?: string; kind?: StatKind; season?: number; q?: string; sort?: StatSort }) => {
     const board = STAT_BOARDS.find((row) => row.id === (next.league || leagueId)) || desk.board;
     const season = next.season ?? desk.season;
@@ -149,16 +165,50 @@ export function StatsCentre({
               </Link>
             ))}
           </nav>
-          <form className="stats-seek" action={`/stats/${desk.board.slug}/${desk.season}`} method="get">
+          <form className={styles.filterConsole} action={`/stats/${desk.board.slug}/${desk.season}`} method="get">
             <input type="hidden" name="kind" value={kind} />
-            <input type="search" name="q" defaultValue={q} placeholder={pick(locale, 'ابحث عن لاعب...', 'Search a player...')} />
-            <select name="sort" defaultValue={sort}>
-              <option value="value">{pick(locale, 'ترتيب حسب الرقم', 'Sort by value')}</option>
-              <option value="apps">{pick(locale, 'المشاركات', 'Appearances')}</option>
-              <option value="minutes">{pick(locale, 'الدقائق', 'Minutes')}</option>
-              <option value="name">{pick(locale, 'الاسم', 'Name')}</option>
-            </select>
-            <button type="submit">{pick(locale, 'تطبيق', 'Apply')}</button>
+            
+            <div className={styles.searchWrapper}>
+              <Search size={15} className={styles.searchIcon} aria-hidden />
+              <input
+                type="search"
+                name="q"
+                className={styles.searchInput}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={pick(locale, 'ابحث عن لاعب...', 'Search a player...')}
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  className={styles.clearBtn}
+                  onClick={() => setSearchQuery('')}
+                  aria-label={pick(locale, 'مسح البحث', 'Clear search')}
+                >
+                  <X size={12} />
+                </button>
+              ) : null}
+            </div>
+
+            <div className={styles.sortWrapper}>
+              <SlidersHorizontal size={14} className={styles.sortIcon} aria-hidden />
+              <select name="sort" defaultValue={sort} className={styles.sortSelect}>
+                <option value="value">{pick(locale, 'ترتيب حسب الرقم', 'Sort by value')}</option>
+                <option value="apps">{pick(locale, 'المشاركات', 'Appearances')}</option>
+                <option value="minutes">{pick(locale, 'الدقائق', 'Minutes')}</option>
+                <option value="name">{pick(locale, 'الاسم', 'Name')}</option>
+              </select>
+            </div>
+
+            <button type="submit" className={styles.applyBtn}>
+              <ArrowUpDown size={14} aria-hidden />
+              <span>{pick(locale, 'تطبيق', 'Apply')}</span>
+            </button>
+
+            <div className={styles.liveAutoBadge} title={pick(locale, 'تحديث تلقائي كل 60 ثانية من المصدر', 'Auto-syncs live every 60s from source')}>
+              <span className={styles.pulseDot} aria-hidden />
+              <span>{pick(locale, 'مباشر وتلقائي', 'Live Auto-Sync')}</span>
+            </div>
           </form>
         </div>
       }

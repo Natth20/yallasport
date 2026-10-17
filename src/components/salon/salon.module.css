@@ -713,12 +713,13 @@
   -webkit-overflow-scrolling: touch;
   width: 100%;
   max-width: 100%;
-  padding: 0.4rem 0.85rem;
-  scroll-padding-inline: 0.85rem;
+  padding: 0.38rem 0.75rem;
+  scroll-padding-inline: 0.75rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
-  background: color-mix(in srgb, var(--muted) 78%, transparent);
-  box-shadow: inset 0 2px 4px color-mix(in srgb, #000 12%, transparent);
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(14px);
 }
 
 .stage :global(.salon-tabs::-webkit-scrollbar) {
@@ -736,45 +737,56 @@
   }
 }
 
+:global(.dark) .stage :global(.salon-tabs),
+:global([data-theme="dark"]) .stage :global(.salon-tabs) {
+  background: rgba(18, 24, 38, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
 .stage :global(.salon-tab) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.38rem 0.8rem;
+  padding: 0.42rem 0.95rem;
   border-radius: 999px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--muted-foreground);
   text-decoration: none;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
 }
 
 @media (min-width: 768px) {
   .stage :global(.salon-tab) {
-    padding: 0.42rem 0.9rem;
-    font-size: 0.78rem;
+    padding: 0.44rem 1rem;
+    font-size: 0.8rem;
   }
 }
 
 .stage :global(.salon-tab:hover) {
   color: var(--foreground);
   -webkit-text-fill-color: var(--foreground);
+  background: color-mix(in srgb, var(--muted) 65%, transparent);
+  transform: translateY(-1px);
 }
 
 .stage :global(.salon-tab.is-on),
 .stage :global(.salon-tab.is-on:hover),
 .stage :global(.salon-tab.is-on:hover span),
 .stage :global(.salon-tab.is-on:hover em) {
-  background: var(--ys-orange);
-  border-color: var(--ys-orange);
-  color: #111;
-  -webkit-text-fill-color: #111;
+  background: linear-gradient(135deg, var(--ys-orange) 0%, #ea580c 100%);
+  border-color: transparent;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--ys-orange) 42%, transparent);
+  transform: translateY(-1px);
 }
 
 .stage :global(.salon-tab-badge) {
@@ -1316,7 +1328,7 @@
   margin: 0.75rem 0;
 }
 
-.stage :global(.stats-seek input),
+.stage :global(.stats-seek input), 
 .stage :global(.stats-seek select),
 .stage :global(.stats-seek button) {
   border: 1px solid var(--border);
