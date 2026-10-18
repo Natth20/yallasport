@@ -3,6 +3,7 @@ import { cache } from 'react';
 import 'server-only';
 
 import { prisma } from '@/lib/prisma';
+import { cachedJson } from '@/lib/redis';
 import { newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
 import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { dayBoundsInTimezone, dateKeyInTimezone } from '@/lib/datetime/format';
@@ -246,6 +247,33 @@ function searchClause(query: string, locale: string): Prisma.NewsWhereInput[] {
   ];
 }
 
+async function loadNewsAggregates() {
+  return cachedJson('news:aggregates:v2', 600, async () => {
+    const [deskGroups, sourceGroups, readingAgg] = await Promise.all([
+      prisma.news
+        .groupBy({ by: ['category'], where: { status: 'PUBLISHED' }, _count: { _all: true } })
+        .catch(swallow('loadNewsDesk.deskGroups', [] as Array<{ category: string; _count: { _all: number } }>)),
+      prisma.news
+        .groupBy({ by: ['sourceName', 'sourceLocale'], where: { status: 'PUBLISHED' }, _count: { _all: true } })
+        .catch(
+          swallow(
+            'loadNewsDesk.sourceGroups',
+            [] as Array<{ sourceName: string | null; sourceLocale: string | null; _count: { _all: number } }>
+          )
+        ),
+      prisma.news
+        .aggregate({ where: { status: 'PUBLISHED' }, _sum: { readingTime: true }, _max: { publishedAt: true } })
+        .catch(
+          swallow('loadNewsDesk.readingAgg', {
+            _sum: { readingTime: 0 },
+            _max: { publishedAt: null },
+          })
+        ),
+    ]);
+    return { deskGroups, sourceGroups, readingAgg };
+  });
+}
+
 export const loadNewsDesk = cache(async function loadNewsDesk({
   locale,
   timezone,
@@ -255,14 +283,16 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
   page,
   day,
 }: NewsDeskParams): Promise<NewsDeskData> {
-  const now = new Date();
-  const { start, end } = dayBoundsInTimezone(dateKeyInTimezone(now, timezone), timezone);
-  const dayAgo = new Date(now.getTime() - 24 * 3600 * 1000);
-  const weekAgo = new Date(now.getTime() - 7 * 864e5);
-  const monthAgo = new Date(now.getTime() - 30 * 864e5);
-  const archiveDay = day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
-  const archiveBounds = archiveDay ? dayBoundsInTimezone(archiveDay, timezone) : null;
-  const freshSince = newsFreshSince(now);
+  const cacheKey = `news:desk:v5:${locale}:${timezone}:${desk}:${source}:${page}:${day || 'live'}:${query || '_'}`;
+  return cachedJson(cacheKey, 120, async () => {
+    const now = new Date();
+    const { start, end } = dayBoundsInTimezone(dateKeyInTimezone(now, timezone), timezone);
+    const dayAgo = new Date(now.getTime() - 24 * 3600 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 864e5);
+    const monthAgo = new Date(now.getTime() - 30 * 864e5);
+    const archiveDay = day && /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+    const archiveBounds = archiveDay ? dayBoundsInTimezone(archiveDay, timezone) : null;
+    const freshSince = newsFreshSince(now);
 
   const visible = newsVisibleWhere(locale);
   const listingScope: Prisma.NewsWhereInput = archiveBounds
@@ -311,10 +341,8 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     extras,
     todayMostReadRows,
     monthMostReadRows,
-    deskGroups,
-    sourceGroups,
     archiveRows,
-    readingAgg,
+    aggregates,
   ] = await Promise.all([
     prisma.news
       .findMany({
@@ -330,7 +358,7 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
       .findMany({
         where: { AND: [visible, { publishedAt: { gte: weekAgo } }] },
         orderBy: { publishedAt: 'desc' },
-        take: 120,
+        take: 36,
         select: briefSelect,
       })
       .catch(swallow('loadNewsDesk.extras', [] as Brief[])),
@@ -351,45 +379,40 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
       })
       .catch(swallow('loadNewsDesk.monthMostReadRows', [] as Brief[])),
     prisma.news
-      .groupBy({ by: ['category'], where: visible, _count: { _all: true } })
-      .catch(swallow('loadNewsDesk.deskGroups', [] as Array<{ category: string; _count: { _all: number } }>)),
-    prisma.news
-      .groupBy({ by: ['sourceName', 'sourceLocale'], where: visible, _count: { _all: true } })
-      .catch(
-        swallow(
-          'loadNewsDesk.sourceGroups',
-          [] as Array<{ sourceName: string | null; sourceLocale: string | null; _count: { _all: number } }>
-        )
-      ),
-    prisma.news
       .findMany({
-        where: { AND: [visible, { publishedAt: { gte: weekAgo } }] },
+        where: { status: 'PUBLISHED', publishedAt: { gte: weekAgo } },
         select: { publishedAt: true },
         orderBy: { publishedAt: 'desc' },
+        take: 60,
       })
       .catch(swallow('loadNewsDesk.archiveRows', [] as Array<{ publishedAt: Date | null }>)),
-    prisma.news
-      .aggregate({ where: visible, _sum: { readingTime: true }, _max: { publishedAt: true } })
-      .catch(
-        swallow('loadNewsDesk.readingAgg', {
-          _sum: { readingTime: 0 },
-          _max: { publishedAt: null },
-        })
-      ),
+    loadNewsAggregates(),
   ]);
 
   const safeArticles = articles ?? [];
   const safeExtras = extras ?? [];
   const safeToday = todayMostReadRows ?? [];
   const safeMonth = monthMostReadRows ?? [];
-  const safeDeskGroups = deskGroups ?? [];
-  const safeSourceGroups = sourceGroups ?? [];
+  const safeDeskGroups = aggregates?.deskGroups ?? [];
+  const safeSourceGroups = aggregates?.sourceGroups ?? [];
   const safeArchiveRows = archiveRows ?? [];
+  const readingAgg = aggregates?.readingAgg ?? { _sum: { readingTime: 0 }, _max: { publishedAt: null } };
 
-  const localized = (await overlayNewsList(safeArticles, locale)) as Story[];
-  const localizedExtras = (await overlayNewsList(safeExtras, locale)) as Brief[];
-  const localizedToday = (await overlayNewsList(safeToday, locale)) as Brief[];
-  const localizedMonth = (await overlayNewsList(safeMonth, locale)) as Brief[];
+  // Single batched translation call for all items
+  const allRawItems = [...safeArticles, ...safeExtras, ...safeToday, ...safeMonth];
+  const uniqueItemsMap = new Map<string, typeof allRawItems[number]>();
+  for (const item of allRawItems) {
+    if (item && item.id && !uniqueItemsMap.has(item.id)) {
+      uniqueItemsMap.set(item.id, item);
+    }
+  }
+  const translatedList = await overlayNewsList(Array.from(uniqueItemsMap.values()), locale);
+  const localizedMap = new Map(translatedList.map((item) => [item.id, item]));
+
+  const localized = safeArticles.map((item) => (localizedMap.get(item.id) ?? item) as Story);
+  const localizedExtras = safeExtras.map((item) => (localizedMap.get(item.id) ?? item) as Brief);
+  const localizedToday = safeToday.map((item) => (localizedMap.get(item.id) ?? item) as Brief);
+  const localizedMonth = safeMonth.map((item) => (localizedMap.get(item.id) ?? item) as Brief);
 
   const mostReadWeek = [...localizedExtras].sort((a, b) => (b.views ?? 0) - (a.views ?? 0)).slice(0, 6);
   const mostReadToday = localizedToday.length >= 6
@@ -502,6 +525,7 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     archive,
     stats,
   };
+  });
 });
 
 export const loadNewsSidecars = cache(async function loadNewsSidecars({
@@ -510,9 +534,11 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
 }: Pick<NewsDeskParams, 'locale' | 'timezone'>): Promise<
   Pick<NewsDeskData, 'pitch' | 'liveCount' | 'tables' | 'goals' | 'broadcasts' | 'teamsInNews'>
 > {
-  const now = new Date();
-  const { start, end } = dayBoundsInTimezone(dateKeyInTimezone(now, timezone), timezone);
-  const isLive = (status: string) => status === 'LIVE' || status === 'HALFTIME';
+  const cacheKey = `news:sidecars:v5:${locale}:${timezone}`;
+  return cachedJson(cacheKey, 120, async () => {
+    const now = new Date();
+    const { start, end } = dayBoundsInTimezone(dateKeyInTimezone(now, timezone), timezone);
+    const isLive = (status: string) => status === 'LIVE' || status === 'HALFTIME';
 
   const [pitchRows, standingLeagues, recentMatches, broadcastRows, teamLinkGroups] = await Promise.all([
     prisma.match
@@ -533,9 +559,11 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
         },
       })
       .catch(swallow('src/lib/news/load-desk.ts:sidecars.pitch', [] as PitchMatch[])),
-    prisma.standing
-      .groupBy({ by: ['leagueId'], _count: { _all: true }, orderBy: { _count: { leagueId: 'desc' } }, take: 3 })
-      .catch(swallow('src/lib/news/load-desk.ts:sidecars.standings', [])),
+    cachedJson('news:sidecars:standings:leagues', 600, () =>
+      prisma.standing
+        .groupBy({ by: ['leagueId'], _count: { _all: true }, orderBy: { _count: { leagueId: 'desc' } }, take: 3 })
+        .catch(swallow('src/lib/news/load-desk.ts:sidecars.standings', []))
+    ),
     prisma.match
       .findMany({
         where: {
@@ -589,15 +617,17 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
         },
       })
       .catch(swallow('src/lib/news/load-desk.ts:sidecars.broadcasts', [])),
-    prisma.newsEntityLink
-      .groupBy({
-        by: ['entityId'],
-        where: { entityType: 'TEAM' },
-        _count: { _all: true },
-        orderBy: { _count: { entityId: 'desc' } },
-        take: 12,
-      })
-      .catch(swallow('src/lib/news/load-desk.ts:sidecars.teams', [])),
+    cachedJson('news:sidecars:teams:top', 600, () =>
+      prisma.newsEntityLink
+        .groupBy({
+          by: ['entityId'],
+          where: { entityType: 'TEAM' },
+          _count: { _all: true },
+          orderBy: { _count: { entityId: 'desc' } },
+          take: 12,
+        })
+        .catch(swallow('src/lib/news/load-desk.ts:sidecars.teams', []))
+    ),
   ]);
 
   const pitch = (pitchRows as PitchMatch[])
@@ -718,12 +748,23 @@ export const loadNewsSidecars = cache(async function loadNewsSidecars({
   walkLocalizeNames(locale, broadcasts);
   walkLocalizeNames(locale, teamsInNews);
 
+  const seenTeamNames = new Set<string>();
+  const deduplicatedTeams: TeamInNews[] = [];
+  for (const team of teamsInNews) {
+    const norm = team.name.trim().toLowerCase();
+    if (!seenTeamNames.has(norm)) {
+      seenTeamNames.add(norm);
+      deduplicatedTeams.push(team);
+    }
+  }
+
   return {
     pitch,
     liveCount: pitch.filter((match) => isLive(match.status)).length,
     tables,
     goals: goals.slice(0, 8),
     broadcasts,
-    teamsInNews,
+    teamsInNews: deduplicatedTeams.slice(0, 10),
   };
+  });
 });

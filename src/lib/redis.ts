@@ -10,23 +10,50 @@ export const redis = new Redis({
 
 const isRealRedis = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 
-export async function safeRedisGet<T>(key: string, ms = 1200): Promise<T | null> {
-  if (!isRealRedis) return null;
+const globalForCache = globalThis as unknown as {
+  memoryCache?: Map<string, { data: unknown; expiresAt: number }>;
+  redisCircuitBreakerUntil?: number;
+};
+
+const memoryCache = (globalForCache.memoryCache ??= new Map());
+
+export function isRedisHealthy(): boolean {
+  if (!isRealRedis) return false;
+  const until = globalForCache.redisCircuitBreakerUntil ?? 0;
+  return Date.now() > until;
+}
+
+export function tripRedisCircuitBreaker(seconds = 300) {
+  globalForCache.redisCircuitBreakerUntil = Date.now() + seconds * 1000;
+}
+
+export async function safeRedisGet<T>(key: string, ms = 150): Promise<T | null> {
+  if (!isRedisHealthy()) return null;
   try {
-    return await Promise.race([
+    let timer: NodeJS.Timeout;
+    const timeoutPromise = new Promise<'TIMEOUT'>((resolve) => {
+      timer = setTimeout(() => resolve('TIMEOUT'), ms);
+    });
+
+    const res = await Promise.race([
       redis.get<T>(key),
-      new Promise<null>((resolve) => {
-        setTimeout(() => resolve(null), ms);
-      }),
+      timeoutPromise,
     ]);
+
+    clearTimeout(timer!);
+
+    if (res === 'TIMEOUT') {
+      // Redis is too slow (> ms), trip circuit breaker immediately
+      tripRedisCircuitBreaker(300);
+      return null;
+    }
+    return res as T | null;
   } catch (error) {
+    tripRedisCircuitBreaker(300);
     reportCaughtError('redis.get', error);
     return null;
   }
 }
-
-// In-memory instant cache map (Key -> { data, expiresAt })
-const memoryCache = new Map<string, { data: unknown; expiresAt: number }>();
 
 export async function cachedJson<T>(
   key: string,
@@ -41,38 +68,50 @@ export async function cachedJson<T>(
     return memHit.data as T;
   }
 
-  // 2. Redis Cache Check
-  try {
-    const hit = await safeRedisGet<T>(key);
-    if (hit !== null && hit !== undefined) {
-      memoryCache.set(key, { data: hit, expiresAt: now + ttlSeconds * 1000 });
-      return hit;
+  // 2. Redis Cache Check (only if healthy)
+  if (isRedisHealthy()) {
+    try {
+      const hit = await safeRedisGet<T>(key);
+      if (hit !== null && hit !== undefined) {
+        memoryCache.set(key, { data: hit, expiresAt: now + ttlSeconds * 1000 });
+        return hit;
+      }
+    } catch {
+      // ignore cache read failure
     }
-  } catch {
-    // ignore cache read failure
   }
 
   // 3. Fresh Query
   const fresh = await load();
   if (fresh !== undefined && fresh !== null) {
     memoryCache.set(key, { data: fresh, expiresAt: now + ttlSeconds * 1000 });
-    if (isRealRedis) {
+    if (isRedisHealthy()) {
       safeRedisSet(key, fresh, { ex: ttlSeconds }).catch(() => {});
     }
   }
   return fresh;
 }
 
-export async function safeRedisSet(key: string, value: unknown, options?: { ex: number }) {
-  if (!isRealRedis) return;
+export async function safeRedisSet(key: string, value: unknown, options?: { ex: number }, ms = 150) {
+  if (!isRedisHealthy()) return;
   try {
-    await Promise.race([
+    let timer: NodeJS.Timeout;
+    const timeoutPromise = new Promise<'TIMEOUT'>((resolve) => {
+      timer = setTimeout(() => resolve('TIMEOUT'), ms);
+    });
+
+    const res = await Promise.race([
       redis.set(key, value, options),
-      new Promise<void>((resolve) => {
-        setTimeout(() => resolve(), 1200);
-      }),
+      timeoutPromise,
     ]);
+
+    clearTimeout(timer!);
+
+    if (res === 'TIMEOUT') {
+      tripRedisCircuitBreaker(300);
+    }
   } catch (error) {
+    tripRedisCircuitBreaker(300);
     reportCaughtError('redis.set', error);
   }
 }
@@ -88,7 +127,7 @@ const fallbackRatelimit = {
 } as unknown as Ratelimit;
 
 // Rate limiters with safe fallback if Redis is unavailable
-export const ratelimit = redis
+export const ratelimit = isRealRedis
   ? new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(100, "10 s"),

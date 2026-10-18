@@ -12,21 +12,23 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
   const timeframe = options.timeframe || 'week';
   const typeFilter = options.type || 'all';
   const leagueSlug = options.leagueSlug?.trim();
-  const limit = options.limit || 50;
+  const limit = options.limit || 60;
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+  const weekStart = new Date(todayStart.getTime() - 4 * 24 * 60 * 60 * 1000);
   const weekEnd = new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const monthStart = new Date(todayStart.getTime() - 14 * 24 * 60 * 60 * 1000);
   const monthEnd = new Date(todayStart.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-  let dateStart = todayStart;
+  let dateStart = weekStart;
   let dateEnd = weekEnd;
   if (timeframe === 'today') {
     dateStart = todayStart;
     dateEnd = todayEnd;
   } else if (timeframe === 'month') {
-    dateStart = todayStart;
+    dateStart = monthStart;
     dateEnd = monthEnd;
   }
 
@@ -90,6 +92,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         details: {
           homeScore: match.homeScore ?? 0,
           awayScore: match.awayScore ?? 0,
+          matchStatus: match.status,
           homeTeamName: home,
           awayTeamName: away,
           leagueName,
@@ -120,10 +123,10 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
   let inMatchMessage: string | undefined;
 
   try {
-    const matchEvents = await prisma.matchEvent.findMany({
+    let matchEvents = await prisma.matchEvent.findMany({
       where: {
         match: {
-          kickoffAt: { gte: new Date(now.getTime() - 24 * 3600 * 1000) },
+          kickoffAt: { gte: dateStart, lte: dateEnd },
           ...(leagueSlug ? { league: { slug: leagueSlug } } : {}),
         },
       },
@@ -135,11 +138,46 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
             league: true,
           },
         },
-        player: true,
+        player: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            photoUrl: true,
+          },
+        },
       },
       orderBy: { minute: 'desc' },
-      take: 25,
+      take: 30,
     });
+
+    // If no events in the tight timeframe window, fallback to the latest recorded real match events
+    if (matchEvents.length === 0) {
+      matchEvents = await prisma.matchEvent.findMany({
+        where: {
+          ...(leagueSlug ? { match: { league: { slug: leagueSlug } } } : {}),
+        },
+        include: {
+          match: {
+            include: {
+              homeTeam: true,
+              awayTeam: true,
+              league: true,
+            },
+          },
+          player: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              photoUrl: true,
+            },
+          },
+        },
+        orderBy: { minute: 'desc' },
+        take: 20,
+      });
+    }
 
     inMatchCount = matchEvents.length;
     for (const ev of matchEvents) {
@@ -171,11 +209,13 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         badgeColor = '#8b5cf6';
       }
 
+      const assistText = ev.assistName ? ` (صناعة: ${ev.assistName})` : '';
+
       eventsMap.set(key, {
         id: key,
         type: 'MATCH_EVENT',
-        title: `${typeLabelAr} — ${playerName}`,
-        subtitle: `${home} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${away} (${match.league.name})`,
+        title: `${typeLabelAr} — ${playerName}${assistText}`,
+        subtitle: `${home} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${away} • ${match.league.name}`,
         timestamp: match.kickoffAt.toISOString(),
         minute: ev.minute,
         badge: {
@@ -198,9 +238,13 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         details: {
           homeScore: match.homeScore,
           awayScore: match.awayScore,
+          matchStatus: match.status,
           homeTeamName: home,
           awayTeamName: away,
           playerName,
+          playerPhoto: ev.player?.photoUrl,
+          assistName: ev.assistName,
+          detail: ev.detail,
           leagueName: match.league.name,
         },
       });
@@ -216,7 +260,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
     status: inMatchCount === 0 && inMatchStatus !== 'ERROR' ? 'PENDING' : inMatchStatus,
     lastChecked: now,
     count: inMatchCount,
-    message: inMatchCount === 0 && inMatchStatus !== 'ERROR' ? 'لا توجد أهداف أو بطاقات مسجلة في الساعات الأخيرة' : inMatchMessage,
+    message: inMatchCount === 0 && inMatchStatus !== 'ERROR' ? 'لا توجد أهداف أو بطاقات مسجلة في هذا النطاق' : inMatchMessage,
   });
 
   // ==========================================
@@ -230,7 +274,6 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
     const breakingNews = await prisma.news.findMany({
       where: {
         status: 'PUBLISHED',
-        OR: [{ breaking: true }, { featured: true }],
       },
       select: {
         id: true,
@@ -244,7 +287,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         category: true,
       },
       orderBy: { publishedAt: 'desc' },
-      take: 15,
+      take: 20,
     });
 
     newsCount = breakingNews.length;
@@ -257,9 +300,9 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         subtitle: item.excerpt || undefined,
         timestamp: (item.publishedAt || now).toISOString(),
         badge: {
-          text: item.breaking ? '🚨 خبر عاجل' : '📰 تطور رياضي',
+          text: item.breaking ? '🚨 خبر عاجل' : '📰 تقرير رياضي',
           textEn: item.breaking ? '🚨 BREAKING NEWS' : '📰 NEWS ALERT',
-          color: item.breaking ? '#ef4444' : '#3b82f6',
+          color: item.breaking ? '#ef4444' : '#2563eb',
           isPulse: item.breaking,
         },
         sourceName: item.sourceName || 'يلا سبورت - غرفة الأخبار',
@@ -287,14 +330,14 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
   });
 
   // ==========================================
-  // SOURCE 4: UPCOMING MAJOR MATCHES & FINALS (🏆 أحداث مهمة)
+  // SOURCE 4: MATCHES & MAJOR CLASHES (🏆 قمم ومباريات)
   // ==========================================
   let majorStatus: DataSourceStatus = 'AVAILABLE';
   let majorCount = 0;
   let majorMessage: string | undefined;
 
   try {
-    const upcomingMatches = await prisma.match.findMany({
+    const matches = await prisma.match.findMany({
       where: {
         kickoffAt: { gte: dateStart, lte: dateEnd },
         status: { notIn: ['LIVE', 'HALFTIME'] },
@@ -306,16 +349,34 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         league: true,
         venue: true,
       },
-      orderBy: { kickoffAt: 'asc' },
-      take: 25,
+      orderBy: { kickoffAt: 'desc' },
+      take: 35,
     });
 
-    majorCount = upcomingMatches.length;
-    for (const match of upcomingMatches) {
+    majorCount = matches.length;
+    for (const match of matches) {
       const home = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
       const away = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
       const leagueName = match.league.name || 'البطولة';
       const key = `major_clash_${match.id}`;
+
+      let badgeText = '🏆 قمة مرتقبة';
+      let badgeTextEn = '🏆 Upcoming';
+      let badgeColor = '#3b82f6';
+
+      if (match.status === 'FINISHED') {
+        badgeText = '🏁 نتيجة نهائية';
+        badgeTextEn = '🏁 Full Time';
+        badgeColor = '#10b981';
+      } else if (match.status === 'POSTPONED') {
+        badgeText = '⚠️ مؤجلة';
+        badgeTextEn = '⚠️ Postponed';
+        badgeColor = '#6b7280';
+      } else if (match.status === 'CANCELLED') {
+        badgeText = '❌ ملغاة';
+        badgeTextEn = '❌ Cancelled';
+        badgeColor = '#ef4444';
+      }
 
       eventsMap.set(key, {
         id: key,
@@ -324,9 +385,9 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         subtitle: `${leagueName} ${match.round ? `• ${match.round}` : ''}`,
         timestamp: match.kickoffAt.toISOString(),
         badge: {
-          text: '🏆 قمة مرتقبة',
-          textEn: '🏆 Big Clash',
-          color: '#f59e0b',
+          text: badgeText,
+          textEn: badgeTextEn,
+          color: badgeColor,
         },
         sourceName: 'Official Fixtures Schedule',
         sourceStatus: 'AVAILABLE',
@@ -341,6 +402,9 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
           leagueLogo: match.league.logoUrl,
         },
         details: {
+          homeScore: match.homeScore,
+          awayScore: match.awayScore,
+          matchStatus: match.status,
           homeTeamName: home,
           awayTeamName: away,
           leagueName,
@@ -370,23 +434,35 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
   let transferMessage: string | undefined;
 
   try {
-    const transfers = await prisma.transfer.findMany({
-      take: 10,
+    const rawTransfers = await prisma.transfer.findMany({
+      take: 25,
       orderBy: { date: 'desc' },
       include: {
         player: true,
       },
     });
 
-    transferCount = transfers.length;
-    for (const tr of transfers) {
+    // Deduplicate transfers by player + destination
+    const seenTransfers = new Set<string>();
+    const deduplicatedTransfers: typeof rawTransfers = [];
+
+    for (const tr of rawTransfers) {
+      const dedupKey = `${tr.playerId}_${tr.toTeam || ''}_${tr.fromTeam || ''}`;
+      if (!seenTransfers.has(dedupKey)) {
+        seenTransfers.add(dedupKey);
+        deduplicatedTransfers.push(tr);
+      }
+    }
+
+    transferCount = deduplicatedTransfers.length;
+    for (const tr of deduplicatedTransfers) {
       const playerName = tr.player.name;
       const key = `transfer_${tr.id}`;
       const subtitle = tr.fromTeam && tr.toTeam
         ? `من ${tr.fromTeam} إلى ${tr.toTeam}`
         : tr.toTeam
-        ? `انضم إلى ${tr.toTeam}`
-        : 'صفقة مؤكدة';
+        ? `انضم رسمياً إلى ${tr.toTeam}`
+        : 'صفقة مؤكدة رسمياً';
 
       eventsMap.set(key, {
         id: key,
@@ -411,6 +487,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         },
         details: {
           playerName,
+          playerPhoto: tr.player?.photoUrl,
           fromTeam: tr.fromTeam,
           toTeam: tr.toTeam,
           fee: tr.fee,
@@ -432,7 +509,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
   });
 
   // ==========================================
-  // UNIFIED DEDUPLICATION & FILTERING & SORTING
+  // UNIFIED FILTERING & SORTING
   // ==========================================
   let allEvents = Array.from(eventsMap.values());
 

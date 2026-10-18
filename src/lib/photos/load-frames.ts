@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { cachedJson } from '@/lib/redis';
 import { cache } from 'react';
 import { rotateStart } from '@/lib/front/rotate-shelf';
 import { newsVisibleWhere, overlayNewsList } from '@/lib/i18n/localized-content';
@@ -97,17 +98,19 @@ function categorizeNewsPhoto(
 }
 
 export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: string): Promise<PhotoFrame[]> {
-  const imageWhere = {
-    OR: [{ featuredImage: { not: null } }, { ogImage: { not: null } }],
-  };
+  const cacheKey = `photos:frames:v4:${locale}`;
+  return cachedJson(cacheKey, 90, async () => {
+    const imageWhere = {
+      OR: [{ featuredImage: { not: null } }, { ogImage: { not: null } }],
+    };
 
-  const raw = await prisma.news
-    .findMany({
-      where: {
-        AND: [newsVisibleWhere(locale), imageWhere],
-      },
-      orderBy: { publishedAt: 'desc' },
-      take: 120,
+    const raw = await prisma.news
+      .findMany({
+        where: {
+          AND: [newsVisibleWhere(locale), imageWhere],
+        },
+        orderBy: { publishedAt: 'desc' },
+        take: 48,
       select: {
         id: true,
         slug: true,
@@ -138,7 +141,7 @@ export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: stri
               AND: [{ status: 'PUBLISHED', publishedAt: { not: null } }, imageWhere],
             },
             orderBy: { publishedAt: 'desc' },
-            take: 120,
+            take: 48,
             select: {
               id: true,
               slug: true,
@@ -281,5 +284,6 @@ export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: stri
     };
   });
 
-  return rotateStart(frames, 6);
+    return rotateStart(frames, 6);
+  });
 });

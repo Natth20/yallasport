@@ -25,8 +25,11 @@ export async function FrontTopMatchesShowcase({
   if (board.length === 0) return null;
 
   // Show top most relevant matches (Live first, then upcoming, then finished)
-  const topMatches = board.slice(0, limit);
   const liveMatches = board.filter((m) => isLiveStatus(m.status));
+  const upcomingMatches = board.filter((m) => !isLiveStatus(m.status) && m.status !== 'FINISHED');
+  const finishedMatches = board.filter((m) => m.status === 'FINISHED');
+  const sortedMatches = [...liveMatches, ...upcomingMatches, ...finishedMatches];
+  const topMatches = sortedMatches.slice(0, limit);
 
   return (
     <section

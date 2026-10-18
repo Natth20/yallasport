@@ -11,10 +11,10 @@ import type { FrontMatch } from './types';
 async function _loadFrontBoard(locale: string): Promise<FrontMatch[]> {
   try {
     const { todayKey, now } = frontDayWindow();
-    const from = new Date(now.getTime() - 18 * 60 * 60 * 1000);
-    const to = new Date(now.getTime() + 72 * 60 * 60 * 1000);
-    const raw = await cachedJson(`front:board:${todayKey}:v4`, 20, () =>
-      prisma.match
+    return await cachedJson(`front:board:v5:${todayKey}:${locale}`, 30, async () => {
+      const from = new Date(now.getTime() - 18 * 60 * 60 * 1000);
+      const to = new Date(now.getTime() + 72 * 60 * 60 * 1000);
+      const raw = await prisma.match
         .findMany({
           where: {
             OR: [
@@ -26,50 +26,50 @@ async function _loadFrontBoard(locale: string): Promise<FrontMatch[]> {
           take: 80,
           select: frontMatchSelect,
         })
-        .catch(swallow('front.board', [])),
-    );
+        .catch(swallow('front.board', []));
 
-    let rows = raw || [];
+      let rows = raw || [];
 
-    // Ensure at least 6 real matches are loaded from the database
-    if (rows.length < 6) {
-      const fallbackUpcoming = await prisma.match
-        .findMany({
-          where: { kickoffAt: { gte: now } },
-          orderBy: { kickoffAt: 'asc' },
-          take: 24,
-          select: frontMatchSelect,
-        })
-        .catch(swallow('front.board.fallbackUpcoming', []));
-      rows = [...rows, ...(fallbackUpcoming || [])];
-    }
+      // Ensure at least 6 real matches are loaded from the database
+      if (rows.length < 6) {
+        const fallbackUpcoming = await prisma.match
+          .findMany({
+            where: { kickoffAt: { gte: now } },
+            orderBy: { kickoffAt: 'asc' },
+            take: 24,
+            select: frontMatchSelect,
+          })
+          .catch(swallow('front.board.fallbackUpcoming', []));
+        rows = [...rows, ...(fallbackUpcoming || [])];
+      }
 
-    if (rows.length < 6) {
-      const fallbackRecent = await prisma.match
-        .findMany({
-          orderBy: { kickoffAt: 'desc' },
-          take: 24,
-          select: frontMatchSelect,
-        })
-        .catch(swallow('front.board.fallbackRecent', []));
-      rows = [...rows, ...(fallbackRecent || [])];
-    }
+      if (rows.length < 6) {
+        const fallbackRecent = await prisma.match
+          .findMany({
+            orderBy: { kickoffAt: 'desc' },
+            take: 24,
+            select: frontMatchSelect,
+          })
+          .catch(swallow('front.board.fallbackRecent', []));
+        rows = [...rows, ...(fallbackRecent || [])];
+      }
 
-    await paintNormalizedMatches(locale, rows);
-    const seen = new Set<string>();
-    const unique = rows.filter((row) => {
-      const kickoffMs = row.kickoffAt ? new Date(row.kickoffAt).getTime() : 0;
-      const key = `${row.homeTeam.id}-${row.awayTeam.id}-${kickoffMs}`;
-      if (seen.has(row.id) || seen.has(key)) return false;
-      seen.add(row.id);
-      seen.add(key);
-      return true;
+      await paintNormalizedMatches(locale, rows);
+      const seen = new Set<string>();
+      const unique = rows.filter((row) => {
+        const kickoffMs = row.kickoffAt ? new Date(row.kickoffAt).getTime() : 0;
+        const key = `${row.homeTeam.id}-${row.awayTeam.id}-${kickoffMs}`;
+        if (seen.has(row.id) || seen.has(key)) return false;
+        seen.add(row.id);
+        seen.add(key);
+        return true;
+      });
+      const live = unique.filter((row) => row.status === 'LIVE' || row.status === 'HALFTIME');
+      const upcoming = unique.filter((row) => row.status === 'NOT_STARTED');
+      const finished = unique.filter((row) => row.status === 'FINISHED');
+      const other = unique.filter((row) => row.status === 'POSTPONED' || row.status === 'CANCELLED');
+      return [...live, ...upcoming, ...finished, ...other].slice(0, 48).map((row) => toFrontMatch(row, locale));
     });
-    const live = unique.filter((row) => row.status === 'LIVE' || row.status === 'HALFTIME');
-    const upcoming = unique.filter((row) => row.status === 'NOT_STARTED');
-    const finished = unique.filter((row) => row.status === 'FINISHED');
-    const other = unique.filter((row) => row.status === 'POSTPONED' || row.status === 'CANCELLED');
-    return [...live, ...upcoming, ...finished, ...other].slice(0, 48).map((row) => toFrontMatch(row, locale));
   } catch {
     return [];
   }

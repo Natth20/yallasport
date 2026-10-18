@@ -47,6 +47,10 @@ export interface UnifiedEvent {
     awayTeamName?: string;
     leagueName?: string;
     playerName?: string | null;
+    playerPhoto?: string | null;
+    assistName?: string | null;
+    detail?: string | null;
+    matchStatus?: string | null;
     teamName?: string | null;
     fromTeam?: string | null;
     toTeam?: string | null;

@@ -1,6 +1,7 @@
 import Parser from 'rss-parser';
 import { cache } from 'react';
 import { prisma } from '@/lib/prisma';
+import { cachedJson } from '@/lib/redis';
 import { swallow } from '@/lib/ops/caught';
 import {
   FOOTBALL_YOUTUBE_CHANNELS,
@@ -225,29 +226,32 @@ export const listYoutubeShelf = cache(async function listYoutubeShelf(
   take: number,
   locale?: string,
 ) {
-  const roster = orderedRoster(locale).filter((channel) => !YOUTUBE_EMBED_BLOCKED.has(channel.id));
-  const per = YOUTUBE_KEEP[kind];
-  const ids = roster.map((channel) => channel.id);
-  const rows = await prisma.youtubeClip.findMany({
-    where: { status: 'PUBLISHED', kind, channelId: { in: ids } },
-    orderBy: { publishedAt: 'desc' },
-  });
-  const buckets = new Map<string, typeof rows>();
-  for (const row of rows) {
-    const list = buckets.get(row.channelId) ?? [];
-    if (list.length >= per) continue;
-    list.push(row);
-    buckets.set(row.channelId, list);
-  }
-  const groups = roster.map((channel) => buckets.get(channel.id) ?? []);
-  const mixed = [];
-  const depth = Math.max(0, ...groups.map((group) => group.length));
-  for (let index = 0; index < depth; index += 1) {
-    for (const group of groups) {
-      if (group[index]) mixed.push(group[index]);
+  const cacheKey = `youtube:shelf:v4:${kind}:${take}:${locale || 'all'}`;
+  return cachedJson(cacheKey, 180, async () => {
+    const roster = orderedRoster(locale).filter((channel) => !YOUTUBE_EMBED_BLOCKED.has(channel.id));
+    const per = YOUTUBE_KEEP[kind];
+    const ids = roster.map((channel) => channel.id);
+    const rows = await prisma.youtubeClip.findMany({
+      where: { status: 'PUBLISHED', kind, channelId: { in: ids } },
+      orderBy: { publishedAt: 'desc' },
+    });
+    const buckets = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const list = buckets.get(row.channelId) ?? [];
+      if (list.length >= per) continue;
+      list.push(row);
+      buckets.set(row.channelId, list);
     }
-  }
-  return mixed.slice(0, take);
+    const groups = roster.map((channel) => buckets.get(channel.id) ?? []);
+    const mixed = [];
+    const depth = Math.max(0, ...groups.map((group) => group.length));
+    for (let index = 0; index < depth; index += 1) {
+      for (const group of groups) {
+        if (group[index]) mixed.push(group[index]);
+      }
+    }
+    return mixed.slice(0, take);
+  });
 });
 
 export function listYoutubeArchive(take = 48) {

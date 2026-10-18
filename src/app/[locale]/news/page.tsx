@@ -70,7 +70,7 @@ export default function NewsPage({
   searchParams: Promise<{ q?: string; desk?: string; category?: string; source?: string; page?: string; day?: string }>;
 }) {
   return (
-    <Suspense fallback={<FrontSkeleton kind="hero" />}>
+    <Suspense fallback={<FrontSkeleton kind="chapter" />}>
       <NewsPageBody searchParams={searchParams} />
     </Suspense>
   );
@@ -111,6 +111,32 @@ async function NewsPageBody({
       ...(data?.stats ?? {}),
     },
   };
+
+  // If lead is missing but we have items in subLeads, rest, or weekFile, pick one as lead to prevent empty desk
+  if (!deskData.lead) {
+    if (deskData.subLeads.length > 0) {
+      deskData.lead = deskData.subLeads[0];
+      deskData.subLeads = deskData.subLeads.slice(1);
+    } else if (deskData.rest.length > 0) {
+      deskData.lead = deskData.rest[0];
+      deskData.rest = deskData.rest.slice(1);
+    } else if (deskData.weekFile.length > 0) {
+      const topStory = deskData.weekFile[0];
+      deskData.lead = {
+        ...topStory,
+        excerpt: '',
+        views: 0,
+        tags: [],
+        readingTime: 2,
+        isPremium: false,
+        featured: false,
+        sourceUrl: null,
+        author: { name: topStory.sourceName || 'Yalla Sport' },
+      };
+      deskData.weekFile = deskData.weekFile.slice(1);
+    }
+  }
+
   const videos = toYoutubeCards(rawVideos, locale);
   const reels = toYoutubeCards(rawReels, locale);
   const photos = rawPhotos.slice(0, 4);
@@ -198,11 +224,39 @@ function NewsHall({
   reels: YoutubeCard[];
   photos: PhotoFrame[];
 }) {
-  const programme = [...data.subLeads, ...data.rest].slice(0, 4);
-  const taken = new Set([data.lead?.id, ...programme.map((story) => story.id)].filter(Boolean) as string[]);
-  const wall = data.lead ? data.rest.filter((story) => !taken.has(story.id)) : data.rest;
-  wall.forEach((story) => taken.add(story.id));
-  const sameDesk = data.sameDesk.filter((story) => !taken.has(story.id)).slice(0, 6);
+  // STRICT PAGE-WIDE DEDUPLICATION:
+  // Every story ID that appears on the page is tracked in `taken`
+  const taken = new Set<string>();
+  if (data.lead?.id) taken.add(data.lead.id);
+
+  // Programme (sub-leads)
+  const candidateProgramme = [...data.subLeads, ...data.rest];
+  const programme: typeof candidateProgramme = [];
+  for (const story of candidateProgramme) {
+    if (!taken.has(story.id) && programme.length < 4) {
+      programme.push(story);
+      taken.add(story.id);
+    }
+  }
+
+  // News Wall (remaining stories)
+  const wall: typeof data.rest = [];
+  for (const story of data.rest) {
+    if (!taken.has(story.id)) {
+      wall.push(story);
+      taken.add(story.id);
+    }
+  }
+
+  // Same desk stories
+  const sameDesk: typeof data.sameDesk = [];
+  for (const story of data.sameDesk) {
+    if (!taken.has(story.id) && sameDesk.length < 6) {
+      sameDesk.push(story);
+      taken.add(story.id);
+    }
+  }
+
   const folio = '01';
   const total = String(Math.max(1, data.total)).padStart(2, '0');
   const firstPage = data.page === 1;
@@ -249,7 +303,6 @@ function NewsHall({
           selectedSource={source}
           desks={data.deskChips}
           sources={data.sources}
-          hrefFor={hrefFor}
         />
 
         {/* ثالثاً: أحدث الأخبار ومستجدات الساعة */}

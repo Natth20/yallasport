@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useTransition, useCallback } from 'react';
+import React, { useState, useEffect, useTransition, useCallback, useMemo, useRef } from 'react';
 import styles from './events.module.css';
-import { UnifiedEvent, SourceHealth, DataSourceStatus, EventCategory } from '@/lib/events/types';
+import { UnifiedEvent, SourceHealth, DataSourceStatus } from '@/lib/events/types';
 import { Link } from '@/i18n/navigation';
 import {
   Flame,
@@ -21,6 +21,12 @@ import {
   XCircle,
   ArrowRightLeft,
   Calendar,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Sparkles,
+  Check,
 } from 'lucide-react';
 
 interface Props {
@@ -53,8 +59,24 @@ export function EventsFeedClient({
   const [countdown, setCountdown] = useState(30);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
-  const [isPending, startTransition] = useTransition();
+  const [showSourcesPanel, setShowSourcesPanel] = useState(false);
+  const [isLeagueOpen, setIsLeagueOpen] = useState(false);
+  const [leagueSearch, setLeagueSearch] = useState('');
+  const leagueDropdownRef = useRef<HTMLDivElement>(null);
+  const [, startTransition] = useTransition();
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (leagueDropdownRef.current && !leagueDropdownRef.current.contains(event.target as Node)) {
+        setIsLeagueOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Polling data fetcher
   const fetchEvents = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -82,7 +104,7 @@ export function EventsFeedClient({
     }
   }, [timeframe, typeFilter, leagueFilter]);
 
-  // Auto-refresh timer countdown (30s)
+  // Auto-refresh timer countdown (30s interval)
   useEffect(() => {
     if (!autoRefresh) return;
     const timer = setInterval(() => {
@@ -98,7 +120,7 @@ export function EventsFeedClient({
     return () => clearInterval(timer);
   }, [autoRefresh, fetchEvents]);
 
-  // Handle manual filter switch
+  // Trigger fetch on filter change
   const handleTypeChange = (newType: string) => {
     setTypeFilter(newType);
     startTransition(() => {
@@ -120,18 +142,78 @@ export function EventsFeedClient({
     });
   };
 
+  // Metrics counts
+  const metrics = useMemo(() => {
+    let live = 0;
+    let matchEvents = 0;
+    let news = 0;
+    let transfers = 0;
+    for (const ev of events) {
+      if (ev.type === 'LIVE') live++;
+      else if (ev.type === 'MATCH_EVENT') matchEvents++;
+      else if (ev.type === 'NEWS') news++;
+      else if (ev.type === 'TRANSFER') transfers++;
+    }
+    return { live, matchEvents, news, transfers, total: events.length };
+  }, [events]);
+
   // Client-side text search
-  const filteredEvents = events.filter((ev) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    const titleMatch = ev.title.toLowerCase().includes(q);
-    const subMatch = ev.subtitle?.toLowerCase().includes(q);
-    const teamMatch =
-      ev.details?.homeTeamName?.toLowerCase().includes(q) ||
-      ev.details?.awayTeamName?.toLowerCase().includes(q) ||
-      ev.details?.playerName?.toLowerCase().includes(q);
-    return titleMatch || subMatch || teamMatch;
-  });
+  const filteredEvents = useMemo(() => {
+    if (!searchQuery.trim()) return events;
+    const q = searchQuery.toLowerCase().trim();
+    return events.filter((ev) => {
+      const titleMatch = ev.title.toLowerCase().includes(q);
+      const subMatch = ev.subtitle?.toLowerCase().includes(q);
+      const teamMatch =
+        ev.details?.homeTeamName?.toLowerCase().includes(q) ||
+        ev.details?.awayTeamName?.toLowerCase().includes(q) ||
+        ev.details?.playerName?.toLowerCase().includes(q) ||
+        ev.details?.leagueName?.toLowerCase().includes(q);
+      return titleMatch || subMatch || teamMatch;
+    });
+  }, [events, searchQuery]);
+
+  const selectedLeagueName = useMemo(() => {
+    if (!leagueFilter) return isAr ? 'كافة البطولات والدوريات' : 'All Competitions';
+    const found = leagues.find((lg) => lg.slug === leagueFilter);
+    return found ? found.name : isAr ? 'كافة البطولات والدوريات' : 'All Competitions';
+  }, [leagueFilter, leagues, isAr]);
+
+  const filteredLeagues = useMemo(() => {
+    if (!leagueSearch.trim()) return leagues;
+    const q = leagueSearch.toLowerCase().trim();
+    return leagues.filter((lg) => lg.name.toLowerCase().includes(q));
+  }, [leagues, leagueSearch]);
+
+  // Format date helper
+  const formatEventTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const formatEventDate = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      if (isToday) {
+        return isAr ? 'اليوم' : 'Today';
+      }
+      return d.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return '';
+    }
+  };
 
   const getStatusBadge = (status: DataSourceStatus, count: number) => {
     switch (status) {
@@ -139,211 +221,412 @@ export function EventsFeedClient({
         return {
           icon: CheckCircle2,
           className: styles.statusAvailable,
-          text: isAr ? `متاح (${count})` : `Active (${count})`,
+          text: isAr ? `نشط (${count})` : `Active (${count})`,
         };
       case 'PENDING':
         return {
           icon: Clock,
           className: styles.statusPending,
-          text: isAr ? `انتظار بيانات (${count})` : `Pending (${count})`,
+          text: isAr ? `مستمر (${count})` : `Syncing (${count})`,
         };
       case 'STALE':
         return {
           icon: AlertCircle,
           className: styles.statusStale,
-          text: isAr ? 'بيانات قديمة' : 'Stale',
+          text: isAr ? 'محدث' : 'Stale',
         };
       case 'UNAVAILABLE':
         return {
           icon: HelpCircle,
           className: styles.statusUnavailable,
-          text: isAr ? 'غير مغطى حالياً' : 'Unavailable',
+          text: isAr ? 'غير مشمول' : 'Unavailable',
         };
       case 'ERROR':
         return {
           icon: XCircle,
           className: styles.statusError,
-          text: isAr ? 'تعطل مؤقت' : 'Error',
+          text: isAr ? 'تأخر مؤقت' : 'Error',
         };
     }
   };
 
   return (
     <div className={styles.page}>
-      {/* Page Header */}
-      <header className={styles.header}>
-        <div className={styles.badge}>
-          <Flame className="h-4 w-4" />
-          <span>{isAr ? 'الأجندة الرياضية والموجز الزمني الموحد' : 'Unified Sports Events Timeline'}</span>
-        </div>
-        <h1 className={styles.title}>
-          {isAr ? 'الموجز الموحد للأحداث الرياضية المباشرة' : 'Live & Verified Sports Events Feed'}
-        </h1>
-        <p className={styles.subtitle}>
-          {isAr
-            ? 'موجز لحظي موحد يجمع المباريات المباشرة، مجريات اللقاءات والأهداف، الأخبار العاجلة، وسوق الانتقالات، من المصادر الرسمية المعتمدة.'
-            : 'Consolidated real-time feed of live matches, in-game events, breaking news, and confirmed transfers from verified providers.'}
-        </p>
-      </header>
+      {/* Ambient background glow */}
+      <div className={styles.glowAura} />
 
-      {/* Source Health Monitor Section (Addresses: عند تعطل المصدر، لا تظهر عبارة «لا توجد أحداث» وكأن المصدر يعمل بصورة طبيعية) */}
-      <section className={styles.sourceHealthSection}>
-        <div className={styles.sourceHealthTitle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Layers className="h-4 w-4 text-emerald-500" />
-            <span>{isAr ? 'حالة تغطية مصادر البيانات الموحدة:' : 'Unified Data Sources Health:'}</span>
-          </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
-            {isAr
-              ? `آخر تدقيق: ${lastRefreshedAt.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US')}`
-              : `Last checked: ${lastRefreshedAt.toLocaleTimeString()}`}
+      {/* Hero Header */}
+      <header className={styles.header}>
+        <div className={styles.livePulsePill}>
+          <span className={styles.liveBeacon}>
+            <span className={styles.beaconPing} />
+            <span className={styles.beaconDot} />
+          </span>
+          <span>{isAr ? 'رادار الأحداث الرياضية المباشر' : 'Live Sports Events Radar'}</span>
+          <span className={styles.pillDivider}>•</span>
+          <span className={styles.livePulseText}>
+            {isAr ? 'بيانات حية وموثقة 100%' : '100% Real-Time & Verified'}
           </span>
         </div>
 
-        <div className={styles.sourcePillsList}>
-          {sources.map((src, i) => {
-            const badge = getStatusBadge(src.status, src.count);
-            const Icon = badge.icon;
-            return (
-              <div
-                key={i}
-                className={`${styles.sourcePill} ${badge.className}`}
-                title={src.message || src.name}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{src.name}: {badge.text}</span>
+        <h1 className={styles.title}>
+          {isAr ? 'الموجز الزمني الموحد للأحداث الرياضية' : 'Unified Sports Events Timeline'}
+        </h1>
+        <p className={styles.subtitle}>
+          {isAr
+            ? 'تغطية شاملة لحظة بلحظة تجمع المباريات الجارية، الأهداف الحاسمة، البطاقات، الأخبار العاجلة، وصفقات الانتقالات المعتمدة من المصادر الرسمية.'
+            : 'Comprehensive real-time coverage aggregating live matches, game incidents, breaking headlines, and confirmed transfer deals.'}
+        </p>
+
+        {/* Dynamic Metric Cards Bar */}
+        <div className={styles.metricsBar}>
+          <button
+            onClick={() => handleTypeChange('all')}
+            className={`${styles.metricCard} ${typeFilter === 'all' ? styles.metricCardActive : ''}`}
+          >
+            <div className={styles.metricIconWrap} style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6' }}>
+              <Zap className="h-4 w-4" />
+            </div>
+            <div className={styles.metricInfo}>
+              <span className={styles.metricVal}>{metrics.total}</span>
+              <span className={styles.metricLabel}>{isAr ? 'إجمالي الأحداث' : 'Total Events'}</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleTypeChange('live')}
+            className={`${styles.metricCard} ${typeFilter === 'live' ? styles.metricCardActive : ''}`}
+          >
+            <div className={styles.metricIconWrap} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+              <Radio className="h-4 w-4 animate-pulse" />
+            </div>
+            <div className={styles.metricInfo}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span className={styles.metricVal} style={{ color: '#ef4444' }}>{metrics.live}</span>
+                {metrics.live > 0 && <span className={styles.activeDot} />}
               </div>
-            );
-          })}
+              <span className={styles.metricLabel}>{isAr ? 'مباشر الآن' : 'Live Now'}</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleTypeChange('matches')}
+            className={`${styles.metricCard} ${typeFilter === 'matches' ? styles.metricCardActive : ''}`}
+          >
+            <div className={styles.metricIconWrap} style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}>
+              <Trophy className="h-4 w-4" />
+            </div>
+            <div className={styles.metricInfo}>
+              <span className={styles.metricVal}>{metrics.matchEvents}</span>
+              <span className={styles.metricLabel}>{isAr ? 'أحداث المباريات' : 'Match Incidents'}</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleTypeChange('news')}
+            className={`${styles.metricCard} ${typeFilter === 'news' ? styles.metricCardActive : ''}`}
+          >
+            <div className={styles.metricIconWrap} style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b' }}>
+              <Newspaper className="h-4 w-4" />
+            </div>
+            <div className={styles.metricInfo}>
+              <span className={styles.metricVal}>{metrics.news}</span>
+              <span className={styles.metricLabel}>{isAr ? 'الأخبار العاجلة' : 'Breaking News'}</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleTypeChange('transfers')}
+            className={`${styles.metricCard} ${typeFilter === 'transfers' ? styles.metricCardActive : ''}`}
+          >
+            <div className={styles.metricIconWrap} style={{ background: 'rgba(139, 92, 246, 0.12)', color: '#8b5cf6' }}>
+              <ArrowRightLeft className="h-4 w-4" />
+            </div>
+            <div className={styles.metricInfo}>
+              <span className={styles.metricVal}>{metrics.transfers}</span>
+              <span className={styles.metricLabel}>{isAr ? 'سوق الانتقالات' : 'Transfers'}</span>
+            </div>
+          </button>
         </div>
+      </header>
+
+      {/* Sources Health Strip (Collapsible, Sleek) */}
+      <section className={styles.sourceHealthContainer}>
+        <div
+          className={styles.sourceHealthHeader}
+          onClick={() => setShowSourcesPanel(!showSourcesPanel)}
+          role="button"
+          tabIndex={0}
+        >
+          <div className={styles.sourceHealthLeft}>
+            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            <span className={styles.sourceHealthStatusText}>
+              {isAr ? 'حالة التغطية وتكامل البيانات:' : 'Data Integrity & Coverage:'}
+            </span>
+            <span className={styles.sourceHealthCountBadge}>
+              {sources.length} {isAr ? 'مصادر متصلة' : 'Connected Providers'}
+            </span>
+          </div>
+
+          <div className={styles.sourceHealthRight}>
+            <span className={styles.lastCheckedText}>
+              <Clock className="h-3 w-3" />
+              {isAr
+                ? `آخر مزامنة: ${lastRefreshedAt.toLocaleTimeString(isAr ? 'ar-EG' : 'en-US')}`
+                : `Synced: ${lastRefreshedAt.toLocaleTimeString()}`}
+            </span>
+            {showSourcesPanel ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+
+        {showSourcesPanel && (
+          <div className={styles.sourcePillsGrid}>
+            {sources.map((src, i) => {
+              const badge = getStatusBadge(src.status, src.count);
+              const Icon = badge.icon;
+              return (
+                <div key={i} className={`${styles.sourcePillCard} ${badge.className}`}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span className={styles.sourcePillName}>{src.name}</span>
+                  </div>
+                  <span className={styles.sourcePillState}>{badge.text}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
-      {/* Control Row: Search + Auto-refresh countdown */}
-      <div className={styles.controlRow}>
-        <div className={styles.searchWrap}>
-          <Search className={`h-4 w-4 ${styles.searchIcon}`} />
+      {/* Control Action Toolbar: Search + Auto-Refresh */}
+      <div className={styles.actionToolbar}>
+        {/* Search Input with Clear Button */}
+        <div className={styles.searchBox}>
+          <Search className={styles.searchIcon} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isAr ? 'بحث سريع في الأحداث، الأندية، واللاعبين...' : 'Search events, teams, players...'}
+            placeholder={
+              isAr
+                ? 'ابحث في الأحداث، الأندية، اللاعبين، أو البطولات...'
+                : 'Search events, clubs, players, leagues...'
+            }
             className={styles.searchInput}
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className={styles.clearSearchBtn}
+              title={isAr ? 'مسح البحث' : 'Clear search'}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className={styles.refreshControls}>
+        {/* Live Controls */}
+        <div className={styles.liveControls}>
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={styles.refreshBtn}
-            style={{
-              borderColor: autoRefresh ? '#10b981' : undefined,
-              color: autoRefresh ? '#059669' : undefined,
-            }}
+            className={`${styles.toggleAutoBtn} ${autoRefresh ? styles.toggleAutoActive : ''}`}
+            title={isAr ? 'تشغيل أو إيقاف المزامنة اللحظية' : 'Toggle live sync'}
           >
-            <Radio className={`h-3.5 w-3.5 ${autoRefresh ? 'animate-pulse text-emerald-500' : ''}`} />
+            <Radio className={`h-3.5 w-3.5 ${autoRefresh ? 'animate-pulse' : ''}`} />
             <span>
               {autoRefresh
-                ? isAr ? `تحديث تلقائي (${countdown}ث)` : `Live (${countdown}s)`
-                : isAr ? 'التحديث التلقائي متوقف' : 'Auto-refresh paused'}
+                ? isAr
+                  ? `مزامنة حية (${countdown}ث)`
+                  : `Live Sync (${countdown}s)`
+                : isAr
+                ? 'المزامنة متوقفة'
+                : 'Sync Paused'}
             </span>
           </button>
 
           <button
             onClick={fetchEvents}
             disabled={isRefreshing}
-            className={styles.refreshBtn}
+            className={styles.manualRefreshBtn}
             title={isAr ? 'تحديث فوري للبيانات' : 'Refresh Now'}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>{isAr ? 'تحديث الآن' : 'Refresh'}</span>
+            <span>{isAr ? 'تحديث' : 'Refresh'}</span>
           </button>
         </div>
       </div>
 
-      {/* Primary Category Filters (P0: الكل، مباشر، المباريات، الأخبار العاجلة، أحداث مهمة، الانتقالات) */}
-      <div className={styles.filterPillsRow}>
-        {[
-          { key: 'all', labelAr: 'الكل', labelEn: 'All Events', icon: Layers },
-          { key: 'live', labelAr: '🔴 مباشر الآن', labelEn: '🔴 Live Now', icon: Radio },
-          { key: 'matches', labelAr: '⚽ المباريات وأحداثها', labelEn: '⚽ Match Events', icon: Trophy },
-          { key: 'news', labelAr: '📰 الأخبار العاجلة', labelEn: '📰 Breaking News', icon: Newspaper },
-          { key: 'major', labelAr: '🏆 قمم وأحداث مهمة', labelEn: '🏆 Big Clashes', icon: Flame },
-          { key: 'transfers', labelAr: '🔄 الانتقالات', labelEn: '🔄 Transfers', icon: ArrowRightLeft },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const active = typeFilter === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => handleTypeChange(tab.key)}
-              className={`${styles.filterPill} ${active ? styles.filterPillActive : ''}`}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{isAr ? tab.labelAr : tab.labelEn}</span>
-            </button>
-          );
-        })}
+      {/* Primary Category Filter Tabs (Swipeable on Mobile) */}
+      <div className={styles.categoryTabsContainer}>
+        <div className={styles.categoryTabsTrack}>
+          {[
+            { key: 'all', labelAr: 'الكل', labelEn: 'All Events', icon: Layers, count: metrics.total },
+            { key: 'live', labelAr: '🔴 مباشر الآن', labelEn: '🔴 Live Now', icon: Radio, count: metrics.live },
+            { key: 'matches', labelAr: '⚽ المباريات وأحداثها', labelEn: '⚽ Match Events', icon: Trophy, count: metrics.matchEvents },
+            { key: 'news', labelAr: '📰 الأخبار العاجلة', labelEn: '📰 Breaking News', icon: Newspaper, count: metrics.news },
+            { key: 'major', labelAr: '🏆 قمم ومواعيد', labelEn: '🏆 Big Clashes', icon: Flame },
+            { key: 'transfers', labelAr: '🔄 صفقات الانتقالات', labelEn: '🔄 Transfers', icon: ArrowRightLeft, count: metrics.transfers },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const active = typeFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => handleTypeChange(tab.key)}
+                className={`${styles.categoryTab} ${active ? styles.categoryTabActive : ''}`}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                <span>{isAr ? tab.labelAr : tab.labelEn}</span>
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className={styles.tabCounter}>{tab.count}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Secondary Timeframe & Tournament Filters */}
-      <div className={styles.timeframeRow}>
-        <span className={styles.timeLabel}>
-          <Clock className="h-3.5 w-3.5" />
-          <span>{isAr ? 'الفترة:' : 'Timeframe:'}</span>
-        </span>
-        <button
-          onClick={() => handleTimeframeChange('today')}
-          className={`${styles.chip} ${timeframe === 'today' ? styles.chipActive : ''}`}
-        >
-          {isAr ? 'اليوم' : 'Today'}
-        </button>
-        <button
-          onClick={() => handleTimeframeChange('week')}
-          className={`${styles.chip} ${timeframe === 'week' ? styles.chipActive : ''}`}
-        >
-          {isAr ? 'الأسبوع الحالي' : 'This Week'}
-        </button>
-        <button
-          onClick={() => handleTimeframeChange('month')}
-          className={`${styles.chip} ${timeframe === 'month' ? styles.chipActive : ''}`}
-        >
-          {isAr ? 'الشهر القادم' : 'Next 30 Days'}
-        </button>
+      {/* Secondary Timeframe & Tournament Filter Row */}
+      <div className={styles.filterSubBar}>
+        <div className={styles.timeframeGroup}>
+          <span className={styles.filterLabel}>
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{isAr ? 'النطاق الزمني:' : 'Timeframe:'}</span>
+          </span>
+          <button
+            onClick={() => handleTimeframeChange('today')}
+            className={`${styles.timeChip} ${timeframe === 'today' ? styles.timeChipActive : ''}`}
+          >
+            {isAr ? 'اليوم' : 'Today'}
+          </button>
+          <button
+            onClick={() => handleTimeframeChange('week')}
+            className={`${styles.timeChip} ${timeframe === 'week' ? styles.timeChipActive : ''}`}
+          >
+            {isAr ? 'الأسبوع الحالي' : 'This Week'}
+          </button>
+          <button
+            onClick={() => handleTimeframeChange('month')}
+            className={`${styles.timeChip} ${timeframe === 'month' ? styles.timeChipActive : ''}`}
+          >
+            {isAr ? 'الشهر' : 'Month'}
+          </button>
+        </div>
 
         {leagues.length > 0 && (
-          <div style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className={styles.timeLabel}>
+          <div className={styles.tournamentGroup} ref={leagueDropdownRef}>
+            <span className={styles.filterLabel}>
               <Trophy className="h-3.5 w-3.5 text-blue-500" />
-              <span>{isAr ? 'تصفية بالبطولة:' : 'Tournament:'}</span>
+              <span>{isAr ? 'البطولة:' : 'Tournament:'}</span>
             </span>
-            <select
-              value={leagueFilter}
-              onChange={(e) => handleLeagueChange(e.target.value)}
-              className={styles.searchInput}
-              style={{ width: 'auto', padding: '6px 12px', fontSize: '0.8rem' }}
-            >
-              <option value="">{isAr ? 'كافة البطولات' : 'All Tournaments'}</option>
-              {leagues.map((lg) => (
-                <option key={lg.id} value={lg.slug}>
-                  {lg.name}
-                </option>
-              ))}
-            </select>
+
+            <div className={styles.tournamentDropdownWrap}>
+              <button
+                type="button"
+                onClick={() => setIsLeagueOpen(!isLeagueOpen)}
+                className={`${styles.tournamentDropdownBtn} ${isLeagueOpen ? styles.tournamentDropdownBtnOpen : ''}`}
+                aria-expanded={isLeagueOpen}
+              >
+                <span className={styles.selectedLeagueText} title={selectedLeagueName}>
+                  {selectedLeagueName}
+                </span>
+                <ChevronDown
+                  className={`${styles.dropdownChevron} ${isLeagueOpen ? styles.dropdownChevronRotate : ''}`}
+                />
+              </button>
+
+              {isLeagueOpen && (
+                <div className={styles.tournamentDropdownMenu}>
+                  {leagues.length > 6 && (
+                    <div className={styles.dropdownSearchWrap}>
+                      <input
+                        type="text"
+                        value={leagueSearch}
+                        onChange={(e) => setLeagueSearch(e.target.value)}
+                        placeholder={isAr ? 'ابحث عن بطولة...' : 'Search tournament...'}
+                        className={styles.dropdownSearchInput}
+                        autoFocus
+                      />
+                    </div>
+                  )}
+
+                  <div className={styles.dropdownList}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleLeagueChange('');
+                        setIsLeagueOpen(false);
+                        setLeagueSearch('');
+                      }}
+                      className={`${styles.dropdownItem} ${!leagueFilter ? styles.dropdownItemActive : ''}`}
+                    >
+                      <span>{isAr ? 'كافة البطولات والدوريات' : 'All Competitions'}</span>
+                      {!leagueFilter && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
+                    </button>
+
+                    {filteredLeagues.map((lg) => {
+                      const isSelected = leagueFilter === lg.slug;
+                      return (
+                        <button
+                          key={lg.id}
+                          type="button"
+                          onClick={() => {
+                            handleLeagueChange(lg.slug);
+                            setIsLeagueOpen(false);
+                            setLeagueSearch('');
+                          }}
+                          className={`${styles.dropdownItem} ${isSelected ? styles.dropdownItemActive : ''}`}
+                        >
+                          <span className={styles.leagueItemName}>{lg.name}</span>
+                          {isSelected && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
+                        </button>
+                      );
+                    })}
+
+                    {filteredLeagues.length === 0 && (
+                      <div className={styles.dropdownEmptyText}>
+                        {isAr ? 'لا توجد بطولة بهذا الاسم' : 'No tournaments match'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
+      {/* Search results banner if searching */}
+      {searchQuery && (
+        <div className={styles.searchFeedback}>
+          <span>
+            {isAr
+              ? `نتائج البحث عن «${searchQuery}»: ${filteredEvents.length} حدث`
+              : `Found ${filteredEvents.length} event(s) for "${searchQuery}"`}
+          </span>
+          <button onClick={() => setSearchQuery('')} className={styles.resetSearchLink}>
+            {isAr ? 'إلغاء التصفية' : 'Clear search'}
+          </button>
+        </div>
+      )}
+
       {/* Unified Timeline Grid */}
       {filteredEvents.length === 0 ? (
         <div className={styles.emptyState}>
-          <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-3" />
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 8px 0' }}>
-            {isAr ? 'لا توجد أحداث مطابقة للفلاتر المحددة' : 'No matching events found'}
+          <div className={styles.emptyIconCircle}>
+            <AlertCircle className="h-8 w-8 text-amber-500" />
+          </div>
+          <h3 className={styles.emptyTitle}>
+            {isAr ? 'لا توجد أحداث مطابقة في هذا النطاق' : 'No matching events found'}
           </h3>
-          <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', margin: '0 0 16px 0' }}>
+          <p className={styles.emptyDesc}>
             {isAr
-              ? 'البيانات المعروضة مستخرجة حصرياً من المصادر الفعلية المعتمدة للمباريات والأخبار والصفقات دون اختراع أي أحداث غير مؤكدة.'
-              : 'Data is strictly synchronized with verified real-time providers without synthetic fixtures.'}
+              ? 'البيانات المعروضة مستمدة بدقة وبشكل لحظي من مصادر المباريات والصفقات والأخبار المعتمدة دون توليد أحداث افتراضية غير حقيقية.'
+              : 'All timeline items are strictly synchronized with verified sports providers without synthetic fixtures.'}
           </p>
           <button
             onClick={() => {
@@ -352,10 +635,10 @@ export function EventsFeedClient({
               setLeagueFilter('');
               setSearchQuery('');
             }}
-            className={styles.refreshBtn}
-            style={{ margin: '0 auto' }}
+            className={styles.resetFiltersBtn}
           >
-            {isAr ? 'إعادة ضبط الفلاتر' : 'Reset Filters'}
+            <Sparkles className="h-4 w-4" />
+            <span>{isAr ? 'إعادة ضبط كافة الفلاتر' : 'Reset All Filters'}</span>
           </button>
         </div>
       ) : (
@@ -363,108 +646,276 @@ export function EventsFeedClient({
           {filteredEvents.map((ev) => {
             const hasScore = ev.details?.homeScore !== null && ev.details?.awayScore !== null;
             const isLive = ev.type === 'LIVE';
+            const isFinished = ev.details?.matchStatus === 'FINISHED';
+            const isMatchRelated = ev.type === 'LIVE' || ev.type === 'MAJOR_EVENT';
+            const isIncident = ev.type === 'MATCH_EVENT';
+            const isNews = ev.type === 'NEWS';
+            const isTransfer = ev.type === 'TRANSFER';
 
             return (
-              <article key={ev.id} className={styles.eventCard}>
-                <div>
-                  <div className={styles.cardTop}>
+              <article
+                key={ev.id}
+                className={`${styles.eventCard} ${isLive ? styles.eventCardLive : ''}`}
+              >
+                {/* Card Top: Category Badge + Timestamp */}
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardBadgeWrap}>
                     <span
                       className={styles.cardBadge}
                       style={{ background: ev.badge.color }}
                     >
                       {ev.badge.isPulse && (
-                        <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                        <span className={styles.badgePulseDot} />
                       )}
                       <span>{isAr ? ev.badge.text : ev.badge.textEn}</span>
                     </span>
 
-                    <span className={styles.cardTime}>
-                      {new Date(ev.timestamp).toLocaleTimeString(isAr ? 'ar-EG' : 'en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
+                    {ev.details?.leagueName && (
+                      <span className={styles.leagueNameTag}>
+                        {ev.details.leagueName}
+                      </span>
+                    )}
                   </div>
 
-                  <h3 className={styles.cardTitle}>{ev.title}</h3>
-                  {ev.subtitle && <p className={styles.cardSubtitle}>{ev.subtitle}</p>}
+                  <div className={styles.cardTimeWrap}>
+                    <span className={styles.cardTimeDate}>{formatEventDate(ev.timestamp)}</span>
+                    <span className={styles.cardTimeClock}>{formatEventTime(ev.timestamp)}</span>
+                  </div>
+                </div>
 
-                  {/* Match / Live Clash Layout */}
-                  {(ev.type === 'LIVE' || ev.type === 'MAJOR_EVENT' || ev.type === 'MATCH_EVENT') && (
-                    <div className={styles.clashRow}>
-                      <div className={styles.teamCol}>
+                {/* Match Card Layout (Live & Upcoming / Finished Clashes) */}
+                {isMatchRelated && (
+                  <div className={styles.matchArena}>
+                    <div className={styles.clashTeamsRow}>
+                      {/* Home Team */}
+                      <div className={styles.clashTeamSide}>
                         {ev.media?.crestHome ? (
-                          <img src={ev.media.crestHome} alt="Home crest" className={styles.crestImg} />
+                          <img
+                            src={ev.media.crestHome}
+                            alt={ev.details?.homeTeamName || 'Home'}
+                            className={styles.clashCrest}
+                            loading="lazy"
+                          />
                         ) : (
-                          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--muted)' }} />
+                          <div className={styles.crestPlaceholder}>⚽</div>
                         )}
-                        <span className={styles.teamNameText}>
+                        <span className={styles.clashTeamName} title={ev.details?.homeTeamName}>
                           {ev.details?.homeTeamName || 'فريق'}
                         </span>
                       </div>
 
-                      <div className={styles.scoreCol}>
+                      {/* Scoreboard / Center VS */}
+                      <div className={styles.clashCenterBox}>
                         {hasScore ? (
-                          <span style={{ color: isLive ? '#ef4444' : undefined }}>
-                            {ev.details?.homeScore} - {ev.details?.awayScore}
-                          </span>
-                        ) : isLive ? (
-                          <span style={{ color: '#ef4444', fontSize: '0.85rem' }}>
-                            {ev.minute ? `${ev.minute}′` : (isAr ? 'مباشر' : 'LIVE')}
-                          </span>
+                          <div className={styles.scoreContainer}>
+                            <span
+                              className={`${styles.scoreNumber} ${
+                                isLive ? styles.scoreLive : isFinished ? styles.scoreFinished : ''
+                              }`}
+                            >
+                              {ev.details?.homeScore} : {ev.details?.awayScore}
+                            </span>
+                            <span className={styles.scoreStatusLabel}>
+                              {isLive
+                                ? ev.minute
+                                  ? `${ev.minute}′`
+                                  : isAr
+                                  ? 'مباشر'
+                                  : 'LIVE'
+                                : isFinished
+                                ? isAr
+                                  ? 'نهاية المباراة'
+                                  : 'FT'
+                                : ''}
+                            </span>
+                          </div>
                         ) : (
-                          <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>VS</span>
+                          <div className={styles.upcomingTimeBox}>
+                            <span className={styles.vsBadge}>VS</span>
+                            <span className={styles.kickoffTimeSub}>
+                              {formatEventTime(ev.timestamp)}
+                            </span>
+                          </div>
                         )}
                       </div>
 
-                      <div className={styles.teamCol} style={{ justifyContent: 'flex-end' }}>
-                        <span className={styles.teamNameText}>
+                      {/* Away Team */}
+                      <div className={`${styles.clashTeamSide} ${styles.clashTeamSideAway}`}>
+                        {ev.media?.crestAway ? (
+                          <img
+                            src={ev.media.crestAway}
+                            alt={ev.details?.awayTeamName || 'Away'}
+                            className={styles.clashCrest}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className={styles.crestPlaceholder}>⚽</div>
+                        )}
+                        <span className={styles.clashTeamName} title={ev.details?.awayTeamName}>
                           {ev.details?.awayTeamName || 'فريق'}
                         </span>
-                        {ev.media?.crestAway ? (
-                          <img src={ev.media.crestAway} alt="Away crest" className={styles.crestImg} />
+                      </div>
+                    </div>
+
+                    {ev.details?.venue && (
+                      <div className={styles.matchVenueRow}>
+                        <span className={styles.venueText}>📍 {ev.details.venue}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Match Incident Layout (Goals, Red Cards, Subs) */}
+                {isIncident && (
+                  <div className={styles.incidentLayout}>
+                    <div className={styles.incidentMain}>
+                      <div className={styles.incidentPlayerWrap}>
+                        {ev.details?.playerPhoto ? (
+                          <img
+                            src={ev.details.playerPhoto}
+                            alt={ev.details.playerName || 'Player'}
+                            className={styles.incidentPlayerPhoto}
+                            loading="lazy"
+                          />
                         ) : (
-                          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--muted)' }} />
+                          <div className={styles.incidentPlayerAvatar}>
+                            {ev.badge.text.includes('هدف') ? '⚽' : ev.badge.text.includes('حمراء') ? '🟥' : '🟨'}
+                          </div>
+                        )}
+                        <div className={styles.incidentInfo}>
+                          <h4 className={styles.incidentTitle}>{ev.title}</h4>
+                          {ev.subtitle && <p className={styles.incidentSubtitle}>{ev.subtitle}</p>}
+                        </div>
+                      </div>
+
+                      {ev.minute && (
+                        <div className={styles.minuteBadge}>
+                          <Clock className="h-3 w-3" />
+                          <span>{ev.minute}′</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Match Context Pill */}
+                    <div className={styles.incidentMatchContext}>
+                      <div className={styles.incidentTeamsSmall}>
+                        {ev.media?.crestHome && (
+                          <img src={ev.media.crestHome} alt="" className={styles.miniCrest} />
+                        )}
+                        <span>{ev.details?.homeTeamName}</span>
+                        <span className={styles.miniScore}>
+                          {ev.details?.homeScore ?? 0} - {ev.details?.awayScore ?? 0}
+                        </span>
+                        <span>{ev.details?.awayTeamName}</span>
+                        {ev.media?.crestAway && (
+                          <img src={ev.media.crestAway} alt="" className={styles.miniCrest} />
                         )}
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* News Featured Image */}
-                  {ev.type === 'NEWS' && ev.media?.image && (
-                    <div className={styles.newsImgWrap}>
-                      <img src={ev.media.image} alt={ev.title} className={styles.newsImg} loading="lazy" />
+                {/* News Card Layout */}
+                {isNews && (
+                  <div className={styles.newsLayout}>
+                    {ev.media?.image && (
+                      <div className={styles.newsCoverWrap}>
+                        <img
+                          src={ev.media.image}
+                          alt={ev.title}
+                          className={styles.newsCover}
+                          loading="lazy"
+                        />
+                        <div className={styles.newsGradientOverlay} />
+                      </div>
+                    )}
+                    <h3 className={styles.newsTitle}>{ev.title}</h3>
+                    {ev.subtitle && <p className={styles.newsExcerpt}>{ev.subtitle}</p>}
+                  </div>
+                )}
+
+                {/* Transfer Deal Layout */}
+                {isTransfer && (
+                  <div className={styles.transferLayout}>
+                    <div className={styles.transferHeader}>
+                      <span className={styles.transferDealBadge}>
+                        <ArrowRightLeft className="h-3 w-3" />
+                        <span>{isAr ? 'صفقة انتقال رسمية' : 'Verified Deal'}</span>
+                      </span>
+                      {ev.details?.fee && (
+                        <span className={styles.transferFeePill}>{ev.details.fee}</span>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Footer with Deep Linking */}
+                    <div className={styles.transferPipeline}>
+                      {/* From Team */}
+                      <div className={styles.transferClub}>
+                        {ev.media?.crestHome ? (
+                          <img src={ev.media.crestHome} alt="" className={styles.transferCrest} />
+                        ) : (
+                          <div className={styles.transferClubIcon}>🛡️</div>
+                        )}
+                        <span className={styles.transferClubName}>
+                          {ev.details?.fromTeam || (isAr ? 'نادي سابق' : 'Previous Club')}
+                        </span>
+                      </div>
+
+                      {/* Direction Arrow */}
+                      <div className={styles.transferArrowBox}>
+                        <ArrowRightLeft className="h-4 w-4 text-emerald-500" />
+                      </div>
+
+                      {/* To Team */}
+                      <div className={styles.transferClub}>
+                        {ev.media?.crestAway ? (
+                          <img src={ev.media.crestAway} alt="" className={styles.transferCrest} />
+                        ) : (
+                          <div className={styles.transferClubIcon}>🛡️</div>
+                        )}
+                        <span className={styles.transferClubName}>
+                          {ev.details?.toTeam || (isAr ? 'النادي الجديد' : 'New Club')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.transferPlayerBar}>
+                      <span className={styles.transferPlayerName}>
+                        {ev.details?.playerName || ev.title}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Universal Card Footer: Source verification & Action link */}
                 <div className={styles.cardFooter}>
-                  <span className={styles.sourceTag} title={ev.sourceName}>
-                    {ev.sourceName}
-                  </span>
+                  <div className={styles.sourceTagWrap}>
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                    <span className={styles.sourceTagText} title={ev.sourceName}>
+                      {ev.sourceName}
+                    </span>
+                  </div>
 
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <div className={styles.cardActions}>
                     {ev.links.match && (
-                      <Link href={ev.links.match} className={styles.cardActionBtn}>
+                      <Link href={ev.links.match} className={styles.primaryActionBtn}>
                         <span>{isAr ? 'مركز المباراة' : 'Match Center'}</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>
                     )}
                     {ev.links.news && (
-                      <Link href={ev.links.news} className={styles.cardActionBtn}>
-                        <span>{isAr ? 'قراءة الخبر' : 'Read Article'}</span>
+                      <Link href={ev.links.news} className={styles.primaryActionBtn}>
+                        <span>{isAr ? 'تفاصيل الخبر' : 'Full Story'}</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>
                     )}
-                    {ev.links.player && (
-                      <Link href={ev.links.player} className={styles.cardActionBtn}>
-                        <span>{isAr ? 'ملف اللاعب' : 'Player Profile'}</span>
+                    {ev.links.player && !ev.links.match && (
+                      <Link href={ev.links.player} className={styles.primaryActionBtn}>
+                        <span>{isAr ? 'بروفايل اللاعب' : 'Profile'}</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>
                     )}
-                    {ev.links.transfer && (
-                      <Link href={ev.links.transfer} className={styles.cardActionBtn}>
+                    {ev.links.transfer && !ev.links.match && !ev.links.news && (
+                      <Link href={ev.links.transfer} className={styles.primaryActionBtn}>
                         <span>{isAr ? 'سوق الانتقالات' : 'Transfers'}</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>

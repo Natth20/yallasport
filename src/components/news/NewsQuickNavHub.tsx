@@ -1,7 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Flame, LayoutGrid, Newspaper, Radio, Trophy, Film, Camera, BarChart2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import {
+  Search,
+  Flame,
+  LayoutGrid,
+  Newspaper,
+  Radio,
+  Trophy,
+  Film,
+  Camera,
+  BarChart2,
+  Calendar,
+  Compass,
+  ArrowRight,
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { pick } from '@/i18n/pick';
 import type { DeskChip, SourceTally } from '@/lib/news/load-desk';
@@ -25,7 +41,6 @@ interface NewsQuickNavHubProps {
   selectedSource: string;
   desks: DeskChip[];
   sources: SourceTally[];
-  hrefFor: (next: { q?: string; desk?: string; source?: string; page?: number }) => string;
 }
 
 export function NewsQuickNavHub({
@@ -34,161 +49,220 @@ export function NewsQuickNavHub({
   selectedDesk,
   selectedSource,
   sources,
-  hrefFor,
 }: NewsQuickNavHubProps) {
   const router = useRouter();
   const [searchInput, setSearchInput] = useState(query);
+  const sourcesRef = useRef<HTMLDivElement>(null);
+
+  const scrollSources = (direction: 'left' | 'right') => {
+    if (!sourcesRef.current) return;
+    const offset = direction === 'left' ? -260 : 260;
+    sourcesRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
+  const buildHref = (next: { q?: string; desk?: string; source?: string; page?: number }) => {
+    const search = new URLSearchParams();
+    const nextQuery = next.q !== undefined ? next.q : query;
+    const nextDesk = next.desk !== undefined ? next.desk : selectedDesk;
+    const nextSource = next.source !== undefined ? next.source : selectedSource;
+    const nextPage = next.page ?? 1;
+    if (nextQuery) search.set('q', nextQuery);
+    if (nextDesk && nextDesk !== 'all') search.set('desk', nextDesk);
+    if (nextSource && nextSource !== 'all') search.set('source', nextSource);
+    if (nextPage > 1) search.set('page', String(nextPage));
+    const val = search.toString();
+    return val ? `/news?${val}` : '/news';
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(hrefFor({ q: searchInput.trim(), page: 1 }));
+    router.push(buildHref({ q: searchInput.trim(), page: 1 }));
   };
 
   const platformSections = [
-    { label: pick(locale, 'الأخبار', 'News'), href: '/news', active: true },
-    { label: pick(locale, 'المباريات', 'Matches'), href: '/matches' },
-    { label: pick(locale, 'البث الحي', 'Live'), href: '/live', badge: 'LIVE' },
-    { label: pick(locale, 'البطولات', 'Leagues'), href: '/leagues' },
-    { label: pick(locale, 'الفيديوهات', 'Videos'), href: '/videos' },
-    { label: pick(locale, 'الريلز', 'Reels'), href: '/videos/reels', badge: 'HOT' },
-    { label: pick(locale, 'الصور', 'Photos'), href: '/photos' },
-    { label: pick(locale, 'الإحصائيات', 'Stats'), href: '/stats' },
+    { label: pick(locale, 'الأخبار', 'News'), href: '/news', active: true, icon: Newspaper },
+    { label: pick(locale, 'المباريات', 'Matches'), href: '/matches', icon: Calendar },
+    { label: pick(locale, 'البث الحي', 'Live'), href: '/live', badge: 'LIVE', icon: Radio },
+    { label: pick(locale, 'البطولات', 'Leagues'), href: '/leagues', icon: Trophy },
+    { label: pick(locale, 'الفيديوهات', 'Videos'), href: '/videos', icon: Film },
+    { label: pick(locale, 'الريلز', 'Reels'), href: '/videos/reels', badge: 'HOT', icon: Flame },
+    { label: pick(locale, 'الصور', 'Photos'), href: '/photos', icon: Camera },
+    { label: pick(locale, 'الإحصائيات', 'Stats'), href: '/stats', icon: BarChart2 },
   ];
 
   return (
-    <div className="w-full my-6 rounded-2xl border border-border/70 bg-card/75 backdrop-blur-md shadow-sm p-5 space-y-5">
-      {/* 1. ترويسة المربع والبحث الفوري */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="w-full my-8 rounded-2xl border border-border/80 bg-card p-5 md:p-6 shadow-sm space-y-6">
+      {/* 1. الترويسة والبحث المباشر المنظم */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/60">
         <div>
-          <span className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-primary">
-            <LayoutGrid className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-black uppercase tracking-wider mb-1">
+            <Compass className="h-3 w-3" />
             {pick(locale, 'دليل الوصول السريع', 'Quick Navigation Hub')}
           </span>
-          <h2 className="text-lg font-black text-foreground mt-0.5">
-            {pick(locale, 'مربع التنقل المباشر', 'Direct Navigation & Search')}
+          <h2 className="text-xl font-black text-foreground">
+            {pick(locale, 'تصفح واستكشاف الأخبار', 'Explore News & Reports')}
           </h2>
         </div>
 
-        {/* نموذج البحث الفوري */}
+        {/* نموذج البحث المباشر */}
         <form onSubmit={handleSearchSubmit} className="flex-1 max-w-md relative">
           <input
             type="search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={pick(locale, 'بحث فوري في الأخبار والتقارير…', 'Instant search in reports…')}
-            className="w-full h-10 ps-10 pe-20 text-xs font-bold rounded-xl border border-border bg-background/80 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+            className="w-full h-11 ps-10 pe-20 text-xs font-bold rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-2xs"
           />
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <button
             type="submit"
-            className="absolute end-1.5 top-1/2 -translate-y-1/2 h-7 px-3 rounded-lg bg-primary text-white text-[11px] font-black hover:bg-primary/90 transition-all"
+            className="absolute end-1.5 top-1/2 -translate-y-1/2 h-8 px-4 rounded-lg bg-primary text-white text-xs font-black hover:bg-primary/90 transition-all shadow-xs"
           >
             {pick(locale, 'بحث', 'Search')}
           </button>
         </form>
       </div>
 
-      <div className="h-px w-full bg-border/50" />
-
-      {/* 2. الأكثر تداولاً */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 text-xs font-black text-foreground">
-          <Flame className="h-3.5 w-3.5 text-orange-500" />
-          <span>{pick(locale, 'الأكثر تداولاً الآن:', 'Trending Topics:')}</span>
+      {/* 2. أقسام المنصة كشبكة منظمة وأنيقة */}
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2 text-xs font-black text-foreground">
+          <LayoutGrid className="h-4 w-4 text-primary" />
+          <span>{pick(locale, 'أقسام المنصة الرياضية:', 'Platform Sections:')}</span>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {TRENDING_TOPICS.map((topic) => (
-            <Link
-              key={topic}
-              href={hrefFor({ q: topic, page: 1 })}
-              className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                query === topic
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary'
-              }`}
-            >
-              #{topic}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* 3. أقسام المنصة */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 text-xs font-black text-foreground">
-          <LayoutGrid className="h-3.5 w-3.5 text-primary" />
-          <span>{pick(locale, 'أقسام المنصة الرئيسية:', 'Platform Sections:')}</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {platformSections.map((sec) => (
-            <Link
-              key={sec.href}
-              href={sec.href}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold border transition-all ${
-                sec.active
-                  ? 'border-primary/40 bg-primary/10 text-primary'
-                  : 'border-border/60 bg-background/50 text-foreground hover:border-primary/40 hover:text-primary'
-              }`}
-            >
-              <span>{sec.label}</span>
-              {sec.badge && (
-                <span className={`text-[9px] px-1.5 py-0.2 rounded-md font-black ${
-                  sec.badge === 'LIVE' ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white'
-                }`}>
-                  {sec.badge}
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. مصادر الأخبار */}
-      {sources.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-black text-foreground">
-              <Newspaper className="h-3.5 w-3.5 text-emerald-500" />
-              <span>{pick(locale, 'مصادر الأخبار المعتمدة:', 'Approved News Sources:')}</span>
-            </div>
-            {selectedSource !== 'all' && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+          {platformSections.map((sec) => {
+            const Icon = sec.icon;
+            return (
               <Link
-                href={hrefFor({ source: 'all', page: 1 })}
-                className="text-[11px] font-bold text-primary hover:underline"
-              >
-                {pick(locale, 'عرض كل المصادر', 'Show all sources')}
-              </Link>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={hrefFor({ source: 'all', page: 1 })}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                selectedSource === 'all'
-                  ? 'bg-foreground text-background font-black'
-                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-              }`}
-            >
-              {pick(locale, 'كافة المصادر', 'All sources')}
-            </Link>
-            {sources.map((src) => (
-              <Link
-                key={src.name}
-                href={hrefFor({ source: selectedSource === src.name ? 'all' : src.name, page: 1 })}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
-                  selectedSource === src.name
-                    ? 'border-primary bg-primary text-white font-black'
-                    : 'border-border/50 bg-background/60 text-foreground hover:border-primary/50'
+                key={sec.href}
+                href={sec.href}
+                className={`relative flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-bold transition-all text-center group ${
+                  sec.active
+                    ? 'border-primary bg-primary/10 text-primary shadow-xs'
+                    : 'border-border/60 bg-muted/30 text-foreground hover:border-primary/50 hover:bg-card hover:-translate-y-0.5'
                 }`}
               >
-                <span>{src.name}</span>
-                <span className={`text-[10px] px-1 rounded-md ${
-                  selectedSource === src.name ? 'bg-white/20' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {src.count}
-                </span>
+                {sec.badge && (
+                  <span
+                    className={`absolute top-1 end-1 text-[8px] px-1 py-0.2 rounded font-black ${
+                      sec.badge === 'LIVE' ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-500 text-white'
+                    }`}
+                  >
+                    {sec.badge}
+                  </span>
+                )}
+                <Icon className={`h-4 w-4 mb-1 ${sec.active ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
+                <span>{sec.label}</span>
               </Link>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. الأكثر تداولاً */}
+      <div className="space-y-2.5 pt-2">
+        <div className="flex items-center gap-2 text-xs font-black text-foreground">
+          <Flame className="h-4 w-4 text-orange-500" />
+          <span>{pick(locale, 'موضوعات تتصدر التغطية الآن:', 'Trending Topics Now:')}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {TRENDING_TOPICS.map((topic) => {
+            const isSelected = query === topic;
+            return (
+              <Link
+                key={topic}
+                href={buildHref({ q: isSelected ? '' : topic, page: 1 })}
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                  isSelected
+                    ? 'border-primary bg-primary text-white shadow-xs'
+                    : 'border-border/60 bg-background text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5'
+                }`}
+              >
+                <span className="text-primary font-black">#</span>
+                <span>{topic}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. مصادر الأخبار المعتمدة بنظام سحب فخم وسلس */}
+      {sources.length > 0 && (
+        <div className="space-y-3 pt-3 border-t border-border/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-black text-foreground">
+              <Newspaper className="h-4 w-4 text-emerald-500" />
+              <span>{pick(locale, 'تصفية حسب المصدر المعتمد (اسحب للتصفح):', 'Filter by Source (Swipe to explore):')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedSource !== 'all' && (
+                <Link
+                  href={buildHref({ source: 'all', page: 1 })}
+                  className="text-[11px] font-bold text-primary hover:underline me-2"
+                >
+                  {pick(locale, 'عرض الكل', 'Show all')}
+                </Link>
+              )}
+              {/* أزرار السحب السلس */}
+              <button
+                type="button"
+                onClick={() => scrollSources('left')}
+                aria-label="Previous"
+                className="grid h-7 w-7 place-items-center rounded-lg border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary transition-all shadow-2xs"
+              >
+                <ChevronRight className="h-4 w-4 rtl:rotate-0 rotate-180" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollSources('right')}
+                aria-label="Next"
+                className="grid h-7 w-7 place-items-center rounded-lg border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary transition-all shadow-2xs"
+              >
+                <ChevronLeft className="h-4 w-4 rtl:rotate-0 rotate-180" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={sourcesRef}
+            className="flex items-center gap-2.5 overflow-x-auto scroll-smooth py-1 px-0.5 select-none"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <Link
+              href={buildHref({ source: 'all', page: 1 })}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                selectedSource === 'all'
+                  ? 'border-primary bg-primary text-white font-black shadow-sm'
+                  : 'border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-muted/30'
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>{pick(locale, 'كافة المصادر', 'All sources')}</span>
+            </Link>
+            {sources.map((src) => {
+              const isSelected = selectedSource === src.name;
+              return (
+                <Link
+                  key={src.name}
+                  href={buildHref({ source: isSelected ? 'all' : src.name, page: 1 })}
+                  className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    isSelected
+                      ? 'border-primary bg-primary text-white font-black shadow-sm'
+                      : 'border-border/70 bg-card text-foreground hover:border-primary/50 hover:bg-muted/30'
+                  }`}
+                >
+                  <Newspaper className={`h-3.5 w-3.5 ${isSelected ? 'text-white' : 'text-emerald-500'}`} />
+                  <span>{src.name}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-md font-mono font-bold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {src.count}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

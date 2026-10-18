@@ -52,11 +52,7 @@ export default async function EventsPage({
     prisma.league.findMany({
       where: {
         matches: {
-          some: {
-            kickoffAt: {
-              gte: new Date(Date.now() - 24 * 3600 * 1000),
-            },
-          },
+          some: {},
         },
       },
       select: {
@@ -64,7 +60,12 @@ export default async function EventsPage({
         name: true,
         slug: true,
       },
-      take: 16,
+      orderBy: {
+        matches: {
+          _count: 'desc',
+        },
+      },
+      take: 24,
     }),
   ]);
 
