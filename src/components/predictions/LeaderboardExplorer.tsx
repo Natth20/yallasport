@@ -3,6 +3,18 @@
 import { reportCaughtError } from '@/lib/ops/caught';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@/i18n/navigation';
+import {
+  Trophy,
+  Medal,
+  Flame,
+  Search,
+  Mic,
+  X,
+  Sparkles,
+  User,
+  CheckCircle2,
+  TrendingUp,
+} from 'lucide-react';
 import styles from './predictions-house.module.css';
 
 export interface UserRankItem {
@@ -67,6 +79,7 @@ export function LeaderboardExplorer({
   locale,
   labels,
 }: LeaderboardExplorerProps) {
+  const isAr = locale === 'ar';
   const [activeTab, setActiveTab] = useState<'users' | 'scorers'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
@@ -109,7 +122,9 @@ export function LeaderboardExplorer({
       try {
         recognitionRef.current?.abort();
       } catch (error) {
-        reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:cleanup', error, { persist: false });
+        reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:cleanup', error, {
+          persist: false,
+        });
       }
     };
   }, [locale, labels.voiceUnsupported]);
@@ -128,7 +143,9 @@ export function LeaderboardExplorer({
       setSpeechError(null);
       recognitionRef.current.start();
     } catch (error) {
-      reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:voice', error, { persist: false });
+      reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:voice', error, {
+        persist: false,
+      });
       recognitionRef.current.stop();
     }
   };
@@ -154,83 +171,182 @@ export function LeaderboardExplorer({
     return list;
   }, [realScorers, selectedLeague, searchQuery]);
 
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) {
+      return (
+        <span className={styles.goldMedalPill}>
+          <span>🥇</span>
+          <b>01</b>
+        </span>
+      );
+    }
+    if (rank === 2) {
+      return (
+        <span className={styles.silverMedalPill}>
+          <span>🥈</span>
+          <b>02</b>
+        </span>
+      );
+    }
+    if (rank === 3) {
+      return (
+        <span className={styles.bronzeMedalPill}>
+          <span>🥉</span>
+          <b>03</b>
+        </span>
+      );
+    }
+    return <span className={styles.normalRankPill}>#{String(rank).padStart(2, '0')}</span>;
+  };
+
+  const getTierTag = (rank: number) => {
+    if (rank === 1) return isAr ? 'بطل الصدارة' : 'Leader';
+    if (rank <= 3) return isAr ? 'منصة التتويج' : 'Podium';
+    if (rank <= 10) return isAr ? 'خبير تكتيكي' : 'Expert';
+    return null;
+  };
+
   return (
     <div className={styles.lx}>
+      {/* Explorer Action Bar: Tabs & Search */}
       <div className={styles['lx-bar']}>
         <div className={styles['lx-tabs']}>
-          <button type="button" data-on={activeTab === 'users'} onClick={() => setActiveTab('users')}>
-            {labels.tabUsers}
-            <i>{userRanks.length}</i>
+          <button
+            type="button"
+            data-on={activeTab === 'users'}
+            onClick={() => setActiveTab('users')}
+            className={styles.tabBtn}
+          >
+            <Trophy className="h-4 w-4 text-amber-500" />
+            <span>{labels.tabUsers}</span>
+            <i className={styles.countTag}>{userRanks.length}</i>
           </button>
-          <button type="button" data-on={activeTab === 'scorers'} onClick={() => setActiveTab('scorers')}>
-            {labels.tabScorers}
-            <i>{realScorers.length}</i>
+          <button
+            type="button"
+            data-on={activeTab === 'scorers'}
+            onClick={() => setActiveTab('scorers')}
+            className={styles.tabBtn}
+          >
+            <Medal className="h-4 w-4 text-emerald-500" />
+            <span>{labels.tabScorers}</span>
+            <i className={styles.countTag}>{realScorers.length}</i>
           </button>
         </div>
+
         <div className={styles['lx-seek']}>
+          <Search className={styles.searchIconInside} />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={isListening ? labels.voiceListening : labels.searchPlaceholder}
             aria-label={labels.searchPlaceholder}
+            className={styles.searchInput}
           />
           {searchQuery ? (
-            <button type="button" onClick={() => setSearchQuery('')} title={labels.clearSearch}>
-              ×
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              title={labels.clearSearch}
+              className={styles.searchClearBtn}
+            >
+              <X className="h-4 w-4" />
             </button>
           ) : (
-            <button type="button" onClick={toggleVoiceSearch} title={labels.searchPlaceholder}>
-              ⌕
+            <button
+              type="button"
+              onClick={toggleVoiceSearch}
+              title={labels.searchPlaceholder}
+              className={`${styles.voiceBtn} ${isListening ? styles.isVoiceListening : ''}`}
+            >
+              <Mic className="h-4 w-4" />
             </button>
           )}
-          {speechError ? <p>{speechError}</p> : null}
+          {speechError ? <p className={styles.speechErrorNotice}>{speechError}</p> : null}
         </div>
       </div>
 
+      {/* Scorers League Filter Pills */}
       {activeTab === 'scorers' && leagues.length > 2 ? (
         <div className={styles['lx-leagues']}>
           {leagues.map((lg) => (
-            <button key={lg} type="button" data-on={selectedLeague === lg} onClick={() => setSelectedLeague(lg)}>
+            <button
+              key={lg}
+              type="button"
+              data-on={selectedLeague === lg}
+              onClick={() => setSelectedLeague(lg)}
+              className={styles.leagueFilterBtn}
+            >
               {lg === 'ALL' ? labels.allLeagues : lg}
             </button>
           ))}
         </div>
       ) : null}
 
+      {/* Users Leaderboard Table */}
       {activeTab === 'users' ? (
         filteredUsers.length === 0 ? (
-          <p className={styles['ph-empty']}>{labels.emptyMessage}</p>
+          <div className={styles['ph-empty']}>
+            <Trophy className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
+            <p>{labels.emptyMessage}</p>
+          </div>
         ) : (
           <div className={styles['lx-table']}>
             <table>
               <thead>
                 <tr>
-                  <th>{labels.colRank}</th>
+                  <th style={{ width: '90px' }}>{labels.colRank}</th>
                   <th>{labels.colName}</th>
-                  <th>{labels.colPredictions}</th>
-                  <th>{labels.colPoints}</th>
+                  <th style={{ textAlign: 'center' }}>{labels.colPredictions}</th>
+                  <th style={{ textAlign: 'end' }}>{labels.colPoints}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => {
                   const isYou = user.id === currentUserId;
+                  const tier = getTierTag(user.rank);
+
                   return (
-                    <tr key={user.id} data-you={isYou}>
-                      <td className={styles['lx-pts']}>{String(user.rank).padStart(2, '0')}</td>
+                    <tr
+                      key={user.id}
+                      data-you={isYou}
+                      className={isYou ? styles.rowHighlightYou : ''}
+                    >
+                      <td className={styles['lx-pts']}>{getRankBadge(user.rank)}</td>
                       <td>
-                        <span className={styles['lx-name']}>
-                          <span className={styles['lx-face']}>
-                            {user.image ? <img src={user.image} alt="" /> : initials(user.name)}
-                          </span>
-                          <span>
-                            <b>{user.name || (locale === 'ar' ? 'بدون اسم' : 'Unnamed')}</b>
-                            {isYou ? <em>{labels.you}</em> : null}
-                          </span>
+                        <div className={styles['lx-name']}>
+                          <div className={styles['lx-face']}>
+                            {user.image ? (
+                              <img src={user.image} alt={user.name || ''} />
+                            ) : (
+                              initials(user.name)
+                            )}
+                          </div>
+                          <div className={styles.userMetaBlock}>
+                            <div className={styles.userNameRow}>
+                              <b>{user.name || (isAr ? 'متوقع يلا سبورت' : 'Yalla Predictor')}</b>
+                              {isYou && <span className={styles.youBadge}>{labels.you}</span>}
+                            </div>
+                            {tier && (
+                              <span className={styles.tierBadge}>
+                                <Sparkles className="h-2.5 w-2.5" />
+                                <span>{tier}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ textAlign: 'center' }} className={styles['lx-pts']}>
+                        <span className={styles.slipsBadge}>
+                          {user.predictionsCount} {isAr ? 'توقع' : 'slips'}
                         </span>
                       </td>
-                      <td className={styles['lx-pts']}>{user.predictionsCount}</td>
-                      <td className={styles['lx-pts']}>{user.points}</td>
+                      <td style={{ textAlign: 'end' }} className={styles['lx-pts']}>
+                        <div className={styles.pointsBadgeWrap}>
+                          <span className={styles.pointsNumber}>{user.points}</span>
+                          <span className={styles.pointsLabel}>{labels.colPoints}</span>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -239,34 +355,55 @@ export function LeaderboardExplorer({
           </div>
         )
       ) : filteredScorers.length === 0 ? (
-        <p className={styles['ph-empty']}>{labels.emptyMessage}</p>
+        <div className={styles['ph-empty']}>
+          <Medal className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-40" />
+          <p>{labels.emptyMessage}</p>
+        </div>
       ) : (
         <div className={styles['lx-table']}>
           <table>
             <thead>
               <tr>
-                <th>{labels.colRank}</th>
+                <th style={{ width: '90px' }}>{labels.colRank}</th>
                 <th>{labels.colName}</th>
                 <th>{labels.colTeam}</th>
                 <th>{labels.colLeague}</th>
-                <th>{labels.colGoals}</th>
+                <th style={{ textAlign: 'end' }}>{labels.colGoals}</th>
               </tr>
             </thead>
             <tbody>
               {filteredScorers.map((scorer) => (
                 <tr key={`${scorer.leagueName}-${scorer.id}`}>
-                  <td className={styles['lx-pts']}>{String(scorer.rank).padStart(2, '0')}</td>
+                  <td className={styles['lx-pts']}>{getRankBadge(scorer.rank)}</td>
                   <td>
                     <Link href={`/player/${scorer.slug}`} className={styles['lx-name']}>
-                      <span className={styles['lx-face']}>
-                        {scorer.photoUrl ? <img src={scorer.photoUrl} alt="" /> : initials(scorer.name)}
-                      </span>
-                      <b>{scorer.name}</b>
+                      <div className={styles['lx-face']}>
+                        {scorer.photoUrl ? (
+                          <img src={scorer.photoUrl} alt={scorer.name} />
+                        ) : (
+                          initials(scorer.name)
+                        )}
+                      </div>
+                      <div className={styles.userMetaBlock}>
+                        <b>{scorer.name}</b>
+                        <span className={styles.scorerSubText}>
+                          {isAr ? 'هداف معتمد' : 'Top Scorer'}
+                        </span>
+                      </div>
                     </Link>
                   </td>
-                  <td>{scorer.teamName || '—'}</td>
-                  <td>{scorer.leagueName}</td>
-                  <td className={styles['lx-pts']}>{scorer.goals}</td>
+                  <td>
+                    <span className={styles.teamTag}>{scorer.teamName || '—'}</span>
+                  </td>
+                  <td>
+                    <span className={styles.leagueTag}>{scorer.leagueName}</span>
+                  </td>
+                  <td style={{ textAlign: 'end' }} className={styles['lx-pts']}>
+                    <div className={styles.goalsBadgeWrap}>
+                      <span className={styles.goalsNumber}>⚽ {scorer.goals}</span>
+                      <span className={styles.goalsLabel}>{labels.colGoals}</span>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

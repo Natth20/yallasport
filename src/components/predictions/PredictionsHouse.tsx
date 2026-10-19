@@ -100,6 +100,29 @@ export async function PredictionsHouse() {
     })),
   );
 
+  let finalScorerItems = realScorerItems;
+  if (finalScorerItems.length === 0) {
+    const dbGoals = await prisma.matchEvent.groupBy({
+      by: ['playerName'],
+      where: { type: 'GOAL', playerName: { not: null } },
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } },
+      take: 25,
+    }).catch(swallow('PredictionsHouse.dbGoals', []));
+
+    if (dbGoals.length > 0) {
+      finalScorerItems = dbGoals.map((item, idx) => ({
+        id: `db-scorer-${idx}`,
+        name: localizePlainName(locale, item.playerName || 'لاعب'),
+        slug: scorerDeskSlug(item.playerName || 'player', `db-${idx}`),
+        photoUrl: null,
+        goals: item._count.id,
+        leagueName: locale === 'ar' ? 'البطولات الكبرى' : 'Top Leagues',
+        rank: idx + 1,
+      }));
+    }
+  }
+
   const myOpenSlips = me
     ? await prisma.prediction.findMany({
       where: { userId: me.id, matchId: { in: openMatches.map((match) => match.id) } },
@@ -294,24 +317,48 @@ export async function PredictionsHouse() {
             <div className={styles['ph-podium']}>
               {podium.map((seat, index) => {
                 const place = index + 1;
+                const seatRankClass =
+                  place === 1
+                    ? styles.podiumSeatRank1
+                    : place === 2
+                    ? styles.podiumSeatRank2
+                    : styles.podiumSeatRank3;
+
+                const avatarRankClass =
+                  place === 1
+                    ? styles.podiumAvatarWrapRank1
+                    : place === 2
+                    ? styles.podiumAvatarWrapRank2
+                    : styles.podiumAvatarWrapRank3;
+
+                const medalEmoji = place === 1 ? '🥇' : place === 2 ? '🥈' : '🥉';
+
                 return (
-                  <article key={seat.id} className={`${styles['ph-seat']} ${styles['ph-card']}`}>
-                    {place === 1 ? <span className={styles['ph-crown']}>{t('champion')}</span> : null}
-                    <span className={styles['ph-medal']} aria-hidden>
-                      {String(place).padStart(2, '0')}
-                    </span>
-                    <div className={styles['ph-seat-face']}>
+                  <article key={seat.id} className={`${styles.podiumSeatLuxury} ${seatRankClass}`}>
+                    {place === 1 ? (
+                      <span className={styles.podiumCrownBadge}>
+                        <span>👑</span>
+                        <span>{t('champion')}</span>
+                      </span>
+                    ) : null}
+
+                    <div className={`${styles.podiumAvatarWrap} ${avatarRankClass}`}>
                       {seat.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={seat.image} alt="" />
+                        <img src={seat.image} alt={seat.name || ''} />
                       ) : (
                         initials(seat.name)
                       )}
                     </div>
-                    <h3>{seat.name || t('unnamed')}</h3>
-                    <b>
-                      {seat.points} {t('col_points')}
-                    </b>
+
+                    <h3 className={styles.podiumName}>{seat.name || t('unnamed')}</h3>
+
+                    <div className={styles.podiumPointsBadge}>
+                      <span>{medalEmoji}</span>
+                      <b>
+                        {seat.points} {t('col_points')}
+                      </b>
+                    </div>
                   </article>
                 );
               })}
@@ -401,13 +448,13 @@ export async function PredictionsHouse() {
             <h2>{t('list_title')}</h2>
             <em>
               {peopleCount} {t('racers')}
-              {realScorerItems.length > 0 ? ` · ${realScorerItems.length} ${t('scorers_count')}` : ''}
+              {finalScorerItems.length > 0 ? ` · ${finalScorerItems.length} ${t('scorers_count')}` : ''}
               {` · ${scorerSeason}/${Number(scorerSeason) + 1}`}
             </em>
           </header>
           <LeaderboardExplorer
             userRanks={userRankItems}
-            realScorers={realScorerItems}
+            realScorers={finalScorerItems}
             currentUserId={me?.id}
             locale={locale}
             labels={{

@@ -4,11 +4,9 @@ import { setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
 import { swallow } from '@/lib/ops/caught';
 import { pick } from '@/i18n/pick';
-import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { pageMetadata } from '@/lib/seo/site';
-import { Link } from '@/i18n/navigation';
-import { slugifyCoachName } from '@/lib/coaches/slug';
-import { Briefcase, Search, ArrowUpRight, Trophy, Shield, User } from 'lucide-react';
+import { Briefcase, Trophy, Shield, Sparkles } from 'lucide-react';
+import { CoachesDirectoryClient, CoachItem } from './CoachesDirectoryClient';
 import styles from './coaches.module.css';
 
 export const revalidate = 300;
@@ -31,6 +29,20 @@ export async function generateMetadata({
   });
 }
 
+const STAR_COACH_KEYWORDS = [
+  'Mourinho',
+  'Guardiola',
+  'Ancelotti',
+  'Arteta',
+  'Klopp',
+  'Alonso',
+  'Flick',
+  'Inzaghi',
+  'Ten Hag',
+  'Conte',
+  'Simeone',
+];
+
 export default async function CoachesPage({
   params,
   searchParams,
@@ -52,7 +64,7 @@ export default async function CoachesPage({
     ];
   }
 
-  const coaches = await prisma.coach
+  const rawCoaches = await prisma.coach
     .findMany({
       where: whereClause,
       select: {
@@ -78,119 +90,73 @@ export default async function CoachesPage({
           take: 3,
         },
       },
-      orderBy: { name: 'asc' },
-      take: 60,
+      take: 80,
     })
     .catch(swallow('coaches.catalog', []));
 
+  // Sort so world-renowned coaches and managers with active clubs appear first
+  const coaches: CoachItem[] = [...rawCoaches].sort((a, b) => {
+    const aStar = STAR_COACH_KEYWORDS.some((kw) =>
+      a.name.toLowerCase().includes(kw.toLowerCase())
+    );
+    const bStar = STAR_COACH_KEYWORDS.some((kw) =>
+      b.name.toLowerCase().includes(kw.toLowerCase())
+    );
+    if (aStar && !bStar) return -1;
+    if (!aStar && bStar) return 1;
+
+    const aHasClub = Boolean(a.currentTeam);
+    const bHasClub = Boolean(b.currentTeam);
+    if (aHasClub && !bHasClub) return -1;
+    if (!aHasClub && bHasClub) return 1;
+
+    return a.name.localeCompare(b.name);
+  });
+
+  const totalCoachesCount = await prisma.coach.count().catch(() => coaches.length);
+
   return (
     <main className={styles.page}>
+      {/* Luxury Hero Banner */}
       <header className={styles.header}>
         <div className={styles.badge}>
           <Briefcase className="h-4 w-4" />
-          <span>{ar ? 'دليل المدربين والمديرين الفنيين' : 'Coaches & Managers Directory'}</span>
+          <span>{ar ? 'دليل المدربين والمديرين الفنيين المعتمد' : 'Verified Managers Directory'}</span>
         </div>
         <h1 className={styles.title}>
           {ar ? 'قادة الدكة الفنية وكبار المدربين' : 'World Football Managers & Tacticians'}
         </h1>
         <p className={styles.subtitle}>
           {ar
-            ? 'تصفح سجلات المدربين، الأندية، البطولات والألقاب، والنتائج التكتيكية من المصدر الحقيقي.'
+            ? 'تصفح سجلات المدربين، الأندية الحالية، سجل الألقاب والبطولات، والتحليلات التكتيكية الحقيقية.'
             : 'Explore manager profiles, current clubs, silverware, and tactical records from the verified source.'}
         </p>
 
-        <form action={`/${locale}/coaches`} method="GET" className={styles.searchForm}>
-          <Search className={styles.searchIcon} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={query}
-            placeholder={ar ? 'ابحث عن مدرب بالاسم أو الجنسية...' : 'Search manager by name or nationality...'}
-            className={styles.searchInput}
-          />
-          <button type="submit" className={styles.searchBtn}>
-            {ar ? 'بحث' : 'Search'}
-          </button>
-        </form>
+        {/* Dynamic Metric Chips */}
+        <div className={styles.kpiRow}>
+          <div className={styles.kpiChip}>
+            <Sparkles className="h-4 w-4 text-emerald-400" />
+            <span>
+              {totalCoachesCount.toLocaleString()} {ar ? 'مديراً فنياً مسجلاً' : 'Registered Managers'}
+            </span>
+          </div>
+          <div className={styles.kpiChip}>
+            <Trophy className="h-4 w-4 text-amber-400" />
+            <span>{ar ? 'ألقاب وبطولات محلية وقارية' : 'Domestic & Continental Trophies'}</span>
+          </div>
+          <div className={styles.kpiChip}>
+            <Shield className="h-4 w-4 text-blue-400" />
+            <span>{ar ? 'سجلات تكتيكية موثقة' : 'Verified Tactical Records'}</span>
+          </div>
+        </div>
       </header>
 
-      <section className={styles.grid}>
-        {coaches.length === 0 ? (
-          <div className={styles.empty}>
-            <Briefcase className={styles.emptyIcon} />
-            <p>{ar ? 'لم يتم العثور على مدربين مطابقين للبحث' : 'No managers found matching your search'}</p>
-            {query && (
-              <Link href="/coaches" className={styles.resetLink}>
-                {ar ? 'عرض كافة المدربين' : 'View all coaches'}
-              </Link>
-            )}
-          </div>
-        ) : (
-          coaches.map((coach) => {
-            const localizedName = localizePlainName(locale, coach.name);
-            const coachSlug = slugifyCoachName(coach.name, coach.id);
-            return (
-              <article key={coach.id} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <div className={styles.avatarWrap}>
-                    {coach.photoUrl ? (
-                      <img
-                        src={coach.photoUrl}
-                        alt={localizedName}
-                        className={styles.avatar}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <User className={styles.avatarFallback} />
-                    )}
-                  </div>
-                  <div className={styles.meta}>
-                    <h2 className={styles.coachName}>
-                      <Link href={`/coach/${coachSlug}`} className={styles.coachLink}>
-                        {localizedName}
-                      </Link>
-                    </h2>
-                    <div className={styles.tags}>
-                      {coach.nationality && (
-                        <span className={styles.nationTag}>{coach.nationality}</span>
-                      )}
-                      {coach.trophies.length > 0 && (
-                        <span className={styles.trophyTag}>
-                          <Trophy className="h-3 w-3" />
-                          <span>
-                            {coach.trophies.length} {ar ? 'ألقاب' : 'Trophies'}
-                          </span>
-                        </span>
-                      )}
-                    </div>
-                    {coach.currentTeam && (
-                      <Link href={`/team/${coach.currentTeam.slug}`} className={styles.teamTag}>
-                        {coach.currentTeam.logoUrl ? (
-                          <img
-                            src={coach.currentTeam.logoUrl}
-                            alt={coach.currentTeam.name}
-                            className={styles.teamLogo}
-                          />
-                        ) : (
-                          <Shield className="h-3 w-3 text-muted-foreground" />
-                        )}
-                        <span>{coach.currentTeam.name}</span>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.actions}>
-                  <Link href={`/coach/${coachSlug}`} className={styles.primaryAction}>
-                    <span>{ar ? 'ملف المدرب' : 'Coach Profile'}</span>
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </article>
-            );
-          })
-        )}
-      </section>
+      {/* Interactive Client Directory */}
+      <CoachesDirectoryClient
+        locale={locale}
+        initialCoaches={coaches}
+        initialQuery={query}
+      />
     </main>
   );
 }
