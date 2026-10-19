@@ -1,19 +1,15 @@
 'use client';
 
 import { reportCaughtError } from '@/lib/ops/caught';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import {
   Trophy,
   Medal,
-  Flame,
   Search,
   Mic,
   X,
   Sparkles,
-  User,
-  CheckCircle2,
-  TrendingUp,
 } from 'lucide-react';
 import styles from './predictions-house.module.css';
 
@@ -92,61 +88,56 @@ export function LeaderboardExplorer({
     return ['ALL', ...list];
   }, [realScorers]);
 
-  useEffect(() => {
-    const SpeechRecognitionCtor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognitionCtor) return;
-
-    const recognition = new SpeechRecognitionCtor();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = locale === 'ar' ? 'ar-SA' : 'en-US';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      setSpeechError(null);
-    };
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0]?.[0]?.transcript;
-      if (transcript) setSearchQuery(transcript.trim());
-      setIsListening(false);
-    };
-    recognition.onerror = (event: any) => {
-      setIsListening(false);
-      if (event.error !== 'no-speech') setSpeechError(labels.voiceUnsupported);
-    };
-    recognition.onend = () => setIsListening(false);
-    recognitionRef.current = recognition;
-
-    return () => {
-      try {
-        recognitionRef.current?.abort();
-      } catch (error) {
-        reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:cleanup', error, {
-          persist: false,
-        });
-      }
-    };
-  }, [locale, labels.voiceUnsupported]);
-
   const toggleVoiceSearch = () => {
-    if (!recognitionRef.current) {
+    const SpeechRecognitionCtor =
+      typeof window !== 'undefined'
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null;
+
+    if (!SpeechRecognitionCtor) {
       setSpeechError(labels.voiceUnsupported);
+      setTimeout(() => setSpeechError(null), 3500);
       return;
     }
-    if (isListening) {
-      recognitionRef.current.stop();
+
+    if (isListening && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
       setIsListening(false);
       return;
     }
+
     try {
       setSpeechError(null);
-      recognitionRef.current.start();
-    } catch (error) {
-      reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:voice', error, {
+      const recognition = new SpeechRecognitionCtor();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = locale === 'ar' ? 'ar-SA' : 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) setSearchQuery(transcript.trim());
+        setIsListening(false);
+      };
+      recognition.onerror = (event: any) => {
+        setIsListening(false);
+        if (event.error !== 'no-speech') {
+          setSpeechError(labels.voiceUnsupported);
+          setTimeout(() => setSpeechError(null), 3500);
+        }
+      };
+      recognition.onend = () => setIsListening(false);
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      reportCaughtError('src/components/predictions/LeaderboardExplorer.tsx:voice', err, {
         persist: false,
       });
-      recognitionRef.current.stop();
+      setIsListening(false);
     }
   };
 
@@ -208,8 +199,9 @@ export function LeaderboardExplorer({
 
   return (
     <div className={styles.lx}>
-      {/* Explorer Action Bar: Tabs & Search */}
-      <div className={styles['lx-bar']}>
+      {/* Explorer Controls: Structured Tab Strip & Search Bar */}
+      <div className={styles.lxToolbar}>
+        {/* Navigation Tabs */}
         <div className={styles['lx-tabs']}>
           <button
             type="button"
@@ -233,6 +225,7 @@ export function LeaderboardExplorer({
           </button>
         </div>
 
+        {/* Clean Integrated Search Bar */}
         <div className={styles['lx-seek']}>
           <Search className={styles.searchIconInside} />
           <input
@@ -262,7 +255,13 @@ export function LeaderboardExplorer({
               <Mic className="h-4 w-4" />
             </button>
           )}
-          {speechError ? <p className={styles.speechErrorNotice}>{speechError}</p> : null}
+
+          {/* Non-intrusive Floating Toast Error */}
+          {speechError && (
+            <div className={styles.speechErrorTooltip}>
+              <span>{speechError}</span>
+            </div>
+          )}
         </div>
       </div>
 

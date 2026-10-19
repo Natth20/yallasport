@@ -567,23 +567,40 @@ export function SocialHubClient({
                       )}
                     </button>
 
-                    {post.platformPostUrl ? (
-                      <a
-                        href={post.platformPostUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.openOriginalLink}
-                        style={{ color: spec.brandColor }}
-                      >
-                        <span>{isAr ? 'مشاهدة في التطبيق' : 'Open in App'}</span>
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    ) : (
-                      <span className={styles.verifiedTag}>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                        <span>{isAr ? 'معتمد رسمياً' : 'Verified'}</span>
-                      </span>
-                    )}
+                    {(() => {
+                      const targetUrl =
+                        post.platformPostUrl &&
+                        !post.platformPostUrl.includes('/status/20') &&
+                        !post.platformPostUrl.includes('/status/10') &&
+                        !post.platformPostUrl.includes('/status/30') &&
+                        !post.platformPostUrl.includes('/100') &&
+                        !post.platformPostUrl.includes('/150')
+                          ? post.platformPostUrl
+                          : post.platform === 'TWITTER'
+                          ? 'https://x.com/yallasport'
+                          : post.platform === 'FACEBOOK'
+                          ? 'https://www.facebook.com/yallasport.2008'
+                          : post.platform === 'INSTAGRAM'
+                          ? 'https://www.instagram.com/yallasport2/'
+                          : post.platform === 'WHATSAPP'
+                          ? 'https://whatsapp.com/channel/0029Vb8wYmS1iUxXYSM3gn3D'
+                          : post.platform === 'TELEGRAM'
+                          ? 'https://t.me/yallasport'
+                          : 'https://youtube.com/@yallasport';
+
+                      return (
+                        <a
+                          href={targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.openOriginalLink}
+                          style={{ color: spec.brandColor }}
+                        >
+                          <span>{isAr ? `مشاهدة عبر ${spec.name}` : `View on ${spec.name}`}</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      );
+                    })()}
                   </div>
                 </article>
               );

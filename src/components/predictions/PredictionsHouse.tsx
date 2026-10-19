@@ -65,34 +65,35 @@ export async function PredictionsHouse() {
     : null;
 
   const liveMeta = await safeRedisGet<{ syncedAt?: string; predictionsSettled?: number }>('sports:meta:live');
-  const scorerPacks: NormalizedScorer[][] = [];
   let scorerSeason = season;
-  for (const league of SCORER_LEAGUES) {
-    let pack = await sportsData.getTopScorers(league.id, season).catch(swallow('PredictionsHouse.scorers', []));
-    if (!pack?.length) {
-      const previous = String(Number(season) - 1);
-      pack = await sportsData.getTopScorers(league.id, previous).catch(swallow('PredictionsHouse.scorers', []));
-      if (pack?.length) scorerSeason = previous;
-    }
-    scorerPacks.push(pack || []);
-  }
+  const scorerPacks = await Promise.all(
+    SCORER_LEAGUES.map(async (league) => {
+      let pack = await sportsData.getTopScorers(league.id, season).catch(swallow('PredictionsHouse.scorers', []));
+      if (!pack?.length) {
+        const previous = String(Number(season) - 1);
+        pack = await sportsData.getTopScorers(league.id, previous).catch(swallow('PredictionsHouse.scorers', []));
+      }
+      return pack || [];
+    })
+  );
 
-  const scorerIds = scorerPacks.flatMap((pack) => (pack || []).map((row) => row.player.id));
+  const scorerIds = scorerPacks.flatMap((pack) => pack.map((row) => row.player.id));
   const ledgerPlayers =
     scorerIds.length > 0
       ? await prisma.player.findMany({
         where: { externalId: { in: scorerIds } },
-        select: { externalId: true, slug: true },
+        select: { externalId: true, slug: true, photoUrl: true },
       })
       : [];
   const slugByExt = new Map(ledgerPlayers.map((row) => [row.externalId, row.slug]));
+  const photoByExt = new Map(ledgerPlayers.map((row) => [row.externalId, row.photoUrl]));
 
   const realScorerItems: RealScorerItem[] = SCORER_LEAGUES.flatMap((league, packIndex) =>
     (scorerPacks[packIndex] || []).map((s, idx) => ({
       id: `${league.id}-${s.player.id}`,
       name: localizePlainName(locale, s.player.name),
       slug: slugByExt.get(s.player.id) || scorerDeskSlug(s.player.name, s.player.id),
-      photoUrl: s.player.photoUrl || null,
+      photoUrl: s.player.photoUrl || photoByExt.get(s.player.id) || null,
       teamName: s.teamName ? localizePlainName(locale, s.teamName) : undefined,
       goals: s.goals,
       leagueName: locale === 'ar' ? league.ar : league.en,
@@ -111,15 +112,46 @@ export async function PredictionsHouse() {
     }).catch(swallow('PredictionsHouse.dbGoals', []));
 
     if (dbGoals.length > 0) {
-      finalScorerItems = dbGoals.map((item, idx) => ({
-        id: `db-scorer-${idx}`,
-        name: localizePlainName(locale, item.playerName || 'لاعب'),
-        slug: scorerDeskSlug(item.playerName || 'player', `db-${idx}`),
-        photoUrl: null,
-        goals: item._count.id,
-        leagueName: locale === 'ar' ? 'البطولات الكبرى' : 'Top Leagues',
-        rank: idx + 1,
-      }));
+      const names = dbGoals.map((g) => g.playerName).filter(Boolean) as string[];
+      const matchedPlayers = await prisma.player.findMany({
+        where: {
+          OR: [
+            { name: { in: names } },
+            ...names.map((n) => ({ name: { contains: n, mode: 'insensitive' as const } })),
+          ],
+        },
+        select: {
+          name: true,
+          photoUrl: true,
+          slug: true,
+          teams: { select: { team: { select: { name: true } } }, take: 1 },
+        },
+      }).catch(swallow('PredictionsHouse.matchedPlayers', []));
+
+      const playerMap = new Map<string, { photoUrl: string | null; slug: string; teamName?: string }>();
+      for (const p of matchedPlayers) {
+        playerMap.set(p.name.toLowerCase(), {
+          photoUrl: p.photoUrl,
+          slug: p.slug,
+          teamName: p.teams?.[0]?.team.name,
+        });
+      }
+
+      finalScorerItems = dbGoals.map((item, idx) => {
+        const rawName = item.playerName || 'لاعب';
+        const info = playerMap.get(rawName.toLowerCase());
+
+        return {
+          id: `db-scorer-${idx}`,
+          name: localizePlainName(locale, rawName),
+          slug: info?.slug || scorerDeskSlug(rawName, `db-${idx}`),
+          photoUrl: info?.photoUrl || null,
+          teamName: info?.teamName ? localizePlainName(locale, info.teamName) : undefined,
+          goals: item._count.id,
+          leagueName: locale === 'ar' ? 'البطولات الكبرى' : 'Top Leagues',
+          rank: idx + 1,
+        };
+      });
     }
   }
 

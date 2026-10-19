@@ -479,3 +479,77 @@
 .resetBtn:hover {
   opacity: 0.9;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   LIGHT MODE OVERRIDES FOR PLAYERS
+   ══════════════════════════════════════════════════════════════════════ */
+:global([data-theme="light"]) .card,
+:global(.light) .card {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
+}
+
+:global([data-theme="light"]) .playerName,
+:global(.light) .playerName {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .playerLink,
+:global(.light) .playerLink {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .toolbarSection,
+:global(.light) .toolbarSection {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05) !important;
+}
+
+:global([data-theme="light"]) .searchBarWrap,
+:global(.light) .searchBarWrap {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+:global([data-theme="light"]) .searchInput,
+:global(.light) .searchInput {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .positionPill,
+:global(.light) .positionPill {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+:global([data-theme="light"]) .teamTag,
+:global(.light) .teamTag {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+:global([data-theme="light"]) .nationTag,
+:global(.light) .nationTag {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+:global([data-theme="light"]) .kpiChip,
+:global(.light) .kpiChip {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+:global([data-theme="light"]) .secondaryAction,
+:global(.light) .secondaryAction {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+

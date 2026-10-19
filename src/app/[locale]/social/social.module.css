@@ -916,3 +916,93 @@
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   LIGHT MODE OVERRIDES FOR SOCIAL HUB
+   ══════════════════════════════════════════════════════════════════════ */
+:global([data-theme="light"]) .card,
+:global(.light) .card {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
+}
+
+:global([data-theme="light"]) .chanTitle,
+:global(.light) .chanTitle {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .postCard,
+:global(.light) .postCard {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+:global([data-theme="light"]) .postContent,
+:global(.light) .postContent {
+  color: #1e293b !important;
+}
+
+:global([data-theme="light"]) .authorName,
+:global(.light) .authorName {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .feedControlToolbar,
+:global(.light) .feedControlToolbar {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05) !important;
+}
+
+:global([data-theme="light"]) .searchBox,
+:global(.light) .searchBox {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+:global([data-theme="light"]) .searchInput,
+:global(.light) .searchInput {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .platformTab,
+:global(.light) .platformTab {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+:global([data-theme="light"]) .socialStatCard,
+:global(.light) .socialStatCard {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+:global([data-theme="light"]) .statVal,
+:global(.light) .statVal {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .threadsBanner,
+:global(.light) .threadsBanner {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06) !important;
+}
+
+:global([data-theme="light"]) .threadsTitle,
+:global(.light) .threadsTitle {
+  color: #0f172a !important;
+}
+
+:global([data-theme="light"]) .threadsBtn,
+:global(.light) .threadsBtn {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+
