@@ -203,6 +203,8 @@ export interface SuggestionHit {
   photoUrl?: string | null;
 }
 
+const suggestionsQuickCache = new Map<string, { at: number; data: SuggestionHit[] }>();
+
 export async function quickSearchSuggestions(
   query: string,
   locale: string
@@ -210,62 +212,88 @@ export async function quickSearchSuggestions(
   const q = (query || '').trim().toLowerCase();
   if (q.length < 2) return [];
 
+  const cacheKey = `${locale}:${q}`;
+  const cached = suggestionsQuickCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < 120_000) {
+    return cached.data;
+  }
+
   const catalog = await getQuickCatalog();
   const slug = q.replace(/\s+/g, '-');
   const results: SuggestionHit[] = [];
+  const seenUrls = new Set<string>();
+  const seenNames = new Set<string>();
 
   // 1. Search Teams (Lightning fast in-memory)
-  const matchingTeams = catalog.teams
-    .filter((t) => {
-      const name = t.name.toLowerCase();
-      const localized = localizeTeamName(locale, t.name).toLowerCase();
-      return name.includes(q) || localized.includes(q) || t.slug.includes(slug);
-    })
-    .slice(0, 4);
-
-  for (const t of matchingTeams) {
-    results.push({
-      label: localizeTeamName(locale, t.name),
-      typeKey: 'team',
-      url: `/team/${t.slug}`,
-      photoUrl: t.logoUrl,
-    });
+  for (const t of catalog.teams) {
+    const name = t.name.toLowerCase();
+    const localized = localizeTeamName(locale, t.name).toLowerCase();
+    if (name.includes(q) || localized.includes(q) || t.slug.includes(slug)) {
+      const label = localizeTeamName(locale, t.name);
+      const url = `/team/${t.slug}`;
+      const nameKey = label.toLowerCase();
+      if (!seenUrls.has(url) && !seenNames.has(nameKey)) {
+        seenUrls.add(url);
+        seenNames.add(nameKey);
+        results.push({
+          label,
+          typeKey: 'team',
+          url,
+          photoUrl: t.logoUrl,
+        });
+        if (results.filter((r) => r.typeKey === 'team').length >= 4) break;
+      }
+    }
   }
 
   // 2. Search Players (Lightning fast in-memory)
-  const matchingPlayers = catalog.players
-    .filter((p) => {
-      const name = p.name.toLowerCase();
-      const localized = localizePlainName(locale, p.name).toLowerCase();
-      return name.includes(q) || localized.includes(q) || p.slug.includes(slug);
-    })
-    .slice(0, 3);
-
-  for (const p of matchingPlayers) {
-    results.push({
-      label: localizePlainName(locale, p.name),
-      typeKey: 'player',
-      url: `/player/${p.slug}`,
-      photoUrl: p.photoUrl,
-    });
+  for (const p of catalog.players) {
+    const name = p.name.toLowerCase();
+    const localized = localizePlainName(locale, p.name).toLowerCase();
+    if (name.includes(q) || localized.includes(q) || p.slug.includes(slug)) {
+      const label = localizePlainName(locale, p.name);
+      const url = `/player/${p.slug}`;
+      const nameKey = label.toLowerCase();
+      if (!seenUrls.has(url) && !seenNames.has(nameKey)) {
+        seenUrls.add(url);
+        seenNames.add(nameKey);
+        results.push({
+          label,
+          typeKey: 'player',
+          url,
+          photoUrl: p.photoUrl,
+        });
+        if (results.filter((r) => r.typeKey === 'player').length >= 3) break;
+      }
+    }
   }
 
   // 3. Search Leagues (Lightning fast in-memory)
-  const matchingLeagues = catalog.leagues
-    .filter((lg) => {
-      const name = lg.name.toLowerCase();
-      const localized = localizePlainName(locale, lg.name).toLowerCase();
-      return name.includes(q) || localized.includes(q) || lg.slug.includes(slug);
-    })
-    .slice(0, 2);
+  for (const lg of catalog.leagues) {
+    const name = lg.name.toLowerCase();
+    const localized = localizePlainName(locale, lg.name).toLowerCase();
+    if (name.includes(q) || localized.includes(q) || lg.slug.includes(slug)) {
+      const label = localizePlainName(locale, lg.name);
+      const url = `/league/${lg.slug}`;
+      const nameKey = label.toLowerCase();
+      if (!seenUrls.has(url) && !seenNames.has(nameKey)) {
+        seenUrls.add(url);
+        seenNames.add(nameKey);
+        results.push({
+          label,
+          typeKey: 'league',
+          url,
+          photoUrl: lg.logoUrl,
+        });
+        if (results.filter((r) => r.typeKey === 'league').length >= 2) break;
+      }
+    }
+  }
 
-  for (const lg of matchingLeagues) {
-    results.push({
-      label: localizePlainName(locale, lg.name),
-      typeKey: 'league',
-      url: `/league/${lg.slug}`,
-      photoUrl: lg.logoUrl,
-    });
+  suggestionsQuickCache.set(cacheKey, { at: Date.now(), data: results });
+  if (suggestionsQuickCache.size > 500) {
+    const oldestKey = suggestionsQuickCache.keys().next().value;
+    if (oldestKey) suggestionsQuickCache.delete(oldestKey);
   }
 
   return results;

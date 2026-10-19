@@ -241,7 +241,14 @@ async function loadClubSquad(teamId: string, teamExternalId?: string | null): Pr
   });
 }
 
+const coachDossierMemoryCache = new Map<string, { at: number; data: CoachDossierData }>();
+
 export const loadCoachDossier = cache(async function loadCoachDossier(slug: string): Promise<CoachDossierData | null> {
+  const cached = coachDossierMemoryCache.get(slug);
+  if (cached && Date.now() - cached.at < 15 * 60 * 1000) {
+    return cached.data;
+  }
+
   const decoded = (() => {
     try {
       return decodeURIComponent(slug).trim();
@@ -499,7 +506,7 @@ export const loadCoachDossier = cache(async function loadCoachDossier(slug: stri
 
   const publishedNews = news.filter((item): item is typeof item & { publishedAt: Date } => Boolean(item.publishedAt));
 
-  return {
+  const result: CoachDossierData = {
     coach: {
       id: row?.id || apiId || resolvedSlug,
       slug: row?.slug || resolvedSlug,
@@ -532,4 +539,12 @@ export const loadCoachDossier = cache(async function loadCoachDossier(slug: stri
       ];
     }),
   };
+
+  coachDossierMemoryCache.set(slug, { at: Date.now(), data: result });
+  if (coachDossierMemoryCache.size > 200) {
+    const oldestKey = coachDossierMemoryCache.keys().next().value;
+    if (typeof oldestKey === 'string') coachDossierMemoryCache.delete(oldestKey);
+  }
+
+  return result;
 });

@@ -172,7 +172,7 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
                     className={styles.navItem}
                     aria-label={ar ? 'أقسام الموقع' : 'More sections'}
                   >
-                    <span>{ar ? 'المجموعات' : 'Groups'}</span>
+                    <span>{ar ? 'المزيد' : 'المزيد'}</span>
                     <span className={styles.dropdownCaret}>▾</span>
                   </button>
                 </DropdownTrigger>

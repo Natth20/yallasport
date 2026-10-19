@@ -68,23 +68,58 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
   if (!dossier) notFound();
   walkLocalizeNames(locale, dossier);
 
+  const displayName = localizePlainName(locale, dossier.player.name);
+  const latinName = dossier.player.name;
+
   const playerSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: dossier.player.name,
-    jobTitle: dossier.player.position,
+    '@type': ['Person', 'Athlete'],
+    name: displayName,
+    alternateName: latinName !== displayName ? latinName : undefined,
+    jobTitle: dossier.player.position || 'Professional Footballer',
     nationality: dossier.player.nationality,
     ...(dossier.player.birthDate ? { birthDate: dossier.player.birthDate.toISOString().slice(0, 10) } : {}),
+    ...(dossier.player.birthPlace ? { birthPlace: { '@type': 'Place', name: dossier.player.birthPlace } } : {}),
+    ...(dossier.player.height ? { height: dossier.player.height } : {}),
+    ...(dossier.player.weight ? { weight: dossier.player.weight } : {}),
     image: dossier.player.photoUrl,
     ...(dossier.currentClub
       ? {
         memberOf: {
           '@type': 'SportsTeam',
           name: dossier.currentClub.name,
-          ...(dossier.currentClub.slug ? { url: `/team/${dossier.currentClub.slug}` } : {}),
+          ...(dossier.currentClub.slug ? { url: `https://yallasport.com/${locale}/team/${dossier.currentClub.slug}` } : {}),
         },
       }
       : {}),
+    ...(dossier.trophies?.length
+      ? { award: dossier.trophies.slice(0, 10).map((t) => `${t.league} (${t.season})`) }
+      : {}),
+  };
+
+  const breadcrumbsSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: pick(locale, 'الرئيسية', 'Home'),
+        item: `https://yallasport.com/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: pick(locale, 'اللاعبون', 'Players'),
+        item: `https://yallasport.com/${locale}/players`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: displayName,
+        item: `https://yallasport.com/${locale}/player/${slug}`,
+      },
+    ],
   };
 
   const serializedDossier = JSON.parse(JSON.stringify(dossier));
@@ -92,6 +127,7 @@ async function PlayerPageBody({ params }: { params: Promise<{ slug: string }> })
   return (
     <>
       <JsonLd data={playerSchema} />
+      <JsonLd data={breadcrumbsSchema} />
       <PlayerDossier locale={locale} dossier={serializedDossier} />
     </>
   );

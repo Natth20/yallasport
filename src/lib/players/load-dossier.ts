@@ -607,7 +607,14 @@ export async function findPlayerRowBySlug(slug: string) {
   return [...candidates].sort((a, b) => a.slug.length - b.slug.length)[0] ?? null;
 }
 
+const playerDossierMemoryCache = new Map<string, { at: number; data: PlayerDossierData }>();
+
 export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: string): Promise<PlayerDossierData | null> {
+  const cached = playerDossierMemoryCache.get(slug);
+  if (cached && Date.now() - cached.at < 15 * 60 * 1000) {
+    return cached.data;
+  }
+
   const playerRow = await findPlayerRowBySlug(slug);
 
   if (!playerRow) return null;
@@ -1237,7 +1244,7 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
       sourceName: row.sourceName ?? undefined,
     }));
 
-  return {
+  const result: PlayerDossierData = {
     player: {
       id: playerRow.id,
       externalId: playerRow.externalId,
@@ -1293,6 +1300,42 @@ export const loadPlayerDossier = cache(async function loadPlayerDossier(slug: st
     teammates,
     clubFixtures,
   };
+
+  playerDossierMemoryCache.set(slug, { at: Date.now(), data: result });
+  if (playerDossierMemoryCache.size > 300) {
+    const oldestKey = playerDossierMemoryCache.keys().next().value;
+    if (typeof oldestKey === 'string') playerDossierMemoryCache.delete(oldestKey);
+  }
+
+  // Automatic background database enrichment from live API
+  if (apiProfile) {
+    const updateData: {
+      birthDate?: Date;
+      position?: string;
+      nationality?: string;
+      photoUrl?: string;
+    } = {};
+    if (!playerRow.birthDate && apiProfile.birth?.date) {
+      const parsed = new Date(apiProfile.birth.date);
+      if (!Number.isNaN(parsed.getTime())) updateData.birthDate = parsed;
+    }
+    if (!playerRow.position && seasonBlocks[0]?.games.position) {
+      updateData.position = seasonBlocks[0].games.position;
+    }
+    if (!playerRow.nationality && apiProfile.nationality) {
+      updateData.nationality = apiProfile.nationality;
+    }
+    if (!playerRow.photoUrl && apiProfile.photo) {
+      updateData.photoUrl = apiProfile.photo;
+    }
+    if (Object.keys(updateData).length > 0) {
+      prisma.player
+        .update({ where: { id: playerRow.id }, data: updateData })
+        .catch(() => null);
+    }
+  }
+
+  return result;
 });
 
 export type PlayerCompareCard = {

@@ -62,19 +62,56 @@ async function CoachPageBody({ params }: { params: Promise<{ slug: string }> }) 
   const dossier = await loadCoachDossier(slug);
   if (!dossier) notFound();
 
+  const coachName = localizePlainName(locale, dossier.coach.name);
+
   const coachSchema = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: dossier.coach.name,
-    description: dossier.coach.bio,
+    name: coachName,
+    alternateName: dossier.coach.name !== coachName ? dossier.coach.name : undefined,
+    jobTitle: 'Football Manager',
+    description: dossier.coach.bio || undefined,
     image: dossier.coach.photoUrl,
     nationality: dossier.coach.nationality,
-    memberOf: dossier.club
+    ...(dossier.coach.birthDate ? { birthDate: new Date(dossier.coach.birthDate).toISOString().slice(0, 10) } : {}),
+    ...(dossier.coach.birthPlace ? { birthPlace: { '@type': 'Place', name: dossier.coach.birthPlace } } : {}),
+    ...(dossier.club
       ? {
-        '@type': 'SportsTeam',
-        name: dossier.club.name,
+        memberOf: {
+          '@type': 'SportsTeam',
+          name: dossier.club.name,
+          ...(dossier.club.slug ? { url: `https://yallasport.com/${locale}/team/${dossier.club.slug}` } : {}),
+        },
       }
-      : undefined,
+      : undefined),
+    ...(dossier.trophies?.length
+      ? { award: dossier.trophies.slice(0, 10).map((t) => `${t.title} (${t.season})`) }
+      : {}),
+  };
+
+  const breadcrumbsSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: pick(locale, 'الرئيسية', 'Home'),
+        item: `https://yallasport.com/${locale}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: pick(locale, 'المدربون', 'Coaches'),
+        item: `https://yallasport.com/${locale}/coaches`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: coachName,
+        item: `https://yallasport.com/${locale}/coach/${slug}`,
+      },
+    ],
   };
 
   const serializedDossier = JSON.parse(JSON.stringify(dossier));
@@ -82,6 +119,7 @@ async function CoachPageBody({ params }: { params: Promise<{ slug: string }> }) 
   return (
     <>
       <JsonLd data={coachSchema} />
+      <JsonLd data={breadcrumbsSchema} />
       <CoachDossier locale={locale} dossier={serializedDossier} />
     </>
   );
