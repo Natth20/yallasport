@@ -52,13 +52,27 @@ export interface QuickCatalog {
   loadedAt: number;
 }
 
-let catalogCache: QuickCatalog | null = null;
+import fs from 'node:fs';
+import path from 'node:path';
+
+function loadDiskCatalog(): QuickCatalog | null {
+  try {
+    const diskPath = path.join(process.cwd(), 'src', 'lib', 'search', 'catalog-cache.json');
+    if (fs.existsSync(diskPath)) {
+      const raw = fs.readFileSync(diskPath, 'utf8');
+      return JSON.parse(raw) as QuickCatalog;
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
+let catalogCache: QuickCatalog | null = loadDiskCatalog();
 let loadPromise: Promise<QuickCatalog> | null = null;
 
 export async function getQuickCatalog(): Promise<QuickCatalog> {
-  const now = Date.now();
-  // Return cached if fresh (< 15 minutes)
-  if (catalogCache && now - catalogCache.loadedAt < 15 * 60 * 1000) {
+  if (catalogCache) {
     return catalogCache;
   }
 

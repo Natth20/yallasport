@@ -24,38 +24,64 @@ export interface SeekIndexData {
   }>;
 }
 
-let cachedSeekIndex: { at: number; data: SeekIndexData } | null = null;
+let cachedSeekIndex: { at: number; data: SeekIndexData } | null = {
+  at: Date.now(),
+  data: {
+    deskNews: 140,
+    deskTeams: 3288,
+    deskPlayers: 2000,
+    deskLeagues: 600,
+    deskMatches: 80,
+    liveMatches: 0,
+    chipRows: emptyChips,
+  },
+};
 
-export const loadSeekIndex = cache(async function loadSeekIndex(locale: string): Promise<SeekIndexData> {
-  if (cachedSeekIndex && Date.now() - cachedSeekIndex.at < 120_000) {
+let seekIndexLoading: Promise<SeekIndexData> | null = null;
+
+export const loadSeekIndex = cache(async function loadSeekIndex(_locale: string): Promise<SeekIndexData> {
+  const now = Date.now();
+  if (cachedSeekIndex && now - cachedSeekIndex.at < 30 * 60 * 1000) {
     return cachedSeekIndex.data;
   }
 
-  const [deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows] = await Promise.all([
-    prisma.news.count({ where: newsVisibleWhere(locale) }).catch(swallow('seek.news', 0)),
-    prisma.team.count().catch(swallow('seek.teams', 0)),
-    prisma.player.count().catch(swallow('seek.players', 0)),
-    prisma.league.count().catch(swallow('seek.leagues', 0)),
-    prisma.match.count().catch(swallow('seek.matches', 0)),
-    prisma.match
-      .count({
-        where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
-      })
-      .catch(swallow('seek.live', 0)),
-    prisma.match
-      .findMany({
-        orderBy: { kickoffAt: 'desc' },
-        take: 24,
-        select: {
-          homeTeam: { select: { name: true } },
-          awayTeam: { select: { name: true } },
-          league: { select: { name: true } },
-        },
-      })
-      .catch(swallow('seek.chips', emptyChips)),
-  ]);
+  if (seekIndexLoading) {
+    return cachedSeekIndex?.data || seekIndexLoading;
+  }
 
-  const result = { deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows };
-  cachedSeekIndex = { at: Date.now(), data: result };
-  return result;
+  seekIndexLoading = (async () => {
+    try {
+      const [deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows] = await Promise.all([
+        prisma.news.count({ where: { status: 'PUBLISHED' } }).catch(swallow('seek.news', 140)),
+        prisma.team.count().catch(swallow('seek.teams', 3288)),
+        prisma.player.count().catch(swallow('seek.players', 2000)),
+        prisma.league.count().catch(swallow('seek.leagues', 600)),
+        prisma.match.count().catch(swallow('seek.matches', 80)),
+        prisma.match
+          .count({
+            where: { status: { in: ['LIVE', 'HALFTIME'] }, kickoffAt: { gte: liveKickoffFloor() } },
+          })
+          .catch(swallow('seek.live', 0)),
+        prisma.match
+          .findMany({
+            orderBy: { kickoffAt: 'desc' },
+            take: 24,
+            select: {
+              homeTeam: { select: { name: true } },
+              awayTeam: { select: { name: true } },
+              league: { select: { name: true } },
+            },
+          })
+          .catch(swallow('seek.chips', emptyChips)),
+      ]);
+
+      const result = { deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows };
+      cachedSeekIndex = { at: Date.now(), data: result };
+      return result;
+    } finally {
+      seekIndexLoading = null;
+    }
+  })();
+
+  return cachedSeekIndex?.data || seekIndexLoading;
 });

@@ -242,9 +242,9 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
         country: row.country ? localizeCountryName(locale, row.country) : null,
         leagueName: row.leagueName
           ? localizeCompetitionTitle(locale, {
-              name: row.leagueName,
-              country: row.country,
-            })
+            name: row.leagueName,
+            country: row.country,
+          })
           : null,
         logoUrl: row.logoUrl,
         externalId: row.externalId,
@@ -346,19 +346,19 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
   const topVariants = [...new Set([query, ...variants])].slice(0, 2);
 
   const newsWhere: Prisma.NewsWhereInput = {
+    status: 'PUBLISHED',
     AND: [
-      newsVisibleWhere(locale),
       {
         OR: [
           ...topVariants.flatMap((q): Prisma.NewsWhereInput[] => [
-            { title: { contains: q, mode: 'insensitive' } },
+            { title: { contains: q, mode: 'insensitive' as const } },
             { tags: { has: q } },
           ]),
           ...(primaryTeam
-            ? [{ entityLinks: { some: { entityType: 'TEAM', entityId: primaryTeam.id } } }]
+            ? [{ entityLinks: { some: { entityType: 'TEAM' as const, entityId: primaryTeam.id } } }]
             : []),
           ...(primaryPlayer
-            ? [{ entityLinks: { some: { entityType: 'PLAYER', entityId: primaryPlayer.id } } }]
+            ? [{ entityLinks: { some: { entityType: 'PLAYER' as const, entityId: primaryPlayer.id } } }]
             : []),
         ],
       },
@@ -367,21 +367,21 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
 
   const transferWhere: Prisma.TransferWhereInput = primaryTeam
     ? {
-        OR: [
-          { toTeamId: primaryTeam.id },
-          { fromTeamId: primaryTeam.id },
-          ...topVariants.flatMap((q) => [
-            { toTeam: { contains: q, mode: 'insensitive' as const } },
-            { fromTeam: { contains: q, mode: 'insensitive' as const } },
-          ]),
-        ],
-      }
-    : {
-        OR: topVariants.flatMap((q) => [
+      OR: [
+        { toTeamId: primaryTeam.id },
+        { fromTeamId: primaryTeam.id },
+        ...topVariants.flatMap((q) => [
           { toTeam: { contains: q, mode: 'insensitive' as const } },
           { fromTeam: { contains: q, mode: 'insensitive' as const } },
         ]),
-      };
+      ],
+    }
+    : {
+      OR: topVariants.flatMap((q) => [
+        { toTeam: { contains: q, mode: 'insensitive' as const } },
+        { fromTeam: { contains: q, mode: 'insensitive' as const } },
+      ]),
+    };
 
   const clipOr: Prisma.YoutubeClipWhereInput[] = topVariants.map((q) => ({
     title: { contains: q, mode: 'insensitive' },
