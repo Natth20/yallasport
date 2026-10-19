@@ -103,7 +103,7 @@ export function HeaderSeek({
         setHits([]);
         setLoading(false);
       }
-    }, 180);
+    }, 280);
     return () => {
       window.clearTimeout(timer);
       controller.abort();

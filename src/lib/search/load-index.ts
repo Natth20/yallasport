@@ -10,7 +10,27 @@ const emptyChips: Array<{
   league: { name: string };
 }> = [];
 
-export const loadSeekIndex = cache(async function loadSeekIndex(locale: string) {
+export interface SeekIndexData {
+  deskNews: number;
+  deskTeams: number;
+  deskPlayers: number;
+  deskLeagues: number;
+  deskMatches: number;
+  liveMatches: number;
+  chipRows: Array<{
+    homeTeam: { name: string };
+    awayTeam: { name: string };
+    league: { name: string };
+  }>;
+}
+
+let cachedSeekIndex: { at: number; data: SeekIndexData } | null = null;
+
+export const loadSeekIndex = cache(async function loadSeekIndex(locale: string): Promise<SeekIndexData> {
+  if (cachedSeekIndex && Date.now() - cachedSeekIndex.at < 120_000) {
+    return cachedSeekIndex.data;
+  }
+
   const [deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows] = await Promise.all([
     prisma.news.count({ where: newsVisibleWhere(locale) }).catch(swallow('seek.news', 0)),
     prisma.team.count().catch(swallow('seek.teams', 0)),
@@ -35,5 +55,7 @@ export const loadSeekIndex = cache(async function loadSeekIndex(locale: string) 
       .catch(swallow('seek.chips', emptyChips)),
   ]);
 
-  return { deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows };
+  const result = { deskNews, deskTeams, deskPlayers, deskLeagues, deskMatches, liveMatches, chipRows };
+  cachedSeekIndex = { at: Date.now(), data: result };
+  return result;
 });

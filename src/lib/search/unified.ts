@@ -11,6 +11,7 @@ import { didYouMean, expandQueryVariants } from './aliases';
 import { dedupeNews, scoreNewsItem } from './news-rank';
 import { scoreNameHit, slugBit } from './text';
 import type { SeekKind } from '@/components/search/seek';
+import { getQuickCatalog, quickSearchSuggestions } from './quick-catalog';
 
 const LIVE_WHERE: Prisma.MatchWhereInput = {
   status: { in: ['LIVE', 'HALFTIME'] },
@@ -220,105 +221,30 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
   };
   if (!query) return blank;
 
+  const cacheKey = `${locale}:${query}:${kind}:${page}`;
+  const cachedHit = unifiedSearchCache.get(cacheKey);
+  if (cachedHit && Date.now() - cachedHit.at < 60_000) {
+    return cachedHit.data;
+  }
+
   const variants = expandQueryVariants(query);
-  const teamOr = containsOr(variants, ['name', 'officialName', 'slug']);
-  const playerOr: Prisma.PlayerWhereInput[] = variants.flatMap((q) => {
-    const slug = slugBit(q);
-    const rows: Prisma.PlayerWhereInput[] = [
-      { name: { contains: q, mode: 'insensitive' } },
-      { officialName: { contains: q, mode: 'insensitive' } },
-    ];
-    if (slug.length >= 3) rows.push({ slug: { contains: slug, mode: 'insensitive' } });
-    return rows;
-  });
-  const leagueOr: Prisma.LeagueWhereInput[] = variants.flatMap((q) => [
-    { name: { contains: q, mode: 'insensitive' } },
-    { country: { contains: q, mode: 'insensitive' } },
-  ]);
-  const coachOr: Prisma.CoachWhereInput[] = variants.flatMap((q) => [
-    { name: { contains: q, mode: 'insensitive' } },
-  ]);
+  const catalog = await getQuickCatalog();
 
-  const [teamRows, playerRows, leagueRows, coachRows] = await Promise.all([
-    prisma.team
-      .findMany({
-        where: { OR: teamOr },
-        take: 40,
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          officialName: true,
-          logoUrl: true,
-          externalId: true,
-          standings: {
-            orderBy: { seasonId: 'desc' },
-            take: 1,
-            select: { league: { select: { name: true, country: true, externalId: true } } },
-          },
-        },
-      })
-      .catch(swallow('search.teams', [])),
-    prisma.player
-      .findMany({
-        where: { OR: playerOr },
-        take: 40,
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          officialName: true,
-          photoUrl: true,
-          position: true,
-          nationality: true,
-          teams: {
-            where: { to: null },
-            take: 1,
-            select: { team: { select: { name: true } } },
-          },
-        },
-      })
-      .catch(swallow('search.players', [])),
-    prisma.league
-      .findMany({
-        where: { OR: leagueOr },
-        take: 20,
-        select: { id: true, slug: true, name: true, logoUrl: true, country: true, externalId: true },
-      })
-      .catch(swallow('search.leagues', [])),
-    prisma.coach
-      .findMany({
-        where: { OR: coachOr },
-        take: 16,
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          photoUrl: true,
-          nationality: true,
-          currentTeam: { select: { name: true } },
-          team: { select: { name: true } },
-        },
-      })
-      .catch(swallow('search.coaches', [])),
-  ]);
-
-  const teams: SearchTeam[] = teamRows
+  // 1. Teams scored in-memory (< 0.5ms)
+  const teams: SearchTeam[] = catalog.teams
     .map((row) => {
-      const standing = row.standings[0]?.league;
       const extras = [row.officialName || '', localizeTeamName('ar', row.name), localizeTeamName('en', row.name)];
       return {
         id: row.id,
         slug: row.slug,
         name: localizeTeamName(locale, row.name),
         englishName: row.officialName || row.name,
-        country: standing?.country ? localizeCountryName(locale, standing.country) : null,
-        leagueName: standing
+        country: row.country ? localizeCountryName(locale, row.country) : null,
+        leagueName: row.leagueName
           ? localizeCompetitionTitle(locale, {
-            name: standing.name,
-            country: standing.country,
-            externalId: standing.externalId,
-          })
+              name: row.leagueName,
+              country: row.country,
+            })
           : null,
         logoUrl: row.logoUrl,
         externalId: row.externalId,
@@ -328,7 +254,8 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
-  let players: SearchPlayer[] = playerRows
+  // 2. Players scored in-memory (< 0.5ms)
+  const players: SearchPlayer[] = catalog.players
     .map((row) => {
       const extras = [
         row.officialName || '',
@@ -344,26 +271,12 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
         position: row.position ? localizePlainName(locale, row.position) : null,
         nationality: row.nationality ? localizeCountryName(locale, row.nationality) : null,
         photoUrl: row.photoUrl,
-        teamName: row.teams[0]?.team.name ? localizeTeamName(locale, row.teams[0].team.name) : null,
+        teamName: row.teamName ? localizeTeamName(locale, row.teamName) : null,
         score: Math.max(...variants.map((q) => scoreNameHit(row.name, q, extras))),
       };
     })
+    .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
-
-  if (players.length === 0) {
-    const remote = await searchPlayers(query, locale).catch(swallow('search.players.remote', []));
-    players = remote.map((row) => ({
-      id: row.slug,
-      slug: row.slug,
-      name: row.name,
-      englishName: row.name,
-      position: null,
-      nationality: null,
-      photoUrl: row.photoUrl,
-      teamName: row.teamName,
-      score: Math.max(...variants.map((q) => scoreNameHit(row.name, q, [row.slug]))),
-    }));
-  }
 
   const primaryPlayer = players[0] && players[0].score >= 44 ? players[0] : null;
   const primaryTeam =
@@ -371,86 +284,22 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
       ? teams[0]
       : null;
 
-  if (primaryTeam && !primaryPlayer && (kind === 'all' || kind === 'players') && players.length < 8) {
-    const squad = await prisma.playerTeam
-      .findMany({
-        where: { teamId: primaryTeam.id, to: null },
-        take: 16,
-        select: {
-          player: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-              officialName: true,
-              photoUrl: true,
-              position: true,
-              nationality: true,
-            },
-          },
-        },
-      })
-      .catch(swallow('search.squad', []));
-    const seen = new Set(players.map((row) => row.id));
-    for (const row of squad) {
-      if (seen.has(row.player.id)) continue;
-      seen.add(row.player.id);
-      players.push({
-        id: row.player.id,
-        slug: row.player.slug,
-        name: localizePlainName(locale, row.player.name),
-        englishName: row.player.officialName || row.player.name,
-        position: row.player.position ? localizePlainName(locale, row.player.position) : null,
-        nationality: row.player.nationality ? localizeCountryName(locale, row.player.nationality) : null,
-        photoUrl: row.player.photoUrl,
-        teamName: primaryTeam.name,
-        score: 36,
-      });
-    }
-  }
-
-  const coaches: SearchCoach[] = coachRows
+  // 3. Coaches scored in-memory (< 0.1ms)
+  const coaches: SearchCoach[] = catalog.coaches
     .map((row) => ({
       id: row.id,
       slug: row.slug || row.id,
       name: localizePlainName(locale, row.name),
       nationality: row.nationality ? localizeCountryName(locale, row.nationality) : null,
       photoUrl: row.photoUrl,
-      teamName: localizeTeamName(locale, row.currentTeam?.name || row.team?.name || '') || null,
-      score: Math.max(...variants.map((q) => scoreNameHit(row.name, q, [row.currentTeam?.name || '', row.team?.name || '']))),
+      teamName: row.teamName ? localizeTeamName(locale, row.teamName) : null,
+      score: Math.max(...variants.map((q) => scoreNameHit(row.name, q, [row.teamName || '']))),
     }))
     .filter((row) => row.score > 0 || (primaryTeam && row.teamName === primaryTeam.name))
     .sort((a, b) => b.score - a.score);
 
-  if (primaryTeam && coaches.length === 0) {
-    const clubCoach = await prisma.coach
-      .findFirst({
-        where: { OR: [{ currentTeamId: primaryTeam.id }, { team: { id: primaryTeam.id } }] },
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          photoUrl: true,
-          nationality: true,
-          currentTeam: { select: { name: true } },
-          team: { select: { name: true } },
-        },
-      })
-      .catch(swallow('search.clubCoach', null));
-    if (clubCoach) {
-      coaches.push({
-        id: clubCoach.id,
-        slug: clubCoach.slug || clubCoach.id,
-        name: localizePlainName(locale, clubCoach.name),
-        nationality: clubCoach.nationality ? localizeCountryName(locale, clubCoach.nationality) : null,
-        photoUrl: clubCoach.photoUrl,
-        teamName: primaryTeam.name,
-        score: 40,
-      });
-    }
-  }
-
-  const leagues: SearchLeague[] = leagueRows
+  // 4. Leagues scored in-memory (< 0.1ms)
+  const leagues: SearchLeague[] = catalog.leagues
     .map((row) => ({
       id: row.id,
       slug: row.slug,
@@ -469,41 +318,17 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  let playerClubId: string | null = null;
-  if (primaryPlayer) {
-    const filed = await prisma.player
-      .findFirst({
-        where: { OR: [{ id: primaryPlayer.id }, { slug: primaryPlayer.slug }] },
-        select: { id: true, teams: { where: { to: null }, take: 1, select: { teamId: true } } },
-      })
-      .catch(swallow('search.playerClub', null));
-    if (filed) {
-      primaryPlayer.id = filed.id;
-      playerClubId = filed.teams[0]?.teamId || null;
-    }
-  }
-
   const teamIds = primaryTeam
     ? [primaryTeam.id]
-    : playerClubId
-      ? [playerClubId]
-      : teams.slice(0, 3).map((row) => row.id);
+    : teams.slice(0, 3).map((row) => row.id);
+
   const matchWhere: Prisma.MatchWhereInput = primaryPlayer
-    ? {
-        OR: [
-          { events: { some: { playerId: primaryPlayer.id } } },
-          ...(playerClubId ? [{ homeTeamId: playerClubId }, { awayTeamId: playerClubId }] : []),
-        ],
-      }
+    ? { events: { some: { playerId: primaryPlayer.id } } }
     : teamIds.length
       ? { OR: [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }] }
-      : {
-          OR: [
-            { homeTeam: { OR: teamOr } },
-            { awayTeam: { OR: teamOr } },
-            { league: { OR: leagueOr } },
-          ],
-        };
+      : leagues.length
+        ? { leagueId: { in: leagues.slice(0, 2).map((l) => l.id) } }
+        : {};
 
   const matchSelect = {
     id: true,
@@ -517,40 +342,17 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
     league: { select: { id: true, name: true, slug: true } },
   } as const;
 
-  const matchRows = await prisma.match
-    .findMany({
-      where: matchWhere,
-      take: 80,
-      orderBy: { kickoffAt: 'desc' },
-      select: matchSelect,
-    })
-    .catch(swallow('search.matches', []));
-
-  const matches = matchRows.map((row) => mapMatch(row, locale));
-  const split = splitMatches(matches);
+  // Use top distinct query terms to prevent ILIKE combinatorial explosion
+  const topVariants = [...new Set([query, ...variants])].slice(0, 2);
 
   const newsWhere: Prisma.NewsWhereInput = {
     AND: [
       newsVisibleWhere(locale),
       {
         OR: [
-          ...variants.flatMap((q): Prisma.NewsWhereInput[] => [
+          ...topVariants.flatMap((q): Prisma.NewsWhereInput[] => [
             { title: { contains: q, mode: 'insensitive' } },
-            { excerpt: { contains: q, mode: 'insensitive' } },
             { tags: { has: q } },
-            { category: { contains: q, mode: 'insensitive' } },
-            {
-              translations: {
-                some: {
-                  locale,
-                  status: 'APPROVED',
-                  OR: [
-                    { title: { contains: q, mode: 'insensitive' } },
-                    { excerpt: { contains: q, mode: 'insensitive' } },
-                  ],
-                },
-              },
-            },
           ]),
           ...(primaryTeam
             ? [{ entityLinks: { some: { entityType: 'TEAM', entityId: primaryTeam.id } } }]
@@ -563,36 +365,99 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
     ],
   };
 
-  const newsRows = await prisma.news
-    .findMany({
-      where: newsWhere,
-      take: 40,
-      orderBy: { publishedAt: 'desc' },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        excerpt: true,
-        content: true,
-        publishedAt: true,
-        featuredImage: true,
-        category: true,
-        tags: true,
-        sourceName: true,
-        sourceLocale: true,
-        isDuplicate: true,
-        originalId: true,
-        entityLinks: {
-          where: primaryPlayer
-            ? { entityType: 'PLAYER', entityId: primaryPlayer.id }
-            : primaryTeam
-              ? { entityType: 'TEAM', entityId: primaryTeam.id }
-              : undefined,
-          select: { confirmed: true, suggested: true, entityType: true, entityId: true },
+  const transferWhere: Prisma.TransferWhereInput = primaryTeam
+    ? {
+        OR: [
+          { toTeamId: primaryTeam.id },
+          { fromTeamId: primaryTeam.id },
+          ...topVariants.flatMap((q) => [
+            { toTeam: { contains: q, mode: 'insensitive' as const } },
+            { fromTeam: { contains: q, mode: 'insensitive' as const } },
+          ]),
+        ],
+      }
+    : {
+        OR: topVariants.flatMap((q) => [
+          { toTeam: { contains: q, mode: 'insensitive' as const } },
+          { fromTeam: { contains: q, mode: 'insensitive' as const } },
+        ]),
+      };
+
+  const clipOr: Prisma.YoutubeClipWhereInput[] = topVariants.map((q) => ({
+    title: { contains: q, mode: 'insensitive' },
+  }));
+
+  // Fire all remaining DB queries concurrently
+  const [matchRows, newsRows, transferRows, videos] = await Promise.all([
+    prisma.match
+      .findMany({
+        where: matchWhere,
+        take: 24,
+        orderBy: { kickoffAt: 'desc' },
+        select: matchSelect,
+      })
+      .catch(swallow('search.matches', [])),
+
+    prisma.news
+      .findMany({
+        where: newsWhere,
+        take: 20,
+        orderBy: { publishedAt: 'desc' },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          content: true,
+          publishedAt: true,
+          featuredImage: true,
+          category: true,
+          tags: true,
+          sourceName: true,
+          sourceLocale: true,
+          isDuplicate: true,
+          originalId: true,
+          entityLinks: {
+            where: primaryPlayer
+              ? { entityType: 'PLAYER', entityId: primaryPlayer.id }
+              : primaryTeam
+                ? { entityType: 'TEAM', entityId: primaryTeam.id }
+                : undefined,
+            select: { confirmed: true, suggested: true, entityType: true, entityId: true },
+          },
         },
-      },
-    })
-    .catch(swallow('search.news', []));
+      })
+      .catch(swallow('search.news', [])),
+
+    prisma.transfer
+      .findMany({
+        where: transferWhere,
+        take: 12,
+        orderBy: { date: 'desc' },
+        select: {
+          id: true,
+          fromTeam: true,
+          toTeam: true,
+          date: true,
+          type: true,
+          fee: true,
+          player: { select: { name: true, slug: true } },
+        },
+      })
+      .catch(swallow('search.transfers', [])),
+
+    prisma.youtubeClip
+      .findMany({
+        where: { status: 'PUBLISHED', OR: clipOr },
+        take: 8,
+        orderBy: { publishedAt: 'desc' },
+        select: { id: true, youtubeId: true, title: true, thumbnailUrl: true, publishedAt: true },
+      })
+      .catch(swallow('search.videos', [])),
+  ]);
+
+  const matches = matchRows.map((row) => mapMatch(row, locale));
+  const split = splitMatches(matches);
 
   const localizedNews = await overlayNewsList(
     newsRows.map(({ content: _c, entityLinks: _e, tags: _t, isDuplicate: _d, originalId: _o, ...rest }) => rest),
@@ -639,41 +504,6 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
 
   const news = dedupeNews(rankedNews);
 
-  const transferWhere: Prisma.TransferWhereInput = primaryTeam
-    ? {
-      OR: [
-        { toTeamId: primaryTeam.id },
-        { fromTeamId: primaryTeam.id },
-        ...variants.flatMap((q) => [
-          { toTeam: { contains: q, mode: 'insensitive' as const } },
-          { fromTeam: { contains: q, mode: 'insensitive' as const } },
-        ]),
-      ],
-    }
-    : {
-      OR: variants.flatMap((q) => [
-        { toTeam: { contains: q, mode: 'insensitive' as const } },
-        { fromTeam: { contains: q, mode: 'insensitive' as const } },
-      ]),
-    };
-
-  const transferRows = await prisma.transfer
-    .findMany({
-      where: transferWhere,
-      take: 20,
-      orderBy: { date: 'desc' },
-      select: {
-        id: true,
-        fromTeam: true,
-        toTeam: true,
-        date: true,
-        type: true,
-        fee: true,
-        player: { select: { name: true, slug: true } },
-      },
-    })
-    .catch(swallow('search.transfers', []));
-
   const transfers: SearchTransfer[] = transferRows.map((row) => ({
     id: row.id,
     playerName: localizePlainName(locale, row.player.name),
@@ -684,18 +514,6 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
     type: row.type,
     fee: row.fee,
   }));
-
-  const clipOr: Prisma.YoutubeClipWhereInput[] = variants.map((q) => ({
-    title: { contains: q, mode: 'insensitive' },
-  }));
-  const videos = await prisma.youtubeClip
-    .findMany({
-      where: { status: 'PUBLISHED', OR: clipOr },
-      take: 12,
-      orderBy: { publishedAt: 'desc' },
-      select: { id: true, youtubeId: true, title: true, thumbnailUrl: true, publishedAt: true },
-    })
-    .catch(swallow('search.videos', []));
 
   const photos = news.filter((row) => row.featuredImage).slice(0, 12);
 
@@ -718,7 +536,7 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
 
   const suggestion = teams.length || news.length || matches.length ? null : didYouMean(query);
 
-  return {
+  const result: UnifiedSearch = {
     query,
     variants,
     suggestion,
@@ -740,29 +558,22 @@ export const runUnifiedSearch = cache(async function runUnifiedSearch(opts: {
     page,
     pageSize,
   };
+
+  unifiedSearchCache.set(cacheKey, { at: Date.now(), data: result });
+  if (unifiedSearchCache.size > 200) {
+    const oldestKey = unifiedSearchCache.keys().next().value;
+    if (oldestKey) unifiedSearchCache.delete(oldestKey);
+  }
+
+  return result;
 });
 
 export async function liveMatchCount() {
   return prisma.match.count({ where: LIVE_WHERE }).catch(swallow('search.live', 0));
 }
 
+const unifiedSearchCache = new Map<string, { at: number; data: UnifiedSearch }>();
+
 export async function searchSuggestions(query: string, locale: string) {
-  const pack = await runUnifiedSearch({ locale, query, kind: 'all' });
-  const rows: Array<{ label: string; typeKey: string; url: string; photoUrl?: string | null }> = [];
-  for (const row of pack.teams.slice(0, 4)) {
-    rows.push({ label: row.name, typeKey: 'team', url: `/team/${row.slug}`, photoUrl: row.logoUrl });
-  }
-  for (const row of pack.players.slice(0, 3)) {
-    rows.push({ label: row.name, typeKey: 'player', url: `/player/${row.slug}`, photoUrl: row.photoUrl });
-  }
-  for (const row of pack.coaches.slice(0, 2)) {
-    rows.push({ label: row.name, typeKey: 'coach', url: `/coach/${row.slug}`, photoUrl: row.photoUrl });
-  }
-  for (const row of pack.leagues.slice(0, 2)) {
-    rows.push({ label: row.name, typeKey: 'league', url: `/league/${row.slug}`, photoUrl: row.logoUrl });
-  }
-  for (const row of pack.news.slice(0, 2)) {
-    rows.push({ label: row.title, typeKey: 'news', url: `/news/${row.slug}`, photoUrl: row.featuredImage });
-  }
-  return rows;
+  return quickSearchSuggestions(query, locale);
 }
