@@ -494,3 +494,182 @@
 .resetBtn:hover {
   opacity: 0.9;
 }
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES
+   ========================================================================== */
+:global([data-theme="light"]) .page,
+:global(.light) .page {
+  background: transparent;
+}
+
+:global([data-theme="light"]) .title,
+:global(.light) .title {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .subtitle,
+:global(.light) .subtitle {
+  color: #4b5563;
+}
+
+:global([data-theme="light"]) .integrityAlert,
+:global(.light) .integrityAlert {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+}
+
+:global([data-theme="light"]) .integrityIcon,
+:global(.light) .integrityIcon {
+  color: #0284c7;
+}
+
+:global([data-theme="light"]) .filtersSection,
+:global(.light) .filtersSection {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .filterLabel,
+:global(.light) .filterLabel {
+  color: #374151;
+}
+
+:global([data-theme="light"]) .chip,
+:global(.light) .chip {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+:global([data-theme="light"]) .chip:hover,
+:global(.light) .chip:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+:global([data-theme="light"]) .chipActive,
+:global(.light) .chipActive {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .sectionTitle,
+:global(.light) .sectionTitle {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .sectionHead,
+:global(.light) .sectionHead {
+  border-bottom-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .matchCard,
+:global(.light) .matchCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="light"]) .matchCard:hover,
+:global(.light) .matchCard:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.12);
+}
+
+:global([data-theme="light"]) .matchTop,
+:global(.light) .matchTop {
+  border-bottom-color: #f3f4f6;
+}
+
+:global([data-theme="light"]) .leagueLink,
+:global(.light) .leagueLink {
+  color: #4b5563;
+}
+
+:global([data-theme="light"]) .teamLink,
+:global(.light) .teamLink {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .teamLink:hover,
+:global(.light) .teamLink:hover {
+  color: #2563eb;
+}
+
+:global([data-theme="light"]) .scoreDigit,
+:global(.light) .scoreDigit {
+  color: #111827;
+  background: #f3f4f6;
+}
+
+:global([data-theme="light"]) .channelLink,
+:global(.light) .channelLink {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+:global([data-theme="light"]) .commentatorRow,
+:global(.light) .commentatorRow {
+  color: #4b5563;
+}
+
+:global([data-theme="light"]) .commentatorName,
+:global(.light) .commentatorName {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .cardBottom,
+:global(.light) .cardBottom {
+  border-top-color: #f3f4f6;
+}
+
+:global([data-theme="light"]) .matchCenterBtn,
+:global(.light) .matchCenterBtn {
+  color: #2563eb;
+}
+
+:global([data-theme="light"]) .matchCenterBtn:hover,
+:global(.light) .matchCenterBtn:hover {
+  color: #1d4ed8;
+}
+
+:global([data-theme="light"]) .channelDirectoryCard,
+:global(.light) .channelDirectoryCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="light"]) .channelDirectoryCard:hover,
+:global(.light) .channelDirectoryCard:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+}
+
+:global([data-theme="light"]) .channelLogoWrap,
+:global(.light) .channelLogoWrap {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .channelName,
+:global(.light) .channelName {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .channelCountry,
+:global(.light) .channelCountry {
+  color: #6b7280;
+}
+
+:global([data-theme="light"]) .emptyState,
+:global(.light) .emptyState {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+

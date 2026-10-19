@@ -78,26 +78,32 @@ export default async function ChannelsPage({
   const oneWeekLater = new Date(todayStart.getTime() + 8 * 24 * 60 * 60 * 1000);
 
   // Time window
-  let timeStart = todayStart;
-  let timeEnd = oneWeekLater;
+  let timeStart: Date | undefined = todayStart;
+  let timeEnd: Date | undefined = oneWeekLater;
   if (selectedDate === 'today') {
     timeStart = todayStart;
     timeEnd = todayEnd;
   } else if (selectedDate === 'tomorrow') {
     timeStart = tomorrowStart;
     timeEnd = tomorrowEnd;
+  } else if (selectedDate === 'all') {
+    timeStart = undefined;
+    timeEnd = undefined;
   }
 
   // Construct match query
   const matchWhere: any = {
-    kickoffAt: {
-      gte: timeStart,
-      lte: timeEnd,
-    },
     channels: {
       some: {},
     },
   };
+
+  if (timeStart && timeEnd) {
+    matchWhere.kickoffAt = {
+      gte: timeStart,
+      lte: timeEnd,
+    };
+  }
 
   if (selectedStatus === 'LIVE') {
     matchWhere.status = { in: ['LIVE', 'HALFTIME'] };
@@ -130,7 +136,7 @@ export default async function ChannelsPage({
   }
 
   // 1. Fetch broadcast matches with confirmed channels & commentators
-  const broadcastMatches = await prisma.match
+  let broadcastMatches = await prisma.match
     .findMany({
       where: matchWhere,
       select: {
@@ -169,8 +175,58 @@ export default async function ChannelsPage({
     })
     .catch(swallow('channels.broadcastMatches', []));
 
-  // 2. Fetch all registered channels with match counts
-  const channelsList = await prisma.channel
+  let isFallbackSchedule = false;
+  if (broadcastMatches.length === 0 && !selectedLeagueSlug && !selectedChannelId && !selectedCountry && selectedStatus === 'ALL') {
+    // If strict week date filter yields 0, retrieve verified broadcast schedule so the page is genuinely informative and alive
+    const fallbackMatches = await prisma.match
+      .findMany({
+        where: {
+          channels: { some: {} },
+        },
+        select: {
+          id: true,
+          kickoffAt: true,
+          status: true,
+          minute: true,
+          homeScore: true,
+          awayScore: true,
+          homeTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
+          awayTeam: { select: { id: true, name: true, slug: true, logoUrl: true } },
+          league: { select: { id: true, name: true, slug: true, logoUrl: true } },
+          channels: {
+            select: {
+              id: true,
+              channel: {
+                select: {
+                  id: true,
+                  name: true,
+                  logoUrl: true,
+                  country: true,
+                },
+              },
+            },
+          },
+          commentators: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { kickoffAt: 'desc' },
+        take: 40,
+      })
+      .catch(swallow('channels.fallbackMatches', []));
+
+    if (fallbackMatches.length > 0) {
+      broadcastMatches = fallbackMatches;
+      isFallbackSchedule = true;
+    }
+  }
+
+  // 2. Fetch all registered channels with match counts, top active networks first
+  const rawChannels = await prisma.channel
     .findMany({
       select: {
         id: true,
@@ -183,9 +239,10 @@ export default async function ChannelsPage({
           },
         },
       },
-      orderBy: { name: 'asc' },
     })
     .catch(swallow('channels.channelsList', []));
+
+  const channelsList = rawChannels.sort((a, b) => b._count.matches - a._count.matches || a.name.localeCompare(b.name));
 
   // 3. Fetch active leagues that have confirmed broadcasts
   const broadcastLeagues = await prisma.league
@@ -193,7 +250,6 @@ export default async function ChannelsPage({
       where: {
         matches: {
           some: {
-            kickoffAt: { gte: todayStart },
             channels: { some: {} },
           },
         },
@@ -203,7 +259,8 @@ export default async function ChannelsPage({
         name: true,
         slug: true,
       },
-      take: 12,
+      take: 16,
+      orderBy: { name: 'asc' },
     })
     .catch(swallow('channels.broadcastLeagues', []));
 
@@ -212,6 +269,7 @@ export default async function ChannelsPage({
     { code: 'SA', label: ar ? 'السعودية (SSC)' : 'Saudi Arabia' },
     { code: 'AE', label: ar ? 'الإمارات (أبوظبي)' : 'UAE' },
     { code: 'EG', label: ar ? 'مصر (ON Time)' : 'Egypt' },
+    { code: 'GB', label: ar ? 'بريطانيا (Sky)' : 'UK' },
   ];
 
   return (
@@ -284,6 +342,12 @@ export default async function ChannelsPage({
               className={`${styles.chip} ${selectedDate === 'week' ? styles.chipActive : ''}`}
             >
               {ar ? 'خلال الأسبوع' : 'This Week'}
+            </Link>
+            <Link
+              href={`/channels?date=all${selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : ''}${selectedLeagueSlug ? `&league=${selectedLeagueSlug}` : ''}`}
+              className={`${styles.chip} ${selectedDate === 'all' ? styles.chipActive : ''}`}
+            >
+              {ar ? 'كافة المواعيد المؤكدة' : 'All Confirmed'}
             </Link>
           </div>
 
@@ -381,7 +445,11 @@ export default async function ChannelsPage({
         <div className={styles.sectionHead}>
           <h2 className={styles.sectionTitle}>
             <Radio className="h-5 w-5 text-orange-500" />
-            <span>{ar ? 'جدول المباريات المنقولة تلفزيونياً' : 'Confirmed Match Broadcasts'}</span>
+            <span>
+              {isFallbackSchedule
+                ? (ar ? 'أحدث المباريات المنقولة تلفزيونياً والمؤكدة' : 'Latest Confirmed Match Broadcasts')
+                : (ar ? 'جدول المباريات المنقولة تلفزيونياً' : 'Confirmed Match Broadcasts')}
+            </span>
           </h2>
           <span className={styles.countBadge}>
             {broadcastMatches.length} {ar ? 'مباراة مؤكدة' : 'fixtures'}

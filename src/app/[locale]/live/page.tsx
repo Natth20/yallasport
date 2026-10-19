@@ -3,6 +3,7 @@ import React, { Suspense } from 'react';
 import { cookies, headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { prisma } from '@/lib/prisma';
 import {
   listLinearCatalog,
   listLiveCatalog,
@@ -93,9 +94,26 @@ async function LivePageBody({
     ? await listPublishedLibrary({ take: 12 }).catch(swallow('LivePage.listPublishedLibrary', []))
     : [];
 
-  const [deskLive, deskLiveCount] = await Promise.all([
+  const [deskLive, deskLiveCount, upcomingLiveSchedule] = await Promise.all([
     listLiveMatches(16).catch(swallow('LivePage.deskLive', [])),
     countLiveMatches(),
+    prisma.match.findMany({
+      where: {
+        status: 'NOT_STARTED',
+      },
+      orderBy: { kickoffAt: 'asc' },
+      take: 8,
+      include: {
+        homeTeam: true,
+        awayTeam: true,
+        league: true,
+        channels: {
+          include: {
+            channel: true,
+          },
+        },
+      },
+    }).catch(swallow('LivePage.upcomingLiveSchedule', [])),
   ]);
 
   const tvRows = await listTonightTvGuide({
@@ -453,6 +471,102 @@ async function LivePageBody({
                       <div className={styles.liveCardFooter}>
                         <span className={styles.liveEnterHint}>
                           {pick(locale, 'دخول مركز المباراة والتفاصيل', 'Enter Match Center')}
+                        </span>
+                        <span className={styles.liveEnterArrow}>{locale === 'ar' ? '←' : '→'}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ) : upcomingLiveSchedule.length > 0 ? (
+            <section className={styles.bandSection}>
+              <div className={styles.bandHead}>
+                <div className={styles.bandMark}>
+                  <div className={styles.livePulseDot} style={{ background: '#f97316', boxShadow: '0 0 0 4px rgba(249, 115, 22, 0.2)' }} />
+                  <div>
+                    <h2 className={styles.bandTitle}>{pick(locale, 'أقرب مواعيد المباريات للبث المباشر 📺', 'Next Scheduled Matches for Live Broadcast 📺')}</h2>
+                    <p className={styles.bandLead}>{pick(locale, 'مواعيد حية من جدول المباريات مع القنوات الناقلة المعتمدة', 'Live fixtures from calendar with verified broadcast carriers')}</p>
+                  </div>
+                </div>
+                <Link href="/matches" className={styles.viewAllLiveLink}>
+                  <span>{pick(locale, 'جدول كافة المباريات', 'Full fixture calendar')}</span>
+                  <span className="text-sm font-black">{locale === 'ar' ? '←' : '→'}</span>
+                </Link>
+              </div>
+
+              <div className={styles.liveMatrixGrid}>
+                {upcomingLiveSchedule.map((match) => {
+                  const homeName = localizeTeamName(locale, match.homeTeam.name);
+                  const awayName = localizeTeamName(locale, match.awayTeam.name);
+                  const leagueName = localizeLeagueName(locale, match.league, match.league.name);
+                  const channelName = match.channels[0]?.channel?.name;
+
+                  return (
+                    <Link key={match.id} href={`/match/${match.id}`} className={styles.liveMatchCard}>
+                      <div className={styles.liveMatchHeader}>
+                        <div className={styles.liveMatchLeague}>
+                          {match.league.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={match.league.logoUrl} alt="" className={styles.liveLeagueLogo} />
+                          ) : null}
+                          <span className={styles.liveLeagueName}>{leagueName}</span>
+                        </div>
+
+                        {channelName ? (
+                          <span className={styles.liveMinuteBadge}>
+                            <Tv className="h-3 w-3 inline mr-1" />
+                            {channelName}
+                          </span>
+                        ) : (
+                          <span className={styles.liveMinuteBadge}>
+                            <ClientTime
+                              value={match.kickoffAt}
+                              locale={locale}
+                              options={{ hour: '2-digit', minute: '2-digit' }}
+                            />
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.liveDuelRow}>
+                        {/* Home Team */}
+                        <div className={styles.liveTeamSide}>
+                          {match.homeTeam.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={match.homeTeam.logoUrl} alt="" className={styles.liveTeamCrest} />
+                          ) : (
+                            <span className={styles.liveCrestFallback}>{homeName.charAt(0)}</span>
+                          )}
+                          <span className={styles.liveTeamTitle}>{homeName}</span>
+                        </div>
+
+                        {/* Kickoff Box */}
+                        <div className={styles.liveScoreBox}>
+                          <span className={styles.liveScoreDigits}>
+                            <ClientTime
+                              value={match.kickoffAt}
+                              locale={locale}
+                              options={{ hour: '2-digit', minute: '2-digit' }}
+                            />
+                          </span>
+                        </div>
+
+                        {/* Away Team */}
+                        <div className={styles.liveTeamSide}>
+                          {match.awayTeam.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={match.awayTeam.logoUrl} alt="" className={styles.liveTeamCrest} />
+                          ) : (
+                            <span className={styles.liveCrestFallback}>{awayName.charAt(0)}</span>
+                          )}
+                          <span className={styles.liveTeamTitle}>{awayName}</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.liveCardFooter}>
+                        <span className={styles.liveEnterHint}>
+                          {pick(locale, 'تفاصيل اللقاء والقنوات الناقلة', 'Match details & channels')}
                         </span>
                         <span className={styles.liveEnterArrow}>{locale === 'ar' ? '←' : '→'}</span>
                       </div>

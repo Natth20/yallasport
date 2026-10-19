@@ -1041,3 +1041,208 @@
   content: '— ';
   color: var(--ys-orange);
 }
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES FOR LIVE STREAM & TV BROADCAST HALL
+   ========================================================================== */
+:global([data-theme="light"]) .liveHall,
+:global(.light) .liveHall {
+  background: transparent;
+  color: #111827;
+}
+
+:global([data-theme="light"]) .mast,
+:global(.light) .mast {
+  background: #ffffff;
+  border-color: #fee2e2;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.06);
+}
+
+:global([data-theme="light"]) .mastTitle,
+:global(.light) .mastTitle {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .mastLead,
+:global(.light) .mastLead {
+  color: #4b5563;
+}
+
+:global([data-theme="light"]) .meterCard,
+:global(.light) .meterCard {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .meterCard:hover,
+:global(.light) .meterCard:hover {
+  border-color: #ef4444;
+  background: #fff;
+}
+
+:global([data-theme="light"]) .meterValue,
+:global(.light) .meterValue {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .meterLabel,
+:global(.light) .meterLabel {
+  color: #6b7280;
+}
+
+:global([data-theme="light"]) .meterLive,
+:global(.light) .meterLive {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+:global([data-theme="light"]) .meterLive .meterValue,
+:global(.light) .meterLive .meterValue {
+  color: #dc2626;
+}
+
+:global([data-theme="light"]) .liveMatchCard,
+:global(.light) .liveMatchCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="light"]) .liveMatchCard:hover,
+:global(.light) .liveMatchCard:hover {
+  border-color: #ef4444;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12);
+}
+
+:global([data-theme="light"]) .liveLeagueName,
+:global(.light) .liveLeagueName {
+  color: #4b5563;
+}
+
+:global([data-theme="light"]) .liveTeamTitle,
+:global(.light) .liveTeamTitle {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .liveScoreBox,
+:global(.light) .liveScoreBox {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .liveScoreDigits,
+:global(.light) .liveScoreDigits {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .liveCardFooter,
+:global(.light) .liveCardFooter {
+  border-top-color: #f3f4f6;
+  color: #4b5563;
+}
+
+:global([data-theme="light"]) .channelCard,
+:global(.light) .channelCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+:global([data-theme="light"]) .channelCard:hover,
+:global(.light) .channelCard:hover {
+  border-color: #ef4444;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.1);
+}
+
+:global([data-theme="light"]) .channelName,
+:global(.light) .channelName {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .channelCountry,
+:global(.light) .channelCountry {
+  color: #6b7280;
+}
+
+:global([data-theme="light"]) .filterChip,
+:global(.light) .filterChip {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+:global([data-theme="light"]) .filterChip:hover,
+:global(.light) .filterChip:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+:global([data-theme="light"]) .filterChipActive,
+:global(.light) .filterChipActive {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+:global([data-theme="light"]) .ticketCard,
+:global(.light) .ticketCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .ticketCard:hover,
+:global(.light) .ticketCard:hover {
+  border-color: #ea580c;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.1);
+}
+
+:global([data-theme="light"]) .ticketTitle,
+:global(.light) .ticketTitle {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .ticketTime,
+:global(.light) .ticketTime {
+  color: #6b7280;
+}
+
+:global([data-theme="light"]) .linearCard,
+:global(.light) .linearCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+:global([data-theme="light"]) .linearName,
+:global(.light) .linearName {
+  color: #111827;
+}
+
+:global([data-theme="light"]) .licenseBay,
+:global(.light) .licenseBay {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #111827;
+}
+
+:global([data-theme="light"]) .licenseBay h2,
+:global(.light) .licenseBay h2 {
+  color: #9a3412;
+}
+
+:global([data-theme="light"]) .licenseBay p,
+:global(.light) .licenseBay p {
+  color: #7c2d12;
+}
+
+:global([data-theme="light"]) .licenseBay ul,
+:global(.light) .licenseBay ul {
+  color: #9a3412;
+}
+
+:global([data-theme="light"]) .emptyCard,
+:global(.light) .emptyCard {
+  background: #ffffff;
+  border-color: #e5e7eb;
+  color: #6b7280;
+}
