@@ -1,7 +1,7 @@
 'use client';
 
 import { reportCaughtError } from '@/lib/ops/caught';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { Link } from '@/i18n/navigation';
 import {
   Trophy,
@@ -79,9 +79,17 @@ export function LeaderboardExplorer({
   const [activeTab, setActiveTab] = useState<'users' | 'scorers'>('users');
   const [searchQuery, setSearchQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [selectedLeague, setSelectedLeague] = useState('ALL');
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    setIsVoiceSupported(
+      typeof window !== 'undefined' &&
+      Boolean((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
+    );
+  }, []);
 
   const leagues = useMemo(() => {
     const list = Array.from(new Set(realScorers.map((s) => s.leagueName))).filter(Boolean);
@@ -103,7 +111,7 @@ export function LeaderboardExplorer({
     if (isListening && recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {}
+      } catch { }
       setIsListening(false);
       return;
     }
@@ -173,7 +181,7 @@ export function LeaderboardExplorer({
     }
     if (rank === 2) {
       return (
-        <span className={styles.silverMedalPill}>
+        <span style={{ color: "#5a687d" }} className={styles.silverMedalPill}>
           <span>🥈</span>
           <b>02</b>
         </span>
@@ -245,7 +253,7 @@ export function LeaderboardExplorer({
             >
               <X className="h-4 w-4" />
             </button>
-          ) : (
+          ) : isVoiceSupported ? (
             <button
               type="button"
               onClick={toggleVoiceSearch}
@@ -254,7 +262,7 @@ export function LeaderboardExplorer({
             >
               <Mic className="h-4 w-4" />
             </button>
-          )}
+          ) : null}
 
           {/* Non-intrusive Floating Toast Error */}
           {speechError && (

@@ -99,7 +99,8 @@ async function LivePageBody({
     countLiveMatches(),
     prisma.match.findMany({
       where: {
-        status: 'NOT_STARTED',
+        status: { in: ['NOT_STARTED', 'LIVE', 'HALFTIME'] },
+        kickoffAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
       },
       orderBy: { kickoffAt: 'asc' },
       take: 8,
@@ -236,10 +237,26 @@ async function LivePageBody({
   const scoreLabel = (home?: number | null, away?: number | null) =>
     typeof home === 'number' && typeof away === 'number' ? `${home} : ${away}` : '–';
 
-  const featuredMatch = featuredSports?.match ?? featuredListing?.match ?? null;
+  const fallbackUpcoming = upcomingLiveSchedule[0] ? {
+    id: upcomingLiveSchedule[0].id,
+    status: upcomingLiveSchedule[0].status,
+    minute: null,
+    homeScore: upcomingLiveSchedule[0].homeScore,
+    awayScore: upcomingLiveSchedule[0].awayScore,
+    homeTeam: upcomingLiveSchedule[0].homeTeam,
+    awayTeam: upcomingLiveSchedule[0].awayTeam,
+    league: upcomingLiveSchedule[0].league,
+    channelName: upcomingLiveSchedule[0].channels[0]?.channel?.name,
+  } : null;
+
+  const featuredMatch = featuredSports?.match ?? featuredListing?.match ?? fallbackUpcoming;
   const featuredAssets = featuredSports?.assets ?? [];
-  const featuredLeague = featuredMatch?.league.name;
-  const featuredChannel = featuredSports?.assets[0]?.channel?.name ?? featuredListing?.channel?.name;
+  const featuredLeague = featuredMatch?.league?.name;
+  const featuredChannel =
+    featuredSports?.assets[0]?.channel?.name ??
+    featuredListing?.channel?.name ??
+    fallbackUpcoming?.channelName ??
+    (locale === 'ar' ? 'البث المباشر المعتمد' : 'Verified Live Broadcast');
 
   return (
     <SalonStage
@@ -326,7 +343,7 @@ async function LivePageBody({
                         : t('now_on_air')
                       : featuredListing
                         ? t('on_television')
-                        : t('watch')}
+                        : pick(locale, 'المواجهة المرتقبة القادمة ⏳', 'Upcoming Fixture ⏳')}
                   </span>
                 </div>
 

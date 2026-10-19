@@ -177,11 +177,13 @@ export default async function ChannelsPage({
 
   let isFallbackSchedule = false;
   if (broadcastMatches.length === 0 && !selectedLeagueSlug && !selectedChannelId && !selectedCountry && selectedStatus === 'ALL') {
-    // If strict week date filter yields 0, retrieve verified broadcast schedule so the page is genuinely informative and alive
+    // Retrieve upcoming confirmed broadcast schedule from today onwards
     const fallbackMatches = await prisma.match
       .findMany({
         where: {
           channels: { some: {} },
+          kickoffAt: { gte: todayStart },
+          status: { in: ['NOT_STARTED', 'LIVE', 'HALFTIME'] },
         },
         select: {
           id: true,
@@ -214,7 +216,7 @@ export default async function ChannelsPage({
             },
           },
         },
-        orderBy: { kickoffAt: 'desc' },
+        orderBy: { kickoffAt: 'asc' },
         take: 40,
       })
       .catch(swallow('channels.fallbackMatches', []));
@@ -447,7 +449,7 @@ export default async function ChannelsPage({
             <Radio className="h-5 w-5 text-orange-500" />
             <span>
               {isFallbackSchedule
-                ? (ar ? 'أحدث المباريات المنقولة تلفزيونياً والمؤكدة' : 'Latest Confirmed Match Broadcasts')
+                ? (ar ? 'أقرب مواعيد المباريات المنقولة تلفزيونياً والمؤكدة' : 'Upcoming Confirmed Match Broadcasts')
                 : (ar ? 'جدول المباريات المنقولة تلفزيونياً' : 'Confirmed Match Broadcasts')}
             </span>
           </h2>
