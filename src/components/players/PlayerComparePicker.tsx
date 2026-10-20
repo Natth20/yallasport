@@ -69,7 +69,7 @@ function PlayerSearchField({
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/players/suggest?locale=${locale}&q=${encodeURIComponent(q)}`,
+          `/api/search/suggestions?kind=player&locale=${locale}&q=${encodeURIComponent(q)}`,
           { signal: controller.signal },
         );
         if (!res.ok) {
@@ -111,7 +111,7 @@ function PlayerSearchField({
         setHits([]);
         setLoading(false);
       }
-    }, 280);
+    }, 120);
     return () => {
       window.clearTimeout(timer);
       controller.abort();

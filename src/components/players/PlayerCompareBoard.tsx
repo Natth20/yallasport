@@ -323,13 +323,13 @@ export function PlayerCompareBoard({
               left={radarKeys.map((row, i) => row[1] / max[i])}
               right={radarKeys.map((row, i) => row[2] / max[i])}
             />
-            <div className="flex items-center gap-5 text-xs font-extrabold mt-1">
-              <span className="flex items-center gap-1.5 text-foreground/80">
-                <span className="h-2 w-2 rounded-full bg-foreground/60" />
+            <div className="flex items-center gap-5 text-xs font-black mt-2">
+              <span className="flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
                 {left.name}
               </span>
-              <span className="flex items-center gap-1.5 text-orange-500">
-                <span className="h-2 w-2 rounded-full bg-orange-500" />
+              <span className="flex items-center gap-1.5 text-orange-500 dark:text-orange-400">
+                <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_8px_#f97316]" />
                 {right.name}
               </span>
             </div>

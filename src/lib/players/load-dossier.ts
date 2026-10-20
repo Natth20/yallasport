@@ -1355,12 +1355,21 @@ export type PlayerCompareCard = {
   fetchedAt: Date;
 };
 
+const compareCardCache = new Map<string, { at: number; data: PlayerCompareCard }>();
+const COMPARE_CARD_TTL_MS = 15 * 60 * 1000;
+
 /** Season stats from the football API — not sparse local match-event counts. */
 export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
   slug: string,
   seasonYear?: number,
   competitionId?: string,
 ): Promise<PlayerCompareCard | null> {
+  const cacheKey = `${slug}:${seasonYear ?? 'curr'}:${competitionId ?? 'all'}`;
+  const cached = compareCardCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < COMPARE_CARD_TTL_MS) {
+    return cached.data;
+  }
+
   const playerRow = await findPlayerRowBySlug(slug);
   if (!playerRow) return null;
 
@@ -1437,7 +1446,7 @@ export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
       : { id: clubFromApi.id, name: clubFromApi.name, slug: '', logoUrl: clubFromApi.logoUrl };
   }
 
-  return {
+  const result: PlayerCompareCard = {
     id: playerRow.id,
     slug: playerRow.slug,
     name: playerRow.name,
@@ -1453,6 +1462,13 @@ export const loadPlayerCompareCard = cache(async function loadPlayerCompareCard(
     provider: apiPlayer || apiPlayerPrev ? 'api-football' : 'database',
     fetchedAt: new Date(),
   };
+
+  compareCardCache.set(cacheKey, { at: Date.now(), data: result });
+  if (compareCardCache.size > 200) {
+    const oldest = compareCardCache.keys().next().value;
+    if (typeof oldest === 'string') compareCardCache.delete(oldest);
+  }
+  return result;
 });
 
 const COMPARE_FACE_NEEDLES = [

@@ -6,7 +6,16 @@ import { STREAMING_ENABLED } from '@/lib/streaming';
 import { liveKickoffFloor } from '@/lib/sports-data/match-window';
 import { swallow } from '@/lib/ops/caught';
 
+const aboutDeskCache = new Map<string, { at: number; data: any }>();
+const ABOUT_DESK_TTL = 10 * 60 * 1000;
+
 export const loadAboutDesk = cache(async function loadAboutDesk(locale: string, todayKey: string, timezone: string) {
+  const cacheKey = `${locale}:${todayKey}:${timezone}`;
+  const hit = aboutDeskCache.get(cacheKey);
+  if (hit && Date.now() - hit.at < ABOUT_DESK_TTL) {
+    return hit.data;
+  }
+
   const { start, end } = dayBoundsInTimezone(todayKey, timezone);
   const emptyLive: Array<{
     id: string;

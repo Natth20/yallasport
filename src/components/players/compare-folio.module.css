@@ -15,8 +15,8 @@
 }
 
 .radarInk {
-  fill: color-mix(in srgb, var(--foreground) 12%, transparent);
-  stroke: color-mix(in srgb, var(--foreground) 55%, transparent);
+  fill: color-mix(in srgb, #10b981 22%, transparent);
+  stroke: #10b981;
 }
 
 .radarMark {
@@ -483,17 +483,38 @@
 .portrait {
   padding: 1.55rem 1.15rem 1.35rem;
   border-radius: 1.4rem;
-  border: 1px solid color-mix(in srgb, var(--ys-orange) 18%, var(--border));
-  background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--ys-orange) 12%, transparent), transparent 52%),
-    var(--card);
+  border: 1px solid var(--border);
+  background: var(--card);
   text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portrait[data-accent='cyan'] {
+  border-color: color-mix(in srgb, #10b981 35%, var(--border));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, #10b981 14%, transparent), transparent 55%),
+    var(--card);
+  box-shadow: 0 12px 32px color-mix(in srgb, #10b981 8%, transparent);
 }
 
 .portrait[data-accent='cyan'] .face {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--foreground) 18%, transparent),
-    0 0 22px color-mix(in srgb, var(--foreground) 8%, transparent);
+    0 0 0 2px color-mix(in srgb, #10b981 60%, transparent),
+    0 0 24px color-mix(in srgb, #10b981 25%, transparent);
+}
+
+.portrait[data-accent='amber'] {
+  border-color: color-mix(in srgb, var(--ys-orange) 35%, var(--border));
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--ys-orange) 14%, transparent), transparent 55%),
+    var(--card);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--ys-orange) 8%, transparent);
+}
+
+.portrait[data-accent='amber'] .face {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ys-orange) 60%, transparent),
+    0 0 24px color-mix(in srgb, var(--ys-orange) 25%, transparent);
 }
 
 .face {
@@ -503,9 +524,6 @@
   overflow: hidden;
   border-radius: 999px;
   background: var(--background);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ys-orange) 30%, transparent),
-    0 0 22px color-mix(in srgb, var(--ys-orange) 12%, transparent);
 }
 
 .face img {

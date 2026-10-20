@@ -67,19 +67,42 @@ export function FrontSportNewsTabs({ locale, stories }: { locale: string; storie
         </Link>
       </div>
 
-      {/* Tabs Row */}
-      <div className={styles.sportNewsTabsRow}>
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`${styles.sportNewsTabBtn} ${tab === item.id ? styles.sportNewsTabActive : ''}`}
-            onClick={() => setTab(item.id)}
+      {/* Filter Controls: Luxury Dropdown Select + Quick Tabs */}
+      <div className={styles.sportNewsFilterControls}>
+        <div className={styles.sportNewsSelectWrap}>
+          <select
+            className={styles.sportNewsSelect}
+            value={tab}
+            onChange={(e) => setTab(e.target.value)}
+            aria-label={ar ? 'اختر الدوري أو البطولة' : 'Select League or Competition'}
           >
-            <span className={styles.tabEmoji}>{item.emoji}</span>
-            <span>{ar ? item.ar : item.en}</span>
-          </button>
-        ))}
+            {TABS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.emoji} {ar ? item.ar : item.en}
+              </option>
+            ))}
+          </select>
+          <div className={styles.sportNewsSelectArrow}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+
+        {/* Quick Tabs Row */}
+        <div className={styles.sportNewsTabsRow} style={{ marginBottom: 0 }}>
+          {TABS.slice(0, 7).map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`${styles.sportNewsTabBtn} ${tab === item.id ? styles.sportNewsTabActive : ''}`}
+              onClick={() => setTab(item.id)}
+            >
+              <span className={styles.tabEmoji}>{item.emoji}</span>
+              <span>{ar ? item.ar : item.en}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {shown.length === 0 ? (

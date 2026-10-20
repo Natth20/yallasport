@@ -190,6 +190,23 @@ export function ComparisonGroupCard({
         ) : null}
       </div>
 
+      {/* Side Entity Header Indicators */}
+      {leftLabel && rightLabel ? (
+        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-muted/30 border border-border/30 text-xs font-black">
+          <div className="flex items-center gap-1.5 text-foreground/90">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
+            <span className="truncate max-w-[140px] sm:max-w-[220px]">{leftLabel}</span>
+          </div>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold select-none">
+            VS
+          </span>
+          <div className="flex items-center gap-1.5 text-foreground/90">
+            <span className="truncate max-w-[140px] sm:max-w-[220px]">{rightLabel}</span>
+            <span className="h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_6px_#f97316]" />
+          </div>
+        </div>
+      ) : null}
+
       {/* Metrics List */}
       <div className="grid grid-cols-1 gap-2 sm:gap-2.5">
         {visibleMetrics.map((metric) => (

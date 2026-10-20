@@ -33,6 +33,8 @@ function TeamWell({
   const abortRef = useRef<AbortController | null>(null);
   const listId = useId();
 
+  const [active, setActive] = useState(0);
+
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2 || selected) {
@@ -51,7 +53,12 @@ function TeamWell({
         );
         if (!res.ok) return;
         const data = (await res.json()) as {
-          suggestions?: Array<{ label: string; slug?: string; photoUrl?: string | null }>;
+          suggestions?: Array<{
+            label: string;
+            slug?: string;
+            photoUrl?: string | null;
+            leagueName?: string | null;
+          }>;
         };
         const next = (data.suggestions || [])
           .map((row) => ({
@@ -59,15 +66,17 @@ function TeamWell({
             slug: row.slug || '',
             name: row.label,
             logoUrl: row.photoUrl ?? null,
+            leagueName: row.leagueName ?? null,
           }))
           .filter((row) => row.slug && row.slug !== occupied);
         setHits(next);
+        setActive(0);
         setOpen(true);
       } catch (error) {
         if (isAbortError(error)) return;
         setHits([]);
       }
-    }, 180);
+    }, 120);
     return () => {
       window.clearTimeout(timer);
       controller.abort();
@@ -98,19 +107,40 @@ function TeamWell({
             maxLength={80}
             autoComplete="off"
             onChange={(event) => setQuery(event.target.value)}
+            onFocus={() => {
+              if (hits.length) setOpen(true);
+            }}
+            onKeyDown={(event) => {
+              if (!open || hits.length === 0) return;
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setActive((i) => Math.min(i + 1, hits.length - 1));
+              } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActive((i) => Math.max(i - 1, 0));
+              } else if (event.key === 'Enter' && hits[active]) {
+                event.preventDefault();
+                onPick(hits[active]);
+                setQuery('');
+                setOpen(false);
+              } else if (event.key === 'Escape') {
+                setOpen(false);
+              }
+            }}
             placeholder={t('type_name')}
             aria-label={label}
             aria-controls={listId}
             aria-expanded={open}
           />
           {open ? (
-            <ul id={listId} className={styles.hits}>
+            <ul id={listId} className={styles.hits} role="listbox">
               {hits.length > 0 ? (
-                hits.map((team) => (
-                  <li key={team.slug}>
+                hits.map((team, idx) => (
+                  <li key={team.slug} role="option" aria-selected={idx === active}>
                     <button
                       type="button"
-                      className={styles.hit}
+                      className={`${styles.hit} ${idx === active ? styles.hitActive : ''}`}
+                      onMouseEnter={() => setActive(idx)}
                       onClick={() => {
                         onPick(team);
                         setQuery('');
@@ -123,7 +153,14 @@ function TeamWell({
                       ) : (
                         <span className={styles.hitMark}>{team.name.charAt(0)}</span>
                       )}
-                      {team.name}
+                      <div className="flex flex-col text-start min-w-0">
+                        <span className="font-bold truncate">{team.name}</span>
+                        {(team as any).leagueName ? (
+                          <span className="text-[10px] text-muted-foreground truncate">
+                            {(team as any).leagueName}
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   </li>
                 ))
