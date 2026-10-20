@@ -171,49 +171,49 @@
   --ys-red: #ef4444;
   --ys-red-soft: rgba(239, 68, 68, 0.15);
 
-  /* Dark Theme Surfaces & Text */
-  --background: #0a0a0a;
+  /* Dark Theme Surfaces & Text (Cyber Stadium Midnight Palette) */
+  --background: #04070e;
   --foreground: #f8fafc;
-  --card: #121212;
+  --card: #080d19;
   --card-foreground: #f8fafc;
-  --popover: #121212;
+  --popover: #080d19;
   --popover-foreground: #f8fafc;
 
   --primary: #10b981;
-  --primary-foreground: #0a0a0a;
-  --secondary: #1e1e1e;
+  --primary-foreground: #04070e;
+  --secondary: #0f172a;
   --secondary-foreground: #f8fafc;
 
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #f97316;
+  --muted: #0c1322;
+  --muted-foreground: #94a3b8;
+  --accent: #f59e0b;
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  --border: #27272a;
-  --input: #27272a;
+  --border: rgba(16, 185, 129, 0.16);
+  --input: rgba(16, 185, 129, 0.2);
   --ring: #10b981;
 
   --ys-slate: #94a3b8;
   --ys-slate-dim: #64748b;
-  --ys-surface: #121212;
-  --ys-surface-elevated: #1a1a1a;
+  --ys-surface: #080d19;
+  --ys-surface-elevated: #0d1527;
 
   /* Dark Shadows */
   --ys-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
   --ys-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --ys-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-  --ys-bg-0: #070707;
-  --ys-bg-1: #0a0a0a;
-  --ys-bg-2: #121212;
-  --ys-bg-3: #1a1a1a;
+  --ys-bg-0: #03050a;
+  --ys-bg-1: #04070e;
+  --ys-bg-2: #080d19;
+  --ys-bg-3: #0d1527;
   --ys-text: #f8fafc;
   --ys-text-secondary: #e2e8f0;
-  --ys-text-muted: #a1a1aa;
-  --ys-divider: #27272a;
-  --ys-green-live: #34d399;
+  --ys-text-muted: #94a3b8;
+  --ys-divider: rgba(255, 255, 255, 0.08);
+  --ys-green-live: #10b981;
   --ys-elev-4: 0 18px 36px -14px rgb(0 0 0 / 0.65);
   --ys-shadow-metallic: 0 12px 28px -12px rgb(220 38 38 / 0.55);
 
