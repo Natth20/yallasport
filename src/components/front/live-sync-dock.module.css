@@ -1,0 +1,335 @@
+/* ==========================================================================
+   Front Live Sync Dock & Goal Toasts Master Stylesheet
+   Luxury Cyber & Porcelain Theme
+   ========================================================================== */
+
+.syncDock {
+  position: fixed;
+  bottom: 1.5rem;
+  inset-inline-end: 1.5rem;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.85rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(245, 158, 11, 0.4);
+  border-radius: 9999px;
+  box-shadow: 
+    0 10px 28px -4px rgba(15, 23, 42, 0.15),
+    0 0 16px -2px rgba(245, 158, 11, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+:global(.dark) .syncDock,
+:global([data-theme="dark"]) .syncDock {
+  background: rgba(11, 16, 28, 0.92);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 
+    0 16px 40px -6px rgba(0, 0, 0, 0.7),
+    0 0 24px -4px rgba(245, 158, 11, 0.25);
+}
+
+.syncDock:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 16px 36px -4px rgba(245, 158, 11, 0.3),
+    0 0 24px rgba(245, 158, 11, 0.35);
+}
+
+.dockGlow {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.15), transparent 70%);
+  pointer-events: none;
+}
+
+/* Status Cluster */
+.statusCluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.liveIndicatorRing {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.liveCoreDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.liveIndicatorRing::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.5);
+  animation: pulseRing 1.8s infinite cubic-bezier(0.24, 0, 0.38, 1);
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.statusLabel {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  color: #059669;
+}
+
+:global(.dark) .statusLabel,
+:global([data-theme="dark"]) .statusLabel {
+  color: #34d399;
+}
+
+.dockDivider {
+  width: 1px;
+  height: 1rem;
+  background: rgba(203, 213, 225, 0.8);
+}
+
+:global(.dark) .dockDivider,
+:global([data-theme="dark"]) .dockDivider {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.timeAgoText {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+:global(.dark) .timeAgoText,
+:global([data-theme="dark"]) .timeAgoText {
+  color: #94a3b8;
+}
+
+/* Refresh Action Button */
+.refreshActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.refreshActionBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+}
+
+.refreshBtnText {
+  display: inline;
+}
+
+@media (max-width: 480px) {
+  .refreshBtnText {
+    display: none;
+  }
+}
+
+.refreshRotating svg {
+  animation: spinSlow 0.8s linear infinite;
+}
+
+@keyframes spinSlow {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Goal Toast Notifications
+   -------------------------------------------------------------------------- */
+.goalAlertsContainer {
+  position: fixed;
+  bottom: 5rem;
+  inset-inline-end: 1.5rem;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 380px;
+  width: calc(100% - 3rem);
+  pointer-events: none;
+}
+
+.goalToast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1.15rem;
+  background: #ffffff;
+  border: 1.5px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 
+    0 12px 32px -4px rgba(15, 23, 42, 0.2),
+    0 0 20px -2px rgba(245, 158, 11, 0.35);
+  animation: toastSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:global(.dark) .goalToast,
+:global([data-theme="dark"]) .goalToast {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 
+    0 16px 40px -6px rgba(0, 0, 0, 0.8),
+    0 0 25px -4px rgba(245, 158, 11, 0.35);
+}
+
+@keyframes toastSlideUp {
+  0% {
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.goalToastLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.goalBallBadge {
+  font-size: 1.4rem;
+  animation: bounceGoal 1s infinite alternate;
+}
+
+@keyframes bounceGoal {
+  0% { transform: scale(0.9); }
+  100% { transform: scale(1.15) rotate(15deg); }
+}
+
+.goalAlertHeading {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #d97706;
+}
+
+:global(.dark) .goalAlertHeading,
+:global([data-theme="dark"]) .goalAlertHeading {
+  color: #fbbf24;
+}
+
+.goalMinuteTag {
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+:global(.dark) .goalMinuteTag,
+:global([data-theme="dark"]) .goalMinuteTag {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+}
+
+.goalMatchText {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 850;
+  color: #0f172a;
+  line-height: 1.35;
+  margin-top: 0.15rem;
+}
+
+:global(.dark) .goalMatchText,
+:global([data-theme="dark"]) .goalMatchText {
+  color: #ffffff;
+}
+
+.goalToastActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.goalMatchBtn {
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #b45309;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:global(.dark) .goalMatchBtn,
+:global([data-theme="dark"]) .goalMatchBtn {
+  color: #fbbf24;
+}
+
+.goalMatchBtn:hover {
+  background: #f59e0b;
+  color: #0f172a;
+}
+
+.dismissBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dismissBtn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #ef4444;
+}
+
+:global(.dark) .dismissBtn:hover,
+:global([data-theme="dark"]) .dismissBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fca5a5;
+}

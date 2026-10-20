@@ -23,6 +23,7 @@ import { FrontVideoGrid } from './FrontVideoGrid';
 import { FrontMediaStrip } from './FrontMediaStrip';
 import { SquadsChapter } from './chapters/SquadsChapter';
 import { FrontTopMatchesShowcase } from './FrontTopMatchesShowcase';
+import { FrontLiveSyncDock } from './FrontLiveSyncDock';
 import look from './front-design.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -129,6 +130,9 @@ export async function FrontPage({ locale: propLocale }: { locale?: string } = {}
             <SquadsChapter />
           </Suspense>
         </section>
+
+        {/* 🟢 شريط التحديث اللحظي المباشر وتنبيهات الأهداف (Live Sync Dock & Goal Alerts) */}
+        <FrontLiveSyncDock locale={locale} />
 
       </div>
     </div>
