@@ -448,13 +448,27 @@ async function LeaguesPageBody({
     : [];
 
   const followedLeagues = leagues.filter((league) => followedSet.has(league.id));
+  const finishedRecencyFloor = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
+  const upcomingCeiling = new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000);
+
   const upcomingMatches = [...upcomingRows]
+    .filter((match) => match.kickoffAt.getTime() >= now.getTime() && match.kickoffAt.getTime() <= upcomingCeiling.getTime())
     .sort((first, second) => first.kickoffAt.getTime() - second.kickoffAt.getTime())
     .slice(0, 6);
   const recentResults = [...finishedRows]
-    .filter((match) => hasScore(match.homeScore, match.awayScore))
+    .filter(
+      (match) =>
+        hasScore(match.homeScore, match.awayScore) &&
+        match.kickoffAt.getTime() >= finishedRecencyFloor.getTime() &&
+        match.kickoffAt.getTime() <= now.getTime()
+    )
     .sort((first, second) => second.kickoffAt.getTime() - first.kickoffAt.getTime())
     .slice(0, 6);
+
+  const featuredLeagues = [...leagues]
+    .sort((a, b) => spotlightScore(b) - spotlightScore(a))
+    .slice(0, 8);
+
   const liveBoard = liveMatches.slice(0, 8);
   const liveGoalByMatch = new Map<string, (typeof liveGoals)[number]>();
   for (const event of liveGoals) {
@@ -663,7 +677,6 @@ async function LeaguesPageBody({
         visibleCountries={visibleCountries}
         extraCountryCount={extraCountryCount}
         countryCoverage={countryCoverage}
-        countryHref={countryHref}
         filterCounts={filterCounts}
         census={census}
         providerIsLive={providerIsLive}
@@ -673,6 +686,7 @@ async function LeaguesPageBody({
         titleRaces={titleRaces}
         scorers={scorers}
         leagueNews={leagueNews}
+        featuredLeagues={featuredLeagues}
       />
     </SalonStage>
   );

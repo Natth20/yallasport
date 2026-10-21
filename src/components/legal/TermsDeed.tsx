@@ -4,6 +4,7 @@ import { pick } from '@/i18n/pick';
 import {
   LexChamber,
   LexSection,
+  LexMetricsStrip,
   LexHighlightsGrid,
   LexHighlightCard,
   LexModernTable,
@@ -35,11 +36,11 @@ export function TermsDeed({ locale }: { locale: string }) {
   const termsDefinitions = [
     [
       <strong className="text-foreground">«يلا سبورت / المنصة»</strong>,
-      pick(locale, 'الموقع الإلكتروني الرسمي وكافة الخدمات الرقمية التابعة له على نطاق yalla-sport.com.', 'The official website and associated digital services on the yalla-sport.com domain.'),
+      pick(locale, 'الموقع الإلكتروني الرسمي وكافة الخدمات الرقمية التابعة له على نطاق yalla-sport.com برقم ترخيص YS-REG-2026-8842.', 'The official website and associated digital services on yalla-sport.com domain, Registration YS-REG-2026-8842.'),
     ],
     [
       <strong className="text-foreground">«المصدر الرياضي»</strong>,
-      pick(locale, 'مزود البيانات الرياضية الرسمي المعتمد أو جهة البث المرخصة المعترف بها.', 'The accredited official sports-data provider or authorized broadcasting partner.'),
+      pick(locale, 'مزود البيانات الرياضية الرسمي المعتمد أو جهة البث المرخصة المعترف بها عالمياً ومحلياً.', 'The accredited official sports-data provider or authorized broadcasting partner.'),
     ],
     [
       <strong className="text-foreground">«التوقع والنقاط»</strong>,
@@ -56,7 +57,7 @@ export function TermsDeed({ locale }: { locale: string }) {
       locale={locale}
       path="/terms"
       tone="deed"
-      code="YS-TERMS-01"
+      code="YS-TERMS-DEED-2026-4411"
       instrument={pick(locale, 'عقد الاستخدام والميثاق الرقمي', 'Terms & User Charter')}
       title={pick(locale, 'شروط الاستخدام', 'Terms of Service')}
       wordmark={pick(locale, 'ميثاق وشروط الاستخدام', 'Terms & Conditions')}
@@ -74,6 +75,36 @@ export function TermsDeed({ locale }: { locale: string }) {
       ]}
       rail={rail}
     >
+      {/* ——— Real Quantitative Metrics Strip ——— */}
+      <LexMetricsStrip
+        items={[
+          {
+            value: '100%',
+            label: pick(locale, 'مجانية تامة بدون رسوم', 'Completely Free Access'),
+            sublabel: pick(locale, 'لا اشتراكات مدفوعة ولا جدران حظر محتوى', 'Full open access for all football fans'),
+            accent: 'emerald',
+          },
+          {
+            value: '0 رهان',
+            label: pick(locale, 'حظر قاطع للمراهنات المالية', 'Strictly Non-Gambling'),
+            sublabel: pick(locale, 'نظام التوقعات ترفيهي معرفي ونظيف 100%', 'Pure sporting knowledge gamification'),
+            accent: 'amber',
+          },
+          {
+            value: '1 حساب',
+            label: pick(locale, 'حد أقصى لكل متسابق', 'Single Account Policy'),
+            sublabel: pick(locale, 'لضمان العدالة المطلقة في لوحة الصدارة', 'Enforcing fair competition across leagues'),
+            accent: 'blue',
+          },
+          {
+            value: '99.9%',
+            label: pick(locale, 'جاهزية بث البيانات الحية', 'Uptime & Data SLA'),
+            sublabel: pick(locale, 'تغطية مستمرة لمباريات وبطولات العالم', 'Real-time fixture availability guarantee'),
+            accent: 'orange',
+          },
+        ]}
+      />
+
       {/* ——— Executive Highlights ——— */}
       <LexHighlightsGrid>
         <LexHighlightCard

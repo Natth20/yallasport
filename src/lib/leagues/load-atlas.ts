@@ -57,12 +57,9 @@ async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise
 async function wave<T extends readonly unknown[]>(
   tasks: [...{ [K in keyof T]: () => Promise<T[K]> }]
 ): Promise<{ [K in keyof T]: T[K] }> {
-  const out: unknown[] = [];
-  for (const task of tasks) {
-    out.push(await task());
-  }
-  return out as { [K in keyof T]: T[K] };
+  return Promise.all(tasks.map((task) => task())) as Promise<{ [K in keyof T]: T[K] }>;
 }
+
 
 export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(input: {
   now: Date;
@@ -177,6 +174,9 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
     }
   }
 
+  const finishedRecencyFloor = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
+  const upcomingCeiling = new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000);
+
   const [matchCensus, nextKickoffs, lastKickoffs, todayMatchCount] = await wave([
     () =>
       soft(
@@ -192,7 +192,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
         () =>
           prisma.match.groupBy({
             by: ['leagueId'],
-            where: { kickoffAt: { gte: now }, status: 'NOT_STARTED' },
+            where: { kickoffAt: { gte: now, lte: upcomingCeiling }, status: 'NOT_STARTED' },
             _min: { kickoffAt: true },
           }),
         []
@@ -202,7 +202,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
         () =>
           prisma.match.groupBy({
             by: ['leagueId'],
-            where: { status: 'FINISHED' },
+            where: { status: 'FINISHED', kickoffAt: { gte: finishedRecencyFloor } },
             _max: { kickoffAt: true },
           }),
         []
@@ -232,6 +232,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
             prisma.match.findMany({
               where: {
                 status: 'NOT_STARTED',
+                kickoffAt: { gte: now, lte: upcomingCeiling },
                 OR: nextPairs.map((row) => ({ leagueId: row.leagueId, kickoffAt: row.kickoffAt })),
               },
               select: {
@@ -257,6 +258,7 @@ export const loadLeaguesAtlasData = cache(async function loadLeaguesAtlasData(in
             prisma.match.findMany({
               where: {
                 status: 'FINISHED',
+                kickoffAt: { gte: finishedRecencyFloor },
                 OR: lastPairs.map((row) => ({ leagueId: row.leagueId, kickoffAt: row.kickoffAt })),
               },
               select: {

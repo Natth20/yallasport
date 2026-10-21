@@ -6,6 +6,7 @@ import { LeagueFollowChip } from '@/components/leagues/LeagueFollowChip';
 import { LeagueFilterBar } from '@/components/leagues/LeagueFilterBar';
 import { LeagueCrest } from '@/components/leagues/LeagueCrest';
 import { LeagueDeskCard } from '@/components/leagues/LeagueDeskCard';
+import { CountryJumpSelect } from '@/components/leagues/CountryJumpSelect';
 import { pick } from '@/i18n/pick';
 import { localizeCompetitionTitle, localizeCountryName, localizeLeagueRegion, localizeRoundName } from '@/lib/i18n/competition-names';
 import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
@@ -111,14 +112,40 @@ function roundLabel(locale: string, round?: string | null) {
   return round ? localizeRoundName(locale, round) : '';
 }
 
+function countryFlagEmoji(country: string) {
+  const c = country.toLowerCase();
+  if (c.includes('all') || c.includes('كل')) return '🌍';
+  if (c.includes('world') || c.includes('global') || c.includes('عالمي') || c.includes('international')) return '🌐';
+  if (c.includes('england') || c.includes('إنجلترا')) return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
+  if (c.includes('spain') || c.includes('إسبانيا')) return '🇪🇸';
+  if (c.includes('saudi') || c.includes('السعودية')) return '🇸🇦';
+  if (c.includes('italy') || c.includes('إيطاليا')) return '🇮🇹';
+  if (c.includes('germany') || c.includes('ألمانيا')) return '🇩🇪';
+  if (c.includes('france') || c.includes('فرنسا')) return '🇫🇷';
+  if (c.includes('europe') || c.includes('أوروبا')) return '🇪🇺';
+  if (c.includes('brazil') || c.includes('البرازيل')) return '🇧🇷';
+  if (c.includes('argentina') || c.includes('الأرجنتين')) return '🇦🇷';
+  if (c.includes('portugal') || c.includes('البرتغال')) return '🇵🇹';
+  if (c.includes('netherlands') || c.includes('هولندا')) return '🇳🇱';
+  if (c.includes('turkey') || c.includes('تركيا')) return '🇹🇷';
+  if (c.includes('egypt') || c.includes('مصر')) return '🇪🇬';
+  if (c.includes('morocco') || c.includes('المغرب')) return '🇲🇦';
+  if (c.includes('japan') || c.includes('اليابان')) return '🇯🇵';
+  if (c.includes('korea') || c.includes('كوريا')) return '🇰🇷';
+  if (c.includes('norway') || c.includes('النرويج')) return '🇳🇴';
+  if (c.includes('austria') || c.includes('النمسا')) return '🇦🇹';
+  if (c.includes('sweden') || c.includes('السويد')) return '🇸🇪';
+  return '⚽';
+}
+
 function raceLine(locale: string, gap: number, leader: string, runner: string) {
   if (gap === 0) {
-    return pick(locale, `يتساوى الفريقان في النقاط. ${leader} و ${runner}`, `${leader} and ${runner} are level on points.`);
+    return pick(locale, `يتساوى الفريقان في النقاط (${leader} × ${runner})`, `${leader} and ${runner} are level on points.`);
   }
   return pick(
     locale,
-    `الفارق بين الفريقين: ${gap} نقطة. ${leader} و ${runner}`,
-    `The gap between the two teams is ${gap} pts — ${leader} and ${runner}`
+    `فارق ${gap} نقاط بين الفريقين (${leader} × ${runner})`,
+    `The gap between the two teams is ${gap} pts (${leader} × ${runner})`
   );
 }
 
@@ -180,7 +207,6 @@ export function LeaguesAtlas({
   visibleCountries,
   extraCountryCount,
   countryCoverage,
-  countryHref,
   filterCounts,
   census,
   providerIsLive,
@@ -190,6 +216,7 @@ export function LeaguesAtlas({
   titleRaces,
   scorers,
   leagueNews,
+  featuredLeagues = [],
 }: {
   locale: string;
   now: Date;
@@ -213,7 +240,6 @@ export function LeaguesAtlas({
   visibleCountries: string[];
   extraCountryCount: number;
   countryCoverage: Array<{ country: string; live: number }>;
-  countryHref: (country: string) => string;
   filterCounts: { all: number; following: number; live: number; standings: number; covered: number };
   census: Array<{ value: number; label: string; live: boolean }>;
   providerIsLive: boolean;
@@ -237,7 +263,17 @@ export function LeaguesAtlas({
     leagueName: string;
     leagueSlug: string;
   }>;
+  featuredLeagues?: AtlasLeague[];
 }) {
+  const countryHref = (country: string) => {
+    const nextParams = new URLSearchParams();
+    if (paramsQ?.trim()) nextParams.set('q', paramsQ.trim());
+    if (country !== 'all') nextParams.set('country', country);
+    if (activeFilter !== 'all') nextParams.set('filter', activeFilter);
+    if (activeSort !== 'coverage') nextParams.set('sort', activeSort);
+    const search = nextParams.toString();
+    return search ? `/leagues?${search}` : '/leagues';
+  };
   return (
     <div className={`${styles.leagueAtlas} league-atlas pb-10`}>
       <span className="atlas-flood atlas-flood-a" aria-hidden />
@@ -510,14 +546,16 @@ export function LeaguesAtlas({
                       ))}
                     </div>
                     {spotlightLeague.leader && spotlightLeague.runnerUp && (
-                      <p className="mt-4 text-[10px] atlas-muted">
-                        {raceLine(
-                          locale,
-                          spotlightLeague.leader.points - spotlightLeague.runnerUp.points,
-                          teamLabel(locale, spotlightLeague.leader.team.name),
-                          teamLabel(locale, spotlightLeague.runnerUp.team.name)
-                        )}
-                      </p>
+                      <div className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-card/60 px-3 py-2 text-xs">
+                        <span className="font-bold text-amber-500 shrink-0">
+                          {formatGap(locale, spotlightLeague.leader.points - spotlightLeague.runnerUp.points)}
+                        </span>
+                        <div className="truncate text-muted-foreground flex items-center gap-1.5" dir="auto">
+                          <bdi className="font-semibold text-foreground truncate">{teamLabel(locale, spotlightLeague.leader.team.name)}</bdi>
+                          <span className="opacity-40">×</span>
+                          <bdi className="font-semibold text-foreground truncate">{teamLabel(locale, spotlightLeague.runnerUp.team.name)}</bdi>
+                        </div>
+                      </div>
                     )}
                   </div>
                 ) : spotlightLiveMatches.length > 0 ? (
@@ -686,74 +724,243 @@ export function LeaguesAtlas({
           </section>
         )}
 
-        {sortedLeagues.length > 0 ? (
-          <>
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        {/* VIP Featured Tournaments Showcase Ribbon ("شريط أبرز البطولات") */}
+        {featuredLeagues.length > 0 && selectedCountry === 'all' && !paramsQ && activeFilter === 'all' && (
+          <section className="mb-12">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
               <div>
-                <span className="atlas-section-kicker">{pick(locale, 'حسب العالم والقارات والدول', 'By world, continents and countries')}</span>
-                <h2 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-foreground dark:text-foreground">
-                  {selectedCountry === 'all'
-                    ? directoryCapped
-                      ? pick(locale, 'أبرز البطولات', 'Featured leagues')
-                      : pick(locale, 'دليل البطولات', 'League directory')
-                    : countryLabel(locale, selectedCountry)}
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/25 shadow-xs">
+                    <Trophy className="h-4 w-4" />
+                  </span>
+                  <span className="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                    {pick(locale, 'شريط النخبة العالمي', 'Premier World Showcase')}
+                  </span>
+                </div>
+                <h2 className="mt-1.5 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                  {pick(locale, 'أبرز البطولات والدوريات', 'Featured Tournaments & Leagues')}
                 </h2>
-              </div>
-              <span className="text-[12px] text-muted-foreground">
-                {directoryCapped
-                  ? pick(
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                  {pick(
                     locale,
-                    `عرض مختار من ${sortedLeagues.length} بطولة — اختر دولة لرؤية الكل`,
-                    `A desk selection of ${sortedLeagues.length} leagues — pick a country to see all`
-                  )
-                  : `${sortedLeagues.length} ${pick(locale, 'بطولة', 'leagues')}`}
-                <span className="mx-2 text-muted-foreground">·</span>
-                <ClientTime value={now} options={{ weekday: 'long', day: 'numeric', month: 'short' }} />
-                {selectedCountry !== 'all' && (
-                  <>
-                    {' · '}
-                    <Link href={countryHref('all')} className="text-orange-500 hover:underline">
-                      {pick(locale, 'كل الدول', 'All countries')}
-                    </Link>
-                  </>
-                )}
+                    'متابعة حية ومباشرة لقمم الكرة العالمية مع جداول الترتيب والمباريات والأرشيف من المصدر المعتمد',
+                    'Direct access to world top leagues with standings, fixtures and verified records'
+                  )}
+                </p>
+              </div>
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                {featuredLeagues.length} {pick(locale, 'بطولة كبرى', 'Marquee Competitions')}
               </span>
             </div>
 
-            {visibleCountries.length > 0 && (
-              <div className="mb-6 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                <Link
-                  href={countryHref('all')}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold ${selectedCountry === 'all'
-                    ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
-                    : 'border border-border bg-card text-muted-foreground hover:text-foreground dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
-                    }`}
-                >
-                  {pick(locale, 'كل الدول', 'All countries')}
-                </Link>
-                {visibleCountries.map((country) => {
-                  const liveHere = countryCoverage.find((entry) => entry.country === country)?.live ?? 0;
-                  return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {featuredLeagues.map((league) => {
+                const live = Boolean(league.liveMatch);
+                return (
+                  <article
+                    key={league.id}
+                    className="group relative flex flex-col justify-between rounded-3xl border border-border/80 bg-card/75 p-5 backdrop-blur-xl transition-all duration-300 hover:border-amber-500/50 hover:bg-card hover:shadow-[0_16px_36px_-12px_rgba(245,158,11,0.18)] dark:bg-card/40 dark:hover:border-amber-400/40"
+                  >
+                    <div>
+                      {/* Top Bar with crest pedestal & follow chip */}
+                      <div className="flex items-start justify-between gap-3">
+                        <Link href={`/league/${league.slug}`} className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-card p-2.5 shadow-sm transition-transform duration-300 group-hover:scale-105 group-hover:border-amber-500/40">
+                          <LeagueCrest name={league.name} logoUrl={league.logoUrl} className="h-full w-full object-contain" />
+                        </Link>
+                        <div className="flex flex-col items-end gap-2">
+                          <LeagueFollowChip leagueId={league.id} isLoggedIn={loggedIn} initialIsFollowing={followedSet.has(league.id)} />
+                          {live ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/15 px-2.5 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
+                              {pick(locale, 'مباشر الآن', 'Live Now')}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                              <Globe className="h-3 w-3 text-amber-500" />
+                              {countryLabel(locale, league.country)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Title & Season */}
+                      <div className="mt-3.5">
+                        <Link href={`/league/${league.slug}`} className="transition-colors hover:text-amber-500">
+                          <h3 className="text-base font-black leading-snug text-foreground">
+                            {leagueLabel(locale, league)}
+                          </h3>
+                        </Link>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                          {league.season && <span>{league.season}</span>}
+                          {league.standings > 0 && (
+                            <>
+                              <span>·</span>
+                              <span>{league.standings} {pick(locale, 'فريق', 'teams')}</span>
+                            </>
+                          )}
+                          {league.census.upcoming > 0 && (
+                            <>
+                              <span>·</span>
+                              <span className="text-orange-600 dark:text-orange-400 font-medium">
+                                {league.census.upcoming} {pick(locale, 'قادمة', 'fixtures')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Status / Podium / Next match highlight */}
+                      <div className="mt-3 rounded-2xl border border-border/50 bg-background/50 p-2.5 text-xs">
+                        {league.leader ? (
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-[10px] font-black text-amber-600 dark:text-amber-400">
+                                1
+                              </span>
+                              <span className="truncate font-bold text-foreground">
+                                {teamLabel(locale, league.leader.team.name)}
+                              </span>
+                            </div>
+                            <span className="shrink-0 font-black text-amber-600 dark:text-amber-400">
+                              {league.leader.points} {pick(locale, 'نقطة', 'pts')}
+                            </span>
+                          </div>
+                        ) : league.nextMatch ? (
+                          <div className="flex items-center justify-between gap-2 text-[11px]">
+                            <span className="truncate font-medium text-muted-foreground">
+                              {teamLabel(locale, league.nextMatch.homeTeam.name)} × {teamLabel(locale, league.nextMatch.awayTeam.name)}
+                            </span>
+                            <ClientTime value={league.nextMatch.kickoffAt} className="shrink-0 font-bold text-orange-500" />
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">
+                            {pick(locale, 'بيانات وجداول محدثة', 'Live synchronized stats')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick Action Buttons */}
+                    <div className="mt-4 flex flex-wrap items-center gap-1.5 pt-3 border-t border-border/50">
+                      {league.standings > 0 && (
+                        <Link
+                          href={`/league/${league.slug}/standings`}
+                          className="flex-1 text-center rounded-xl border border-border/70 bg-card/60 py-1.5 text-[11px] font-bold text-foreground transition-colors hover:border-amber-500/40 hover:bg-card"
+                        >
+                          {pick(locale, 'الجدول', 'Table')}
+                        </Link>
+                      )}
+                      {league.census.upcoming > 0 && (
+                        <Link
+                          href={`/league/${league.slug}/fixtures`}
+                          className="flex-1 text-center rounded-xl border border-border/70 bg-card/60 py-1.5 text-[11px] font-bold text-foreground transition-colors hover:border-amber-500/40 hover:bg-card"
+                        >
+                          {pick(locale, 'المباريات', 'Fixtures')}
+                        </Link>
+                      )}
+                      {league.census.finished > 0 && (
+                        <Link
+                          href={`/league/${league.slug}/archive`}
+                          className="flex-1 text-center rounded-xl border border-border/70 bg-card/60 py-1.5 text-[11px] font-bold text-foreground transition-colors hover:border-amber-500/40 hover:bg-card"
+                        >
+                          {pick(locale, 'الأرشيف', 'Archive')}
+                        </Link>
+                      )}
+                      <Link
+                        href={`/league/${league.slug}`}
+                        className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-orange-400"
+                        title={pick(locale, 'فتح البطولة', 'Open league')}
+                      >
+                        <ArrowUpLeft className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {sortedLeagues.length > 0 ? (
+          <>
+            {/* Luxury Country & Continent Pavilion ("دليل البطولات حسب الدول") */}
+            <div className="countryPavilion">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/50 pb-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-500 border border-orange-500/30 shadow-xs">
+                    <Globe className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <span className="atlas-section-kicker">
+                      {pick(locale, 'دليل البطولات والتصنيفات الجغرافية', 'Geographic League Atlas & Directory')}
+                    </span>
+                    <h2 className="mt-0.5 text-xl sm:text-2xl font-black text-foreground">
+                      {selectedCountry === 'all'
+                        ? pick(locale, 'دليل البطولات حسب الدول والقارات', 'Directory by Country & Continent')
+                        : countryLabel(locale, selectedCountry)}
+                    </h2>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-full border border-border/70 bg-card/70 px-3.5 py-1 text-xs font-bold text-muted-foreground">
+                    {sortedLeagues.length} {pick(locale, 'بطولة', 'leagues')} · {jumpCountries.length} {pick(locale, 'دولة ومنطقة', 'regions')}
+                  </span>
+                  {selectedCountry !== 'all' && (
                     <Link
-                      key={country}
-                      href={countryHref(country)}
-                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${selectedCountry === country
-                        ? 'bg-foreground text-white dark:bg-card dark:text-foreground'
-                        : liveHere > 0
-                          ? 'border border-rose-200 bg-rose-500/10 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300'
-                          : 'border border-border bg-card text-muted-foreground hover:text-foreground dark:border-border dark:bg-card/[0.04] dark:text-muted-foreground'
-                        }`}
+                      href={countryHref('all')}
+                      className="rounded-full bg-orange-500/15 border border-orange-500/30 px-3.5 py-1 text-xs font-bold text-orange-600 dark:text-orange-400 hover:bg-orange-500/25"
                     >
-                      {liveHere > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />}
-                      {countryLabel(locale, country)}
+                      {pick(locale, 'عرض كل الدول ✕', 'Clear Filter ✕')}
                     </Link>
-                  );
-                })}
-                {extraCountryCount > 0 && selectedCountry === 'all' && (
-                  <span className="text-[10px] text-muted-foreground">+{extraCountryCount}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Luxury Country Navigation Ribbon with Dropdown */}
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                {/* Horizontal scrollable pills */}
+                <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1.5 no-scrollbar">
+                  <Link
+                    href={countryHref('all')}
+                    className={`countryPill ${selectedCountry === 'all' ? 'is-active' : ''}`}
+                  >
+                    <span>🌍</span>
+                    <span>{pick(locale, 'كل الدول', 'All Countries')}</span>
+                  </Link>
+
+                  {visibleCountries.map((country) => {
+                    const liveHere = countryCoverage.find((entry) => entry.country === country)?.live ?? 0;
+                    const isActive = selectedCountry === country;
+                    return (
+                      <Link
+                        key={country}
+                        href={countryHref(country)}
+                        className={`countryPill ${isActive ? 'is-active' : ''}`}
+                      >
+                        <span>{countryFlagEmoji(country)}</span>
+                        <span>{countryLabel(locale, country)}</span>
+                        {liveHere > 0 && (
+                          <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" title={pick(locale, 'مباريات مباشرة', 'Live')} />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Quick searchable country selector for all 100+ countries */}
+                {jumpCountries.length > 0 && (
+                  <CountryJumpSelect
+                    selectedCountry={selectedCountry}
+                    jumpCountries={jumpCountries}
+                    labelAll={pick(locale, `— اختر من جميع الدول (${jumpCountries.length}+) —`, `— All Countries (${jumpCountries.length}+) —`)}
+                    countryLabels={Object.fromEntries(
+                      jumpCountries.map((c) => [c.country, `${countryFlagEmoji(c.country)} ${countryLabel(locale, c.country)}`])
+                    )}
+                  />
                 )}
               </div>
-            )}
+            </div>
 
             <div className="space-y-7">
               {chapterEntries.map(({ country, rows, total }, chapterIndex) => {

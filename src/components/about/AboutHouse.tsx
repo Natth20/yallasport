@@ -167,7 +167,7 @@ export async function AboutHouse() {
             </div>
             {liveRows.length > 0 ? (
               <div className={styles.wireGrid}>
-                {liveRows.map((row) => {
+                {liveRows.map((row: any) => {
                   const scored = row.homeScore != null && row.awayScore != null;
                   const home = localizePlainName(locale, row.homeTeam.name);
                   const away = localizePlainName(locale, row.awayTeam.name);

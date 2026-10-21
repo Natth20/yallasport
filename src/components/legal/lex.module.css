@@ -379,6 +379,105 @@
   display: none;
 }
 
+/* ══════════════ STATISTICAL METRICS STRIP ══════════════ */
+.lex-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 0 0 1.35rem;
+}
+
+@media (min-width: 768px) {
+  .lex-metrics-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.lex-metric-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.15rem 1.1rem;
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 18px -3px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.lex-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 2.5px;
+  background: var(--lex-accent);
+}
+
+.lex-metric-card[data-accent='emerald']::before {
+  background: #10b981;
+}
+
+.lex-metric-card[data-accent='blue']::before {
+  background: #3b82f6;
+}
+
+.lex-metric-card[data-accent='amber']::before {
+  background: #f59e0b;
+}
+
+.lex-metric-card[data-accent='orange']::before {
+  background: #ea580c;
+}
+
+.lex-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--lex-accent-rgb), 0.35);
+  box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.55), 0 0 16px -4px rgba(var(--lex-accent-rgb), 0.25);
+}
+
+.lex-metric-value {
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.lex-metric-card[data-accent='emerald'] .lex-metric-value {
+  color: #10b981;
+}
+
+.lex-metric-card[data-accent='blue'] .lex-metric-value {
+  color: #60a5fa;
+}
+
+.lex-metric-card[data-accent='amber'] .lex-metric-value {
+  color: #fbbf24;
+}
+
+.lex-metric-card[data-accent='orange'] .lex-metric-value {
+  color: #f97316;
+}
+
+.lex-metric-label {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: var(--foreground);
+}
+
+.lex-metric-sublabel {
+  margin-top: 0.25rem;
+  font-size: 0.73rem;
+  color: var(--muted-foreground);
+  line-height: 1.35;
+}
+
 /* ══════════════ HIGHLIGHTS / EXECUTIVE SUMMARY ══════════════ */
 .lex-highlights-grid {
   display: grid;

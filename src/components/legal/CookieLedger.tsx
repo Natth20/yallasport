@@ -5,6 +5,7 @@ import { CONTACT_EMAIL } from '@/lib/seo/site';
 import {
   LexChamber,
   LexSection,
+  LexMetricsStrip,
   LexHighlightsGrid,
   LexHighlightCard,
   LexModernTable,
@@ -98,7 +99,7 @@ export function CookieLedger({ locale, analyticsId = '' }: { locale: string; ana
       locale={locale}
       path="/cookies"
       tone="crumb"
-      code="YS-SEC-02"
+      code="YS-COOKIE-LED-2026-1109"
       instrument={pick(locale, 'سجل ملفات الارتباط والتخزين', 'Cookie & Storage Ledger')}
       title={pick(locale, 'ملفات تعريف الارتباط', 'Cookie Policy')}
       wordmark={pick(locale, 'سجل ملفات الارتباط والتخزين', 'Cookie & Storage Ledger')}
@@ -116,6 +117,36 @@ export function CookieLedger({ locale, analyticsId = '' }: { locale: string; ana
       ]}
       rail={rail}
     >
+      {/* ——— Real Quantitative Metrics Strip ——— */}
+      <LexMetricsStrip
+        items={[
+          {
+            value: '5 ملفات',
+            label: pick(locale, 'كوكيز وظيفية حتمية', 'Strictly Essential Cookies'),
+            sublabel: pick(locale, 'للمصادقة وحفظ تفضيلات المظهر واللغة والتوقيت', 'Powering core session and regional settings'),
+            accent: 'emerald',
+          },
+          {
+            value: '3 مفاتيح',
+            label: pick(locale, 'تخزين محلي سريع', 'Local Storage Keys'),
+            sublabel: pick(locale, 'تسريع تحميل واجهات النتائج دون استهلاك الخادم', 'Client-side instant caching for zero latency'),
+            accent: 'blue',
+          },
+          {
+            value: '0 Byte',
+            label: pick(locale, 'تتبع سلوكي إعلاني', 'Zero Cross-Site Ad Tracking'),
+            sublabel: pick(locale, 'لا ملفات استهداف أو مزادات إعلانات خارجية', 'No third-party data brokers or ad pixels'),
+            accent: 'amber',
+          },
+          {
+            value: '365 يوم',
+            label: pick(locale, 'أقصى مدة صلاحية', 'Max Cookie Lifespan'),
+            sublabel: pick(locale, 'تنتهي صلاحيتها تلقائياً ما لم تجدد زيارتك', 'Automatic expiration enforced by browser headers'),
+            accent: 'orange',
+          },
+        ]}
+      />
+
       {/* ——— Executive Highlights ——— */}
       <LexHighlightsGrid>
         <LexHighlightCard

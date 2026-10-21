@@ -20,11 +20,11 @@
   position: relative;
   overflow: hidden;
   color: #f6f1ea;
-  border-bottom: 1px solid color-mix(in srgb, var(--ys-orange) 24%, transparent);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
   background:
-    radial-gradient(55% 75% at 15% 0%, color-mix(in srgb, var(--ys-orange) 20%, transparent), transparent 60%),
-    radial-gradient(45% 55% at 85% 100%, color-mix(in srgb, #0ea5e9 12%, transparent), transparent 60%),
-    linear-gradient(180deg, #14110e 0%, #0a0a0a 100%);
+    radial-gradient(55% 75% at 15% 0%, rgba(16, 185, 129, 0.15), transparent 60%),
+    radial-gradient(45% 55% at 85% 100%, rgba(245, 158, 11, 0.1), transparent 60%),
+    linear-gradient(180deg, #0d1527 0%, #04070e 100%);
 }
 
 .heroAura,

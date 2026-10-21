@@ -364,6 +364,13 @@ export function localizeLeagueName(locale: string, league: LeagueInput, translat
   if (!official) return stored;
 
   if (locale === 'ar') {
+    if (/afc champions league elite/i.test(official)) return 'دوري أبطال آسيا للنخبة';
+    if (/afc champions league two|afc champions league 2/i.test(official)) return 'دوري أبطال آسيا 2';
+    if (/afc champions league/i.test(official)) return 'دوري أبطال آسيا';
+    if (/caf women'?s champions league/i.test(official)) return 'دوري أبطال أفريقيا للسيدات';
+    if (/caf champions league/i.test(official)) return 'دوري أبطال أفريقيا';
+    if (/uefa women'?s champions league/i.test(official)) return 'دوري أبطال أوروبا للسيدات';
+
     const countryAr = league.country ? localizePlainName('ar', league.country) : '';
     if (/^premier league$/i.test(official) || /^premierleague$/i.test(official.replace(/\s+/g, ''))) {
       if (countryLooksEnglish(league.country)) return EPL_AR;

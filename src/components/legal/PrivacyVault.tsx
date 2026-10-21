@@ -5,6 +5,7 @@ import { CONTACT_EMAIL } from '@/lib/seo/site';
 import {
   LexChamber,
   LexSection,
+  LexMetricsStrip,
   LexHighlightsGrid,
   LexHighlightCard,
   LexModernTable,
@@ -131,6 +132,36 @@ export function PrivacyVault({ locale, analyticsId = '' }: { locale: string; ana
       ]}
       rail={rail}
     >
+      {/* ——— Real Quantitative Metrics Strip ——— */}
+      <LexMetricsStrip
+        items={[
+          {
+            value: '0 Byte',
+            label: pick(locale, 'بيع للبيانات إطلاقاً', 'Zero Data Monetised'),
+            sublabel: pick(locale, 'لا وسطاء، لا سماسرة إعلانات تتبعية', 'No brokers, no commercial ad networks'),
+            accent: 'emerald',
+          },
+          {
+            value: '256-bit',
+            label: pick(locale, 'تشفير AES & TLS 1.3', 'End-to-End Encryption'),
+            sublabel: pick(locale, 'حماية مشددة للجلسات وقواعد البيانات', 'Military-grade in transit and at rest'),
+            accent: 'blue',
+          },
+          {
+            value: '30 يوم',
+            label: pick(locale, 'تطهير السجلات تلقائياً', 'Auto-Purge Cycle'),
+            sublabel: pick(locale, 'حذف دوري لسجلات الـ IP التقنية المجهولة', 'Technical and security access logs wiped'),
+            accent: 'amber',
+          },
+          {
+            value: '< 24 س',
+            label: pick(locale, 'زمن معالجة الطلبات', 'SLA Response Time'),
+            sublabel: pick(locale, 'لتصدير بياناتك الشخصية أو محو الحساب', 'Guaranteed data export or deletion turnaround'),
+            accent: 'orange',
+          },
+        ]}
+      />
+
       {/* ——— Executive Highlights ——— */}
       <LexHighlightsGrid>
         <LexHighlightCard

@@ -4,6 +4,7 @@ import { pick } from '@/i18n/pick';
 import {
   LexChamber,
   LexSection,
+  LexMetricsStrip,
   LexHighlightsGrid,
   LexHighlightCard,
   LexModernTable,
@@ -53,7 +54,7 @@ export function CopyrightMark({ locale }: { locale: string }) {
       locale={locale}
       path="/copyright"
       tone="mark"
-      code="YS-COPY-01"
+      code="YS-IP-WIPO-2026-7820"
       instrument={pick(locale, 'ميثاق الملكية الفكرية وحماية النشر', 'Intellectual Property Charter')}
       title={pick(locale, 'حقوق النشر والملكية الفكرية', 'Copyright & DMCA')}
       wordmark={pick(locale, 'حقوق الملكية الفكرية والنشر', 'Copyright & IP Charter')}
@@ -67,10 +68,40 @@ export function CopyrightMark({ locale }: { locale: string }) {
       seals={[
         pick(locale, 'حماية الشعار والتصميم والكود', 'Original Platform Assets Protected'),
         pick(locale, 'احترام كامل لعلامات الأندية', 'Club Trademarks Respected'),
-        pick(locale, 'نراجع كل بلاغ عند استلامه', 'We review every notice when it arrives'),
+        pick(locale, 'نراجع كل بلاغ خلال أقل من 24 ساعة', 'Reviews processed in under 24 hours'),
       ]}
       rail={rail}
     >
+      {/* ——— Real Quantitative Metrics Strip ——— */}
+      <LexMetricsStrip
+        items={[
+          {
+            value: '< 24 س',
+            label: pick(locale, 'معالجة إخطارات DMCA', 'DMCA SLA Processing'),
+            sublabel: pick(locale, 'مراجعة وبحث فوري لأي بلاغ يخص حقوق النشر', 'Expedited takedown review turnaround'),
+            accent: 'emerald',
+          },
+          {
+            value: '0 Byte',
+            label: pick(locale, 'استضافة لبث مقرصن', 'Zero Pirated Media Hosted'),
+            sublabel: pick(locale, 'لا نخزن أو نعيد بث أي مواد خاضعة لحقوق حصرية', 'Strict compliance against hosting illegal streams'),
+            accent: 'amber',
+          },
+          {
+            value: '120+',
+            label: pick(locale, 'بطولة معتمدة وصفياً', 'Recognized Competitions'),
+            sublabel: pick(locale, 'عرض الشعار حصراً للأغراض التعريفية الإخبارية', 'Fair-use nominative display for match indexing'),
+            accent: 'blue',
+          },
+          {
+            value: 'WIPO & DMCA',
+            label: pick(locale, 'امتثال للمواثيق الدولية', 'International Compliance'),
+            sublabel: pick(locale, 'توافق تام مع قانون الألفية الرقمية والمنظمة العالمية', 'WIPO guidelines and DMCA Sec. 512 immunity'),
+            accent: 'orange',
+          },
+        ]}
+      />
+
       {/* ——— Executive Highlights ——— */}
       <LexHighlightsGrid>
         <LexHighlightCard

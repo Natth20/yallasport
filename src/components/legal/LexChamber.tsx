@@ -433,6 +433,31 @@ export function LexChamber({
 
 /* ══════════════ SUBCOMPONENTS ══════════════ */
 
+export function LexMetricsStrip({
+  items,
+}: {
+  items: Array<{
+    value: string;
+    label: string;
+    sublabel?: string;
+    accent?: 'emerald' | 'amber' | 'blue' | 'orange';
+  }>;
+}) {
+  const { query } = useContext(LexSearchContext);
+  if (query.trim()) return null;
+  return (
+    <div className={styles['lex-metrics-strip']}>
+      {items.map((it, idx) => (
+        <div key={idx} className={styles['lex-metric-card']} data-accent={it.accent || 'orange'}>
+          <div className={styles['lex-metric-value']}>{it.value}</div>
+          <div className={styles['lex-metric-label']}>{it.label}</div>
+          {it.sublabel ? <div className={styles['lex-metric-sublabel']}>{it.sublabel}</div> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function LexHighlightsGrid({ children }: { children: ReactNode }) {
   const { query } = useContext(LexSearchContext);
   if (query.trim()) return null;

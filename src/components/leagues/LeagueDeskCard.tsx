@@ -73,20 +73,27 @@ function FaceOff({
   href: string;
   locale: string;
 }) {
+  const homeName = localizeTeamName(locale, home.name);
+  const awayName = localizeTeamName(locale, away.name);
+
   return (
-    <Link href={href} className="league-desk-faceoff">
+    <Link href={href} className="league-desk-faceoff" title={`${homeName} × ${awayName}`}>
       <span className="league-desk-side is-home">
-        <span className="league-desk-badge">
-          <LeagueCrest name={home.name} logoUrl={home.logoUrl} className="h-full w-full" />
+        <span className="league-desk-name" title={homeName}>
+          <bdi dir="auto">{homeName}</bdi>
         </span>
-        <span className="truncate">{localizeTeamName(locale, home.name)}</span>
+        <span className="league-desk-badge shrink-0">
+          <LeagueCrest name={home.name} logoUrl={home.logoUrl} className="h-full w-full object-contain" />
+        </span>
       </span>
-      <span className="league-desk-score">{centre}</span>
+      <span className="league-desk-score shrink-0">{centre}</span>
       <span className="league-desk-side is-away">
-        <span className="league-desk-badge">
-          <LeagueCrest name={away.name} logoUrl={away.logoUrl} className="h-full w-full" />
+        <span className="league-desk-badge shrink-0">
+          <LeagueCrest name={away.name} logoUrl={away.logoUrl} className="h-full w-full object-contain" />
         </span>
-        <span className="truncate">{localizeTeamName(locale, away.name)}</span>
+        <span className="league-desk-name" title={awayName}>
+          <bdi dir="auto">{awayName}</bdi>
+        </span>
       </span>
     </Link>
   );
@@ -141,10 +148,6 @@ export function LeagueDeskCard({
   return (
     <article className={`league-desk-card ${tone}`}>
       <div className="league-desk-card-top">
-        <div className="league-desk-follow">
-          <LeagueFollowChip leagueId={league.id} isLoggedIn={loggedIn} initialIsFollowing={followed} />
-        </div>
-
         <Link href={`/league/${league.slug}`} className="league-desk-crest-stage">
           <span className="league-desk-crest-ring" aria-hidden />
           <span className="league-desk-crest-orb">
@@ -159,13 +162,17 @@ export function LeagueDeskCard({
           ) : null}
         </Link>
 
-        <div className="league-desk-identity">
+        <div className="league-desk-identity min-w-0 flex-1">
           <Link href={`/league/${league.slug}`} className="hover:text-orange-500 transition-colors">
-            <h3 className="text-foreground dark:text-foreground font-extrabold text-sm sm:text-base">
+            <h3 className="text-foreground dark:text-foreground font-black text-sm sm:text-base leading-snug">
               {localizeCompetitionTitle(locale, league)}
             </h3>
           </Link>
-          {meta.length > 0 ? <p className="text-muted-foreground">{meta.slice(0, 3).join(' · ')}</p> : null}
+          {meta.length > 0 ? <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed">{meta.slice(0, 3).join(' · ')}</p> : null}
+        </div>
+
+        <div className="league-desk-follow shrink-0">
+          <LeagueFollowChip leagueId={league.id} isLoggedIn={loggedIn} initialIsFollowing={followed} />
         </div>
       </div>
 
@@ -191,9 +198,9 @@ export function LeagueDeskCard({
         ) : league.nextMatch ? (
           <Link
             href={`/match/${league.nextMatch.id}`}
-            className="block rounded-xl border border-border/70 bg-card/60 p-2.5 transition-colors hover:border-orange-500/40 hover:bg-card/90"
+            className="block rounded-2xl border border-border/70 bg-card/60 p-3 transition-colors hover:border-orange-500/40 hover:bg-card/90"
           >
-            <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1.5 text-[10px]">
+            <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2 text-[11px]">
               <span className="font-bold text-orange-600 dark:text-orange-400 shrink-0">
                 {roundText || pick(locale, 'المباراة القادمة', 'Next match')}
               </span>
@@ -204,29 +211,29 @@ export function LeagueDeskCard({
                 />
               </div>
             </div>
-            <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
-              <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
+            <div className="mt-2.5 grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 text-xs sm:text-[13px]">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
                   <LeagueCrest
                     name={league.nextMatch.homeTeam.name}
                     logoUrl={league.nextMatch.homeTeam.logoUrl}
                     className="h-full w-full object-contain"
                   />
                 </div>
-                <span className="truncate font-bold text-foreground">
-                  {localizeTeamName(locale, league.nextMatch.homeTeam.name)}
+                <span className="flex-1 min-w-0 font-bold text-foreground leading-tight break-words line-clamp-2">
+                  <bdi dir="auto">{localizeTeamName(locale, league.nextMatch.homeTeam.name)}</bdi>
                 </span>
               </div>
 
-              <span className="shrink-0 rounded-full bg-muted/80 px-1.5 py-0.5 text-[9px] font-black uppercase text-muted-foreground">
+              <span className="shrink-0 rounded-full bg-muted/80 px-2 py-0.5 text-[9px] font-black uppercase text-muted-foreground">
                 VS
               </span>
 
-              <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-end">
-                <span className="truncate font-bold text-foreground">
-                  {localizeTeamName(locale, league.nextMatch.awayTeam.name)}
+              <div className="flex min-w-0 items-center justify-end gap-2 text-end">
+                <span className="flex-1 min-w-0 font-bold text-foreground leading-tight break-words line-clamp-2">
+                  <bdi dir="auto">{localizeTeamName(locale, league.nextMatch.awayTeam.name)}</bdi>
                 </span>
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
                   <LeagueCrest
                     name={league.nextMatch.awayTeam.name}
                     logoUrl={league.nextMatch.awayTeam.logoUrl}
@@ -251,33 +258,67 @@ export function LeagueDeskCard({
             }
           />
         ) : league.leader ? (
-          <Link href={`/league/${league.slug}/standings`} className="league-desk-leader">
-            <span className="league-desk-badge">
+          <Link
+            href={`/league/${league.slug}/standings`}
+            className="league-desk-leader"
+            title={pick(locale, `المتصدر: ${leaderName}`, `Leader: ${leaderName}`)}
+          >
+            <div className="league-desk-leader-crest">
               <LeagueCrest
                 name={league.leader.team.name}
                 logoUrl={league.leader.team.logoUrl}
-                className="h-full w-full"
+                className="h-full w-full object-contain"
               />
-            </span>
-            <span className="min-w-0">
-              <em>{pick(locale, 'الصدارة', 'Leader')}</em>
-              <strong className="truncate">{leaderName}</strong>
-            </span>
-            <b className="tabular-nums">{league.leader.points}</b>
+            </div>
+            <div className="league-desk-leader-info">
+              <span className="league-desk-leader-tag">
+                <span className="league-desk-crown" aria-hidden>👑</span>
+                {pick(locale, 'صدارة الترتيب', 'Table Leader')}
+              </span>
+              <strong className="league-desk-leader-name">
+                <bdi dir="auto">{leaderName}</bdi>
+              </strong>
+            </div>
+            <div className="league-desk-leader-pts">
+              <span className="league-desk-pts-val tabular-nums">{league.leader.points}</span>
+              <span className="league-desk-pts-lbl">{pick(locale, 'نقطة', 'pts')}</span>
+            </div>
           </Link>
-        ) : null}
+        ) : (
+          <div className="league-desk-idle-hub">
+            <div className="league-desk-idle-main">
+              <span className="league-desk-idle-icon">🏆</span>
+              <div className="league-desk-idle-meta min-w-0 flex-1">
+                <span className="league-desk-idle-title">
+                  {league.census.upcoming > 0
+                    ? pick(locale, `${league.census.upcoming} مباراة مجدولة قادمة`, `${league.census.upcoming} scheduled fixtures`)
+                    : league.census.finished > 0
+                      ? pick(locale, `${league.census.finished} مباراة في أرشيف البطولة`, `${league.census.finished} archived matches`)
+                      : pick(locale, 'في انتظار انطلاق المنافسات', 'Awaiting tournament kickoff')}
+                </span>
+                <span className="league-desk-idle-sub">
+                  {league.season
+                    ? pick(locale, `الموسم الرياضي: ${league.season}`, `Season: ${league.season}`)
+                    : pick(locale, 'تابع تفاصيل البطولة وجدول المباريات', 'Follow tournament details and fixtures')}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {league.leader && league.runnerUp && !live && gap != null ? (
-          <p className="league-desk-race">
-            <span>
+          <div className="league-desk-race">
+            <span className="league-desk-race-tag">
               {gap === 0
-                ? pick(locale, 'يتساوى الفريقان في النقاط.', 'The two teams are level on points.')
-                : pick(locale, `الفارق بين الفريقين: ${gap} نقطة.`, `The gap between the two teams is ${gap} pts.`)}
+                ? pick(locale, 'تساوي بالنقاط', 'Level on points')
+                : pick(locale, `فارق ${gap} نقاط`, `${gap} pts gap`)}
             </span>
-            <span className="truncate">
-              {leaderName} · {runnerName}
-            </span>
-          </p>
+            <div className="league-desk-race-teams" dir="auto">
+              <bdi className="truncate">{leaderName}</bdi>
+              <span className="opacity-40 font-normal">×</span>
+              <bdi className="truncate">{runnerName}</bdi>
+            </div>
+          </div>
         ) : null}
 
         {roundText ? <p className="league-desk-round">{roundText}</p> : null}
@@ -287,12 +328,15 @@ export function LeagueDeskCard({
         {league.standings > 0 ? (
           <Link href={`/league/${league.slug}/standings`}>{pick(locale, 'الجدول', 'Table')}</Link>
         ) : null}
+        {league.census.upcoming > 0 ? (
+          <Link href={`/league/${league.slug}/fixtures`}>{pick(locale, 'المباريات', 'Fixtures')}</Link>
+        ) : null}
         {league.census.finished > 0 ? (
           <Link href={`/league/${league.slug}/archive`}>{pick(locale, 'الأرشيف', 'Archive')}</Link>
         ) : null}
-        <Link href={`/league/${league.slug}`} className="is-primary">
-          {pick(locale, 'فتح البطولة', 'Open league')}
-          <ArrowUpLeft className="h-3 w-3" />
+        <Link href={`/league/${league.slug}`} className="is-primary" title={pick(locale, 'فتح البطولة', 'Open league')}>
+          <span>{pick(locale, 'فتح', 'Open')}</span>
+          <ArrowUpLeft className="h-3.5 w-3.5 shrink-0" />
         </Link>
       </footer>
     </article>
