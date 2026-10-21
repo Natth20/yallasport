@@ -230,3 +230,108 @@ export function siteGraph(locale: string) {
     ],
   };
 }
+
+export function matchEventJsonLd(match: {
+  id: string;
+  name: string;
+  homeTeam: { name: string; logoUrl?: string | null };
+  awayTeam: { name: string; logoUrl?: string | null };
+  kickoffAt: string | Date;
+  status: string;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  leagueName: string;
+  venueName?: string | null;
+  locale: string;
+}) {
+  const kickoff = new Date(match.kickoffAt).toISOString();
+  let eventStatus = 'https://schema.org/EventScheduled';
+  if (match.status === 'LIVE' || match.status === 'HALFTIME') {
+    eventStatus = 'https://schema.org/EventLive';
+  } else if (match.status === 'FINISHED') {
+    eventStatus = 'https://schema.org/EventCompleted';
+  } else if (match.status === 'POSTPONED') {
+    eventStatus = 'https://schema.org/EventPostponed';
+  } else if (match.status === 'CANCELLED') {
+    eventStatus = 'https://schema.org/EventCancelled';
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SportsEvent',
+    name: match.name,
+    startDate: kickoff,
+    eventStatus,
+    sport: 'Soccer',
+    organizer: {
+      '@type': 'Organization',
+      name: match.leagueName,
+    },
+    homeTeam: {
+      '@type': 'SportsTeam',
+      name: match.homeTeam.name,
+      logo: match.homeTeam.logoUrl ? absoluteUrl(match.homeTeam.logoUrl) : undefined,
+    },
+    awayTeam: {
+      '@type': 'SportsTeam',
+      name: match.awayTeam.name,
+      logo: match.awayTeam.logoUrl ? absoluteUrl(match.awayTeam.logoUrl) : undefined,
+    },
+    location: match.venueName
+      ? {
+          '@type': 'Place',
+          name: match.venueName,
+        }
+      : undefined,
+  };
+}
+
+export function newsArticleJsonLd(article: {
+  title: string;
+  description?: string | null;
+  url: string;
+  imageUrl?: string | null;
+  publishedAt: string | Date;
+  modifiedAt?: string | Date | null;
+  authorName?: string | null;
+  locale: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': absoluteUrl(article.url),
+    },
+    headline: article.title,
+    description: article.description || article.title,
+    image: article.imageUrl ? [absoluteUrl(article.imageUrl)] : [absoluteUrl(LOGO_PATH)],
+    datePublished: new Date(article.publishedAt).toISOString(),
+    dateModified: article.modifiedAt ? new Date(article.modifiedAt).toISOString() : new Date(article.publishedAt).toISOString(),
+    author: {
+      '@type': 'Person',
+      name: article.authorName || (article.locale === 'ar' ? 'غرفة الأخبار' : 'News Desk'),
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: brandName(article.locale),
+      logo: {
+        '@type': 'ImageObject',
+        url: absoluteUrl(LOGO_PATH),
+      },
+    },
+  };
+}
+
+export function breadcrumbsJsonLd(items: Array<{ name: string; url: string }>) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(item.url),
+    })),
+  };
+}

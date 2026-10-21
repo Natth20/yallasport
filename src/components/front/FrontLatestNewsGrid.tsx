@@ -11,9 +11,10 @@ export async function FrontLatestNewsGrid() {
   const locale = await getLocale();
   const ar = locale === 'ar';
   const { latest, rest, lead } = await loadFrontStories(locale);
-  // Ensure strict deduplication: do not repeat lead or the top 3 stories already shown in TopHeadlines
+  // Ensure strict deduplication: do not repeat lead or any stories shown in TopHeadlines
   const leadId = lead?.id;
-  const topFeaturedIds = new Set([leadId, ...rest.slice(0, 3).map((r) => r.id)].filter(Boolean));
+  const topNewsPool = [...rest, ...latest].filter((s) => s && s.id !== leadId);
+  const topFeaturedIds = new Set([leadId, ...topNewsPool.slice(0, 4).map((r) => r.id)].filter(Boolean));
   const pool = [...latest, ...rest].filter((row): row is NonNullable<typeof row> => Boolean(row) && !topFeaturedIds.has(row.id));
   const unique = [...new Map(pool.map((row) => [row.id, row])).values()].slice(0, 12);
   if (unique.length === 0) return null;

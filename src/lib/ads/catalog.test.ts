@@ -8,10 +8,12 @@ import {
   isSafeAdHref,
 } from './catalog';
 
-test('five public ad placements exist', () => {
-  assert.equal(AD_PLACEMENTS.length, 5);
+test('public ad placements exist and include major sections', () => {
+  assert.equal(AD_PLACEMENTS.length, 16);
   assert.equal(isAdPlacementId('header-banner'), true);
   assert.equal(isAdPlacementId('home-mid'), true);
+  assert.equal(isAdPlacementId('matches-top'), true);
+  assert.equal(isAdPlacementId('leagues-banner'), true);
   assert.equal(isAdPlacementId('unknown'), false);
 });
 

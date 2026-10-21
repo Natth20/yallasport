@@ -1,7 +1,7 @@
 import { swallow, reportCaughtError } from '@/lib/ops/caught';
 // src/lib/sports-data/cached-provider.ts
 import { SportsDataProvider } from './interface';
-import { safeRedisGet, safeRedisSet } from '../redis';
+import { safeRedisGet, safeRedisSet, fastCacheGet, fastCacheSet } from '../redis';
 import {
   NormalizedMatch,
   NormalizedMatchDetail,
@@ -64,9 +64,9 @@ export class CachedSportsDataProvider implements SportsDataProvider {
           freshness: { syncedAt, cachedAt: syncedAt, source, staleAfterSeconds: 120 },
         };
         await Promise.all([
-          safeRedisSet(cacheKey, fresh, { ex: this.CACHE_TTL }),
-          safeRedisSet('sports:live:all', envelope, { ex: 300 }),
-          safeRedisSet('sports:meta:live', { syncedAt, matchCount: fresh.length, fixtureCount: fresh.length, source }, { ex: 300 }),
+          fastCacheSet(cacheKey, fresh, this.CACHE_TTL),
+          fastCacheSet('sports:live:all', envelope, 300),
+          fastCacheSet('sports:meta:live', { syncedAt, matchCount: fresh.length, fixtureCount: fresh.length, source }, 300),
         ]);
         return fresh;
       }
@@ -74,13 +74,13 @@ export class CachedSportsDataProvider implements SportsDataProvider {
       reportCaughtError("src/lib/sports-data/cached-provider.ts:71", error);
       // Degraded: last trusted cache below.
     }
-    const cached = await safeRedisGet<NormalizedMatch[]>(cacheKey);
+    const cached = await fastCacheGet<NormalizedMatch[]>(cacheKey);
     return cached ? cached.map(hydrateMatch) : [];
   }
 
   async getMatchById(id: string): Promise<NormalizedMatchDetail> {
     const cacheKey = `match_${id}`;
-    const cached = await safeRedisGet<NormalizedMatchDetail>(cacheKey);
+    const cached = await fastCacheGet<NormalizedMatchDetail>(cacheKey);
     if (cached) return hydrateMatch(cached);
 
     const fresh = await withBudget(
@@ -90,13 +90,13 @@ export class CachedSportsDataProvider implements SportsDataProvider {
     );
     if (!fresh) throw new Error('Match not found');
     const ttl = fresh.status === 'FINISHED' ? this.LONG_CACHE_TTL : this.CACHE_TTL;
-    await safeRedisSet(cacheKey, fresh, { ex: ttl });
+    await fastCacheSet(cacheKey, fresh, ttl);
     return fresh;
   }
 
   async getTeamById(id: string): Promise<NormalizedTeam> {
     const cacheKey = `team_${id}`;
-    const cached = await safeRedisGet<NormalizedTeam>(cacheKey);
+    const cached = await fastCacheGet<NormalizedTeam>(cacheKey);
     if (cached) return cached;
 
     const fresh = await withBudget(
@@ -104,42 +104,42 @@ export class CachedSportsDataProvider implements SportsDataProvider {
       null as NormalizedTeam | null
     );
     if (!fresh) throw new Error('Team not found');
-    await safeRedisSet(cacheKey, fresh, { ex: this.LONG_CACHE_TTL });
+    await fastCacheSet(cacheKey, fresh, this.LONG_CACHE_TTL);
     return fresh;
   }
 
   async getStandings(leagueId: string, season: string): Promise<NormalizedStanding[]> {
     const cacheKey = `standings_v2_${leagueId}_${season}`;
-    const cached = await safeRedisGet<NormalizedStanding[]>(cacheKey);
+    const cached = await fastCacheGet<NormalizedStanding[]>(cacheKey);
     if (cached) return cached;
 
     const fresh = await withBudget(this.baseProvider.getStandings(leagueId, season), [], 12000);
     if (fresh.length > 0) {
-      await safeRedisSet(cacheKey, fresh, { ex: this.TABLE_TTL });
+      await fastCacheSet(cacheKey, fresh, this.TABLE_TTL);
     }
     return fresh;
   }
 
   async getTopScorers(leagueId: string, season: string): Promise<NormalizedScorer[]> {
     const cacheKey = `topscorers_${leagueId}_${season}`;
-    const cached = await safeRedisGet<NormalizedScorer[]>(cacheKey);
+    const cached = await fastCacheGet<NormalizedScorer[]>(cacheKey);
     if (cached) return cached;
 
     const fresh = await withBudget(this.baseProvider.getTopScorers(leagueId, season), []);
     if (fresh.length > 0) {
-      await safeRedisSet(cacheKey, fresh, { ex: this.TABLE_TTL });
+      await fastCacheSet(cacheKey, fresh, this.TABLE_TTL);
     }
     return fresh;
   }
 
   async getH2H(team1Id: string, team2Id: string): Promise<NormalizedMatch[]> {
     const cacheKey = `h2h_${team1Id}_${team2Id}`;
-    const cached = await safeRedisGet<NormalizedMatch[]>(cacheKey);
+    const cached = await fastCacheGet<NormalizedMatch[]>(cacheKey);
     if (cached) return cached.map(hydrateMatch);
 
     const fresh = await withBudget(this.baseProvider.getH2H(team1Id, team2Id), []);
     if (fresh.length > 0) {
-      await safeRedisSet(cacheKey, fresh, { ex: this.LONG_CACHE_TTL });
+      await fastCacheSet(cacheKey, fresh, this.LONG_CACHE_TTL);
     }
     return fresh;
   }
@@ -149,25 +149,25 @@ export class CachedSportsDataProvider implements SportsDataProvider {
     try {
       const fresh = await withBudget(this.baseProvider.getMatchesByDate(date), []);
       if (fresh.length > 0) {
-        await safeRedisSet(cacheKey, fresh, { ex: 300 });
+        await fastCacheSet(cacheKey, fresh, 300);
         return fresh;
       }
     } catch (error) {
       reportCaughtError("src/lib/sports-data/cached-provider.ts:151", error);
       // Degraded
     }
-    const cached = await safeRedisGet<NormalizedMatch[]>(cacheKey);
+    const cached = await fastCacheGet<NormalizedMatch[]>(cacheKey);
     return cached ? cached.map(hydrateMatch) : [];
   }
 
   async getLeagueArchive(leagueId: string): Promise<NormalizedLeagueSeason[]> {
     const cacheKey = `archive_${leagueId}`;
-    const cached = await safeRedisGet<NormalizedLeagueSeason[]>(cacheKey);
+    const cached = await fastCacheGet<NormalizedLeagueSeason[]>(cacheKey);
     if (cached) return cached;
 
     const fresh = await withBudget(this.baseProvider.getLeagueArchive(leagueId), []);
     if (fresh.length > 0) {
-      await safeRedisSet(cacheKey, fresh, { ex: 86400 });
+      await fastCacheSet(cacheKey, fresh, 86400);
     }
     return fresh;
   }
@@ -175,7 +175,7 @@ export class CachedSportsDataProvider implements SportsDataProvider {
   async getRaw<T = unknown>(path: string): Promise<T | null> {
     const cacheKey = `sports:raw:${path}`;
     const ttl = rawCacheTtl(path);
-    const cached = await safeRedisGet<T>(cacheKey);
+    const cached = await fastCacheGet<T>(cacheKey);
     if (cached != null) {
       const rows = (cached as { response?: unknown[] } | null)?.response;
       const emptySearch = /players\?search=/i.test(path) && Array.isArray(rows) && rows.length === 0;
@@ -203,8 +203,8 @@ export class CachedSportsDataProvider implements SportsDataProvider {
         Array.isArray(rows) &&
         rows.length === 0;
       if (fresh != null && !emptySearch && !emptyBoard) {
-        await safeRedisSet(cacheKey, fresh, { ex: ttl });
-        await safeRedisSet(`sports:raw:meta:${path}`, { syncedAt: new Date().toISOString() }, { ex: ttl });
+        await fastCacheSet(cacheKey, fresh, ttl);
+        await fastCacheSet(`sports:raw:meta:${path}`, { syncedAt: new Date().toISOString() }, ttl);
         return fresh;
       }
     } catch (error) {

@@ -11,9 +11,20 @@ export type PublicAdSlot = {
 
 export const AD_PLACEMENTS = [
   { id: 'header-banner', ar: 'شريط أعلى الموقع', en: 'Site header' },
+  { id: 'home-hero-bottom', ar: 'أسفل واجهة القمة بالرئيسية', en: 'Home below hero' },
   { id: 'home-mid', ar: 'منتصف الصفحة الرئيسية', en: 'Home mid-page' },
+  { id: 'home-media', ar: 'أعلى قسم الفيديو والوسائط', en: 'Home above media' },
+  { id: 'matches-top', ar: 'أعلى جدول المباريات', en: 'Matches top banner' },
+  { id: 'matches-infeed', ar: 'بين سطور قائمة المباريات', en: 'Matches in-feed' },
   { id: 'article-inline', ar: 'داخل صفحة الخبر', en: 'Inside article' },
+  { id: 'article-sidebar', ar: 'الشريط الجانبي للخبر', en: 'Article sidebar' },
   { id: 'match-rail', ar: 'صفحة المباراة', en: 'Match page' },
+  { id: 'match-stats', ar: 'أسفل إحصائيات المباراة', en: 'Match stats bottom' },
+  { id: 'leagues-banner', ar: 'صفحة ترتيب الدوريات', en: 'Leagues standings banner' },
+  { id: 'teams-banner', ar: 'صفحة تفاصيل النادي', en: 'Team profile banner' },
+  { id: 'players-banner', ar: 'صفحة تفاصيل اللاعب', en: 'Player profile banner' },
+  { id: 'transfers-feed', ar: 'سوق الانتقالات والميركاتو', en: 'Transfers feed' },
+  { id: 'tv-guide-banner', ar: 'دليل التلفزيون والقنوات', en: 'TV guide banner' },
   { id: 'footer-banner', ar: 'شريط أسفل الموقع', en: 'Site footer' },
 ] as const;
 

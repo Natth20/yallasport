@@ -116,6 +116,32 @@ export async function safeRedisSet(key: string, value: unknown, options?: { ex: 
   }
 }
 
+export async function fastCacheGet<T>(key: string): Promise<T | null> {
+  const now = Date.now();
+  const memHit = memoryCache.get(key);
+  if (memHit && memHit.expiresAt > now) {
+    return memHit.data as T;
+  }
+  if (isRedisHealthy()) {
+    try {
+      const hit = await safeRedisGet<T>(key);
+      if (hit !== null && hit !== undefined) {
+        memoryCache.set(key, { data: hit, expiresAt: now + 60 * 1000 });
+        return hit;
+      }
+    } catch {}
+  }
+  return null;
+}
+
+export async function fastCacheSet(key: string, value: unknown, ttlSeconds = 120): Promise<void> {
+  const now = Date.now();
+  memoryCache.set(key, { data: value, expiresAt: now + ttlSeconds * 1000 });
+  if (isRedisHealthy()) {
+    safeRedisSet(key, value, { ex: ttlSeconds }).catch(() => {});
+  }
+}
+
 const fallbackRatelimit = {
   limit: async () => ({
     success: true,

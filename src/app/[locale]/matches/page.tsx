@@ -7,6 +7,7 @@ import { PinnedMatchesBar } from '@/components/matches/PinnedMatchesBar';
 import { MatchdayLenses } from '@/components/matches/MatchdayLenses';
 import { MatchdayDesk } from '@/components/matches/MatchdayDesk';
 import { MatchdayLedger } from '@/components/matches/MatchdayLedger';
+import { SiteAd } from '@/components/ads/SiteAd';
 import { auth } from '@/lib/auth/auth';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
@@ -1714,6 +1715,10 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                 {filteredMatches.length}
                 <small>{pick(locale, 'مباراة', 'matches')}</small>
               </span>
+            </div>
+
+            <div className="my-4">
+              <SiteAd placement="matches-top" locale={locale} />
             </div>
 
             <div className={styles.contentGrid}>

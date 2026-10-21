@@ -25,6 +25,7 @@ import { pageMetadata } from '@/lib/seo/site';
 import { FrontSkeleton } from '@/components/front/FrontMark';
 import { HallFoyer } from '@/components/salon/HallFoyer';
 import { SalonStage } from '@/components/salon/SalonStage';
+import { SiteAd } from '@/components/ads/SiteAd';
 import { CalendarDays, Radio, Search, Trophy } from 'lucide-react';
 
 export const revalidate = 60;
@@ -688,6 +689,9 @@ async function LeaguesPageBody({
         leagueNews={leagueNews}
         featuredLeagues={featuredLeagues}
       />
+      <div className="mt-8">
+        <SiteAd placement="leagues-banner" locale={locale} />
+      </div>
     </SalonStage>
   );
 }

@@ -11,9 +11,11 @@ export async function FrontTopNewsGrid() {
   const locale = await getLocale();
   const ar = locale === 'ar';
   const { lead, rest, latest } = await loadFrontStories(locale);
-  const main = lead || rest[0] || latest[0];
-  const pool = (lead ? rest : rest.slice(1));
-  const side = (pool.length >= 3 ? pool : [...pool, ...latest]).slice(0, 3);
+  // Ensure strict deduplication: do NOT repeat the hero story (lead)
+  const leadId = lead?.id;
+  const pool = [...rest, ...latest].filter((s) => s && s.id !== leadId);
+  const main = pool[0];
+  const side = pool.slice(1, 4);
   if (!main) return null;
 
   return (
