@@ -13,6 +13,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { predictionAccuracy, rankByPoints, scorerDeskSlug, settledStreak } from '@/lib/predictions/rank';
 import styles from './predictions-house.module.css';
 import { SalonStage } from '@/components/salon/SalonStage';
+import { SiteAd } from '@/components/ads/SiteAd';
 import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import type { NormalizedScorer } from '@/lib/sports-data/types';
 
@@ -509,6 +510,10 @@ export async function PredictionsHouse() {
             }}
           />
         </section>
+
+        <div className="my-8">
+          <SiteAd placement="home-mid" locale={locale} />
+        </div>
 
         <section id="board-rules" className={styles['ph-rules']}>
           <header className={styles['ph-head']}>

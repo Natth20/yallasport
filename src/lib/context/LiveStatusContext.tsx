@@ -8,6 +8,8 @@ import type { DataFreshness, LiveMatchesPayload, NormalizedMatch } from '@/lib/s
 import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { useSettings } from './SettingsContext';
 
+import { playGoalSound } from '@/lib/audio/goal-alert';
+
 type ConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'degraded';
 
 interface LiveStatusContextValue {
@@ -34,7 +36,24 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
       if (disposed) return;
       const next = payload.matches.map((match) => ({ ...match, kickoffAt: new Date(match.kickoffAt) }));
       walkLocalizeNames(locale, next);
-      setMatches(next);
+
+      setMatches((prevMatches) => {
+        if (prevMatches.length > 0) {
+          for (const nextMatch of next) {
+            const old = prevMatches.find((p) => p.id === nextMatch.id || p.externalId === nextMatch.externalId);
+            if (old) {
+              const oldGoals = (old.homeScore ?? 0) + (old.awayScore ?? 0);
+              const newGoals = (nextMatch.homeScore ?? 0) + (nextMatch.awayScore ?? 0);
+              if (newGoals > oldGoals) {
+                playGoalSound();
+                break;
+              }
+            }
+          }
+        }
+        return next;
+      });
+
       setFreshness(payload.freshness);
       const syncedAt = payload.freshness.syncedAt;
       const age = syncedAt ? (Date.now() - new Date(syncedAt).getTime()) / 1000 : Number.POSITIVE_INFINITY;

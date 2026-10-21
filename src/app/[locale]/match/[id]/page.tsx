@@ -82,7 +82,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title,
       description,
       path: `/match/${id}`,
-      images: [match.homeTeam.logoUrl, match.awayTeam.logoUrl],
+      images: [`/api/og/match/${id}`, match.homeTeam.logoUrl, match.awayTeam.logoUrl],
     });
   } catch (error) {
     reportCaughtError("src/app/[locale]/match/[id]/page.tsx:87", error);

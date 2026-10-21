@@ -11,32 +11,115 @@ import {
 import { Activity, Flame, Shield, Target, Award } from 'lucide-react';
 import folio from './compare-folio.module.css';
 
-function Radar({ left, right, labels }: { left: number[]; right: number[]; labels: string[] }) {
+function Radar({
+  left,
+  right,
+  labels,
+}: {
+  left: number[];
+  right: number[];
+  labels: string[];
+}) {
   const n = labels.length;
-  const cx = 120;
-  const cy = 120;
-  const r = 88;
+  const cx = 130;
+  const cy = 130;
+  const r = 90;
   const point = (i: number, mag: number) => {
     const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
     return [cx + Math.cos(angle) * r * mag, cy + Math.sin(angle) * r * mag] as const;
   };
-  const poly = (vals: number[]) => vals.map((v, i) => point(i, Math.max(0.04, Math.min(1, v))).join(',')).join(' ');
+  const poly = (vals: number[]) =>
+    vals.map((v, i) => point(i, Math.max(0.06, Math.min(1, v))).join(',')).join(' ');
+
+  const leftPoints = left.map((v, i) => point(i, Math.max(0.06, Math.min(1, v))));
+  const rightPoints = right.map((v, i) => point(i, Math.max(0.06, Math.min(1, v))));
+
   return (
-    <svg viewBox="0 0 240 240" className={folio.radar} role="img" aria-label="Player Comparison Radar Chart">
-      {[0.33, 0.66, 1].map((ring) => (
+    <svg
+      viewBox="0 0 260 260"
+      className={folio.radar}
+      role="img"
+      aria-label="Player Comparison Radar Chart"
+      style={{ width: '100%', maxWidth: '320px', height: 'auto', overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id="radarGradLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#059669" stopOpacity="0.15" />
+        </linearGradient>
+        <linearGradient id="radarGradRight" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f97316" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#ea580c" stopOpacity="0.15" />
+        </linearGradient>
+      </defs>
+
+      {/* Concentric rings */}
+      {[0.25, 0.5, 0.75, 1].map((ring) => (
         <polygon
           key={ring}
           fill="none"
-          className={folio.radarRing}
+          stroke="currentColor"
+          strokeOpacity={ring === 1 ? 0.25 : 0.1}
+          strokeDasharray={ring === 1 ? undefined : '2,2'}
           points={Array.from({ length: n }, (_, i) => point(i, ring).join(',')).join(' ')}
         />
       ))}
-      <polygon className={folio.radarInk} points={poly(left)} strokeWidth={1.5} />
-      <polygon className={folio.radarMark} points={poly(right)} strokeWidth={1.5} />
-      {labels.map((label, i) => {
-        const [x, y] = point(i, 1.16);
+
+      {/* Radial Axis Lines */}
+      {Array.from({ length: n }, (_, i) => {
+        const [x, y] = point(i, 1);
         return (
-          <text key={label} x={x} y={y} textAnchor="middle" className={folio.radarLabel} fontSize="9">
+          <line
+            key={`axis-${i}`}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            stroke="currentColor"
+            strokeOpacity="0.15"
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      {/* Left player shape */}
+      <polygon
+        points={poly(left)}
+        fill="url(#radarGradLeft)"
+        stroke="#10b981"
+        strokeWidth="2.2"
+      />
+
+      {/* Right player shape */}
+      <polygon
+        points={poly(right)}
+        fill="url(#radarGradRight)"
+        stroke="#f97316"
+        strokeWidth="2.2"
+      />
+
+      {/* Vertex dots */}
+      {leftPoints.map(([x, y], i) => (
+        <circle key={`lp-${i}`} cx={x} cy={y} r="3" fill="#10b981" stroke="#ffffff" strokeWidth="1" />
+      ))}
+      {rightPoints.map(([x, y], i) => (
+        <circle key={`rp-${i}`} cx={x} cy={y} r="3" fill="#f97316" stroke="#ffffff" strokeWidth="1" />
+      ))}
+
+      {/* Metric labels */}
+      {labels.map((label, i) => {
+        const [x, y] = point(i, 1.2);
+        return (
+          <text
+            key={label}
+            x={x}
+            y={y + 3}
+            textAnchor="middle"
+            className={folio.radarLabel}
+            fontSize="9"
+            fontWeight="800"
+            fill="currentColor"
+          >
             {label}
           </text>
         );

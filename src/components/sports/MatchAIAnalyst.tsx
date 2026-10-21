@@ -73,7 +73,19 @@ export function MatchAIAnalyst({
     });
   }
 
-  if (notes.length === 0) return null;
+  if (notes.length === 0) {
+    // Smart pre-match tactical preview
+    notes.push({
+      kind: 'tactical',
+      label: t('tactical_duel') || (homeName ? 'الصراع التكتيكي المرتقب' : 'Tactical Duel'),
+      text: `${homeName} في مواجهة تكتيكية مرتقبة أمام ${awayName}؛ الحسم سيعتمد على السيطرة في خط الوسط والتحولات الهجومية السريعة.`,
+    });
+    notes.push({
+      kind: 'preview',
+      label: t('key_factors') || 'مفاتيح اللقاء',
+      text: `الصلابة الدفاعية واستغلال الكرات الثابتة والفرص المحققة سيكونان العامل الفاصل لكلا الطرفين في هذه القمة.`,
+    });
+  }
 
   return (
     <div className={styles.panelCard}>

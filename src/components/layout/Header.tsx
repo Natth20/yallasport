@@ -15,6 +15,7 @@ import {
 import { LanguageToggle } from './LanguageToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { DataSaverToggle } from './DataSaverToggle';
+import { GoalSoundToggle } from './GoalSoundToggle';
 import { MobileMenu } from './MobileMenu';
 import { HeaderSeek } from './HeaderSeek';
 import { VoiceSearch } from './VoiceSearch';
@@ -212,6 +213,7 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
                 className={styles.headerVoice}
               />
               <div className={styles.togglesDesktop}>
+                <GoalSoundToggle />
                 <LanguageToggle />
                 <ThemeToggle />
                 <DataSaverToggle />
