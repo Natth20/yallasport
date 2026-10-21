@@ -40,7 +40,7 @@ export async function KickoffTimeline({
         </span>
       </div>
 
-      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+      <div className="p-3.5 flex flex-col gap-3">
         {slots.map((slot) => {
           const active = activeHour === slot.hour;
           return (

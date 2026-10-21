@@ -373,7 +373,7 @@ function StoryRail({
 }) {
   if (stories.length === 0) return null;
   return (
-    <section className={styles['ed-rail-panel']}>
+    <section style={{marginBottom:"20px"}} className={styles['ed-rail-panel']}>
       <div className={styles['ed-rail-head']}>
         <p>{kicker}</p>
         <h2>{title}</h2>

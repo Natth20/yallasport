@@ -172,13 +172,13 @@ function DeskCard({
       <div className="flex items-center gap-2.5">
         <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-6 w-6 shrink-0" />
         <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-foreground">
-          {match.homeTeam.name}
+          <bdi dir="auto">{match.homeTeam.name}</bdi>
         </span>
       </div>
       <div className="mt-2 flex items-center gap-2.5">
         <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-6 w-6 shrink-0" />
         <span className="min-w-0 flex-1 truncate text-[12px] font-bold text-foreground">
-          {match.awayTeam.name}
+          <bdi dir="auto">{match.awayTeam.name}</bdi>
         </span>
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2 text-[11px] font-black tabular-nums">
@@ -189,7 +189,7 @@ function DeskCard({
           {live ? (
             match.minute ? `${match.minute}′` : 'LIVE'
           ) : countdown ? (
-            <MatchCountdown kickoffAt={new Date(match.kickoffAt)} compact />
+            <MatchCountdown kickoffAt={new Date(match.kickoffAt)} variant="pill" />
           ) : (
             <ClientTime value={match.kickoffAt} />
           )}

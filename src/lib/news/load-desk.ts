@@ -422,15 +422,21 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     ? localizedMonth.slice(0, 6)
     : [...localizedMonth, ...mostReadWeek.filter((w) => !localizedMonth.some((m) => m.id === w.id))].slice(0, 6);
 
-  // ── front page slots ──────────────────────────────────────────────────────
+  // ── front page slots (ALWAYS freshest news first, no stale rotation) ────────
   const onFirstPage = page === 1;
-  const filed = localized.filter((story) => story.category !== DEFAULT_DESK.key);
-  const catchAll = localized.filter((story) => story.category === DEFAULT_DESK.key);
-  const stacked = filed.length > 0 ? [...filed, ...catchAll] : localized;
-  const front = onFirstPage && !query && desk === 'all' ? rotateStart(stacked, 1) : stacked;
-  const lead = onFirstPage ? front[0] ?? null : null;
-  const subLeads = onFirstPage ? front.slice(1, 4) : [];
-  const rest = onFirstPage ? front.slice(4) : localized;
+  const sortedStories = [...localized].sort(
+    (a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime()
+  );
+  const freshFeatured = sortedStories.find(
+    (s) => (s.featured || s.breaking) && s.publishedAt && s.publishedAt >= dayAgo
+  );
+  const leadCandidate = freshFeatured || sortedStories[0] || null;
+  const remainingStories = leadCandidate
+    ? sortedStories.filter((s) => s.id !== leadCandidate.id)
+    : sortedStories;
+  const lead = onFirstPage ? leadCandidate : null;
+  const subLeads = onFirstPage ? remainingStories.slice(0, 4) : [];
+  const rest = onFirstPage ? remainingStories.slice(4) : sortedStories;
   const breaking =
     localizedExtras.find(
       (entry) =>
@@ -465,7 +471,7 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
   }
   const sources = [...sourceMap.values()].sort((a, b) => b.count - a.count);
 
-  // ── archive ───────────────────────────────────────────────────────────────
+  // ── archive: complete 7-day velocity ──────────────────────────────────────
   const dayCounts = new Map<string, { date: Date; count: number }>();
   for (const row of safeArchiveRows) {
     if (!row.publishedAt) continue;
@@ -474,10 +480,19 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     if (entry) entry.count += 1;
     else dayCounts.set(key, { date: row.publishedAt, count: 1 });
   }
-  const archive: ArchiveDay[] = [...dayCounts.entries()]
-    .map(([key, value]) => ({ key, ...value }))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 7);
+
+  // Ensure all 7 recent days are represented so telemetry chart is complete and real
+  const archive: ArchiveDay[] = [];
+  for (let d = 0; d < 7; d++) {
+    const targetDate = new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
+    const key = dateKeyInTimezone(targetDate, timezone);
+    const found = dayCounts.get(key);
+    archive.push({
+      key,
+      date: targetDate,
+      count: found ? found.count : 0,
+    });
+  }
 
   let storyCount = 0;
   for (const row of safeDeskGroups) {

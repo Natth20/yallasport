@@ -20,7 +20,7 @@ export async function MatchdayLedger({
   if (visibleCensus.length === 0 && grounds.length === 0 && broadcasts.length === 0) return null;
 
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+    <div className="flex flex-col gap-3.5 min-w-0">
       {visibleCensus.length > 0 && (
         <section className="min-w-0 rounded-3xl border border-emerald-900/10 bg-card p-5 dark:border-emerald-400/10 dark:bg-muted">
           <h2 className="flex items-center gap-2 text-sm font-bold text-foreground dark:text-foreground">

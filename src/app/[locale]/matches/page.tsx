@@ -33,12 +33,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Flame,
   Globe,
   Heart,
+  MapPin,
   Radio,
   Search,
+  Sparkles,
   Trophy,
+  Tv,
 } from 'lucide-react';
+import { MatchCountdown } from '@/components/sports/MatchCountdown';
 import { addDays, format, isValid, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { enUS } from 'date-fns/locale';
@@ -1963,70 +1968,173 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
 
               <aside className={styles.rail}>
                 <section className={styles.plate}>
-                  <div className="matchday-section-kicker">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-orange-500">
-                      {pick(locale, 'الموعد التالي', 'Next kickoff')}
-                    </span>
+                  <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-orange-500" />
+                      </span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
+                        {pick(locale, 'الموعد التالي', 'Next kickoff')}
+                      </span>
+                    </div>
+                    {nextMatches.length > 1 ? (
+                      <span className="rounded-full bg-orange-500/10 px-2 py-0.5 text-[10px] font-extrabold text-orange-600 dark:text-orange-400 tabular-nums">
+                        {nextMatches.length} {pick(locale, 'مباريات قادمة', 'upcoming')}
+                      </span>
+                    ) : null}
                   </div>
-                  <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
-                    {pick(locale, 'الموعد التالي', 'Next fixture')}
-                  </h2>
+
                   {nextMatch ? (
-                    <div className="mt-4 space-y-3">
-                      {nextMatches.map((match) => (
-                        <Link
-                          key={match.id}
-                          href={`/match/${match.id}`}
-                          className="group block rounded-2xl border border-border/80 bg-card/60 p-3.5 transition-all hover:border-orange-500/40 hover:bg-card/90 dark:border-border/60 dark:bg-card/40"
-                        >
-                          <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2 text-[10px] font-semibold text-muted-foreground">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <LeagueCrest name={match.league.name} logoUrl={match.league.logoUrl} className="h-4 w-4 shrink-0" />
-                              <span className="truncate">{match.league.name}</span>
+                    <div className="mt-3.5 space-y-3.5">
+                      {/* Spotlight Primary Next Match */}
+                      <div className="relative overflow-hidden rounded-2xl border border-orange-500/35 bg-gradient-to-b from-orange-500/5 via-card/70 to-card/90 p-4 shadow-sm transition-all hover:border-orange-500/60 hover:shadow-md">
+                        {/* League & Kickoff header */}
+                        <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2.5 text-[11px] font-bold text-muted-foreground">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <LeagueCrest name={nextMatch.league.name} logoUrl={nextMatch.league.logoUrl} className="h-4 w-4 shrink-0" />
+                            <span className="truncate text-foreground font-black">{nextMatch.league.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 bg-background/80 px-2 py-0.5 rounded-full border border-border/60">
+                            <ClientTime value={nextMatch.kickoffAt} variant="clock" className="tabular-nums font-black text-orange-500" />
+                            <ClientTime value={nextMatch.kickoffAt} variant="day" className="text-[9px] text-muted-foreground font-semibold" />
+                          </div>
+                        </div>
+
+                        {/* Duel row */}
+                        <div className="my-3.5 grid grid-cols-5 items-center gap-2">
+                          {/* Home Team */}
+                          <div className="col-span-2 flex flex-col items-center text-center min-w-0">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-background p-1.5 border border-border/70 shadow-xs">
+                              <LeagueCrest name={nextMatch.homeTeam.name} logoUrl={nextMatch.homeTeam.logoUrl} className="h-full w-full object-contain" />
                             </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <ClientTime value={match.kickoffAt} variant="clock" className="tabular-nums font-bold text-orange-500" />
-                              <ClientTime value={match.kickoffAt} variant="day" className="text-[9px] text-muted-foreground" />
-                            </div>
+                            <span className="mt-1.5 w-full truncate text-xs font-black text-foreground leading-snug">
+                              <bdi dir="auto">{nextMatch.homeTeam.name}</bdi>
+                            </span>
+                            {formByTeam.get(nextMatch.homeTeam.id)?.length ? (
+                              <div className="mt-1">
+                                <FormPips letters={formByTeam.get(nextMatch.homeTeam.id) ?? []} />
+                              </div>
+                            ) : null}
                           </div>
 
-                          <div className="mt-2.5 space-y-2">
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-background p-0.5 border border-border/60 shadow-xs">
-                                  <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full object-contain" />
-                                </div>
-                                <span className="text-xs sm:text-[13px] font-bold text-foreground leading-snug">
-                                  {match.homeTeam.name}
-                                </span>
-                              </div>
-                              {formByTeam.get(match.homeTeam.id)?.length ? (
-                                <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
-                              ) : null}
-                            </div>
-
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-background p-0.5 border border-border/60 shadow-xs">
-                                  <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full object-contain" />
-                                </div>
-                                <span className="text-xs sm:text-[13px] font-bold text-foreground leading-snug">
-                                  {match.awayTeam.name}
-                                </span>
-                              </div>
-                              {formByTeam.get(match.awayTeam.id)?.length ? (
-                                <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
-                              ) : null}
-                            </div>
+                          {/* Center VS pill */}
+                          <div className="col-span-1 flex flex-col items-center justify-center">
+                            <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-black text-orange-600 dark:text-orange-400">
+                              VS
+                            </span>
                           </div>
 
-                          {(match.venue || match.channels[0]) && (
-                            <p className="mt-2 truncate border-t border-border/30 pt-1.5 text-[9px] font-medium text-muted-foreground">
-                              {[match.venue, match.venueCity, match.channels[0]?.name].filter(Boolean).join(' · ')}
-                            </p>
+                          {/* Away Team */}
+                          <div className="col-span-2 flex flex-col items-center text-center min-w-0">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-background p-1.5 border border-border/70 shadow-xs">
+                              <LeagueCrest name={nextMatch.awayTeam.name} logoUrl={nextMatch.awayTeam.logoUrl} className="h-full w-full object-contain" />
+                            </div>
+                            <span className="mt-1.5 w-full truncate text-xs font-black text-foreground leading-snug">
+                              <bdi dir="auto">{nextMatch.awayTeam.name}</bdi>
+                            </span>
+                            {formByTeam.get(nextMatch.awayTeam.id)?.length ? (
+                              <div className="mt-1">
+                                <FormPips letters={formByTeam.get(nextMatch.awayTeam.id) ?? []} />
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* Detailed Countdown Box */}
+                        <div className="my-3 flex flex-col items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/[0.06] p-2.5">
+                          <span className="mb-1.5 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                            <Clock3 className="h-3 w-3" />
+                            {pick(locale, 'ينطلق خلال', 'Starts in')}
+                          </span>
+                          <MatchCountdown kickoffAt={new Date(nextMatch.kickoffAt)} variant="detailed" />
+                        </div>
+
+                        {/* Broadcast & Venue Info */}
+                        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-border/40 pt-2 text-[10px] text-muted-foreground">
+                          {nextMatch.channels[0]?.name ? (
+                            <span className="flex items-center gap-1 font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-md">
+                              <Tv className="h-3 w-3 shrink-0" />
+                              <span className="truncate max-w-[120px]">{nextMatch.channels[0].name}</span>
+                            </span>
+                          ) : (
+                            <span className="italic">{pick(locale, 'القناة لم تحدد بعد', 'Channel TBD')}</span>
                           )}
+
+                          {nextMatch.venue || nextMatch.venueCity ? (
+                            <span className="flex items-center gap-1 truncate max-w-[130px] font-medium" title={[nextMatch.venue, nextMatch.venueCity].filter(Boolean).join(' · ')}>
+                              <MapPin className="h-3 w-3 shrink-0 text-muted-foreground" />
+                              <span className="truncate">{nextMatch.venueCity || nextMatch.venue}</span>
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* Match center link */}
+                        <Link
+                          href={`/match/${nextMatch.id}`}
+                          className="mt-3 flex items-center justify-center gap-1.5 w-full rounded-xl bg-orange-500 py-2 text-[11px] font-extrabold text-white transition-all hover:bg-orange-600 active:scale-[0.98] shadow-xs"
+                        >
+                          <span>{pick(locale, 'مركز المباراة والمتابعة', 'Match Center & Live Desk')}</span>
+                          <ArrowUpRight className="h-3.5 w-3.5" />
                         </Link>
-                      ))}
+                      </div>
+
+                      {/* Subsequent Next Matches */}
+                      {nextMatches.slice(1).length > 0 ? (
+                        <div className="space-y-2 pt-1">
+                          <span className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                            {pick(locale, 'مباريات لاحقة اليوم', 'Later fixtures today')}
+                          </span>
+                          {nextMatches.slice(1).map((match) => (
+                            <Link
+                              key={match.id}
+                              href={`/match/${match.id}`}
+                              className="group block rounded-xl border border-border/70 bg-card/60 p-2.5 transition-all hover:border-orange-500/40 hover:bg-card/90 dark:border-border/50 dark:bg-card/40"
+                            >
+                              <div className="flex items-center justify-between gap-2 border-b border-border/30 pb-1.5 text-[10px] text-muted-foreground">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <LeagueCrest name={match.league.name} logoUrl={match.league.logoUrl} className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate font-semibold text-foreground/90">{match.league.name}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <MatchCountdown kickoffAt={new Date(match.kickoffAt)} variant="pill" />
+                                  <ClientTime value={match.kickoffAt} variant="clock" className="tabular-nums font-bold text-orange-500" />
+                                </div>
+                              </div>
+
+                              <div className="mt-2 space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
+                                      <LeagueCrest name={match.homeTeam.name} logoUrl={match.homeTeam.logoUrl} className="h-full w-full object-contain" />
+                                    </div>
+                                    <span className="text-xs font-bold text-foreground truncate">
+                                      <bdi dir="auto">{match.homeTeam.name}</bdi>
+                                    </span>
+                                  </div>
+                                  {formByTeam.get(match.homeTeam.id)?.length ? (
+                                    <FormPips letters={formByTeam.get(match.homeTeam.id) ?? []} />
+                                  ) : null}
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-background p-0.5 border border-border/50">
+                                      <LeagueCrest name={match.awayTeam.name} logoUrl={match.awayTeam.logoUrl} className="h-full w-full object-contain" />
+                                    </div>
+                                    <span className="text-xs font-bold text-foreground truncate">
+                                      <bdi dir="auto">{match.awayTeam.name}</bdi>
+                                    </span>
+                                  </div>
+                                  {formByTeam.get(match.awayTeam.id)?.length ? (
+                                    <FormPips letters={formByTeam.get(match.awayTeam.id) ?? []} />
+                                  ) : null}
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <p className="mt-4 text-[12px] font-medium text-muted-foreground">
@@ -2076,18 +2184,27 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                     <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
                       {pick(locale, `سجل أهداف اليوم — ${scorers.length}`, `Today's goal log — ${scorers.length}`)}
                     </h2>
-                    <ul className="mt-4 space-y-3">
+                    <ul className="mt-3.5 space-y-2">
                       {scorers.map((scorer) => (
                         <li key={scorer.id}>
-                          <Link href={`/match/${scorer.matchId}`} className="flex items-center gap-3">
-                            <LeagueCrest name={scorer.teamName} logoUrl={scorer.teamLogo} className="h-7 w-7" />
+                          <Link
+                            href={`/match/${scorer.matchId}`}
+                            className="flex items-center gap-2.5 rounded-xl border border-transparent p-2 transition-all hover:border-border/60 hover:bg-card/90"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background p-1 border border-border/60 shadow-xs">
+                              <LeagueCrest name={scorer.teamName} logoUrl={scorer.teamLogo} className="h-full w-full object-contain" />
+                            </div>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{scorer.player}</p>
-                              <p className="truncate text-[9px] font-medium text-muted-foreground">
-                                {scorer.type === 'OWN_GOAL' ? t('own_goal') : scorer.type === 'PENALTY' ? t('penalty') : scorer.teamName}
+                              <p className="truncate text-xs font-bold text-foreground">
+                                <bdi dir="auto">{scorer.player}</bdi>
+                              </p>
+                              <p className="truncate text-[10px] font-medium text-muted-foreground">
+                                <bdi dir="auto">{scorer.type === 'OWN_GOAL' ? t('own_goal') : scorer.type === 'PENALTY' ? t('penalty') : scorer.teamName}</bdi>
                               </p>
                             </div>
-                            <span className="text-[11px] font-bold tabular-nums text-orange-500">{scorer.minute}&prime;</span>
+                            <span className="shrink-0 rounded-md bg-orange-500/10 px-1.5 py-0.5 text-[11px] font-black tabular-nums text-orange-600 dark:text-orange-400">
+                              {scorer.minute}&prime;
+                            </span>
                           </Link>
                         </li>
                       ))}
@@ -2105,19 +2222,31 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
                     <h2 className="mt-2 text-sm font-bold text-foreground dark:text-foreground">
                       {pick(locale, 'بطاقات اليوم', "Today's cards")}
                     </h2>
-                    <ul className="mt-4 space-y-3">
+                    <ul className="mt-3.5 space-y-2">
                       {discipline.map((card) => (
                         <li key={card.id}>
-                          <Link href={`/match/${card.matchId}`} className="flex items-center gap-3">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <LeagueCrest name={card.teamName} logoUrl={card.teamLogo} className="h-7 w-7" />
+                          <Link
+                            href={`/match/${card.matchId}`}
+                            className="flex items-center gap-2.5 rounded-xl border border-transparent p-2 transition-all hover:border-border/60 hover:bg-card/90"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background p-1 border border-border/60 shadow-xs">
+                              <LeagueCrest name={card.teamName} logoUrl={card.teamLogo} className="h-full w-full object-contain" />
+                            </div>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-[12px] font-bold text-foreground dark:text-foreground">{card.player}</p>
-                              <p className="truncate text-[9px] font-medium text-muted-foreground">
-                                {card.teamName} · {card.type === 'RED_CARD' ? t('red_card') : t('yellow_card')}
+                              <p className="truncate text-xs font-bold text-foreground">
+                                <bdi dir="auto">{card.player}</bdi>
+                              </p>
+                              <p className="truncate text-[10px] font-medium text-muted-foreground">
+                                <bdi dir="auto">{card.teamName}</bdi> · {card.type === 'RED_CARD' ? t('red_card') : t('yellow_card')}
                               </p>
                             </div>
-                            <span className={`text-[11px] font-bold tabular-nums ${card.type === 'RED_CARD' ? 'text-red-500' : 'text-amber-500'}`}>
+                            <span
+                              className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-black tabular-nums ${
+                                card.type === 'RED_CARD'
+                                  ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                                  : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                              }`}
+                            >
                               {card.minute}&prime;
                             </span>
                           </Link>

@@ -8,6 +8,7 @@ import { Heart } from 'lucide-react';
 import { localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { localizeRoundName } from '@/lib/i18n/competition-names';
 import { formatScore } from '@/lib/sports-data/score-format';
+import { MatchCountdown } from '@/components/sports/MatchCountdown';
 
 export type MatchCardEvent = Pick<NormalizedMatchEvent, 'type' | 'minute' | 'teamId'> & {
   extraMinute?: number;
@@ -154,6 +155,11 @@ export async function MatchCard({
             <div className="flex flex-col items-center justify-center leading-tight">
               <ClientTime value={match.kickoffAt} variant="clock" className="font-black text-xs sm:text-[13px] text-orange-500 tabular-nums" />
               <ClientTime value={match.kickoffAt} variant="day" className="fixture-clock-day text-[10px] font-bold text-muted-foreground mt-0.5 whitespace-nowrap" />
+              {new Date(match.kickoffAt).getTime() > Date.now() && (
+                <div className="mt-1">
+                  <MatchCountdown kickoffAt={new Date(match.kickoffAt)} variant="pill" />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -161,9 +167,9 @@ export async function MatchCard({
         <div className="fixture-teams">
           <div className="fixture-team is-home">
             <CrestImage src={match.homeTeam.logoUrl} alt={homeName} name={homeName} size={28} />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <strong className={homeWon ? 'is-winner' : awayWon ? 'is-muted' : undefined}>
-                {homeName}
+                <bdi dir="auto">{homeName}</bdi>
               </strong>
               {(homeForm?.length || homePlace) && (
                 <div className="fixture-team-meta">
@@ -186,9 +192,9 @@ export async function MatchCard({
 
           <div className="fixture-team is-away">
             <CrestImage src={match.awayTeam.logoUrl} alt={awayName} name={awayName} size={28} />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <strong className={awayWon ? 'is-winner' : homeWon ? 'is-muted' : undefined}>
-                {awayName}
+                <bdi dir="auto">{awayName}</bdi>
               </strong>
               {(awayForm?.length || awayPlace) && (
                 <div className="fixture-team-meta">

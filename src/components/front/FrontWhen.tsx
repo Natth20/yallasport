@@ -14,7 +14,7 @@ export function FrontWhen({ value }: { value: string | Date }) {
   const delta = date.getTime() - Date.now();
   const abs = Math.abs(delta);
   if (abs >= WEEK) {
-    return <ClientTime value={date} locale={locale} options={{ day: 'numeric', month: 'short' }} />;
+    return <ClientTime value={date} locale={locale} variant="day" />;
   }
 
   const rtf = new Intl.RelativeTimeFormat(locale === 'ar' ? 'ar' : 'en', { numeric: 'auto' });

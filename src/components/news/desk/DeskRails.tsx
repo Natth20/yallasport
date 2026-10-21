@@ -7,7 +7,8 @@ import { PitchWatermark } from '@/components/decor/CraftMarks';
 import { deskLabel } from '@/lib/news/desks';
 import { pick } from '@/i18n/pick';
 import type { Brief, PitchMatch, SourceTally, TeamInNews } from '@/lib/news/load-desk';
-import { Radio, Flame, Sparkles, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
+import { FrontWhen } from '@/components/front/FrontWhen';
+import { Radio, Flame, Sparkles, Eye, ArrowLeft, ArrowRight, Crown } from 'lucide-react';
 
 export function MostReadRail({
   articles,
@@ -37,32 +38,32 @@ export function MostReadRail({
   const list = activeArticles.slice(0, 6);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-sm shadow-sm transition-all hover:border-border/90">
-      <div className="border-b border-border/70 p-4 space-y-3">
+    <div className="overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card/90 via-card/65 to-card/45 backdrop-blur-xl shadow-xl transition-all">
+      <div className="border-b border-border/70 p-5 space-y-4 bg-muted/15">
         <div className="flex items-center justify-between">
           <div>
-            <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
-              <Flame className="h-3 w-3" />
-              {pick(locale, 'التداول', 'Circulation')}
+            <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-amber-500">
+              <Flame className="h-3.5 w-3.5 animate-pulse" />
+              {pick(locale, 'التداول الصحفي', 'Circulation')}
             </p>
-            <h2 className="mt-0.5 text-base font-black text-foreground">
-              {title || pick(locale, 'الأكثر قراءة', 'Most read')}
+            <h2 className="mt-1 text-base font-black text-foreground">
+              {title || pick(locale, 'الأكثر قراءة وتأثيراً', 'Most read & impactful')}
             </h2>
           </div>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-extrabold text-primary">
+          <span className="rounded-full bg-amber-500/10 border border-amber-500/25 px-3 py-1 text-[10px] font-black text-amber-500 shadow-2xs">
             TOP 6
           </span>
         </div>
 
-        {/* تبويبات الفترات: اليوم / هذا الأسبوع / هذا الشهر */}
-        <div className="flex items-center gap-1 rounded-xl bg-muted/50 p-1 border border-border/40 text-xs font-bold">
+        {/* Segmented Control Tabs */}
+        <div className="flex items-center gap-1.5 rounded-2xl bg-muted/40 p-1.5 border border-border/50 text-xs font-bold backdrop-blur-md">
           <button
             type="button"
             onClick={() => setTab('today')}
-            className={`flex-1 rounded-lg py-1 px-2 text-center transition-all ${
+            className={`flex-1 rounded-xl py-2 px-3 text-center transition-all duration-200 ${
               tab === 'today'
-                ? 'bg-card text-primary font-black shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-primary text-primary-foreground font-black shadow-md shadow-primary/25 scale-[1.02]'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             }`}
           >
             {pick(locale, 'اليوم', 'Today')}
@@ -70,10 +71,10 @@ export function MostReadRail({
           <button
             type="button"
             onClick={() => setTab('week')}
-            className={`flex-1 rounded-lg py-1 px-2 text-center transition-all ${
+            className={`flex-1 rounded-xl py-2 px-3 text-center transition-all duration-200 ${
               tab === 'week'
-                ? 'bg-card text-primary font-black shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-primary text-primary-foreground font-black shadow-md shadow-primary/25 scale-[1.02]'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             }`}
           >
             {pick(locale, 'هذا الأسبوع', 'This week')}
@@ -81,10 +82,10 @@ export function MostReadRail({
           <button
             type="button"
             onClick={() => setTab('month')}
-            className={`flex-1 rounded-lg py-1 px-2 text-center transition-all ${
+            className={`flex-1 rounded-xl py-2 px-3 text-center transition-all duration-200 ${
               tab === 'month'
-                ? 'bg-card text-primary font-black shadow-xs'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-primary text-primary-foreground font-black shadow-md shadow-primary/25 scale-[1.02]'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             }`}
           >
             {pick(locale, 'هذا الشهر', 'This month')}
@@ -93,50 +94,84 @@ export function MostReadRail({
       </div>
 
       {list.length > 0 ? (
-        <ol className="divide-y divide-border/40">
-          {list.map((article, index) => (
-            <li key={article.id}>
-              <Link
-                href={`/news/${article.slug}`}
-                className="group flex items-start gap-3.5 px-4 py-3 transition-colors hover:bg-primary/5"
-              >
-                <span className="w-6 shrink-0 text-base font-black tabular-nums text-primary/70 transition-colors group-hover:text-primary">
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <strong className="block text-[13px] font-bold leading-5 text-foreground transition-colors group-hover:text-primary">
-                    {article.title}
-                  </strong>
-                  <span className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-muted-foreground">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        router.push(`/news?desk=${encodeURIComponent(article.category || 'all')}`);
-                      }}
-                      title={pick(locale, `فتح قسم ${deskLabel(article.category, locale)} بالكامل`, `Open full section for ${deskLabel(article.category, locale)}`)}
-                      className="text-primary font-bold hover:underline cursor-pointer bg-transparent border-0 p-0 text-start"
-                    >
-                      {deskLabel(article.category, locale)}
-                    </button>
-                    {article.publishedAt && (
-                      <ClientTime value={article.publishedAt} options={{ month: 'short', day: 'numeric' }} />
-                    )}
-                    {article.views > 0 && (
-                      <span className="inline-flex items-center gap-1 font-bold text-foreground/80">
-                        <Eye className="h-2.5 w-2.5 text-primary" />
-                        {article.views} {pick(locale, 'مشاهدة', 'views')}
-                      </span>
-                    )}
+        <ol className="p-3 space-y-2">
+          {list.map((article, index) => {
+            const isFirst = index === 0;
+            const isSecond = index === 1;
+            const isThird = index === 2;
+
+            const podiumBadge = isFirst ? (
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 font-black text-xs shadow-md shadow-amber-500/30 ring-1 ring-amber-300">
+                01
+              </span>
+            ) : isSecond ? (
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 via-slate-300 to-slate-400 text-slate-900 font-black text-xs shadow-sm ring-1 ring-slate-300">
+                02
+              </span>
+            ) : isThird ? (
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-700 via-amber-800 to-amber-900 text-amber-100 font-black text-xs shadow-sm ring-1 ring-amber-700">
+                03
+              </span>
+            ) : (
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-muted/70 text-muted-foreground font-black text-xs border border-border/50">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            );
+
+            return (
+              <li key={article.id}>
+                <Link
+                  href={`/news/${article.slug}`}
+                  className={`group flex items-start gap-3.5 p-3.5 rounded-2xl transition-all duration-200 ${
+                    isFirst
+                      ? 'border border-amber-500/30 bg-amber-500/[0.04] hover:bg-amber-500/[0.08] hover:border-amber-500/50 hover:shadow-md'
+                      : 'border border-border/40 bg-card/40 hover:bg-primary/5 hover:border-primary/40 hover:shadow-xs'
+                  }`}
+                >
+                  {podiumBadge}
+
+                  <span className="min-w-0 flex-1">
+                    <strong className={`block font-bold leading-snug transition-colors group-hover:text-primary ${
+                      isFirst ? 'text-sm text-foreground' : 'text-xs text-foreground/90'
+                    }`}>
+                      <bdi dir="auto">{article.title}</bdi>
+                    </strong>
+
+                    <span className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/news?desk=${encodeURIComponent(article.category || 'all')}`);
+                        }}
+                        title={pick(locale, `فتح قسم ${deskLabel(article.category, locale)} بالكامل`, `Open full section for ${deskLabel(article.category, locale)}`)}
+                        className="rounded-md bg-primary/10 px-2 py-0.5 text-primary font-black hover:bg-primary/20 transition-colors"
+                      >
+                        {deskLabel(article.category, locale)}
+                      </button>
+
+                      {article.publishedAt ? (
+                        <span className="inline-flex items-center text-muted-foreground">
+                          <FrontWhen value={article.publishedAt} />
+                        </span>
+                      ) : null}
+
+                      {article.views > 0 && (
+                        <span className="inline-flex items-center gap-1 font-black text-foreground bg-muted/60 px-2 py-0.5 rounded-md">
+                          <Eye className="h-2.5 w-2.5 text-primary" />
+                          <span>{article.views} {pick(locale, 'مشاهدة', 'views')}</span>
+                        </span>
+                      )}
+                    </span>
                   </span>
-                </span>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            );
+          })}
         </ol>
       ) : (
-        <div className="px-5 py-6 text-center text-xs text-muted-foreground">
+        <div className="px-5 py-8 text-center text-xs text-muted-foreground">
           {pick(locale, 'بانتظار التداول — لا تقارير معتمدة بعد.', 'Awaiting circulation — no approved reports yet.')}
         </div>
       )}
@@ -212,33 +247,44 @@ export function TeamsInNewsRail({ teams, locale }: { teams: TeamInNews[]; locale
   if (teams.length === 0) return null;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur-sm shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card/90 to-card/50 backdrop-blur-md shadow-sm">
       <div className="border-b border-border/70 px-5 py-4 flex items-center justify-between">
         <div>
           <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.24em] text-primary">
             <Sparkles className="h-3 w-3" />
-            {pick(locale, 'الأسماء', 'The names')}
+            {pick(locale, 'الأكثر ذكراً', 'Most mentioned')}
           </p>
           <h2 className="mt-0.5 text-base font-black text-foreground">
             {pick(locale, 'فرق في الأخبار', 'Teams in the news')}
           </h2>
         </div>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-black text-primary">
+          {teams.length} {pick(locale, 'فريق', 'clubs')}
+        </span>
       </div>
-      <div className="p-4 flex flex-wrap gap-2">
+      <div className="p-3.5 grid grid-cols-2 gap-2.5">
         {teams.map((team) => (
           <Link
             key={team.id}
             href={`/team/${team.slug}`}
-            className="group flex items-center gap-2 rounded-xl border border-border/80 bg-card/80 px-3 py-1.5 text-xs font-bold transition-all hover:border-primary hover:bg-primary/5"
+            className="group flex items-center justify-between gap-2.5 rounded-xl border border-border/70 bg-background/60 p-2.5 transition-all hover:border-primary/60 hover:bg-primary/5 hover:shadow-2xs"
           >
-            {team.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={team.logoUrl} alt="" className="h-4 w-4 object-contain" />
-            ) : null}
-            <span className="truncate max-w-[120px] text-foreground group-hover:text-primary">{team.name}</span>
-            <b className="rounded-full bg-primary/10 px-1.5 py-0.2 text-[10px] font-black text-primary">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card border border-border/60 p-1 group-hover:border-primary/30 transition-colors">
+                {team.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={team.logoUrl} alt="" className="h-full w-full object-contain" />
+                ) : (
+                  <span className="text-[10px] font-bold text-muted-foreground">{team.name.slice(0, 1)}</span>
+                )}
+              </div>
+              <span className="truncate text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                <bdi dir="auto">{team.name}</bdi>
+              </span>
+            </div>
+            <span className="shrink-0 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-black text-primary tabular-nums">
               {team.count}
-            </b>
+            </span>
           </Link>
         ))}
       </div>

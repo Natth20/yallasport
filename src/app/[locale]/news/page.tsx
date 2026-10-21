@@ -362,19 +362,19 @@ function NewsHall({
           <BroadcastBand broadcasts={data.broadcasts} locale={locale} />
         ) : null}
 
-        {/* أحدث الفيديوهات وملخصات المباريات */}
+        {/* أولاً: معرض صور وأحداث اليوم */}
+        {firstPage && photos.length > 0 ? (
+          <NewsPhotosBand photos={photos} locale={locale} />
+        ) : null}
+
+        {/* ثانياً: أحدث الفيديوهات وملخصات المباريات */}
         {firstPage && videos.length > 0 ? (
           <NewsVideosBand videos={videos} locale={locale} />
         ) : null}
 
-        {/* قسم الريلز واللقطات القصيرة */}
+        {/* ثالثاً: قسم الريلز واللقطات القصيرة */}
         {firstPage && reels.length > 0 ? (
           <NewsReelsBand reels={reels} locale={locale} />
-        ) : null}
-
-        {/* معرض صور وأحداث اليوم */}
-        {firstPage && photos.length > 0 ? (
-          <NewsPhotosBand photos={photos} locale={locale} />
         ) : null}
 
         {/* رابعاً: الأقسام الموجودة المحفوظة (الجداول، فرق في الأخبار) */}

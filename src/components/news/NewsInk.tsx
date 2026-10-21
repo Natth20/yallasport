@@ -85,6 +85,17 @@ export function NewsInkMast({
   );
 }
 
+function getDayParts(dateVal: Date | string, locale: string) {
+  const d = new Date(dateVal);
+  const isAr = locale === 'ar';
+  // Distinct day name (e.g. الأربعاء / Wed)
+  const dayName = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { weekday: 'short' });
+  // Distinct day number and month (e.g. 21 أكتوبر / Oct 21)
+  const dayNumber = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { day: 'numeric' });
+  const monthName = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { month: 'short' });
+  return { dayName, dayNumber, monthName };
+}
+
 export function NewsInkPulse({
   archive,
   locale,
@@ -96,24 +107,100 @@ export function NewsInkPulse({
 }) {
   if (archive.length === 0) return null;
   const days = [...archive].reverse();
+  const maxCount = Math.max(...days.map((d) => d.count), 1);
+  const totalWeekly = days.reduce((acc, d) => acc + d.count, 0);
+
+  // Today's YYYY-MM-DD
+  const todayKey = new Date().toISOString().slice(0, 10);
+
   return (
     <section className={`${styles['nk-panel']} ${styles['nk-pulse-panel']}`}>
       <div className={styles['nk-panel-head']}>
-        <p>{pick(locale, 'إيقاع الأسبوع', 'Week pulse')}</p>
-        <h2>{pick(locale, 'كم وصل على المكتب كل يوم', 'How much reached the desk each day')}</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full border-b border-border/50 pb-3 mb-4">
+          <div>
+            <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-primary">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+              </span>
+              {pick(locale, 'مؤشر التغطية الصحفية', 'Newsroom telemetry')}
+            </p>
+            <h2 className="mt-1 text-base font-black text-foreground">
+              {pick(locale, 'كم وصل على المكتب كل يوم', 'How much reached the desk each day')}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/25 px-3 py-1 text-xs font-black text-primary shadow-xs">
+              <span className="font-black tabular-nums">{totalWeekly}</span>
+              <span>{pick(locale, 'تقرير هذا الأسبوع', 'reports this week')}</span>
+            </span>
+          </div>
+        </div>
       </div>
+
       <div className={styles['nk-pulse']}>
-        {days.map((day) => (
-          <Link key={day.key} href={hrefFor({ day: day.key })} className={styles['nk-pulse-day']}>
-            <small>
-              <ClientTime value={day.date} options={{ weekday: 'long' }} />
-            </small>
-            <strong>{day.count}</strong>
-            <em>
-              <ClientTime value={day.date} options={{ day: 'numeric', month: 'long' }} />
-            </em>
-          </Link>
-        ))}
+        {days.map((day) => {
+          const isToday = day.key === todayKey || day.key === days[days.length - 1]?.key;
+          const { dayName, dayNumber, monthName } = getDayParts(day.date, locale);
+          const hasReports = day.count > 0;
+          const heightPct = hasReports
+            ? Math.max(22, Math.round((day.count / maxCount) * 100))
+            : 8;
+
+          return (
+            <Link
+              key={day.key}
+              href={hrefFor({ day: day.key })}
+              className={`${styles['nk-pulse-day']} ${isToday ? styles['is-today'] : ''}`}
+              title={pick(
+                locale,
+                `أخبار يوم ${dayName}، ${dayNumber} ${monthName} (${day.count} تقرير)`,
+                `News for ${dayName}, ${monthName} ${dayNumber} (${day.count} reports)`
+              )}
+            >
+              {/* Day info Header */}
+              <div className="flex flex-col items-center gap-0.5 text-center w-full">
+                <span className={styles['nk-pulse-day-title']}>
+                  {dayName}
+                </span>
+                <span className={styles['nk-pulse-day-date']}>
+                  {dayNumber} {monthName}
+                </span>
+                {isToday ? (
+                  <span className={styles['nk-pulse-today-pill']}>
+                    {pick(locale, 'اليوم', 'Today')}
+                  </span>
+                ) : (
+                  <span className="h-4" aria-hidden />
+                )}
+              </div>
+
+              {/* Vertical Telemetry Tower */}
+              <div className={styles['nk-pulse-track']}>
+                <div
+                  className={`${styles['nk-pulse-bar']} ${hasReports ? styles['is-active'] : styles['is-idle']}`}
+                  style={{ height: `${heightPct}%` }}
+                >
+                  {hasReports ? (
+                    <span className={styles['nk-pulse-bar-tip']} />
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Count Footer */}
+              <div className="flex flex-col items-center gap-0.5 text-center w-full mt-1">
+                <strong className={hasReports ? 'text-primary font-black' : 'text-muted-foreground font-bold'}>
+                  {day.count}
+                </strong>
+                <small className="text-[10px] font-semibold text-muted-foreground/80">
+                  {day.count === 1
+                    ? pick(locale, 'تقرير', 'report')
+                    : pick(locale, 'تقارير', 'reports')}
+                </small>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
