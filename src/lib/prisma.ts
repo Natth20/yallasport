@@ -81,6 +81,21 @@ function createPrisma(rawUrl?: string, kind: 'app' | 'direct' = 'app') {
   });
 }
 
+function isConnectionDropError(err: unknown): boolean {
+  if (!err) return false;
+  const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  return (
+    msg.includes('server has closed the connection') ||
+    msg.includes('connection closed') ||
+    msg.includes('connection terminated') ||
+    msg.includes('connection reset') ||
+    msg.includes('connection lost') ||
+    msg.includes("can't reach database server") ||
+    msg.includes('socket has been ended') ||
+    msg.includes('connection refused')
+  );
+}
+
 function wrapPrisma(client: PrismaClient): PrismaClient {
   return new Proxy(client, {
     get(target, prop, receiver) {
@@ -89,7 +104,18 @@ function wrapPrisma(client: PrismaClient): PrismaClient {
 
       if (name === '$transaction') {
         return (...args: unknown[]) =>
-          withQueryGate(() => (value as (...inner: unknown[]) => unknown).apply(target, args) as Promise<unknown>);
+          withQueryGate(async () => {
+            try {
+              return await (value as (...inner: unknown[]) => unknown).apply(target, args);
+            } catch (error) {
+              if (isConnectionDropError(error)) {
+                resetClients();
+                const fresh = getRawPrisma();
+                return await (fresh.$transaction as unknown as (...inner: unknown[]) => unknown).apply(fresh, args);
+              }
+              throw error;
+            }
+          });
       }
 
       if (name.startsWith('$')) {
@@ -102,7 +128,22 @@ function wrapPrisma(client: PrismaClient): PrismaClient {
             const fn = Reflect.get(model, method, modelReceiver);
             if (typeof fn !== 'function') return fn;
             return (...args: unknown[]) =>
-              withQueryGate(() => Promise.resolve(fn.apply(model, args)));
+              withQueryGate(async () => {
+                try {
+                  return await Promise.resolve(fn.apply(model, args));
+                } catch (error) {
+                  if (isConnectionDropError(error)) {
+                    resetClients();
+                    const freshClient = getRawPrisma();
+                    const freshModel = (freshClient as unknown as Record<string, Record<string, (...a: unknown[]) => unknown>>)[name];
+                    const freshFn = freshModel?.[String(method)];
+                    if (typeof freshFn === 'function') {
+                      return await Promise.resolve(freshFn.apply(freshModel, args));
+                    }
+                  }
+                  throw error;
+                }
+              });
           },
         });
       }
