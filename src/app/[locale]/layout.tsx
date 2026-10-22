@@ -16,6 +16,8 @@ import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { LiveStatusProvider } from "@/lib/context/LiveStatusContext";
 import { PageShell } from "@/components/motion/PageMotion";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { GoalToastBanner } from "@/components/sports/GoalToastBanner";
 import { routing } from "@/i18n/routing";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
@@ -191,6 +193,8 @@ export default async function RootLayout({
                   <GoogleAnalytics measurementId={gaMeasurementId()} />
                   <PWAInstallPrompt />
                   <ServiceWorkerRegister />
+                  <MobileBottomNav />
+                  <GoalToastBanner />
                 </LiveStatusProvider>
               </SettingsProvider>
             </ThemeProvider>

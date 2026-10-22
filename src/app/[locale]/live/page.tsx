@@ -75,26 +75,25 @@ async function LivePageBody({
   const todayKey = dateKeyInTimezone(new Date(), timezone);
   const { start, end } = dayBoundsInTimezone(todayKey, timezone);
 
-  const items = STREAMING_ENABLED
-    ? await listLiveCatalog({
-      country,
-      leagueId: leagueId || undefined,
-      channelId: channelId || undefined,
-    }).catch(swallow('LivePage.listLiveCatalog', []))
-    : [];
-
-  const linear = STREAMING_ENABLED
-    ? await listLinearCatalog({
-      country,
-      channelId: channelId || undefined,
-    }).catch(swallow('LivePage.listLinearCatalog', []))
-    : [];
-
-  const library = STREAMING_ENABLED
-    ? await listPublishedLibrary({ take: 12 }).catch(swallow('LivePage.listPublishedLibrary', []))
-    : [];
-
-  const [deskLive, deskLiveCount, upcomingLiveSchedule] = await Promise.all([
+  const [
+    items,
+    linear,
+    library,
+    deskLive,
+    deskLiveCount,
+    upcomingLiveSchedule,
+    tvRows,
+    upcomingWindows,
+  ] = await Promise.all([
+    STREAMING_ENABLED
+      ? listLiveCatalog({ country, leagueId: leagueId || undefined, channelId: channelId || undefined }).catch(swallow('LivePage.listLiveCatalog', []))
+      : Promise.resolve([]),
+    STREAMING_ENABLED
+      ? listLinearCatalog({ country, channelId: channelId || undefined }).catch(swallow('LivePage.listLinearCatalog', []))
+      : Promise.resolve([]),
+    STREAMING_ENABLED
+      ? listPublishedLibrary({ take: 12 }).catch(swallow('LivePage.listPublishedLibrary', []))
+      : Promise.resolve([]),
     listLiveMatches(16).catch(swallow('LivePage.deskLive', [])),
     countLiveMatches(),
     prisma.match.findMany({
@@ -115,20 +114,18 @@ async function LivePageBody({
         },
       },
     }).catch(swallow('LivePage.upcomingLiveSchedule', [])),
+    listTonightTvGuide({
+      start,
+      end,
+      leagueId: leagueId || undefined,
+      channelId: channelId || undefined,
+    }).catch(swallow('LivePage.listTonightTvGuide', [] as Awaited<ReturnType<typeof listTonightTvGuide>>)),
+    STREAMING_ENABLED
+      ? upcomingLicensedWindows(8).catch(swallow('LivePage.upcomingLicensedWindows', []))
+      : Promise.resolve([]),
   ]);
 
-  const tvRows = await listTonightTvGuide({
-    start,
-    end,
-    leagueId: leagueId || undefined,
-    channelId: channelId || undefined,
-  }).catch(swallow('LivePage.listTonightTvGuide', [] as Awaited<ReturnType<typeof listTonightTvGuide>>));
-
-  const upcoming = STREAMING_ENABLED
-    ? (await upcomingLicensedWindows(8).catch(swallow('LivePage.upcomingLicensedWindows', []))).filter((asset) =>
-      isGeoAllowed(country, asset.geoAllow)
-    )
-    : [];
+  const upcoming = upcomingWindows.filter((asset) => isGeoAllowed(country, asset.geoAllow));
 
   walkLocalizeNames(locale, items);
   walkLocalizeNames(locale, linear);

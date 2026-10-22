@@ -5,6 +5,7 @@ import { slugifyCoachName } from '@/lib/coaches/slug';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
 import { sportsData } from '@/lib/sports-data';
 import { apiSportsCoachPhoto, apiSportsPlayerPhoto } from '@/lib/sports-data/media';
+import { enrichCoachDossier } from '@/lib/coaches/enrich-coach';
 
 export type CareerStint = {
   club: string;
@@ -288,7 +289,7 @@ export const loadCoachDossier = cache(async function loadCoachDossier(slug: stri
   }
 
   const api = await fetchCoachFromApi(apiId || (row ? apiIdFromSlug(row.slug || '') : null), guessedName || row?.name);
-  if (!row && !api?.name) return null;
+  if (!row && !api?.name && guessedName.length < 3) return null;
 
   const resolvedName = row?.name || api?.name || guessedName;
   const resolvedSlug = row?.slug || slugifyCoachName(resolvedName, apiId || row?.id || 'coach');
@@ -540,11 +541,12 @@ export const loadCoachDossier = cache(async function loadCoachDossier(slug: stri
     }),
   };
 
-  coachDossierMemoryCache.set(slug, { at: Date.now(), data: result });
+  const enriched = enrichCoachDossier(result);
+  coachDossierMemoryCache.set(slug, { at: Date.now(), data: enriched });
   if (coachDossierMemoryCache.size > 200) {
     const oldestKey = coachDossierMemoryCache.keys().next().value;
     if (typeof oldestKey === 'string') coachDossierMemoryCache.delete(oldestKey);
   }
 
-  return result;
+  return enriched;
 });

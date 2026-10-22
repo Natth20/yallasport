@@ -9,6 +9,7 @@ import { walkLocalizeNames } from '@/lib/i18n/sports-lexicon';
 import { useSettings } from './SettingsContext';
 
 import { playGoalSound } from '@/lib/audio/goal-alert';
+import { triggerGoalToast } from '@/components/sports/GoalToastBanner';
 
 type ConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'degraded';
 
@@ -46,6 +47,14 @@ export function LiveStatusProvider({ children }: { children: React.ReactNode }) 
               const newGoals = (nextMatch.homeScore ?? 0) + (nextMatch.awayScore ?? 0);
               if (newGoals > oldGoals) {
                 playGoalSound();
+                triggerGoalToast({
+                  matchId: nextMatch.id,
+                  homeName: nextMatch.homeTeam.name,
+                  awayName: nextMatch.awayTeam.name,
+                  homeScore: nextMatch.homeScore ?? 0,
+                  awayScore: nextMatch.awayScore ?? 0,
+                  minute: nextMatch.minute,
+                });
                 break;
               }
             }

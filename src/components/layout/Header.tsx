@@ -62,6 +62,7 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
     { name: t('common.news') || 'الأخبار', href: '/news' },
     { name: t('common.matches') || 'المباريات', href: '/matches' },
     { name: t('common.leagues') || 'البطولات', href: '/leagues' },
+    { name: ar ? 'الخريطة' : 'Map', href: '/map', badge: 'NEW' },
     { name: t('common.video') || 'الفيديو', href: '/videos' },
     { name: t('common.stats') || 'الإحصائيات', href: '/stats' },
     { name: t('common.broadcasts') || 'يلا سبورت مباشر', href: '/live', badge: 'LIVE' },
@@ -81,6 +82,7 @@ export const Header: React.FC<{ desk?: React.ReactNode }> = ({ desk }) => {
     {
       label: ar ? 'الرياضة' : 'Sports',
       items: [
+        { name: ar ? 'خريطة الملاعب والأندية' : 'Stadiums & Clubs Map', href: '/map', badge: 'NEW' },
         { name: ar ? 'المباريات' : 'Matches', href: '/matches' },
         { name: ar ? 'البطولات' : 'Tournaments', href: '/leagues' },
         { name: ar ? 'الفرق' : 'Teams', href: '/teams' },

@@ -337,16 +337,19 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
   const { start: weekStart } = dayBoundsInTimezone(stripDates[0], timezone);
   const { end: weekEnd } = dayBoundsInTimezone(stripDates[6], timezone);
 
-  const session = await auth();
   let matchRows: any[] = [];
   let dayEvents: any[] = [];
   let weekKickoffs: Array<{ kickoffAt: Date; status: string }> = [];
-  try {
-    matchRows = await prisma.match.findMany({
+
+  const [session, matchResult, weekResult] = await Promise.all([
+    auth().catch(() => null),
+    prisma.match.findMany({
       where: isToday ? todayOrLiveWhere(start, end) : { kickoffAt: { gte: start, lt: end } },
       orderBy: { kickoffAt: 'asc' },
+      take: 120,
       select: {
         id: true,
+        round: true,
         externalId: true,
         status: true,
         homeScore: true,
@@ -383,8 +386,11 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
           select: { teamId: true, formation: true, isPredicted: true, playersJson: true },
         },
       },
-    });
-    weekKickoffs = await prisma.match.findMany({
+    }).catch((err) => {
+      console.error('[MATCHES_PAGE_DB]', err);
+      return [];
+    }),
+    prisma.match.findMany({
       where: {
         OR: [
           { kickoffAt: { gte: weekStart, lt: weekEnd } },
@@ -392,11 +398,18 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
         ],
       },
       select: { kickoffAt: true, status: true },
-    });
+    }).catch(() => []),
+  ]);
+
+  matchRows = matchResult;
+  weekKickoffs = weekResult;
+
+  if (matchRows.length > 0) {
+    const matchIds = matchRows.map((r) => r.id);
     dayEvents = await prisma.matchEvent.findMany({
-      where: { match: { kickoffAt: { gte: start, lt: end } } },
+      where: { matchId: { in: matchIds } },
       orderBy: [{ minute: 'desc' }, { extraMinute: 'desc' }],
-      take: 250,
+      take: 150,
       select: {
         id: true,
         type: true,
@@ -417,31 +430,21 @@ async function MatchesPageBody({ searchParams }: MatchesPageProps) {
           },
         },
       },
-    });
-  } catch (error) {
-    console.error('[MATCHES_PAGE_DB]', error);
+    }).catch(() => []);
   }
 
   const roundById = new Map<string, string>();
-  if (matchRows.length > 0) {
-    try {
-      const roundRows = await prisma.match.findMany({
-        where: { id: { in: matchRows.map((row) => row.id) } },
-        select: { id: true, round: true },
-      });
-      for (const row of roundRows) {
-        if (row.round) roundById.set(row.id, row.round);
-      }
-    } catch (error) {
-      reportCaughtError("src/app/[locale]/matches/page.tsx:388", error);
-      // Older Prisma query engines reject `round` until generate succeeds.
-    }
+  for (const row of matchRows) {
+    if (row.round) roundById.set(row.id, row.round);
   }
 
   // If DB is empty (no matches from Supabase), fetch from live API
   const apiMatches =
     matchRows.length === 0
-      ? await sportsData.getMatchesByDate(selectedDateStr).catch(swallow("src/app/[locale]/matches/page.tsx:395", []))
+      ? await Promise.race([
+          sportsData.getMatchesByDate(selectedDateStr).catch(swallow("src/app/[locale]/matches/page.tsx:395", [])),
+          new Promise<NormalizedMatch[]>((resolve) => setTimeout(() => resolve([]), 3500)),
+        ])
       : [];
 
   // Merge: API matches come first, DB matches supplement

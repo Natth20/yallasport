@@ -1,5 +1,6 @@
 import { reportCaughtError } from '@/lib/ops/caught';
 import { cache } from 'react';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { slugifyCoachName } from '@/lib/coaches/slug';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
@@ -7,6 +8,7 @@ import { sportsData } from '@/lib/sports-data';
 import { liveKickoffFloor } from '@/lib/sports-data/match-window';
 import { apiSportsCoachPhoto, apiSportsPlayerPhoto } from '@/lib/sports-data/media';
 import type { NormalizedMatch } from '@/lib/sports-data/types';
+import { enrichTeamDossier } from '@/lib/teams/enrich-dossier';
 
 async function soft<T>(run: () => Promise<T>, fallback: T, retries = 2): Promise<T> {
   let lastError: unknown;
@@ -376,22 +378,17 @@ async function hydrateSquadNationalities(
   const season = footballSeason();
   const byExternal = new Map<string, string>();
 
-  for (let page = 1; page <= 3; page += 1) {
-    const data = await sportsData.getRaw<{
-      paging?: { current?: number; total?: number };
-      response?: Array<{
-        player?: { id?: number; nationality?: string };
-      }>;
-    }>(`/players?team=${encodeURIComponent(teamExternalId)}&season=${season}&page=${page}`);
+  const data = await soft(
+    () => sportsData.getRaw<{
+      response?: Array<{ player?: { id?: number; nationality?: string } }>;
+    }>(`/players?team=${encodeURIComponent(teamExternalId)}&season=${season}&page=1`),
+    null
+  );
 
-    for (const row of data?.response || []) {
-      const id = row.player?.id != null ? String(row.player.id) : '';
-      const nation = row.player?.nationality?.trim();
-      if (id && nation) byExternal.set(id, nation);
-    }
-
-    const total = data?.paging?.total ?? 1;
-    if (page >= total || !data?.response?.length) break;
+  for (const row of data?.response || []) {
+    const id = row.player?.id != null ? String(row.player.id) : '';
+    const nation = row.player?.nationality?.trim();
+    if (id && nation) byExternal.set(id, nation);
   }
 
   if (byExternal.size === 0) return players;
@@ -408,16 +405,17 @@ async function hydrateSquadNationalities(
     };
   });
 
-  for (const patch of patches.slice(0, 40)) {
-    await soft(
-      () =>
-        prisma.player.update({
+  // Non-blocking background persistence
+  Promise.resolve().then(async () => {
+    for (const patch of patches.slice(0, 15)) {
+      try {
+        await prisma.player.update({
           where: { id: patch.id },
           data: { nationality: patch.nationality },
-        }),
-      null
-    );
-  }
+        });
+      } catch {}
+    }
+  }).catch(() => null);
 
   return next;
 }
@@ -551,21 +549,22 @@ function mapApiFixture(row: ApiFixtureRow): NormalizedMatch {
 }
 
 async function hydrateTeamFixtures(externalId: string) {
-  const [lastData, nextData] = await Promise.all([
-    sportsData.getRaw<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&last=8`),
-    sportsData.getRaw<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&next=5`),
-  ]);
-  const rows = [...(lastData?.response || []), ...(nextData?.response || [])];
-  if (rows.length === 0) return;
-  const { persistNormalizedMatch } = await import('@/lib/sports-data/persistence');
-  for (const row of rows.slice(0, 10)) {
+  Promise.resolve().then(async () => {
     try {
-      await persistNormalizedMatch(mapApiFixture(row));
-    } catch (error) {
-      reportCaughtError("src/lib/teams/load-dossier.ts:535", error);
-      // one fixture must not break the dossier
-    }
-  }
+      const [lastData, nextData] = await Promise.all([
+        sportsData.getRaw<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&last=8`),
+        sportsData.getRaw<{ response?: ApiFixtureRow[] }>(`/fixtures?team=${encodeURIComponent(externalId)}&next=5`),
+      ]);
+      const rows = [...(lastData?.response || []), ...(nextData?.response || [])];
+      if (rows.length === 0) return;
+      const { persistNormalizedMatch } = await import('@/lib/sports-data/persistence');
+      for (const row of rows.slice(0, 10)) {
+        try {
+          await persistNormalizedMatch(mapApiFixture(row));
+        } catch {}
+      }
+    } catch {}
+  }).catch(() => null);
 }
 
 function parseCareer(raw: unknown): Array<{
@@ -630,7 +629,37 @@ const teamRowSelect = {
   },
 } as const;
 
-export async function findTeamRowBySlug(slug: string) {
+export type TeamSelectedRow = {
+  id: string;
+  externalId: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  founded: number | null;
+  bio: string | null;
+  venue: {
+    name: string;
+    city: string | null;
+    capacity: number | null;
+  } | null;
+  coach: {
+    id: string;
+    slug: string | null;
+    name: string;
+    photoUrl: string | null;
+    nationality: string | null;
+    bio: string | null;
+    birthDate: Date | null;
+    careerHistory: Prisma.JsonValue;
+    trophies: Array<{
+      title: string;
+      season: string;
+      teamName: string | null;
+    }>;
+  } | null;
+};
+
+export async function findTeamRowBySlug(slug: string): Promise<TeamSelectedRow | null> {
   const decoded = (() => {
     try {
       return decodeURIComponent(slug).trim();
@@ -640,15 +669,24 @@ export async function findTeamRowBySlug(slug: string) {
   })();
   if (!decoded) return null;
 
+  const tail = decoded.match(/(\d{2,})$/)?.[1] ?? null;
+  const nameGuess = decoded.replace(/-\d+$/, '').replace(/-/g, ' ').trim();
+
   const exact = await soft(
     () =>
       prisma.team.findFirst({
-        where: { OR: [{ slug: decoded }, { slug }] },
+        where: {
+          OR: [
+            { slug: decoded },
+            { slug },
+            ...(tail ? [{ externalId: tail }, { slug: { endsWith: `-${tail}` } }] : []),
+          ],
+        },
         select: teamRowSelect,
       }),
     null
   );
-  if (exact) return exact;
+  if (exact) return exact as unknown as TeamSelectedRow;
 
   const candidates = await soft(
     () =>
@@ -659,6 +697,10 @@ export async function findTeamRowBySlug(slug: string) {
             { slug: { equals: decoded, mode: 'insensitive' } },
             { name: { equals: decoded, mode: 'insensitive' } },
             { name: { startsWith: decoded, mode: 'insensitive' } },
+            ...(nameGuess.length >= 3 ? [
+              { name: { contains: nameGuess, mode: 'insensitive' as const } },
+              { slug: { startsWith: nameGuess.replace(/\s+/g, '-'), mode: 'insensitive' as const } },
+            ] : []),
           ],
         },
         take: 12,
@@ -667,9 +709,10 @@ export async function findTeamRowBySlug(slug: string) {
     []
   );
   if (candidates.length === 0) return null;
-  const named = candidates.find((row) => row.name.toLowerCase() === decoded.toLowerCase());
-  if (named) return named;
-  return [...candidates].sort((a, b) => a.slug.length - b.slug.length)[0] ?? null;
+  const named = candidates.find((row) => row.name.toLowerCase() === decoded.toLowerCase() || (nameGuess && row.name.toLowerCase().includes(nameGuess.toLowerCase())));
+  if (named) return named as unknown as TeamSelectedRow;
+  const sorted = [...candidates].sort((a, b) => a.slug.length - b.slug.length);
+  return (sorted[0] as unknown as TeamSelectedRow) ?? null;
 }
 
 type ApiSquadEntry = {
@@ -682,19 +725,41 @@ type ApiSquadEntry = {
 };
 
 async function hydrateSquadFromApi(teamId: string, teamExternalId: string): Promise<SquadPlayerRow[]> {
-  const data = await sportsData.getRaw<{
-    response?: Array<{ players?: ApiSquadEntry[] }>;
-  }>(`/players/squads?team=${encodeURIComponent(teamExternalId)}`);
+  const data = await soft(
+    () => sportsData.getRaw<{
+      response?: Array<{ players?: ApiSquadEntry[] }>;
+    }>(`/players/squads?team=${encodeURIComponent(teamExternalId)}`),
+    null
+  );
   const list = data?.response?.[0]?.players ?? [];
   if (list.length === 0) return [];
 
-  const rows: SquadPlayerRow[] = [];
-  for (const entry of list) {
+  const rows: SquadPlayerRow[] = list.map((entry) => {
     const externalId = String(entry.id);
     const slug = `${slugifyName(entry.name) || 'player'}-${externalId}`;
-    const player = await soft(
-      () =>
-        prisma.player.upsert({
+    return {
+      id: `${externalId}-${teamId}`,
+      shirtNumber: entry.number ?? null,
+      player: {
+        id: `api-p-${externalId}`,
+        externalId,
+        name: entry.name,
+        slug,
+        photoUrl: apiSportsPlayerPhoto(externalId, entry.photo),
+        position: entry.position ?? null,
+        nationality: null,
+        birthDate: null,
+      },
+    };
+  });
+
+  // Background non-blocking persistence
+  Promise.resolve().then(async () => {
+    for (const entry of list.slice(0, 20)) {
+      try {
+        const externalId = String(entry.id);
+        const slug = `${slugifyName(entry.name) || 'player'}-${externalId}`;
+        const p = await prisma.player.upsert({
           where: { externalId },
           create: {
             externalId,
@@ -703,52 +768,22 @@ async function hydrateSquadFromApi(teamId: string, teamExternalId: string): Prom
             photoUrl: apiSportsPlayerPhoto(externalId, entry.photo),
             position: entry.position ?? null,
           },
-          update: {
-            photoUrl: apiSportsPlayerPhoto(externalId, entry.photo) ?? undefined,
-            position: entry.position ?? undefined,
-          },
-          select: {
-            id: true,
-            externalId: true,
-            name: true,
-            slug: true,
-            photoUrl: true,
-            position: true,
-            nationality: true,
-            birthDate: true,
-          },
-        }),
-      null
-    );
-    if (!player) continue;
-    await soft(async () => {
-      const existing = await prisma.playerTeam.findFirst({
-        where: { playerId: player.id, teamId, to: null },
-        select: { id: true },
-      });
-      if (existing) {
-        if (entry.number != null) {
-          await prisma.playerTeam.update({
-            where: { id: existing.id },
-            data: { shirtNumber: entry.number },
+          update: {},
+          select: { id: true },
+        });
+        const existing = await prisma.playerTeam.findFirst({
+          where: { playerId: p.id, teamId, to: null },
+          select: { id: true },
+        });
+        if (!existing) {
+          await prisma.playerTeam.create({
+            data: { playerId: p.id, teamId, shirtNumber: entry.number ?? null },
           });
         }
-        return existing;
-      }
-      return prisma.playerTeam.create({
-        data: {
-          playerId: player.id,
-          teamId,
-          shirtNumber: entry.number ?? null,
-        },
-      });
-    }, null);
-    rows.push({
-      id: `${player.id}-${teamId}`,
-      shirtNumber: entry.number ?? null,
-      player,
-    });
-  }
+      } catch {}
+    }
+  }).catch(() => null);
+
   return rows;
 }
 
@@ -881,10 +916,18 @@ async function fetchTransfersFromApi(teamExternalId: string) {
     .slice(0, 8) as TeamDossierData['transfers'];
 }
 
+const teamDossierMemoryCache = new Map<string, { at: number; data: TeamDossierData }>();
+
 export const loadTeamDossier = cache(async function loadTeamDossier(
   slug: string,
   options?: { season?: string; leagueSlug?: string }
 ): Promise<TeamDossierData | null> {
+  const cacheKey = `${slug}:${options?.season || ''}:${options?.leagueSlug || ''}`;
+  const cached = teamDossierMemoryCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < 15 * 60 * 1000) {
+    return cached.data;
+  }
+
   const teamRow = await findTeamRowBySlug(slug);
 
   if (!teamRow) return null;
@@ -1111,11 +1154,8 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
               where: {
                 type: { in: ['GOAL', 'PENALTY', 'YELLOW_CARD', 'RED_CARD'] },
                 teamId: teamRow.externalId,
-                match: {
-                  OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
-                },
               },
-              take: 500,
+              take: 120,
               select: {
                 type: true,
                 playerId: true,
@@ -1126,7 +1166,11 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
             }),
           []
         ),
-      () => soft(() => fetchTeamProfileFromApi(teamRow.externalId), null),
+      () =>
+        Promise.race([
+          soft(() => fetchTeamProfileFromApi(teamRow.externalId), null),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+        ]),
       () =>
         soft(
           () =>
@@ -1135,11 +1179,10 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
                 OR: [
                   { toTeam: { contains: teamRow.name, mode: 'insensitive' } },
                   { fromTeam: { contains: teamRow.name, mode: 'insensitive' } },
-                  { player: { teams: { some: { teamId } } } },
                 ],
               },
               orderBy: { date: 'desc' },
-              take: 6,
+              take: 10,
               select: {
                 id: true,
                 date: true,
@@ -1272,21 +1315,28 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
     }
   }
 
-  const seasonSlice = await soft(
-    () =>
-      isLiveSportsApi()
-        ? fetchSeasonSlice(teamRow.externalId, leagueHint, seasonHint)
-        : Promise.resolve(null),
-    null
-  );
+  const [seasonSlice, apiTransfers, apiCoach] = isLiveSportsApi()
+    ? await Promise.all([
+      Promise.race([
+        soft(() => fetchSeasonSlice(teamRow.externalId, leagueHint, seasonHint), null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]),
+      transfers.length === 0
+        ? Promise.race([
+          soft(() => fetchTransfersFromApi(teamRow.externalId), []),
+          new Promise<TeamDossierData['transfers']>((resolve) => setTimeout(() => resolve([]), 2000)),
+        ])
+        : Promise.resolve([]),
+      Promise.race([
+        soft(() => fetchCoachFromApi(teamRow.externalId), null),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]),
+    ])
+    : [null, [], null];
 
-  if (transfers.length === 0 && isLiveSportsApi()) {
-    transfers = await soft(() => fetchTransfersFromApi(teamRow.externalId), []);
+  if (transfers.length === 0 && apiTransfers.length > 0) {
+    transfers = apiTransfers;
   }
-
-  const apiCoach = isLiveSportsApi()
-    ? await soft(() => fetchCoachFromApi(teamRow.externalId), null)
-    : null;
 
   const neighborRows = standingRow
     ? await soft(
@@ -1795,7 +1845,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
     news: news.length > 0 ? 'AVAILABLE' : 'PENDING',
   };
 
-  return {
+  const rawDossier: TeamDossierData = {
     team,
     squad,
     squadCount: players.length,
@@ -1833,4 +1883,13 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
     selectedLeagueSlug: options?.leagueSlug,
     sectionStatus,
   };
+
+  const enriched = enrichTeamDossier(rawDossier);
+  teamDossierMemoryCache.set(cacheKey, { at: Date.now(), data: enriched });
+  if (teamDossierMemoryCache.size > 200) {
+    const oldestKey = teamDossierMemoryCache.keys().next().value;
+    if (typeof oldestKey === 'string') teamDossierMemoryCache.delete(oldestKey);
+  }
+
+  return enriched;
 });

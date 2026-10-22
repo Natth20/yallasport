@@ -40,6 +40,7 @@ import { MatchPredictionCard } from '@/components/sports/MatchPredictionCard';
 import { SiteAd } from '@/components/ads/SiteAd';
 import { MatchDetailTabs } from '@/components/sports/MatchDetailTabs';
 import { MatchContextPack } from '@/components/sports/MatchContextPack';
+import { AttackMomentumGauge } from '@/components/sports/AttackMomentumGauge';
 import { sportsData } from '@/lib/sports-data';
 import { toChannelSlug } from '@/lib/channels/catalog';
 import styles from '@/components/sports/match-dossier.module.css';
@@ -703,7 +704,18 @@ async function MatchCenterBody({ params }: { params: Promise<{ id: string }> }) 
         <div className={styles.mainLayout}>
           <div className={styles.mainGrid}>
             {/* Main Column: Match Detail Tabs */}
-            <div>
+            <div className="space-y-4">
+              <AttackMomentumGauge
+                homeName={match.homeTeam.name}
+                awayName={match.awayTeam.name}
+                homeScore={match.homeScore}
+                awayScore={match.awayScore}
+                homePossession={match.statistics?.find((s) => s.teamId === match.homeTeam.id)?.possession}
+                awayPossession={match.statistics?.find((s) => s.teamId === match.awayTeam.id)?.possession}
+                homeShotsOnTarget={match.statistics?.find((s) => s.teamId === match.homeTeam.id)?.shotsOnTarget}
+                awayShotsOnTarget={match.statistics?.find((s) => s.teamId === match.awayTeam.id)?.shotsOnTarget}
+                isLive={match.status === 'LIVE' || match.status === 'HALFTIME'}
+              />
               <MatchDetailTabs
                 matchId={match.id}
                 status={match.status}
