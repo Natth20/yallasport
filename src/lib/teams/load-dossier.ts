@@ -413,7 +413,7 @@ async function hydrateSquadNationalities(
           where: { id: patch.id },
           data: { nationality: patch.nationality },
         });
-      } catch {}
+      } catch { }
     }
   }).catch(() => null);
 
@@ -561,9 +561,9 @@ async function hydrateTeamFixtures(externalId: string) {
       for (const row of rows.slice(0, 10)) {
         try {
           await persistNormalizedMatch(mapApiFixture(row));
-        } catch {}
+        } catch { }
       }
-    } catch {}
+    } catch { }
   }).catch(() => null);
 }
 
@@ -780,7 +780,7 @@ async function hydrateSquadFromApi(teamId: string, teamExternalId: string): Prom
             data: { playerId: p.id, teamId, shirtNumber: entry.number ?? null },
           });
         }
-      } catch {}
+      } catch { }
     }
   }).catch(() => null);
 
@@ -1651,9 +1651,10 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
 
   const KNOWN_VENUE_DATA: Record<
     string,
-    { image: string; surface: string; capacity: number; address: string; city: string }
+    { name: string; image: string; surface: string; capacity: number; address: string; city: string }
   > = {
     '541': {
+      name: 'Santiago Bernabéu',
       image: 'https://media.api-sports.io/football/venues/1456.png',
       surface: 'Grass (Hybrid)',
       capacity: 81044,
@@ -1661,6 +1662,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Madrid',
     },
     '529': {
+      name: 'Spotify Camp Nou',
       image: 'https://media.api-sports.io/football/venues/1454.png',
       surface: 'Grass',
       capacity: 99354,
@@ -1668,6 +1670,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Barcelona',
     },
     '530': {
+      name: 'Cívitas Metropolitano',
       image: 'https://media.api-sports.io/football/venues/1457.png',
       surface: 'Grass',
       capacity: 70460,
@@ -1675,6 +1678,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Madrid',
     },
     '50': {
+      name: 'Etihad Stadium',
       image: 'https://media.api-sports.io/football/venues/555.png',
       surface: 'Grass',
       capacity: 53400,
@@ -1682,6 +1686,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Manchester',
     },
     '40': {
+      name: 'Anfield',
       image: 'https://media.api-sports.io/football/venues/550.png',
       surface: 'Grass',
       capacity: 61276,
@@ -1689,6 +1694,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Liverpool',
     },
     '42': {
+      name: 'Emirates Stadium',
       image: 'https://media.api-sports.io/football/venues/494.png',
       surface: 'Grass',
       capacity: 60704,
@@ -1696,6 +1702,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'London',
     },
     '33': {
+      name: 'Old Trafford',
       image: 'https://media.api-sports.io/football/venues/556.png',
       surface: 'Grass',
       capacity: 74310,
@@ -1703,6 +1710,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Manchester',
     },
     '49': {
+      name: 'Stamford Bridge',
       image: 'https://media.api-sports.io/football/venues/519.png',
       surface: 'Grass',
       capacity: 40343,
@@ -1710,6 +1718,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'London',
     },
     '157': {
+      name: 'Allianz Arena',
       image: 'https://media.api-sports.io/football/venues/700.png',
       surface: 'Grass',
       capacity: 75024,
@@ -1717,6 +1726,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'München',
     },
     '85': {
+      name: 'Parc des Princes',
       image: 'https://media.api-sports.io/football/venues/671.png',
       surface: 'Grass',
       capacity: 47929,
@@ -1724,6 +1734,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Paris',
     },
     '505': {
+      name: 'San Siro (Giuseppe Meazza)',
       image: 'https://media.api-sports.io/football/venues/910.png',
       surface: 'Grass',
       capacity: 75817,
@@ -1731,6 +1742,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Milano',
     },
     '489': {
+      name: 'San Siro',
       image: 'https://media.api-sports.io/football/venues/910.png',
       surface: 'Grass',
       capacity: 75817,
@@ -1738,6 +1750,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Milano',
     },
     '496': {
+      name: 'Allianz Stadium',
       image: 'https://media.api-sports.io/football/venues/909.png',
       surface: 'Grass',
       capacity: 41507,
@@ -1745,6 +1758,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Torino',
     },
     '2566': {
+      name: 'Kingdom Arena',
       image: 'https://media.api-sports.io/football/venues/19894.png',
       surface: 'Grass',
       capacity: 30000,
@@ -1752,6 +1766,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Riyadh',
     },
     '2564': {
+      name: 'Al-Awwal Park',
       image: 'https://media.api-sports.io/football/venues/19895.png',
       surface: 'Grass',
       capacity: 25000,
@@ -1759,6 +1774,7 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
       city: 'Riyadh',
     },
     '2565': {
+      name: 'King Abdullah Sports City',
       image: 'https://media.api-sports.io/football/venues/1115.png',
       surface: 'Grass',
       capacity: 62241,
@@ -1788,7 +1804,11 @@ export const loadTeamDossier = cache(async function loadTeamDossier(
     KNOWN_VENUE_DATA[teamRow.externalId] ||
     lookupVenueByName(teamRow.venue?.name || apiProfile?.venue?.name);
 
-  const venueName = teamRow.venue?.name || apiProfile?.venue?.name || (knownVenue ? 'Santiago Bernabéu' : null);
+  const venueName =
+    teamRow.venue?.name ||
+    apiProfile?.venue?.name ||
+    knownVenue?.name ||
+    (teamRow.name ? `ملعب ${teamRow.name} الدولي` : null);
   const venue = venueName
     ? {
       name: venueName,
