@@ -50,6 +50,16 @@ async function ReelsMainPageBody({
     youtubeDeskStats().catch(swallow('reels.stats', emptyYoutubeDeskStats())),
   ]);
 
+  const orderedClips = [...clips].sort(
+    (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+  const displayClips = v
+    ? [
+        ...orderedClips.filter((c) => c.youtubeId === v),
+        ...orderedClips.filter((c) => c.youtubeId !== v),
+      ]
+    : orderedClips;
+
   return (
     <SalonStage
       tone="gallery"
@@ -71,7 +81,7 @@ async function ReelsMainPageBody({
     >
       <ReelsDesk
         locale={locale}
-        clips={toYoutubeCards(pinThenRotate(clips, (clip) => clip.youtubeId === v), locale)}
+        clips={toYoutubeCards(displayClips, locale)}
         initialId={v}
         copy={youtubeCopy(locale)}
         empty={pick(

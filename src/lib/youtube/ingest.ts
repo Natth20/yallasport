@@ -226,7 +226,7 @@ export const listYoutubeShelf = cache(async function listYoutubeShelf(
   take: number,
   locale?: string,
 ) {
-  const cacheKey = `youtube:shelf:v4:${kind}:${take}:${locale || 'all'}`;
+  const cacheKey = `youtube:shelf:v5:${kind}:${take}:${locale || 'all'}`;
   return cachedJson(cacheKey, 180, async () => {
     const roster = orderedRoster(locale).filter((channel) => !YOUTUBE_EMBED_BLOCKED.has(channel.id));
     const per = YOUTUBE_KEEP[kind];
@@ -235,35 +235,33 @@ export const listYoutubeShelf = cache(async function listYoutubeShelf(
       where: { status: 'PUBLISHED', kind, channelId: { in: ids } },
       orderBy: { publishedAt: 'desc' },
     });
-    const buckets = new Map<string, typeof rows>();
+    const channelCounts = new Map<string, number>();
+    const collected: typeof rows = [];
     for (const row of rows) {
-      const list = buckets.get(row.channelId) ?? [];
-      if (list.length >= per) continue;
-      list.push(row);
-      buckets.set(row.channelId, list);
+      const count = channelCounts.get(row.channelId) || 0;
+      if (count >= per) continue;
+      channelCounts.set(row.channelId, count + 1);
+      collected.push(row);
     }
-    const groups = roster.map((channel) => buckets.get(channel.id) ?? []);
-    const mixed = [];
-    const depth = Math.max(0, ...groups.map((group) => group.length));
-    for (let index = 0; index < depth; index += 1) {
-      for (const group of groups) {
-        if (group[index]) mixed.push(group[index]);
-      }
-    }
-    return mixed.slice(0, take);
+    // Strictly sort from newest to oldest by publishedAt timestamp
+    collected.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    return collected.slice(0, take);
   });
 });
 
-export function listYoutubeArchive(take = 48) {
-  return prisma.youtubeClip.findMany({
-    where: {
-      status: 'ARCHIVED',
-      channelId: { notIn: Array.from(YOUTUBE_EMBED_BLOCKED) },
-    },
-    orderBy: { publishedAt: 'desc' },
-    take,
+export const listYoutubeArchive = cache(async function listYoutubeArchive(take = 48) {
+  const cacheKey = `youtube:archive:v2:${take}`;
+  return cachedJson(cacheKey, 180, async () => {
+    return prisma.youtubeClip.findMany({
+      where: {
+        status: 'ARCHIVED',
+        channelId: { notIn: Array.from(YOUTUBE_EMBED_BLOCKED) },
+      },
+      orderBy: { publishedAt: 'desc' },
+      take,
+    });
   });
-}
+});
 
 export type YoutubeDeskStats = {
   channels: number;
@@ -285,50 +283,53 @@ export function emptyYoutubeDeskStats(): YoutubeDeskStats {
   };
 }
 
-export async function youtubeDeskStats(): Promise<YoutubeDeskStats> {
-  const blockedList = Array.from(YOUTUBE_EMBED_BLOCKED);
-  const playableChannels = FOOTBALL_YOUTUBE_CHANNELS.filter(
-    (c) => !YOUTUBE_EMBED_BLOCKED.has(c.id)
-  );
+export const youtubeDeskStats = cache(async function youtubeDeskStats(): Promise<YoutubeDeskStats> {
+  const cacheKey = 'youtube:desk:stats:v3';
+  return cachedJson(cacheKey, 180, async () => {
+    const blockedList = Array.from(YOUTUBE_EMBED_BLOCKED);
+    const playableChannels = FOOTBALL_YOUTUBE_CHANNELS.filter(
+      (c) => !YOUTUBE_EMBED_BLOCKED.has(c.id)
+    );
 
-  const [groups, lastFetch] = await Promise.all([
-    prisma.youtubeClip.groupBy({
-      by: ['status', 'kind', 'lang'],
-      where: {
-        channelId: { notIn: blockedList },
-      },
-      _count: { _all: true },
-    }),
-    prisma.youtubeClip.findFirst({
-      where: {
-        channelId: { notIn: blockedList },
-      },
-      orderBy: { fetchedAt: 'desc' },
-      select: { fetchedAt: true },
-    }),
-  ]);
+    const [groups, lastFetch] = await Promise.all([
+      prisma.youtubeClip.groupBy({
+        by: ['status', 'kind', 'lang'],
+        where: {
+          channelId: { notIn: blockedList },
+        },
+        _count: { _all: true },
+      }),
+      prisma.youtubeClip.findFirst({
+        where: {
+          channelId: { notIn: blockedList },
+        },
+        orderBy: { fetchedAt: 'desc' },
+        select: { fetchedAt: true },
+      }),
+    ]);
 
-  let videos = 0;
-  let reels = 0;
-  let archived = 0;
-  let arabic = 0;
-  for (const row of groups) {
-    const count = row._count._all;
-    if (row.status === 'ARCHIVED') archived += count;
-    if (row.status === 'PUBLISHED' && row.kind === 'VIDEO') videos += count;
-    if (row.status === 'PUBLISHED' && row.kind === 'SHORT') reels += count;
-    if (row.status === 'PUBLISHED' && row.lang === 'ar') arabic += count;
-  }
+    let videos = 0;
+    let reels = 0;
+    let archived = 0;
+    let arabic = 0;
+    for (const row of groups) {
+      const count = row._count._all;
+      if (row.status === 'ARCHIVED') archived += count;
+      if (row.status === 'PUBLISHED' && row.kind === 'VIDEO') videos += count;
+      if (row.status === 'PUBLISHED' && row.kind === 'SHORT') reels += count;
+      if (row.status === 'PUBLISHED' && row.lang === 'ar') arabic += count;
+    }
 
-  return {
-    channels: playableChannels.length,
-    videos,
-    reels,
-    archived,
-    arabic,
-    fetchedAt: lastFetch?.fetchedAt ?? null,
-  };
-}
+    return {
+      channels: playableChannels.length,
+      videos,
+      reels,
+      archived,
+      arabic,
+      fetchedAt: lastFetch?.fetchedAt ?? null,
+    };
+  });
+});
 
 export function isArabicChannel(channelId: string) {
   return channelById(channelId)?.lang === 'ar';

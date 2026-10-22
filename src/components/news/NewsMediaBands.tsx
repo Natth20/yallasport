@@ -270,7 +270,10 @@ export function NewsReelsBand({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {reels.slice(0, 4).map((reel) => {
+        {[...reels]
+          .sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime())
+          .slice(0, 4)
+          .map((reel) => {
           const duration = formatClock(reel.durationSec);
           return (
             <Link

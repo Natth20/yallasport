@@ -479,9 +479,9 @@ export function ReelsDesk({
                 </div>
 
                 {/* Bottom Card Body - compact height & theme adaptive */}
-                <div className="flex flex-col p-2 sm:p-2.5 gap-1 bg-card border-t border-border/50">
+                <div className="flex flex-col p-2 sm:p-2.5 gap-1.5 bg-card border-t border-border/50">
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-bold text-orange-500 truncate tracking-wide">
+                    <span className="text-[10px] font-bold text-orange-500 truncate tracking-wide max-w-[65%]">
                       {clip.channelTitle}
                     </span>
                     <span className="text-[9.5px] text-muted-foreground font-semibold shrink-0">
@@ -489,8 +489,10 @@ export function ReelsDesk({
                     </span>
                   </div>
 
-                  <h3 className="text-[0.68rem] sm:text-[0.71rem] font-semibold leading-[1.32] line-clamp-2 text-foreground group-hover:text-orange-500 transition-colors">
-                    {clip.title}
+                  <h3 className="text-[11px] sm:text-[11.5px] font-medium leading-[1.38] text-foreground group-hover:text-orange-500 transition-colors min-h-[2rem]">
+                    <bdi dir="auto" className="line-clamp-2 block break-words">
+                      {clip.title}
+                    </bdi>
                   </h3>
                 </div>
               </div>

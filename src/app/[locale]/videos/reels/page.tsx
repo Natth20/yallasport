@@ -50,6 +50,16 @@ async function ReelsPageBody({
     youtubeDeskStats().catch(swallow('reels.stats', emptyYoutubeDeskStats())),
   ]);
 
+  const orderedClips = [...clips].sort(
+    (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+  const displayClips = v
+    ? [
+        ...orderedClips.filter((c) => c.youtubeId === v),
+        ...orderedClips.filter((c) => c.youtubeId !== v),
+      ]
+    : orderedClips;
+
   return (
     <SalonStage
       tone="gallery"
@@ -73,7 +83,7 @@ async function ReelsPageBody({
         locale={locale}
         copy={youtubeCopy(locale)}
         initialId={v}
-        clips={toYoutubeCards(pinThenRotate(clips, (clip) => clip.youtubeId === v), locale)}
+        clips={toYoutubeCards(displayClips, locale)}
         empty={pick(locale, 'لا ريلز على الرف بعد. الشورتس تُصنَّف من العنوان أو من مدة الفيديو إن وُجد مفتاح يوتيوب.', 'No reels on the shelf yet. Shorts are classified from the title, or from duration when a YouTube API key is set.')}
       />
     </SalonStage>

@@ -53,7 +53,7 @@ async function _loadFrontStories(locale: string): Promise<{
   photos: FrontStory[];
 }> {
   try {
-    const raw = await cachedJson(`front:news:${locale === 'en' ? 'en' : 'ar'}:v7`, 40, () =>
+    const raw = await cachedJson(`front:news:${locale === 'en' ? 'en' : 'ar'}:v8`, 40, () =>
       prisma.news
         .findMany({
           where: newsVisibleWhere(locale),
@@ -66,15 +66,12 @@ async function _loadFrontStories(locale: string): Promise<{
 
     const localized = await overlayNewsList(raw || [], locale);
     const chronological = (localized || []).map(toStory);
-    const stories = rotateStart(chronological, 3);
-    const featuredIds = new Set([stories[0]?.id, ...stories.slice(1, 6).map((row) => row.id)].filter(Boolean));
-    const photos = rotateStart(
-      stories.filter((item) => item.image),
-      4,
-    ).slice(0, 16);
+    chronological.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    const featuredIds = new Set([chronological[0]?.id, ...chronological.slice(1, 6).map((row) => row.id)].filter(Boolean));
+    const photos = chronological.filter((item) => item.image).slice(0, 16);
     return {
-      lead: stories[0] ?? null,
-      rest: stories.slice(1, 16),
+      lead: chronological[0] ?? null,
+      rest: chronological.slice(1, 16),
       latest: chronological.filter((row) => !featuredIds.has(row.id)).slice(0, 16),
       photos,
     };

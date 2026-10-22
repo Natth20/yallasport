@@ -98,7 +98,7 @@ function categorizeNewsPhoto(
 }
 
 export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: string): Promise<PhotoFrame[]> {
-  const cacheKey = `photos:frames:v4:${locale}`;
+  const cacheKey = `photos:frames:v5:${locale}`;
   return cachedJson(cacheKey, 90, async () => {
     const imageWhere = {
       OR: [{ featuredImage: { not: null } }, { ogImage: { not: null } }],
@@ -284,6 +284,7 @@ export const loadPhotoFrames = cache(async function loadPhotoFrames(locale: stri
     };
   });
 
-    return rotateStart(frames, 6);
-  });
+  frames.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  return frames;
+});
 });

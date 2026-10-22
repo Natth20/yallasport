@@ -30,7 +30,7 @@ function mapClips(
 
 async function _loadFrontVideo(locale: string): Promise<{ videos: FrontClip[]; reels: FrontClip[] }> {
   try {
-    const packed = await cachedJson(`front:youtube:${locale === 'en' ? 'en' : 'ar'}:v7`, 180, async () => {
+    const packed = await cachedJson(`front:youtube:${locale === 'en' ? 'en' : 'ar'}:v8`, 180, async () => {
       const [videos, reels] = await Promise.all([
         listYoutubeShelf('VIDEO', 36, locale).catch(swallow('front.yt.video', [])),
         listYoutubeShelf('SHORT', 24, locale).catch(swallow('front.yt.reels', [])),
@@ -38,9 +38,13 @@ async function _loadFrontVideo(locale: string): Promise<{ videos: FrontClip[]; r
       return { videos, reels };
     });
     const safePacked = packed || { videos: [], reels: [] };
+    const mappedVideos = mapClips(safePacked.videos || [], locale);
+    const mappedReels = mapClips(safePacked.reels || [], locale);
+    mappedVideos.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    mappedReels.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     return {
-      videos: rotateStart(mapClips(safePacked.videos || [], locale), 5),
-      reels: rotateStart(mapClips(safePacked.reels || [], locale), 7),
+      videos: mappedVideos,
+      reels: mappedReels,
     };
   } catch {
     return {
