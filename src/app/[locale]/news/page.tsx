@@ -396,13 +396,13 @@ function NewsHall({
         {/* خامساً: تطوير قسم الأكثر قراءة (6 أخبار وتبويبات اليوم/الأسبوع/الشهر) + إيقاع الأسبوع */}
         {firstPage ? (
           <div className={styles['nk-floor']}>
+            <NewsInkPulse archive={data.archive} locale={locale} hrefFor={hrefFor} />
             <MostReadRail
               todayArticles={data.mostReadToday}
               weekArticles={data.mostReadWeek}
               monthArticles={data.mostReadMonth}
               locale={locale}
             />
-            <NewsInkPulse archive={data.archive} locale={locale} hrefFor={hrefFor} />
           </div>
         ) : null}
       </div>

@@ -20,7 +20,7 @@ function folio(index: number) {
 }
 
 /**
- * قسم معرض الصور وأحداث اليوم — مطابق لتصميم صالة الصور PhotoHall
+ * قسم معرض الصور وأحداث اليوم — تصميم فخم ومميز مطابق لمعايير غرفة الأخبار
  */
 export function NewsPhotosBand({
   photos,
@@ -35,37 +35,37 @@ export function NewsPhotosBand({
     <section className="my-10 w-full">
       <div className="mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between border-b border-border/60 pb-3 gap-2">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary flex items-center gap-1.5">
-            <Camera className="h-3.5 w-3.5 text-primary" />
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-500 flex items-center gap-1.5">
+            <Camera className="h-3.5 w-3.5 text-emerald-500" />
             {pick(locale, 'عدسة اليوم', 'Today in Pictures')}
           </p>
           <div className="flex items-center gap-2.5 mt-0.5">
             <h2 className="text-xl font-black text-foreground sm:text-2xl">
               {pick(locale, 'معرض صور وأحداث اليوم', 'Photo Gallery & Daily Events')}
             </h2>
-            <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-black text-primary">
+            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black text-emerald-500">
               {photos.length} {pick(locale, 'صورة', 'photos')}
             </span>
           </div>
         </div>
         <Link
           href="/photos"
-          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-opacity"
+          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-500 hover:opacity-80 transition-opacity"
         >
           {pick(locale, 'كل الصور', 'All photos')}
           <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {photos.slice(0, 4).map((photo, index) => (
           <Link
             key={photo.id}
             href={`/news/${photo.slug}`}
-            className="group relative block overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs transition-all duration-300 hover:border-primary/70 hover:shadow-xl hover:-translate-y-1"
+            className="group flex flex-col rounded-2xl overflow-hidden border border-border/70 dark:border-zinc-800/80 bg-card dark:bg-[#0c1017] hover:border-emerald-500/60 dark:hover:border-emerald-500/50 hover:shadow-[0_12px_32px_-10px_rgba(16,185,129,0.25)] hover:-translate-y-1 transition-all duration-300 text-start select-none"
           >
-            {/* Image Stage */}
-            <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/40">
+            {/* 1. Image Stage (Aspect 16/10) */}
+            <div className="relative aspect-[16/10] w-full overflow-hidden bg-zinc-950">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo.image}
@@ -73,55 +73,72 @@ export function NewsPhotosBand({
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25 opacity-80 group-hover:opacity-60 transition-opacity duration-300 pointer-events-none" />
 
-              {/* Folio numbering badge (PhotoHall style) */}
-              <span className="absolute bottom-2 end-2 z-10 rounded-md bg-black/70 px-1.5 py-0.5 font-mono text-[9px] font-black text-white/90 backdrop-blur-sm">
-                {folio(index)}
-              </span>
+              {/* Hover Center Camera Indicator */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/90 text-white shadow-[0_2px_16px_rgba(16,185,129,0.6)] border border-white/25 transform scale-75 group-hover:scale-100 transition-all duration-300">
+                  <Camera className="h-4 w-4" />
+                </span>
+              </div>
 
-              {/* Category pill on top of image (PhotoHall style) */}
-              <div className="absolute top-2.5 start-2.5 z-10 flex flex-wrap gap-1 max-w-[80%]">
+              {/* Top Badges */}
+              <div className="absolute top-2.5 start-2.5 end-2.5 flex items-center justify-between pointer-events-none z-10 gap-1.5">
                 {photo.categoryLabel ? (
-                  <span className="truncate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[9.5px] font-black text-amber-300 border border-amber-300/30">
+                  <span className="truncate inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[9px] font-black text-amber-300 border border-amber-300/30">
                     <Trophy className="h-2.5 w-2.5 text-amber-400 shrink-0" />
                     <span className="truncate">{photo.categoryLabel}</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[9.5px] font-black text-white/90 border border-white/20">
-                    <Sparkles className="h-2.5 w-2.5 text-primary shrink-0" />
-                    <span>{pick(locale, 'صورة اليوم', 'Photo of the day')}</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[9px] font-black text-white/90 border border-white/20">
+                    <Sparkles className="h-2.5 w-2.5 text-emerald-400 shrink-0" />
+                    <span>{pick(locale, 'صورة اليوم', 'Photo')}</span>
                   </span>
                 )}
+
+                <span className="rounded-md bg-black/75 backdrop-blur-md px-1.5 py-0.5 font-mono text-[8.5px] font-black text-white/90 border border-white/10 shrink-0">
+                  #{folio(index)}
+                </span>
               </div>
 
               {photo.relatedTeam ? (
-                <div className="absolute top-2.5 end-2.5 z-10">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/80 backdrop-blur-md text-[9px] font-black text-white shadow-xs">
+                <div className="absolute bottom-2.5 start-2.5 z-10 pointer-events-none">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/85 backdrop-blur-md text-[8.5px] font-black text-white shadow-xs">
                     <Shield className="h-2.5 w-2.5 shrink-0" />
-                    <span className="truncate max-w-[80px]">{photo.relatedTeam.name}</span>
+                    <span className="truncate max-w-[90px]">{photo.relatedTeam.name}</span>
                   </span>
                 </div>
               ) : null}
             </div>
 
-            {/* Info Body */}
-            <div className="p-3.5 space-y-2">
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold">
-                <span className="inline-flex items-center gap-1 text-primary font-bold">
-                  <Camera className="h-3 w-3" />
-                  <span className="truncate max-w-[130px]">{photo.sourceName || pick(locale, 'عدسة يلا سبورت', 'Yalla Sport Lens')}</span>
+            {/* 2. Structured Details Box */}
+            <div className="flex flex-col flex-1 p-3 sm:p-3.5 gap-2 justify-between border-t border-border/50 dark:border-white/[0.06] bg-card dark:bg-[#0c1017]">
+              <div className="flex items-center justify-between gap-1 text-[10px]">
+                <span className="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[65%]">
+                  <Camera className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{photo.sourceName || pick(locale, 'عدسة يلا سبورت', 'Yalla Sport Lens')}</span>
                 </span>
                 {photo.publishedAt ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
-                    <Calendar className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-1 text-[9.5px] font-medium text-muted-foreground/80 shrink-0">
+                    <Calendar className="h-2.5 w-2.5" />
                     <FrontWhen value={photo.publishedAt} />
                   </span>
                 ) : null}
               </div>
-              <h3 className="text-xs font-bold leading-relaxed text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+
+              <h3 className="text-xs sm:text-[12.5px] font-bold leading-[1.4] text-foreground/95 dark:text-zinc-100 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors break-words m-0">
                 <bdi dir="auto">{photo.title}</bdi>
               </h3>
+
+              <div className="flex items-center justify-between pt-2 border-t border-border/40 dark:border-white/[0.06] text-[9px] text-muted-foreground/75 font-medium">
+                <span className="inline-flex items-center gap-1 text-emerald-500 dark:text-emerald-400 font-bold">
+                  <Sparkles className="h-2.5 w-2.5" />
+                  <span>{pick(locale, 'تغطية مصورة', 'Photo story')}</span>
+                </span>
+                <span className="text-[8.5px] font-mono text-muted-foreground/60">
+                  {pick(locale, 'يلا سبورت', 'YallaSport')}
+                </span>
+              </div>
             </div>
           </Link>
         ))}
@@ -131,7 +148,7 @@ export function NewsPhotosBand({
 }
 
 /**
- * قسم الفيديوهات وملخصات المباريات — مطابق لقاعة السينما YoutubeDesk
+ * قسم الفيديوهات وملخصات المباريات — تصميم سينمائي فخم ومميز
  */
 export function NewsVideosBand({
   videos,
@@ -146,38 +163,39 @@ export function NewsVideosBand({
     <section className="my-10 w-full">
       <div className="mb-5 flex flex-col sm:flex-row sm:items-end sm:justify-between border-b border-border/60 pb-3 gap-2">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-primary flex items-center gap-1.5">
-            <Film className="h-3.5 w-3.5 text-primary" />
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-500 flex items-center gap-1.5">
+            <Film className="h-3.5 w-3.5 text-red-500" />
             {pick(locale, 'سينما الملاعب', 'Cinema & Highlights')}
           </p>
           <div className="flex items-center gap-2.5 mt-0.5">
             <h2 className="text-xl font-black text-foreground sm:text-2xl">
               {pick(locale, 'أحدث الفيديوهات وملخصات المباريات', 'Latest Videos & Match Highlights')}
             </h2>
-            <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-black text-primary">
+            <span className="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-[10px] font-black text-red-500">
               {videos.length} {pick(locale, 'فيديو', 'clips')}
             </span>
           </div>
         </div>
         <Link
           href="/videos"
-          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:opacity-80 transition-opacity"
+          className="inline-flex items-center gap-1 text-xs font-bold text-red-500 hover:opacity-80 transition-opacity"
         >
           {pick(locale, 'كل الفيديوهات', 'All videos')}
           <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {videos.slice(0, 4).map((video, index) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-5">
+        {videos.slice(0, 6).map((video, index) => {
           const duration = formatClock(video.durationSec);
           return (
             <Link
               key={video.youtubeId}
               href={`/videos?v=${video.youtubeId}`}
-              className="group block overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs transition-all duration-300 hover:border-primary/60 hover:shadow-lg hover:-translate-y-1"
+              className="group flex flex-col rounded-2xl overflow-hidden border border-border/70 dark:border-zinc-800/80 bg-card dark:bg-[#0c1017] hover:border-red-500/60 dark:hover:border-red-500/50 hover:shadow-[0_12px_32px_-10px_rgba(239,68,68,0.25)] hover:-translate-y-1 transition-all duration-300 text-start select-none"
             >
-              <div className="relative aspect-video w-full overflow-hidden bg-black/40">
+              {/* 1. Cinema 16:9 Screen */}
+              <div className="relative aspect-video w-full overflow-hidden bg-zinc-950">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={video.thumbnailUrl || `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`}
@@ -185,43 +203,57 @@ export function NewsVideosBand({
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
-                <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/25 opacity-80 group-hover:opacity-50 transition-opacity duration-300 pointer-events-none" />
 
-                {/* Folio index */}
-                <span className="absolute top-2.5 start-2.5 z-10 rounded-md bg-black/75 px-1.5 py-0.5 font-mono text-[9px] font-black text-white/90 backdrop-blur-sm">
-                  {folio(index)}
-                </span>
-
-                {/* Duration Badge */}
-                {duration ? (
-                  <span className="absolute bottom-2.5 end-2.5 z-10 inline-flex items-center gap-1 rounded-md bg-black/80 backdrop-blur-md px-1.5 py-0.5 text-[9px] font-mono font-bold text-white">
-                    <Clock className="h-2.5 w-2.5 text-primary" />
-                    <span>{duration}</span>
+                {/* Floating Cinema Play Button with Ambient Glow */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-85 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                  <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gradient-to-tr from-red-600 to-rose-500 text-white shadow-[0_4px_22px_rgba(239,68,68,0.65)] border border-white/25 transform scale-90 group-hover:scale-105 transition-all duration-300">
+                    <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current translate-x-0.5" />
                   </span>
-                ) : null}
+                </div>
 
-                {/* Play button overlay on hover */}
-                <span className="absolute inset-0 grid place-items-center bg-black/30 opacity-80 group-hover:opacity-100 transition-opacity">
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-white shadow-xl shadow-primary/40 transform group-hover:scale-110 transition-transform">
-                    <Play className="h-5 w-5 fill-current translate-x-0.5" />
+                {/* Top Badges */}
+                <div className="absolute top-2.5 start-2.5 end-2.5 flex items-center justify-between pointer-events-none z-10">
+                  <span className="rounded-md bg-black/75 backdrop-blur-md px-1.5 py-0.5 font-mono text-[8.5px] font-black text-white/90 border border-white/10 shadow-xs">
+                    #{folio(index)}
                   </span>
-                </span>
+
+                  {duration ? (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-black/80 backdrop-blur-md px-2 py-0.5 text-[9px] font-mono font-bold text-white border border-white/10 shadow-xs">
+                      <Clock className="h-2.5 w-2.5 text-red-400" />
+                      <span>{duration}</span>
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
-              <div className="p-3.5 space-y-1.5">
+              {/* 2. Structured Details Under Video */}
+              <div className="flex flex-col flex-1 p-3 sm:p-3.5 gap-2 justify-between border-t border-border/50 dark:border-white/[0.06] bg-card dark:bg-[#0c1017]">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="inline-block px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-black truncate max-w-[65%]">
-                    {video.channelTitle}
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-500 dark:text-red-400 truncate max-w-[70%]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                    <span className="truncate">{video.channelTitle}</span>
                   </span>
                   {video.publishedAt ? (
-                    <span className="text-[10px] text-muted-foreground font-semibold shrink-0">
+                    <span className="text-[9.5px] font-medium text-muted-foreground/80 shrink-0">
                       <FrontWhen value={video.publishedAt} />
                     </span>
                   ) : null}
                 </div>
-                <h3 className="text-xs font-bold leading-5 text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+
+                <h3 className="text-xs sm:text-[13px] font-bold leading-[1.4] text-foreground/95 dark:text-zinc-100 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors break-words m-0">
                   <bdi dir="auto">{video.title}</bdi>
                 </h3>
+
+                <div className="flex items-center justify-between pt-2 border-t border-border/40 dark:border-white/[0.06] text-[9px] text-muted-foreground/75 font-medium">
+                  <span className="inline-flex items-center gap-1 text-red-500 dark:text-red-400 font-bold">
+                    <Film className="h-2.5 w-2.5" />
+                    <span>{pick(locale, 'فيديو وملخص', 'Highlight clip')}</span>
+                  </span>
+                  <span className="text-[8.5px] font-mono text-muted-foreground/60">
+                    {pick(locale, 'سينما يلا سبورت', 'Yalla Cinema')}
+                  </span>
+                </div>
               </div>
             </Link>
           );

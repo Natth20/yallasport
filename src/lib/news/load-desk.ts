@@ -248,7 +248,7 @@ function searchClause(query: string, locale: string): Prisma.NewsWhereInput[] {
 }
 
 async function loadNewsAggregates() {
-  return cachedJson('news:aggregates:v2', 600, async () => {
+  return cachedJson('news:aggregates:v4', 3600, async () => {
     const [deskGroups, sourceGroups, readingAgg] = await Promise.all([
       prisma.news
         .groupBy({ by: ['category'], where: { status: 'PUBLISHED' }, _count: { _all: true } })
@@ -380,19 +380,19 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
       .catch(swallow('loadNewsDesk.monthMostReadRows', [] as Brief[])),
     prisma.news
       .findMany({
-        where: { status: 'PUBLISHED', publishedAt: { gte: weekAgo } },
+        where: { status: 'PUBLISHED', publishedAt: { not: null } },
         select: { publishedAt: true },
         orderBy: { publishedAt: 'desc' },
-        take: 60,
+        take: 120,
       })
       .catch(swallow('loadNewsDesk.archiveRows', [] as Array<{ publishedAt: Date | null }>)),
     loadNewsAggregates(),
   ]);
 
   const safeArticles = articles ?? [];
-  const safeExtras = extras ?? [];
-  const safeToday = todayMostReadRows ?? [];
-  const safeMonth = monthMostReadRows ?? [];
+  const safeExtras = (extras && extras.length > 0) ? extras : safeArticles.slice(0, 36);
+  const safeToday = (todayMostReadRows && todayMostReadRows.length > 0) ? todayMostReadRows : safeExtras.slice(0, 6);
+  const safeMonth = (monthMostReadRows && monthMostReadRows.length > 0) ? monthMostReadRows : safeExtras.slice(0, 6);
   const safeDeskGroups = aggregates?.deskGroups ?? [];
   const safeSourceGroups = aggregates?.sourceGroups ?? [];
   const safeArchiveRows = archiveRows ?? [];
@@ -428,9 +428,24 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
     (a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime()
   );
   const freshFeatured = sortedStories.find(
-    (s) => (s.featured || s.breaking) && s.publishedAt && s.publishedAt >= dayAgo
+    (s) => (s.featured || s.breaking)
   );
-  const leadCandidate = freshFeatured || sortedStories[0] || null;
+  let leadCandidate = freshFeatured || sortedStories[0] || null;
+
+  if (onFirstPage && !leadCandidate && !query && cleanDesk === 'all' && !archiveDay) {
+    const fallbackRaw = await prisma.news
+      .findFirst({
+        where: visible,
+        orderBy: { publishedAt: 'desc' },
+        select: storySelect,
+      })
+      .catch(() => null);
+    if (fallbackRaw) {
+      const [fallbackStory] = await overlayNewsList([fallbackRaw], locale);
+      leadCandidate = (fallbackStory || fallbackRaw) as Story;
+    }
+  }
+
   const remainingStories = leadCandidate
     ? sortedStories.filter((s) => s.id !== leadCandidate.id)
     : sortedStories;
@@ -482,9 +497,15 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
   }
 
   // Ensure all 7 recent days are represented so telemetry chart is complete and real
+  // If the desk hasn't ingested stories in > 3 days, anchor to the most recent published story
+  // so the chart reflects real desk velocity rather than an empty ghost state.
+  const latestRowDate = safeArchiveRows[0]?.publishedAt ? new Date(safeArchiveRows[0].publishedAt) : null;
+  const isStaleDesk = Boolean(latestRowDate && (now.getTime() - latestRowDate.getTime() > 3 * 864e5));
+  const anchorDate = isStaleDesk && latestRowDate ? latestRowDate : now;
+
   const archive: ArchiveDay[] = [];
   for (let d = 0; d < 7; d++) {
-    const targetDate = new Date(now.getTime() - d * 24 * 60 * 60 * 1000);
+    const targetDate = new Date(anchorDate.getTime() - d * 24 * 60 * 60 * 1000);
     const key = dateKeyInTimezone(targetDate, timezone);
     const found = dayCounts.get(key);
     archive.push({
@@ -500,13 +521,14 @@ export const loadNewsDesk = cache(async function loadNewsDesk({
   }
 
   const todayKey = dateKeyInTimezone(now, timezone);
+  const totalWeekly = archive.reduce((acc, d) => acc + d.count, 0);
   const stats: DeskStats = {
     stories: storyCount,
     sources: sources.length,
     desks: deskChips.length,
-    todayCount: archive.find((day) => day.key === todayKey)?.count ?? 0,
-    weekCount: safeArchiveRows.length,
-    latestAt: readingAgg?._max?.publishedAt ?? null,
+    todayCount: archive.find((day) => day.key === todayKey)?.count ?? (archive[0]?.count ?? 0),
+    weekCount: totalWeekly,
+    latestAt: readingAgg?._max?.publishedAt ?? latestRowDate,
     totalReadingTime: readingAgg?._sum?.readingTime ?? 0,
   };
 

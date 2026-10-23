@@ -88,12 +88,17 @@ export function NewsInkMast({
 function getDayParts(dateVal: Date | string, locale: string) {
   const d = new Date(dateVal);
   const isAr = locale === 'ar';
-  // Distinct day name (e.g. الأربعاء / Wed)
-  const dayName = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { weekday: 'short' });
-  // Distinct day number and month (e.g. 21 أكتوبر / Oct 21)
-  const dayNumber = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { day: 'numeric' });
-  const monthName = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-US', { month: 'short' });
-  return { dayName, dayNumber, monthName };
+  const weekdaysAr = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const dayIndex = d.getDay();
+  const dayName = isAr ? weekdaysAr[dayIndex] : d.toLocaleDateString('en-US', { weekday: 'short' });
+
+  const monthsAr = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+  const dayNumber = d.getDate();
+  const monthName = isAr ? monthsAr[d.getMonth()] : d.toLocaleDateString('en-US', { month: 'short' });
+  return { dayName, dayNumber: String(dayNumber), monthName };
 }
 
 export function NewsInkPulse({
