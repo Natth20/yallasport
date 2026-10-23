@@ -252,14 +252,26 @@ export const listYoutubeShelf = cache(async function listYoutubeShelf(
 export const listYoutubeArchive = cache(async function listYoutubeArchive(take = 48) {
   const cacheKey = `youtube:archive:v2:${take}`;
   return cachedJson(cacheKey, 180, async () => {
-    return prisma.youtubeClip.findMany({
+    const blockedList = Array.from(YOUTUBE_EMBED_BLOCKED);
+    let rows = await prisma.youtubeClip.findMany({
       where: {
         status: 'ARCHIVED',
-        channelId: { notIn: Array.from(YOUTUBE_EMBED_BLOCKED) },
+        channelId: { notIn: blockedList },
       },
       orderBy: { publishedAt: 'desc' },
       take,
     });
+    if (rows.length === 0) {
+      rows = await prisma.youtubeClip.findMany({
+        where: {
+          channelId: { notIn: blockedList },
+        },
+        orderBy: { publishedAt: 'desc' },
+        skip: 24,
+        take,
+      });
+    }
+    return rows;
   });
 });
 
@@ -291,7 +303,7 @@ export const youtubeDeskStats = cache(async function youtubeDeskStats(): Promise
       (c) => !YOUTUBE_EMBED_BLOCKED.has(c.id)
     );
 
-    const [groups, lastFetch] = await Promise.all([
+    const [groups, lastFetch, totalCount] = await Promise.all([
       prisma.youtubeClip.groupBy({
         by: ['status', 'kind', 'lang'],
         where: {
@@ -306,6 +318,11 @@ export const youtubeDeskStats = cache(async function youtubeDeskStats(): Promise
         orderBy: { fetchedAt: 'desc' },
         select: { fetchedAt: true },
       }),
+      prisma.youtubeClip.count({
+        where: {
+          channelId: { notIn: blockedList },
+        },
+      }),
     ]);
 
     let videos = 0;
@@ -318,6 +335,10 @@ export const youtubeDeskStats = cache(async function youtubeDeskStats(): Promise
       if (row.status === 'PUBLISHED' && row.kind === 'VIDEO') videos += count;
       if (row.status === 'PUBLISHED' && row.kind === 'SHORT') reels += count;
       if (row.status === 'PUBLISHED' && row.lang === 'ar') arabic += count;
+    }
+
+    if (archived === 0 && totalCount > 24) {
+      archived = totalCount - 24;
     }
 
     return {

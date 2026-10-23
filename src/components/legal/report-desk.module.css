@@ -16,6 +16,14 @@
   .board {
     grid-template-columns: minmax(0, 1.55fr) minmax(17.5rem, 0.78fr);
   }
+
+  .rail {
+    position: sticky;
+    top: 5.5rem;
+    align-self: start;
+    max-height: calc(100vh - 6.5rem);
+    overflow-y: auto;
+  }
 }
 
 .sheet,

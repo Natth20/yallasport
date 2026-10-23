@@ -247,11 +247,13 @@ export function ReelsDesk({
           <select
             value={channel}
             onChange={(e) => setChannel(e.target.value)}
-            className="h-10 px-3 rounded-xl bg-muted/40 border border-border/50 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all cursor-pointer"
+            className="h-10 px-3 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 text-xs font-bold text-foreground dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all cursor-pointer shadow-sm"
           >
-            <option value="ALL">{ar ? 'جميع القنوات والمصادر' : 'All Channels'}</option>
+            <option value="ALL" className="bg-card dark:bg-zinc-900 text-foreground dark:text-zinc-100 py-1 font-semibold">
+              {ar ? 'جميع القنوات والمصادر' : 'All Channels'}
+            </option>
             {channelList.map((ch) => (
-              <option key={ch.id} value={ch.id}>
+              <option key={ch.id} value={ch.id} className="bg-card dark:bg-zinc-900 text-foreground dark:text-zinc-100 py-1 font-semibold">
                 {ch.name}
               </option>
             ))}
@@ -429,71 +431,97 @@ export function ReelsDesk({
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-          {visible.map((clip) => {
+          {visible.map((clip, index) => {
             const isPlaying = currentClip?.youtubeId === clip.youtubeId;
             return (
               <div
                 key={clip.youtubeId}
                 onClick={() => playReel(clip.youtubeId)}
-                className={`group relative flex flex-col rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer ${
+                className={`group flex flex-col rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer text-start bg-card dark:bg-zinc-950 ${
                   isPlaying
-                    ? 'border-2 border-orange-500 shadow-lg shadow-orange-500/20 scale-[1.01]'
-                    : 'border-border/70 bg-card hover:border-orange-500/50 hover:shadow-md hover:-translate-y-0.5'
+                    ? 'border-orange-500 ring-2 ring-orange-500/50 shadow-lg shadow-orange-500/20'
+                    : 'border-border/70 dark:border-zinc-800 hover:border-orange-500/60 hover:shadow-xl hover:-translate-y-1'
                 }`}
               >
-                {/* Poster Thumbnail - compact aspect ratio to eliminate grey gap and excessive height */}
-                <div className="relative aspect-[16/11] w-full overflow-hidden bg-black">
+                {/* 1. Poster Thumbnail Box (Aspect 16/11 - Compact & proportional) */}
+                <div className="relative aspect-[16/11] w-full overflow-hidden bg-zinc-950">
                   {clip.thumbnailUrl ? (
                     <img
                       src={clip.thumbnailUrl}
                       alt={clip.title}
-                      className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      className="transition-transform duration-500 ease-out group-hover:scale-105"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-muted/40">
-                      <Smartphone size={24} className="text-muted-foreground/40" />
+                    <div className="flex h-full w-full items-center justify-center bg-muted/40">
+                      <Smartphone size={22} className="text-muted-foreground/40" />
                     </div>
                   )}
 
-                  {/* Play button overlay on hover */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/25 pointer-events-none">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/40 transform scale-75 group-hover:scale-100 transition-transform">
-                      <Play size={15} fill="currentColor" className="translate-x-0.5" />
+                  {/* Subtle Dark Scrim on Poster */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/20 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
+
+                  {/* Hover Center Play Button with Soft Glow */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white shadow-[0_2px_14px_rgba(249,115,22,0.5)] border border-white/20 transform scale-75 group-hover:scale-100 transition-all duration-300">
+                      <Play size={13} fill="currentColor" className="translate-x-0.5" />
                     </span>
                   </div>
 
-                  {/* Top badges on poster */}
-                  <div className="absolute top-1.5 start-1.5 end-1.5 flex items-center justify-between pointer-events-none z-10">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-black/75 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold text-white border border-white/10">
-                      <Flame size={10} className="text-orange-400" />
+                  {/* Top Badges (Minimalist Glass Pills) */}
+                  <div className="absolute top-2 start-2 end-2 flex items-center justify-between pointer-events-none z-10">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md px-2 py-0.5 text-[8.5px] font-bold text-white border border-white/10 shadow-xs">
+                      <Flame size={9.5} className="text-orange-400 fill-orange-400/30" />
                       <span>Shorts</span>
                     </span>
 
                     {typeof clip.durationSec === 'number' && clip.durationSec > 0 ? (
-                      <span className="rounded-md bg-black/80 px-1.5 py-0.5 text-[9px] font-mono font-bold text-white">
+                      <span className="rounded-md bg-black/60 backdrop-blur-md px-1.5 py-0.5 text-[8.5px] font-mono text-white/90 border border-white/10 shadow-xs">
                         {clock(clip.durationSec)}
                       </span>
                     ) : null}
                   </div>
+
+                  {/* Now Playing live indicator */}
+                  {isPlaying ? (
+                    <div className="absolute bottom-2 start-2 z-10">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500 px-2 py-0.5 text-[8.5px] font-black text-white shadow-md shadow-orange-500/50">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                        <span>{ar ? 'يعمل الآن' : 'Playing'}</span>
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
 
-                {/* Bottom Card Body - compact height & theme adaptive */}
-                <div className="flex flex-col p-2 sm:p-2.5 gap-1.5 bg-card border-t border-border/50">
+                {/* 2. Ultra-Chic Box Under the Poster */}
+                <div className="flex flex-col flex-1 p-2.5 sm:p-3 gap-1.5 justify-between border-t border-border/50 dark:border-white/[0.06] bg-card dark:bg-[#0b0f17]">
+                  {/* Top line: Channel Micro-chip & Index */}
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-bold text-orange-500 truncate tracking-wide max-w-[65%]">
-                      {clip.channelTitle}
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 dark:text-orange-400 truncate max-w-[75%]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                      <span className="truncate">{clip.channelTitle}</span>
                     </span>
-                    <span className="text-[9.5px] text-muted-foreground font-semibold shrink-0">
-                      <ClientTime value={clip.publishedAt} options={{ day: 'numeric', month: 'short' }} />
+                    <span className="text-[8.5px] font-mono font-bold text-muted-foreground/50 dark:text-zinc-500 shrink-0">
+                      #{String(index + 1).padStart(2, '0')}
                     </span>
                   </div>
 
-                  <h3 className="text-[11px] sm:text-[11.5px] font-medium leading-[1.38] text-foreground group-hover:text-orange-500 transition-colors min-h-[2rem]">
-                    <bdi dir="auto" className="line-clamp-2 block break-words">
-                      {clip.title}
-                    </bdi>
-                  </h3>
+                  {/* Title: Smaller, chic, elegant typography without truncation ellipsis */}
+                  <p className="text-[10.5px] sm:text-[11px] font-medium leading-[1.38] text-foreground/90 dark:text-zinc-200 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors break-words m-0">
+                    <bdi dir="auto">{clip.title}</bdi>
+                  </p>
+
+                  {/* Meta: Published Date & Reel Pill */}
+                  <div className="flex items-center justify-between pt-1.5 border-t border-border/40 dark:border-white/[0.06] text-[9px] text-muted-foreground/80 font-medium">
+                    <span className="flex items-center gap-1">
+                      <ClientTime value={clip.publishedAt} options={{ day: 'numeric', month: 'short' }} />
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[8.5px] font-semibold text-muted-foreground/70 dark:text-zinc-400">
+                      <Smartphone size={9.5} className="text-orange-500/70" />
+                      <span>{ar ? 'ريلز' : 'Reel'}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             );

@@ -1,11 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import { UnifiedEvent, SourceHealth, EventsResponse, DataSourceStatus, EventCategory } from './types';
+import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
 
 export interface GetEventsOptions {
   timeframe?: 'today' | 'week' | 'month';
   type?: 'all' | 'live' | 'matches' | 'news' | 'major' | 'transfers';
   leagueSlug?: string;
   limit?: number;
+  locale?: string;
 }
 
 export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<EventsResponse> {
@@ -13,6 +15,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
   const typeFilter = options.type || 'all';
   const leagueSlug = options.leagueSlug?.trim();
   const limit = options.limit || 60;
+  const locale = options.locale || 'ar';
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -59,16 +62,20 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
 
     liveCount = liveMatches.length;
     for (const match of liveMatches) {
-      const home = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
-      const away = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
-      const leagueName = match.league.name || 'البطولة';
+      const rawHome = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
+      const rawAway = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
+      const rawLeagueName = match.league.name || 'البطولة';
+      const home = localizeTeamName(locale, rawHome);
+      const away = localizeTeamName(locale, rawAway);
+      const leagueName = localizePlainName(locale, rawLeagueName);
+      const venue = match.venue?.name ? localizePlainName(locale, match.venue.name) : undefined;
       const key = `live_match_${match.id}`;
 
       eventsMap.set(key, {
         id: key,
         type: 'LIVE',
         title: `${home} 🆚 ${away}`,
-        subtitle: `${leagueName} • ${match.venue?.name || ''}`,
+        subtitle: `${leagueName}${venue ? ` • ${venue}` : ''}`,
         timestamp: match.kickoffAt.toISOString(),
         minute: match.minute || 'مباشر',
         badge: {
@@ -96,7 +103,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
           homeTeamName: home,
           awayTeamName: away,
           leagueName,
-          venue: match.venue?.name,
+          venue,
         },
       });
     }
@@ -182,9 +189,15 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
     inMatchCount = matchEvents.length;
     for (const ev of matchEvents) {
       const match = ev.match;
-      const home = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
-      const away = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
-      const playerName = ev.player?.name || ev.playerName || 'لاعب';
+      const rawHome = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
+      const rawAway = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
+      const rawPlayerName = ev.player?.name || ev.playerName || 'لاعب';
+      const rawLeagueName = match.league.name || 'البطولة';
+      const home = localizeTeamName(locale, rawHome);
+      const away = localizeTeamName(locale, rawAway);
+      const playerName = localizePlainName(locale, rawPlayerName);
+      const leagueName = localizePlainName(locale, rawLeagueName);
+      const assistName = ev.assistName ? localizePlainName(locale, ev.assistName) : undefined;
       const key = `match_event_${ev.id || ev.sourceKey || `${ev.matchId}_${ev.minute}_${ev.type}`}`;
 
       let typeLabelAr = 'حدث مباراة';
@@ -209,13 +222,13 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         badgeColor = '#8b5cf6';
       }
 
-      const assistText = ev.assistName ? ` (صناعة: ${ev.assistName})` : '';
+      const assistText = assistName ? ` (صناعة: ${assistName})` : '';
 
       eventsMap.set(key, {
         id: key,
         type: 'MATCH_EVENT',
         title: `${typeLabelAr} — ${playerName}${assistText}`,
-        subtitle: `${home} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${away} • ${match.league.name}`,
+        subtitle: `${home} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${away} • ${leagueName}`,
         timestamp: match.kickoffAt.toISOString(),
         minute: ev.minute,
         badge: {
@@ -243,9 +256,9 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
           awayTeamName: away,
           playerName,
           playerPhoto: ev.player?.photoUrl,
-          assistName: ev.assistName,
+          assistName,
           detail: ev.detail,
-          leagueName: match.league.name,
+          leagueName,
         },
       });
     }
@@ -355,9 +368,13 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
 
     majorCount = matches.length;
     for (const match of matches) {
-      const home = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
-      const away = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
-      const leagueName = match.league.name || 'البطولة';
+      const rawHome = match.homeTeam.name || match.homeTeam.officialName || 'فريق';
+      const rawAway = match.awayTeam.name || match.awayTeam.officialName || 'فريق';
+      const rawLeagueName = match.league.name || 'البطولة';
+      const home = localizeTeamName(locale, rawHome);
+      const away = localizeTeamName(locale, rawAway);
+      const leagueName = localizePlainName(locale, rawLeagueName);
+      const venue = match.venue?.name ? localizePlainName(locale, match.venue.name) : undefined;
       const key = `major_clash_${match.id}`;
 
       let badgeText = '🏆 قمة مرتقبة';
@@ -408,7 +425,7 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
           homeTeamName: home,
           awayTeamName: away,
           leagueName,
-          venue: match.venue?.name,
+          venue,
         },
       });
     }
@@ -456,12 +473,15 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
 
     transferCount = deduplicatedTransfers.length;
     for (const tr of deduplicatedTransfers) {
-      const playerName = tr.player.name;
+      const rawPlayerName = tr.player.name;
+      const playerName = localizePlainName(locale, rawPlayerName);
+      const fromTeam = tr.fromTeam ? localizeTeamName(locale, tr.fromTeam) : null;
+      const toTeam = tr.toTeam ? localizeTeamName(locale, tr.toTeam) : null;
       const key = `transfer_${tr.id}`;
-      const subtitle = tr.fromTeam && tr.toTeam
-        ? `من ${tr.fromTeam} إلى ${tr.toTeam}`
-        : tr.toTeam
-        ? `انضم رسمياً إلى ${tr.toTeam}`
+      const subtitle = fromTeam && toTeam
+        ? `من ${fromTeam} إلى ${toTeam}`
+        : toTeam
+        ? `انضم رسمياً إلى ${toTeam}`
         : 'صفقة مؤكدة رسمياً';
 
       eventsMap.set(key, {
@@ -488,8 +508,8 @@ export async function getUnifiedEvents(options: GetEventsOptions = {}): Promise<
         details: {
           playerName,
           playerPhoto: tr.player?.photoUrl,
-          fromTeam: tr.fromTeam,
-          toTeam: tr.toTeam,
+          fromTeam,
+          toTeam,
           fee: tr.fee,
         },
       });

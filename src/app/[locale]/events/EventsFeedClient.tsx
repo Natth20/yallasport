@@ -700,7 +700,7 @@ export function EventsFeedClient({
                           <div className={styles.crestPlaceholder}>⚽</div>
                         )}
                         <span className={styles.clashTeamName} title={ev.details?.homeTeamName}>
-                          {ev.details?.homeTeamName || 'فريق'}
+                          <bdi dir="auto">{ev.details?.homeTeamName || 'فريق'}</bdi>
                         </span>
                       </div>
 
@@ -718,14 +718,14 @@ export function EventsFeedClient({
                             <span className={styles.scoreStatusLabel}>
                               {isLive
                                 ? ev.minute
-                                  ? `${ev.minute}′`
-                                  : isAr
-                                  ? 'مباشر'
-                                  : 'LIVE'
+                                ? `${ev.minute}′`
+                                : isAr
+                                ? 'مباشر'
+                                : 'LIVE'
                                 : isFinished
                                 ? isAr
-                                  ? 'نهاية المباراة'
-                                  : 'FT'
+                                ? 'نهاية المباراة'
+                                : 'FT'
                                 : ''}
                             </span>
                           </div>
@@ -752,7 +752,7 @@ export function EventsFeedClient({
                           <div className={styles.crestPlaceholder}>⚽</div>
                         )}
                         <span className={styles.clashTeamName} title={ev.details?.awayTeamName}>
-                          {ev.details?.awayTeamName || 'فريق'}
+                          <bdi dir="auto">{ev.details?.awayTeamName || 'فريق'}</bdi>
                         </span>
                       </div>
                     </div>

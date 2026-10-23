@@ -984,10 +984,21 @@
   font-size: 0.725rem;
   font-weight: 700;
   color: var(--muted-foreground);
-  max-width: 140px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 3px 8px;
+  border-radius: 6px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+:global(.dark) .leagueNameTag {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .cardTimeWrap {
@@ -1071,6 +1082,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  unicode-bidi: plaintext;
+  text-align: start;
 }
 
 .clashCenterBox {

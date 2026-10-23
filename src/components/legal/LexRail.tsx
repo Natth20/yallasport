@@ -138,7 +138,7 @@ export function LexRail({
               <span className="text-[10px] font-mono font-bold opacity-60 group-hover:opacity-100">
                 {String(index + 1).padStart(2, '0')}
               </span>
-              <span className="truncate flex-1">{item.label}</span>
+              <span className="flex-1 leading-snug">{item.label}</span>
               <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </a>
           </li>

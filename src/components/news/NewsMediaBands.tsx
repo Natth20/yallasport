@@ -273,63 +273,76 @@ export function NewsReelsBand({
         {[...reels]
           .sort((a, b) => new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime())
           .slice(0, 4)
-          .map((reel) => {
+          .map((reel, index) => {
           const duration = formatClock(reel.durationSec);
           return (
             <Link
               key={reel.youtubeId}
               href={`/reels?v=${reel.youtubeId}`}
-              className="group flex flex-col rounded-2xl overflow-hidden border border-border/70 bg-card hover:border-orange-500/60 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              className="group flex flex-col rounded-2xl overflow-hidden border border-border/70 dark:border-zinc-800 bg-card dark:bg-zinc-950 hover:border-orange-500/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 text-start select-none"
             >
-              {/* Poster Thumbnail - compact aspect ratio to eliminate black gaps (ReelsDesk style) */}
-              <div className="relative aspect-[16/11] w-full overflow-hidden bg-black">
+              {/* 1. Poster Thumbnail Box (Aspect 16/11) */}
+              <div className="relative aspect-[16/11] w-full overflow-hidden bg-zinc-950">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={reel.thumbnailUrl || `https://i.ytimg.com/vi/${reel.youtubeId}/hqdefault.jpg`}
                   alt={reel.title}
-                  className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  className="transition-transform duration-500 ease-out group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
 
-                {/* Play button overlay on hover */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/25">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/40 transform scale-75 group-hover:scale-100 transition-transform">
-                    <Play className="h-4 w-4 fill-current translate-x-0.5" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/20 opacity-70 group-hover:opacity-40 transition-opacity duration-300" />
+
+                {/* Hover Center Play Button with Soft Glow */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white shadow-[0_2px_14px_rgba(249,115,22,0.5)] border border-white/20 transform scale-75 group-hover:scale-100 transition-all duration-300">
+                    <Play className="h-3.5 w-3.5 fill-current translate-x-0.5" />
                   </span>
                 </div>
 
-                {/* Top badges on poster (ReelsDesk style) */}
+                {/* Top Badges */}
                 <div className="absolute top-2 start-2 end-2 flex items-center justify-between pointer-events-none z-10">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/75 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold text-white border border-white/10 shadow-xs">
-                    <Flame className="h-2.5 w-2.5 text-orange-400" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md px-2 py-0.5 text-[8.5px] font-bold text-white border border-white/10 shadow-xs">
+                    <Flame className="h-2.5 w-2.5 text-orange-400 fill-orange-400/30" />
                     <span>Shorts</span>
                   </span>
 
                   {duration ? (
-                    <span className="rounded-md bg-black/80 backdrop-blur-sm px-1.5 py-0.5 text-[9px] font-mono font-bold text-white">
+                    <span className="rounded-md bg-black/60 backdrop-blur-md px-1.5 py-0.5 text-[8.5px] font-mono text-white/90 border border-white/10 shadow-xs">
                       {duration}
                     </span>
                   ) : null}
                 </div>
               </div>
 
-              {/* Bottom Card Body - compact height & theme adaptive */}
-              <div className="flex flex-col p-3 gap-1.5 bg-card border-t border-border/50 flex-1 justify-between">
+              {/* 2. Ultra-Chic Details Under Poster */}
+              <div className="flex flex-col flex-1 p-2.5 sm:p-3 gap-1.5 justify-between border-t border-border/50 dark:border-white/[0.06] bg-card dark:bg-[#0c1017]">
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-[10px] font-bold text-orange-500 truncate tracking-wide max-w-[65%]">
-                    {reel.channelTitle}
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-orange-500 dark:text-orange-400 truncate max-w-[75%]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                    <span className="truncate">{reel.channelTitle}</span>
                   </span>
-                  {reel.publishedAt ? (
-                    <span className="text-[9.5px] text-muted-foreground font-semibold shrink-0">
-                      <FrontWhen value={reel.publishedAt} />
-                    </span>
-                  ) : null}
+                  <span className="text-[8.5px] font-mono font-bold text-muted-foreground/50 dark:text-zinc-500 shrink-0">
+                    #{String(index + 1).padStart(2, '0')}
+                  </span>
                 </div>
 
-                <h3 className="text-xs font-semibold leading-[1.35] line-clamp-2 text-foreground group-hover:text-orange-500 transition-colors">
+                <p className="text-[10.5px] sm:text-[11px] font-medium leading-[1.38] text-foreground/90 dark:text-zinc-200 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors break-words m-0">
                   <bdi dir="auto">{reel.title}</bdi>
-                </h3>
+                </p>
+
+                <div className="flex items-center justify-between pt-1.5 border-t border-border/40 dark:border-white/[0.06] text-[9px] text-muted-foreground/80 font-medium">
+                  {reel.publishedAt ? (
+                    <FrontWhen value={reel.publishedAt} />
+                  ) : (
+                    <span>يلا سبورت</span>
+                  )}
+                  <span className="inline-flex items-center gap-1 text-[8.5px] font-semibold text-muted-foreground/70 dark:text-zinc-400">
+                    <Flame className="h-2.5 w-2.5 text-orange-500/70" />
+                    <span>{pick(locale, 'ريلز', 'Reel')}</span>
+                  </span>
+                </div>
               </div>
             </Link>
           );

@@ -10,6 +10,7 @@ import { dateKeyInTimezone, normalizeTimezone } from '@/lib/datetime/format';
 import { CONTACT_EMAIL } from '@/lib/seo/site';
 import { STREAMING_ENABLED } from '@/lib/streaming';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { Mail, Send } from 'lucide-react';
 import styles from './about-house.module.css';
 
 export async function AboutHouse() {
@@ -343,10 +344,12 @@ export async function AboutHouse() {
             </header>
             <div className={styles.actions}>
               <Link href="/contact" className={styles.cta}>
-                {t('letter_cta')}
+                <Send className="w-4 h-4 shrink-0" />
+                <span>{t('letter_cta')}</span>
               </Link>
               <a href={`mailto:${CONTACT_EMAIL}`} className={styles.ghost}>
-                {CONTACT_EMAIL}
+                <Mail className="w-4 h-4 shrink-0 text-amber-500" />
+                <span>{CONTACT_EMAIL}</span>
               </a>
             </div>
             <div>

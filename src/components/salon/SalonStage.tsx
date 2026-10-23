@@ -43,6 +43,7 @@ export function SalonStage({
   wide = false,
   compact = false,
   held = false,
+  reveal = true,
   children,
 }: {
   tone: SalonTone;
@@ -55,6 +56,7 @@ export function SalonStage({
   compact?: boolean;
   /** Keep original home rhythm; luxury spacing is for every other hall. */
   held?: boolean;
+  reveal?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -96,7 +98,11 @@ export function SalonStage({
           </HeroEnter>
         )}
         {tools ? <div className={styles.tools}>{tools}</div> : null}
-        <Reveal className={styles.body}>{children}</Reveal>
+        {reveal ? (
+          <Reveal className={styles.body}>{children}</Reveal>
+        ) : (
+          <div className={styles.body}>{children}</div>
+        )}
       </div>
     </div>
   );

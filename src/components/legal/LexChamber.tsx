@@ -245,6 +245,7 @@ export function LexChamber({
         tone="deed"
         wide
         compact
+        reveal={false}
         kicker={instrument}
         title={title}
         lead={lead}
@@ -391,39 +392,39 @@ export function LexChamber({
                   </div>
                 ) : null}
                 {children}
+
+                {/* ——— Footer Colophon (Integrated at bottom of document flow) ——— */}
+                <footer className={styles['lex-colophon-box']}>
+                  <div className={styles['lex-colophon-info']}>
+                    <div className="w-10 h-10 rounded-xl bg-[var(--lex-accent-soft)] border border-[var(--lex-accent-border)] flex items-center justify-center text-[var(--lex-accent)] font-bold text-sm">
+                      YS
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-foreground">YALLA SPORT TRUST & LEGAL</p>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {date ? `${code} · ${date}` : code}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className={styles['lex-colophon-legal-text']}>
+                    {pick(
+                      locale,
+                      'تخضع هذه الوثيقة لمراجعة دورية لضمان الامتثال التام لأعلى معايير حماية البيانات والشفافية الرقمية.',
+                      'This document is periodically reviewed to ensure complete adherence to digital trust and data privacy standards.'
+                    )}
+                  </p>
+
+                  <a
+                    href={`mailto:${CONTACT_EMAIL}`}
+                    className={styles['lex-mail']}
+                  >
+                    <span>{CONTACT_EMAIL}</span>
+                    <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                  </a>
+                </footer>
               </main>
             </div>
-
-            {/* ——— Footer Colophon ——— */}
-            <footer className={styles['lex-colophon-box']}>
-              <div className={styles['lex-colophon-info']}>
-                <div className="w-10 h-10 rounded-xl bg-[var(--lex-accent-soft)] border border-[var(--lex-accent-border)] flex items-center justify-center text-[var(--lex-accent)] font-bold text-sm">
-                  YS
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-foreground">YALLA SPORT TRUST & LEGAL</p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    {date ? `${code} · ${date}` : code}
-                  </p>
-                </div>
-              </div>
-
-              <p className={styles['lex-colophon-legal-text']}>
-                {pick(
-                  locale,
-                  'تخضع هذه الوثيقة لمراجعة دورية لضمان الامتثال التام لأعلى معايير حماية البيانات والشفافية الرقمية.',
-                  'This document is periodically reviewed to ensure complete adherence to digital trust and data privacy standards.'
-                )}
-              </p>
-
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className={styles['lex-mail']}
-              >
-                <span>{CONTACT_EMAIL}</span>
-                <ExternalLink className="w-3 h-3 text-muted-foreground" />
-              </a>
-            </footer>
           </div>
         </div>
       </SalonStage>

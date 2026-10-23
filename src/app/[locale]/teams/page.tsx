@@ -6,6 +6,7 @@ import { swallow } from '@/lib/ops/caught';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { Shield } from 'lucide-react';
+import { localizePlainName, localizeTeamName } from '@/lib/i18n/sports-lexicon';
 import { TeamsDirectoryClient, DirectoryTeam, ActiveLeague } from './TeamsDirectoryClient';
 import styles from './teams.module.css';
 
@@ -61,7 +62,7 @@ export default async function TeamsPage({
   setRequestLocale(locale);
   const ar = locale === 'ar';
 
-  // Fetch top 120 active teams with league & venue relations from Prisma
+  // Fetch active teams with league & venue relations from Prisma
   const rawTeams = await prisma.team
     .findMany({
       select: {
@@ -90,25 +91,41 @@ export default async function TeamsPage({
           take: 1,
         },
       },
-      take: 160,
+      take: 180,
     })
     .catch(swallow('teams.catalog', []));
 
+  // Deduplicate teams strictly by canonical slug and name
+  const seenTeams = new Set<string>();
+  const deduplicatedRawTeams: Array<(typeof rawTeams)[number]> = [];
+
+  for (const t of rawTeams) {
+    const canonicalKey = t.slug.replace(/-\d+$/, '').toLowerCase();
+    const nameKey = t.name.trim().toLowerCase();
+    if (!seenTeams.has(canonicalKey) && !seenTeams.has(nameKey) && !seenTeams.has(t.id)) {
+      seenTeams.add(canonicalKey);
+      seenTeams.add(nameKey);
+      seenTeams.add(t.id);
+      deduplicatedRawTeams.push(t);
+    }
+  }
+
   // Transform and sort teams with star clubs first
-  const teams: DirectoryTeam[] = rawTeams
+  const teams: DirectoryTeam[] = deduplicatedRawTeams
     .map((team) => {
       const lg = team.standings?.[0]?.league;
+      const localizedName = localizeTeamName(locale, team.name);
       return {
         id: team.id,
-        name: team.name,
+        name: localizedName,
         slug: team.slug,
         logoUrl: team.logoUrl,
         founded: team.founded,
-        venueName: team.venue?.name,
-        venueCity: team.venue?.city,
-        leagueName: lg?.name,
+        venueName: team.venue?.name ? localizePlainName(locale, team.venue.name) : undefined,
+        venueCity: team.venue?.city ? localizePlainName(locale, team.venue.city) : undefined,
+        leagueName: lg?.name ? localizePlainName(locale, lg.name) : undefined,
         leagueSlug: lg?.slug,
-        country: lg?.country || team.venue?.city,
+        country: lg?.country ? localizePlainName(locale, lg.country) : (team.venue?.city ? localizePlainName(locale, team.venue.city) : undefined),
       };
     })
     .sort((a, b) => {
@@ -121,7 +138,7 @@ export default async function TeamsPage({
     });
 
   // Fetch active leagues for filtering chips
-  const activeLeagues: ActiveLeague[] = await prisma.league
+  const rawActiveLeagues = await prisma.league
     .findMany({
       where: {
         standings: { some: {} },
@@ -136,6 +153,13 @@ export default async function TeamsPage({
       orderBy: { name: 'asc' },
     })
     .catch(swallow('teams.activeLeagues', []));
+
+  const activeLeagues: ActiveLeague[] = rawActiveLeagues.map((lg) => ({
+    id: lg.id,
+    name: localizePlainName(locale, lg.name),
+    slug: lg.slug,
+    country: lg.country ? localizePlainName(locale, lg.country) : undefined,
+  }));
 
   return (
     <main className={styles.page}>

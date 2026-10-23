@@ -162,7 +162,7 @@ export const ratelimit = isRealRedis
     })
   : fallbackRatelimit;
 
-export const writeRatelimit = redis
+export const writeRatelimit = isRealRedis
   ? new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(8, "1 m"),
@@ -171,7 +171,7 @@ export const writeRatelimit = redis
     })
   : fallbackRatelimit;
 
-export const searchRatelimit = redis
+export const searchRatelimit = isRealRedis
   ? new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(40, "1 m"),
@@ -180,7 +180,7 @@ export const searchRatelimit = redis
     })
   : fallbackRatelimit;
 
-export const authRatelimit = redis
+export const authRatelimit = isRealRedis
   ? new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(12, "1 m"),

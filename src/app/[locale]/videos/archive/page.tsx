@@ -44,6 +44,8 @@ async function VideosArchivePageBody() {
     youtubeDeskStats().catch(swallow('videos.archive.stats', emptyYoutubeDeskStats())),
   ]);
 
+  const realArchived = Math.max(stats.archived, clips.length);
+
   return (
     <SalonStage
       tone="vault"
@@ -55,7 +57,7 @@ async function VideosArchivePageBody() {
         'هنا ما طلع من الرف: لكل قناة نُبقي أحدث الحلقات ظاهرة، والباقي يُحفظ في الأرشيف ولا يُحذف.',
         'Clips that left the shelf: each channel keeps its newest uploads visible; the rest are stored here, not deleted.',
       )}
-      aside={pick(locale, `${stats.archived} مؤرشف`, `${stats.archived} archived`)}
+      aside={pick(locale, `${realArchived} مؤرشف`, `${realArchived} archived`)}
       tools={
         <YoutubeFoyer>
           <YoutubeClipNav locale={locale} current="archive" />

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { pick } from '@/i18n/pick';
 import { pageMetadata } from '@/lib/seo/site';
 import { getUnifiedEvents } from '@/lib/events/service';
+import { localizePlainName } from '@/lib/i18n/sports-lexicon';
 import { EventsFeedClient } from './EventsFeedClient';
 
 export const revalidate = 60; // Revalidate every 60 seconds
@@ -48,6 +49,7 @@ export default async function EventsPage({
       type: selectedType as unknown as 'all',
       leagueSlug: selectedLeague || undefined,
       limit: 60,
+      locale,
     }),
     prisma.league.findMany({
       where: {
@@ -69,6 +71,11 @@ export default async function EventsPage({
     }),
   ]);
 
+  const localizedLeagues = activeLeagues.map((lg) => ({
+    ...lg,
+    name: localizePlainName(locale, lg.name),
+  }));
+
   return (
     <EventsFeedClient
       locale={locale}
@@ -77,7 +84,7 @@ export default async function EventsPage({
       initialTimeframe={selectedTimeframe}
       initialType={selectedType}
       initialLeague={selectedLeague}
-      leagues={activeLeagues}
+      leagues={localizedLeagues}
     />
   );
 }
