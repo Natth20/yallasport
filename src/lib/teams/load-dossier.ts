@@ -1,6 +1,6 @@
 import { reportCaughtError } from '@/lib/ops/caught';
 import { cache } from 'react';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/generated/prisma';
 import { prisma } from '@/lib/prisma';
 import { slugifyCoachName } from '@/lib/coaches/slug';
 import { isLiveSportsApi } from '@/lib/sports-data/config';
